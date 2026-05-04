@@ -48,6 +48,12 @@ BLOCKED_ACTIONS = {
     "make_fake_buyer_competition_claim": "Fake buyer competition or fake offers are blocked in buyer distribution drafts.",
     "expose_seller_private_data": "Seller/private lead data must not be exposed in buyer distribution prep.",
     "expose_assignment_fee_without_approval": "Assignment fee logic is hidden from buyer distribution unless explicitly approved in a future gate.",
+    "execute_offer_acceptance": "Automatic seller acceptance is blocked in V10.",
+    "mark_contract_ready_without_gate": "Contract-ready state requires V10 underwriting, profit, buyer demand, compliance, risk, readiness, and owner gates.",
+    "automate_live_negotiation": "Live negotiation automation is blocked in V10.",
+    "generate_offer_contract": "Executable contract generation is blocked; V10 only marks readiness for external attorney/title drafting.",
+    "use_pressure_tactics": "Pressure tactics are blocked in V10 offer conversion.",
+    "make_fake_urgency_claim": "False urgency is blocked in V10 offer conversion.",
     "give_legal_advice": "Legal advice is blocked; use attorney/title review reminders.",
     "guarantee_profit": "Guaranteed profit claims are blocked.",
 }
@@ -76,6 +82,9 @@ LEGAL_ADVICE_PATTERNS = (
     "misleading scarcity",
     "only buyer getting this",
     "we already have offers",
+    "this will sell today",
+    "i have buyers lined up",
+    "we have buyers lined up",
 )
 
 

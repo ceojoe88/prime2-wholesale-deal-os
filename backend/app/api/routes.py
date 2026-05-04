@@ -54,6 +54,13 @@ from app.domain.deal_evidence import (
     validate_profit_claims,
 )
 from app.domain.imports import preview_lead_csv
+from app.domain.offer_conversion import (
+    contract_ready_summary,
+    negotiation_summary,
+    offer_conversion_dashboard,
+    offer_positioning_summary,
+    validate_conversion_language,
+)
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import system_rules, validate_action
 from app.domain.seller_acquisition import (
@@ -90,13 +97,16 @@ from app.models import (
     CommunicationDryRunReceipt,
     CommunicationSendAttempt,
     ContractControl,
+    ContractReadyState,
     Deal,
     DealDistributionPrep,
     DealEvidencePacket,
     DealRoomBlocker,
     Division,
     Lead,
+    NegotiationRecord,
     OfferPacket,
+    OfferPositioningRecord,
     SellerInteraction,
     SellerOfferPublication,
     SellerPortalResponse,
@@ -129,6 +139,10 @@ class ProfitClaimValidationRequest(BaseModel):
 class DistributionSafetyRequest(BaseModel):
     content: str
     assignment_fee_exposure_approved: bool = False
+
+
+class ConversionSafetyRequest(BaseModel):
+    content: str
 
 
 class SellerLanguageRequest(BaseModel):
@@ -823,6 +837,99 @@ def deal_distribution_detail(
     summary = distribution_prep_summary(prep)
     session.commit()
     return summary
+
+
+@router.get("/offer-conversion")
+def offer_conversion(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = offer_conversion_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/offer-conversion/{deal_id}")
+def offer_conversion_detail(
+    deal_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    deal = session.get(Deal, deal_id)
+    if deal is None:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    dashboard = offer_conversion_dashboard(session)
+    session.commit()
+    return {
+        "deal": model_to_dict(deal),
+        "offer_positioning": [
+            offer_positioning_summary(record)
+            for record in session.query(OfferPositioningRecord)
+            .filter(OfferPositioningRecord.deal_id == deal_id)
+            .all()
+        ],
+        "negotiations": [
+            negotiation_summary(record)
+            for record in session.query(NegotiationRecord)
+            .filter(NegotiationRecord.deal_id == deal_id)
+            .all()
+        ],
+        "contract_ready_states": [
+            contract_ready_summary(state)
+            for state in session.query(ContractReadyState)
+            .filter(ContractReadyState.deal_id == deal_id)
+            .all()
+        ],
+        "fastest_path_to_contract": [
+            item for item in dashboard["fastest_path_to_contract"] if item["deal_id"] == deal_id
+        ],
+        "contract_execution_allowed": False,
+        "legal_advice_allowed": False,
+    }
+
+
+@router.post("/offer-conversion/safety/validate")
+def offer_conversion_safety(payload: ConversionSafetyRequest) -> dict[str, object]:
+    return validate_conversion_language(payload.content)
+
+
+@router.get("/negotiations")
+def negotiations(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = offer_conversion_dashboard(session)
+    session.commit()
+    return {
+        "negotiation_records": dashboard["negotiation_records"],
+        "high_readiness_sellers": dashboard["high_readiness_sellers"],
+        "stalled_negotiations": dashboard["stalled_negotiations"],
+        "deals_needing_price_adjustment": dashboard["deals_needing_price_adjustment"],
+        "live_negotiation_automation_allowed": False,
+        "automatic_acceptance_allowed": False,
+    }
+
+
+@router.get("/negotiations/{record_id}")
+def negotiation_detail(
+    record_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    record = session.get(NegotiationRecord, record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Negotiation record not found")
+    summary = negotiation_summary(record)
+    session.commit()
+    return summary
+
+
+@router.get("/contract-ready")
+def contract_ready(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = offer_conversion_dashboard(session)
+    session.commit()
+    return {
+        "contract_ready_deals": dashboard["contract_ready_deals"],
+        "contract_ready_states": dashboard["contract_ready_states"],
+        "projected_10k_contracts_ready": dashboard["projected_10k_contracts_ready"],
+        "deals_at_risk": dashboard["deals_at_risk"],
+        "contract_execution_allowed": False,
+        "executable_contract_generation_allowed": False,
+        "legal_advice_allowed": False,
+        "automatic_acceptance_allowed": False,
+    }
 
 
 @router.get("/communications")

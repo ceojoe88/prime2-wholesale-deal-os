@@ -12,6 +12,7 @@ import {
   blockedCommunicationAttempts,
   blockedDealRooms,
   blockedSellerVisibilityOffers,
+  contractReadyDeals,
   buyerInterests,
   buyerDemandProfiles,
   buyerReadyDealsFromDemand,
@@ -26,19 +27,24 @@ import {
   complianceRecords,
   contractPrepBlocked,
   dealEvidencePackets,
+  dealsNeedingPriceAdjustment,
   blockedDistributionPreps,
   dealsNeedingEvidenceOwnerReview,
   distributionDraftsPendingApproval,
   deals,
   evidenceFeesAtRisk,
+  fastestPathToContract,
   fastCloseBuyerList,
   formatCurrency,
   hotDeals,
   hotSellerLeads,
+  highReadinessNegotiations,
   highestDemandZipCodes,
   leads,
   offerPackets,
+  offerConversionDealsAtRisk,
   missingEvidencePackets,
+  projected10kContractsReady,
   projectedAssignmentFeesAtRisk,
   projectedEvidenceAssignmentFees,
   sellerDocumentChecklistQueue,
@@ -46,6 +52,7 @@ import {
   sellerPortalQuestions,
   sellerResponseQueue,
   sellerVisibleOffers,
+  stalledNegotiations,
   staleSellerFollowUps,
   titleHandoffPackets,
   tenKDealsWithStrongBuyerDemand,
@@ -111,6 +118,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Distribution approvals" value={String(distributionDraftsPendingApproval.length)} detail="Drafts waiting on owner review" />
         <MetricCard label="10K+ strong demand" value={String(tenKDealsWithStrongBuyerDemand.length)} detail="Buyer fit plus source-number spread" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Contract-ready" value={String(contractReadyDeals.length)} detail="External drafting-ready only" />
+        <MetricCard label="High readiness sellers" value={String(highReadinessNegotiations.length)} detail="Acceptance score above threshold" />
+        <MetricCard label="Stalled negotiations" value={String(stalledNegotiations.length)} detail="Needs owner positioning review" />
+        <MetricCard label="10K+ contracts ready" value={String(projected10kContractsReady.length)} detail="Projected spreads protected" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -146,6 +159,12 @@ export default function CommandCenterPage() {
               ["high", "Review buyer-ready demand", `${buyerReadyDealsFromDemand.length} deals have strong buyer demand and visible deal rooms`],
               ["normal", "Monitor fast-close buyer list", `${fastCloseBuyerList.length} verified buyers can close in 10 days or faster`],
               ["high", "Clear blocked distribution preps", `${blockedDistributionPreps.length} drafts are blocked by compliance or publication gates`],
+              ["critical", "Review contract-ready conversion queue", `${contractReadyDeals.length} deals are ready for external drafting review`],
+              ["high", "Clear stalled negotiations", `${stalledNegotiations.length} negotiations need a safer next move`],
+              ["high", "Review price adjustments", `${dealsNeedingPriceAdjustment.length} deals have adjustment recommendations inside safe range`],
+              ["high", "Protect 10K+ contract-ready opportunities", `${projected10kContractsReady.length} ready states preserve a 10K+ projected fee`],
+              ["high", "Clear offer conversion risk gates", `${offerConversionDealsAtRisk.length} conversion states have blockers before contract-ready`],
+              ["normal", "Review fastest path to contract", fastestPathToContract[0]?.actions.join(", ") ?? "No conversion path queued"],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

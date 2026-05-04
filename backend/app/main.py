@@ -15,6 +15,7 @@ from app.models import (
     BuyerDemandProfile,
     CommunicationDraft,
     ContractControl,
+    ContractReadyState,
     Division,
     OfferPacket,
     SellerInteraction,
@@ -37,6 +38,7 @@ async def lifespan(app: FastAPI):
                 or session.query(SellerInteraction).count() == 0
                 or session.query(OfferPacket).count() == 0
                 or session.query(ContractControl).count() == 0
+                or session.query(ContractReadyState).count() == 0
                 or session.query(TitleHandoffPacket).count() == 0
                 or session.query(AssignmentReadinessRecord).count() == 0
                 or session.query(CommunicationDraft).count() == 0

@@ -151,6 +151,15 @@ class Deal(TimestampMixin, Base):
     assignment_fee_attributions: Mapped[list["AssignmentFeeAttribution"]] = relationship(
         back_populates="deal"
     )
+    offer_positioning_records: Mapped[list["OfferPositioningRecord"]] = relationship(
+        back_populates="deal"
+    )
+    negotiation_records: Mapped[list["NegotiationRecord"]] = relationship(
+        back_populates="deal"
+    )
+    contract_ready_states: Mapped[list["ContractReadyState"]] = relationship(
+        back_populates="deal"
+    )
 
 
 class Buyer(TimestampMixin, Base):
@@ -302,6 +311,129 @@ class DealDistributionPrep(TimestampMixin, Base):
         back_populates="distribution_preps"
     )
     buyer_deal_publication: Mapped[BuyerDealPublication | None] = relationship()
+
+
+class OfferPositioningRecord(TimestampMixin, Base):
+    __tablename__ = "offer_positioning_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    offer_packet_id: Mapped[str | None] = mapped_column(
+        ForeignKey("offer_packets.id"), nullable=True
+    )
+    offer_strategy_type: Mapped[str] = mapped_column(String(80), default="as-is")
+    seller_pain_alignment: Mapped[list[str]] = mapped_column(JSON, default=list)
+    justification_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    anchor_price: Mapped[int] = mapped_column(Integer, default=0)
+    walk_away_price: Mapped[int] = mapped_column(Integer, default=0)
+    ideal_contract_price: Mapped[int] = mapped_column(Integer, default=0)
+    concession_range: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
+    negotiation_notes: Mapped[str] = mapped_column(Text, default="")
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    safety_status: Mapped[str] = mapped_column(String(80), default="pending")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    pressure_tactics_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal: Mapped[Deal] = relationship(back_populates="offer_positioning_records")
+    offer_packet: Mapped[OfferPacket | None] = relationship()
+    negotiation_records: Mapped[list["NegotiationRecord"]] = relationship(
+        back_populates="offer_positioning"
+    )
+    contract_ready_states: Mapped[list["ContractReadyState"]] = relationship(
+        back_populates="offer_positioning"
+    )
+
+
+class NegotiationRecord(TimestampMixin, Base):
+    __tablename__ = "negotiation_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    offer_positioning_id: Mapped[str | None] = mapped_column(
+        ForeignKey("offer_positioning_records.id"), nullable=True
+    )
+    seller_interaction_id: Mapped[str | None] = mapped_column(
+        ForeignKey("seller_interactions.id"), nullable=True
+    )
+    seller_last_response: Mapped[str] = mapped_column(Text, default="")
+    seller_objections: Mapped[list[str]] = mapped_column(JSON, default=list)
+    counter_offer: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    emotional_signals: Mapped[list[str]] = mapped_column(JSON, default=list)
+    negotiation_stage: Mapped[str] = mapped_column(String(80), default="initial")
+    next_move_recommendation: Mapped[str] = mapped_column(Text, default="")
+    motivation_score: Mapped[float] = mapped_column(Float, default=0)
+    price_alignment: Mapped[float] = mapped_column(Float, default=0)
+    timeline_alignment: Mapped[float] = mapped_column(Float, default=0)
+    trust_level: Mapped[float] = mapped_column(Float, default=0)
+    objection_resolution: Mapped[float] = mapped_column(Float, default=0)
+    contact_consistency: Mapped[float] = mapped_column(Float, default=0)
+    readiness_score: Mapped[float] = mapped_column(Float, default=0)
+    readiness_level: Mapped[str] = mapped_column(String(80), default="low_readiness")
+    safety_status: Mapped[str] = mapped_column(String(80), default="pending")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    automatic_acceptance_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_negotiation_automation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    pressure_tactics_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal: Mapped[Deal] = relationship(back_populates="negotiation_records")
+    offer_positioning: Mapped[OfferPositioningRecord | None] = relationship(
+        back_populates="negotiation_records"
+    )
+    seller_interaction: Mapped[SellerInteraction | None] = relationship()
+    contract_ready_states: Mapped[list["ContractReadyState"]] = relationship(
+        back_populates="negotiation_record"
+    )
+
+
+class ContractReadyState(TimestampMixin, Base):
+    __tablename__ = "contract_ready_states"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    offer_positioning_id: Mapped[str | None] = mapped_column(
+        ForeignKey("offer_positioning_records.id"), nullable=True
+    )
+    negotiation_record_id: Mapped[str | None] = mapped_column(
+        ForeignKey("negotiation_records.id"), nullable=True
+    )
+    readiness_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    contract_ready: Mapped[bool] = mapped_column(Boolean, default=False)
+    ready_for_external_drafting: Mapped[bool] = mapped_column(Boolean, default=False)
+    seller_likely_to_sign: Mapped[bool] = mapped_column(Boolean, default=False)
+    numbers_locked: Mapped[bool] = mapped_column(Boolean, default=False)
+    negotiation_stabilized: Mapped[bool] = mapped_column(Boolean, default=False)
+    underwriting_complete: Mapped[bool] = mapped_column(Boolean, default=False)
+    profit_control_validated: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_demand_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    compliance_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    no_risk_flags: Mapped[bool] = mapped_column(Boolean, default=False)
+    seller_readiness_high: Mapped[bool] = mapped_column(Boolean, default=False)
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    fastest_path_to_contract: Mapped[list[str]] = mapped_column(JSON, default=list)
+    projected_assignment_fee: Mapped[int] = mapped_column(Integer, default=0)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    external_attorney_title_drafting_required: Mapped[bool] = mapped_column(
+        Boolean, default=True
+    )
+    executable_contract_generated: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_provided: Mapped[bool] = mapped_column(Boolean, default=False)
+    automatic_acceptance_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_negotiation_automation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal: Mapped[Deal] = relationship(back_populates="contract_ready_states")
+    offer_positioning: Mapped[OfferPositioningRecord | None] = relationship(
+        back_populates="contract_ready_states"
+    )
+    negotiation_record: Mapped[NegotiationRecord | None] = relationship(
+        back_populates="contract_ready_states"
+    )
 
 
 class ComplianceRecord(TimestampMixin, Base):

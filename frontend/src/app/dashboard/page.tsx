@@ -27,23 +27,28 @@ import {
   communicationDryRunsNeedingApproval,
   communicationRiskQueue,
   complianceRecords,
+  contractReadyDeals,
   contractControls,
   contractPrepBlocked,
   contractPrepReady,
   dealEvidencePackets,
+  dealsNeedingPriceAdjustment,
   distributionDraftsPendingApproval,
   dealsNeedingEvidenceOwnerReview,
-  deals,
   evidenceFeesAtRisk,
   divisions,
+  fastestPathToContract,
   formatCurrency,
   hotDeals,
   hotSellerLeads,
+  highReadinessNegotiations,
   highestDemandZipCodes,
   leads,
   offerReadyPackets,
   offerPackets,
+  offerConversionDealsAtRisk,
   missingEvidencePackets,
+  projected10kContractsReady,
   projectedAssignmentFeesAtRisk,
   projectedEvidenceAssignmentFees,
   projectedAssignmentTotal,
@@ -53,6 +58,7 @@ import {
   sellerPortalQuestions,
   sellerResponseQueue,
   sellerVisibleOffers,
+  stalledNegotiations,
   staleSellerFollowUps,
   sentOrMockSentCommunicationAttempts,
   titleHandoffPackets,
@@ -212,6 +218,24 @@ export default function DashboardPage() {
           <RecordCard title="Buyer-ready demand" meta={`${buyerReadyDealsFromDemand.length} deals have strong buyer fit and visible rooms`} right={<Pill tone="green">ready</Pill>} />
           <RecordCard title="Buyer priority POF gaps" meta={`${buyerPriorityPofGaps.length} rankings need POF refresh`} right={<Pill tone="gold">review</Pill>} />
           <RecordCard title="Bulk distribution" meta="Blocked; no campaigns, blasts, or automatic buyer outreach." right={<Pill tone="red">off</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V10 Offer To Contract Conversion Gate">
+        <div className="grid-three">
+          <RecordCard title="Contract-ready deals" meta={`${contractReadyDeals.length} deals ready for external drafting review`} right={<Pill tone="green">ready</Pill>} />
+          <RecordCard title="High readiness sellers" meta={`${highReadinessNegotiations.length} sellers score high or contract-ready`} right={<Pill tone="gold">seller ready</Pill>} />
+          <RecordCard title="Stalled negotiations" meta={`${stalledNegotiations.length} records need safe next-move review`} right={<Pill tone="red">stalled</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Price adjustments" meta={`${dealsNeedingPriceAdjustment.length} deals have safe-range adjustment recommendations`} right={<Pill tone="gold">review</Pill>} />
+          <RecordCard title="Conversion risk gates" meta={`${offerConversionDealsAtRisk.length} contract-ready states have blockers`} right={<Pill tone="red">blocked</Pill>} />
+          <RecordCard title="10K+ contracts ready" meta={`${projected10kContractsReady.length} conversion states preserve 10K+ projected spreads`} right={<Pill tone="green">10K+</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Fastest path to contract" meta={fastestPathToContract[0]?.actions.join(", ") ?? "No conversion path queued"} right={<Pill tone="gold">recommend</Pill>} />
+          <RecordCard title="Contract creation" meta="Blocked; readiness does not generate or execute contracts." right={<Pill tone="red">off</Pill>} />
+          <RecordCard title="Negotiation automation" meta="Blocked; next moves are owner-reviewed recommendations only." right={<Pill tone="red">off</Pill>} />
         </div>
       </Section>
     </div>

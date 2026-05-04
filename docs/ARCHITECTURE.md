@@ -22,6 +22,8 @@ V8 adds proof-backed deal evidence and assignment-fee attribution. It ties proje
 
 V9 adds buyer demand intelligence and deal distribution prep. It ranks which buyers are most likely to close fast using demand, price, POF, reliability, closing speed, deal type, and buyer margin signals, then prepares sanitized one-recipient distribution drafts without live blasts, bulk sends, fake scarcity, fake competition, or seller/private data exposure.
 
+V10 adds controlled offer-to-contract conversion. It structures offer positioning, negotiation tracking, seller acceptance readiness scoring, and contract-ready state gating so the operator can move faster only when underwriting, profit control, buyer demand, compliance, risk, seller readiness, and owner approval all clear. Contract-ready is an internal coordination status only; it does not create or execute a contract.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -30,6 +32,7 @@ V9 adds buyer demand intelligence and deal distribution prep. It ranks which buy
 - `app/domain/buyer_matching.py`: draft-only buyer match scoring by area, price, property type, reliability, closing speed, and proof of funds.
 - `app/domain/buyer_portal.py`: buyer visibility publishing gate, sanitized deal-room projection, forbidden-field leak guard, and V2 portal policy.
 - `app/domain/buyer_demand.py`: V9 buyer demand scoring, per-deal priority ranking, sanitized private deal sheet generation, distribution prep guard, and buyer demand dashboard aggregation.
+- `app/domain/offer_conversion.py`: V10 offer positioning summaries, negotiation readiness scoring, conversion gates, deal acceleration recommendations, contract-ready state sync, and conversion safety validation.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -100,6 +103,13 @@ erDiagram
   DEAL ||--o{ DEAL_DISTRIBUTION_PREP : prepares
   BUYER ||--o{ DEAL_DISTRIBUTION_PREP : targets
   BUYER_DEAL_PRIORITY ||--o{ DEAL_DISTRIBUTION_PREP : sources
+  DEAL ||--o{ OFFER_POSITIONING_RECORD : positions
+  OFFER_PACKET ||--o{ OFFER_POSITIONING_RECORD : supports
+  DEAL ||--o{ NEGOTIATION_RECORD : tracks
+  OFFER_POSITIONING_RECORD ||--o{ NEGOTIATION_RECORD : frames
+  DEAL ||--o{ CONTRACT_READY_STATE : gates
+  OFFER_POSITIONING_RECORD ||--o{ CONTRACT_READY_STATE : supports
+  NEGOTIATION_RECORD ||--o{ CONTRACT_READY_STATE : readies
 ```
 
 ## V2 Buyer Portal
@@ -379,6 +389,45 @@ The sanitizer hides seller name/contact, seller contract price unless intentiona
 
 The V9 safety guard blocks live buyer blasts, bulk sends, misleading scarcity, fake offers, fake buyer competition, seller/private data exposure, assignment fee exposure without approval, legal guarantees, and closing guarantees.
 
+## V10 Offer To Contract Conversion
+
+Internal routes:
+
+- `/dashboard/offer-conversion`
+- `/dashboard/offer-conversion/[dealId]`
+- `/dashboard/negotiations`
+- `/dashboard/negotiations/[recordId]`
+- `/dashboard/contract-ready`
+
+Offer positioning records capture strategy type (`cash-fast`, `as-is`, `investor-grade`, or `flexible-close`), seller pain alignment, justification summary, anchor price, walk-away price, ideal contract price, concession range, negotiation notes, confidence score, owner approval status, and safety status.
+
+Negotiation records track seller last response, objections, counteroffer, emotional signals, negotiation stage, next move recommendation, and the acceptance readiness inputs:
+
+- Motivation score
+- Price alignment
+- Timeline alignment
+- Trust level
+- Objection resolution
+- Contact consistency
+
+The acceptance readiness engine returns low readiness, medium readiness, high readiness, or contract-ready. The contract-ready level requires a high readiness score plus a stabilized stage such as soft-accepted or verbally accepted.
+
+The offer conversion gate allows a contract-ready internal state only when all of these are true:
+
+- Underwriting complete
+- Profit control validated
+- Buyer demand confirmed
+- Compliance passed
+- No risk flags
+- Seller readiness high
+- Owner approval recorded
+
+The contract-ready state means the deal is ready for external contract drafting by attorney/title resources, the seller is likely to sign, numbers are locked, and negotiation is stabilized. It does not create a contract, execute a contract, auto-accept an offer, submit anything to title, or negotiate with the seller.
+
+The deal acceleration engine only recommends internal next moves such as sending an updated offer explanation draft, handling a specific objection, adjusting price within the safe range, moving toward verbal agreement, holding position, or disengaging.
+
+The V10 safety guard blocks legal advice, executable contract generation, automatic acceptance, pressure tactics, fake urgency, fake buyer claims, guaranteed close language, misleading assignment language, deception about role or assignment, and live negotiation automation.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -429,6 +478,11 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/buyer-priority`
 - `/dashboard/deal-distribution`
 - `/dashboard/deal-distribution/[distributionId]`
+- `/dashboard/offer-conversion`
+- `/dashboard/offer-conversion/[dealId]`
+- `/dashboard/negotiations`
+- `/dashboard/negotiations/[recordId]`
+- `/dashboard/contract-ready`
 
 Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
 
@@ -471,6 +525,8 @@ V7 exception: unified deal rooms are allowed only as internal coordination recor
 V8 exception: evidence and attribution records are allowed only as internal proof and verification records. They can show source-backed fee math, evidence gaps, missing owner review, and verified 10K+ opportunities inside the operator dashboard, but they cannot publish client-facing proof, invent profit support, guarantee ROI, guarantee closing, or expose unsanitized internal notes.
 
 V9 exception: buyer demand and distribution prep records are allowed only as internal ranking and draft-preparation records. They can rank likely buyers, prepare one-recipient drafts, and generate sanitized deal sheets, but they cannot send blasts, send bulk messages, claim fake scarcity or buyer competition, expose seller/private data, expose internal spread logic, guarantee closing, or execute contracts.
+
+V10 exception: offer-to-contract conversion records are allowed only as internal offer positioning, negotiation tracking, readiness scoring, and contract-ready coordination records. They can recommend next moves and mark a deal ready for external attorney/title drafting when gates pass, but they cannot create executable contracts, auto-accept terms, provide legal advice, pressure sellers, fake urgency or buyer demand, guarantee closing, or automate live negotiation.
 
 Allowed:
 

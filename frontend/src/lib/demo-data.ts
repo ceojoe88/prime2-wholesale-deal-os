@@ -233,6 +233,85 @@ export type DealDistributionPrep = {
   legalClosingGuaranteeAllowed: false;
 };
 
+export type OfferPositioningRecord = {
+  id: string;
+  dealId: string;
+  offerPacketId: string;
+  offerStrategyType: "cash-fast" | "as-is" | "investor-grade" | "flexible-close";
+  sellerPainAlignment: string[];
+  justificationSummary: { comps: string; repairs: string; timeline: string };
+  anchorPrice: number;
+  walkAwayPrice: number;
+  idealContractPrice: number;
+  concessionRange: { low: number; high: number };
+  negotiationNotes: string;
+  confidenceScore: number;
+  ownerApprovalRecorded: boolean;
+  safetyStatus: string;
+  blockedReasons: string[];
+  draftOnly: true;
+  pressureTacticsAllowed: false;
+  legalAdviceAllowed: false;
+};
+
+export type NegotiationRecord = {
+  id: string;
+  dealId: string;
+  offerPositioningId: string;
+  sellerInteractionId: string;
+  sellerLastResponse: string;
+  sellerObjections: string[];
+  counterOffer: number | null;
+  emotionalSignals: string[];
+  negotiationStage: "initial" | "follow-up" | "negotiating" | "soft-accepted" | "verbally accepted" | "stalled";
+  nextMoveRecommendation: string;
+  motivationScore: number;
+  priceAlignment: number;
+  timelineAlignment: number;
+  trustLevel: number;
+  objectionResolution: number;
+  contactConsistency: number;
+  readinessScore: number;
+  readinessLevel: "low readiness" | "medium readiness" | "high readiness" | "contract-ready";
+  safetyStatus: string;
+  blockedReasons: string[];
+  draftOnly: true;
+  automaticAcceptanceAllowed: false;
+  liveNegotiationAutomationAllowed: false;
+  pressureTacticsAllowed: false;
+  legalAdviceAllowed: false;
+};
+
+export type ContractReadyState = {
+  id: string;
+  dealId: string;
+  offerPositioningId: string;
+  negotiationRecordId: string;
+  readinessStatus: string;
+  contractReady: boolean;
+  readyForExternalDrafting: boolean;
+  sellerLikelyToSign: boolean;
+  numbersLocked: boolean;
+  negotiationStabilized: boolean;
+  underwritingComplete: boolean;
+  profitControlValidated: boolean;
+  buyerDemandConfirmed: boolean;
+  compliancePassed: boolean;
+  noRiskFlags: boolean;
+  sellerReadinessHigh: boolean;
+  ownerApprovalRecorded: boolean;
+  blockedReasons: string[];
+  fastestPathToContract: string[];
+  projectedAssignmentFee: number;
+  draftOnly: true;
+  externalAttorneyTitleDraftingRequired: true;
+  executableContractGenerated: false;
+  contractExecutionAllowed: false;
+  legalAdviceProvided: false;
+  automaticAcceptanceAllowed: false;
+  liveNegotiationAutomationAllowed: false;
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1206,6 +1285,30 @@ export const dealDistributionPreps: DealDistributionPrep[] = [
   { id: "distribution-004", dealId: "deal-005", buyerId: "buyer-004", buyerPriorityId: "priority-008", buyerDealPublicationId: "publication-005", buyerDealEmailDraft: "Draft held: larger Dallas opportunity requires compliance clearance before any buyer-facing deal sheet.", buyerSmsDraft: "Draft only and blocked pending compliance review.", privateDealSheetDraft: sanitizedDistributionSheet("deal-005"), buyerCallNotes: "Strong buyer fit but buyer portal publication is blocked by compliance risk.", buyerResponseTracker: [{ status: "blocked_compliance", operatorReview: "pending", timestamp: "2026-05-04T12:45:00Z" }], approvalStatus: "blocked_compliance_review", draftStatus: "blocked", safetyStatus: "passed", blockedReasons: ["buyer_publication_missing_compliance_review", "buyer_publication_risk_status_high"], draftOnly: true, liveSendAllowed: false, bulkBlastAllowed: false, sellerPrivateDataExposed: false, assignmentFeeExposed: false, legalClosingGuaranteeAllowed: false }
 ];
 
+export const offerPositioningRecords: OfferPositioningRecord[] = [
+  { id: "positioning-001", dealId: "deal-001", offerPacketId: "packet-001", offerStrategyType: "as-is", sellerPainAlignment: ["vacancy", "maintenance", "repair uncertainty"], justificationSummary: { comps: "ARV range supported by nearby renovated single-family sales.", repairs: "Repair basis includes exterior, kitchen, and mechanical reserves.", timeline: "Seller asked for clarity this week and prefers a clean as-is path." }, anchorPrice: 148000, walkAwayPrice: 163000, idealContractPrice: 151000, concessionRange: { low: 1500, high: 4000 }, negotiationNotes: "Lead with repair-backed as-is certainty and keep concessions inside safe max seller offer.", confidenceScore: 91, ownerApprovalRecorded: true, safetyStatus: "passed", blockedReasons: [], draftOnly: true, pressureTacticsAllowed: false, legalAdviceAllowed: false },
+  { id: "positioning-002", dealId: "deal-003", offerPacketId: "packet-002", offerStrategyType: "flexible-close", sellerPainAlignment: ["absentee ownership", "tenant turnover", "pricing gap"], justificationSummary: { comps: "ARV range needs seller-friendly explanation with documented repair basis.", repairs: "Cosmetic updates plus possible plumbing reserve.", timeline: "Seller has 30-day timeline and is price-focused." }, anchorPrice: 176000, walkAwayPrice: 195000, idealContractPrice: 180000, concessionRange: { low: 2500, high: 6000 }, negotiationNotes: "Use flexible close as value; owner approval still required before conversion.", confidenceScore: 82, ownerApprovalRecorded: false, safetyStatus: "passed", blockedReasons: [], draftOnly: true, pressureTacticsAllowed: false, legalAdviceAllowed: false },
+  { id: "positioning-003", dealId: "deal-005", offerPacketId: "packet-003", offerStrategyType: "investor-grade", sellerPainAlignment: ["inherited property", "authority review", "larger repair scope"], justificationSummary: { comps: "Higher ARV requires authority and compliance review before conversion.", repairs: "Large repair reserve protects buyer margin.", timeline: "Seller is open but review blockers remain." }, anchorPrice: 214000, walkAwayPrice: 235000, idealContractPrice: 220000, concessionRange: { low: 3000, high: 7000 }, negotiationNotes: "Do not convert until compliance authority review clears.", confidenceScore: 74, ownerApprovalRecorded: true, safetyStatus: "passed", blockedReasons: [], draftOnly: true, pressureTacticsAllowed: false, legalAdviceAllowed: false },
+  { id: "positioning-004", dealId: "deal-006", offerPacketId: "packet-004", offerStrategyType: "cash-fast", sellerPainAlignment: ["repair burden", "uncertain pricing"], justificationSummary: { comps: "ARV needs repair validation before price movement.", repairs: "High repair estimate compresses safe offer range.", timeline: "Timeline not stable enough for conversion." }, anchorPrice: 124000, walkAwayPrice: 128000, idealContractPrice: 126000, concessionRange: { low: 0, high: 2000 }, negotiationNotes: "Hold position or disengage because profit control is below target.", confidenceScore: 48, ownerApprovalRecorded: true, safetyStatus: "passed", blockedReasons: [], draftOnly: true, pressureTacticsAllowed: false, legalAdviceAllowed: false },
+  { id: "positioning-005", dealId: "deal-007", offerPacketId: "packet-005", offerStrategyType: "cash-fast", sellerPainAlignment: ["small property", "fast answer preference"], justificationSummary: { comps: "Small single-family spread is below target but may be useful for practice queue.", repairs: "Repair reserve leaves limited assignment room.", timeline: "Seller has not stabilized response yet." }, anchorPrice: 72000, walkAwayPrice: 82000, idealContractPrice: 75000, concessionRange: { low: 500, high: 1500 }, negotiationNotes: "Use as follow-up candidate only; conversion is blocked by target assignment fee.", confidenceScore: 58, ownerApprovalRecorded: true, safetyStatus: "passed", blockedReasons: [], draftOnly: true, pressureTacticsAllowed: false, legalAdviceAllowed: false }
+];
+
+export const negotiationRecords: NegotiationRecord[] = [
+  { id: "negotiation-001", dealId: "deal-001", offerPositioningId: "positioning-001", sellerInteractionId: "seller-interaction-001", sellerLastResponse: "Seller said the as-is explanation makes sense and asked for the written next-step checklist.", sellerObjections: ["wants clear repair basis"], counterOffer: 153000, emotionalSignals: ["motivated", "timeline-driven"], negotiationStage: "soft-accepted", nextMoveRecommendation: "Move to verbal agreement after owner confirms the final external drafting path.", motivationScore: 92, priceAlignment: 90, timelineAlignment: 88, trustLevel: 86, objectionResolution: 86, contactConsistency: 90, readinessScore: 88.92, readinessLevel: "contract-ready", safetyStatus: "passed", blockedReasons: [], draftOnly: true, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false, pressureTacticsAllowed: false, legalAdviceAllowed: false },
+  { id: "negotiation-002", dealId: "deal-003", offerPositioningId: "positioning-002", sellerInteractionId: "seller-interaction-003", sellerLastResponse: "Seller is open to reviewing the repair-backed price but wants a higher number.", sellerObjections: ["price expectation"], counterOffer: 190000, emotionalSignals: ["price-focused", "hesitant"], negotiationStage: "negotiating", nextMoveRecommendation: "Adjust price within safe range only after owner review.", motivationScore: 78, priceAlignment: 72, timelineAlignment: 70, trustLevel: 76, objectionResolution: 68, contactConsistency: 78, readinessScore: 73.8, readinessLevel: "medium readiness", safetyStatus: "passed", blockedReasons: [], draftOnly: true, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false, pressureTacticsAllowed: false, legalAdviceAllowed: false },
+  { id: "negotiation-003", dealId: "deal-005", offerPositioningId: "positioning-003", sellerInteractionId: "seller-interaction-004", sellerLastResponse: "Seller likes the number but authority documents are still unresolved.", sellerObjections: ["authority documentation", "title review"], counterOffer: 224000, emotionalSignals: ["motivated", "hesitant"], negotiationStage: "verbally accepted", nextMoveRecommendation: "Resolve compliance blocker before any contract-ready marking.", motivationScore: 88, priceAlignment: 84, timelineAlignment: 82, trustLevel: 80, objectionResolution: 62, contactConsistency: 82, readinessScore: 80.6, readinessLevel: "high readiness", safetyStatus: "passed", blockedReasons: [], draftOnly: true, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false, pressureTacticsAllowed: false, legalAdviceAllowed: false },
+  { id: "negotiation-004", dealId: "deal-006", offerPositioningId: "positioning-004", sellerInteractionId: "seller-interaction-006", sellerLastResponse: "Seller stopped responding after the repair range was discussed.", sellerObjections: ["price expectation", "repair disagreement"], counterOffer: 145000, emotionalSignals: ["stalled", "price-focused"], negotiationStage: "stalled", nextMoveRecommendation: "Disengage unless price moves back inside safe range.", motivationScore: 52, priceAlignment: 35, timelineAlignment: 44, trustLevel: 50, objectionResolution: 30, contactConsistency: 38, readinessScore: 42.72, readinessLevel: "low readiness", safetyStatus: "passed", blockedReasons: [], draftOnly: true, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false, pressureTacticsAllowed: false, legalAdviceAllowed: false },
+  { id: "negotiation-005", dealId: "deal-007", offerPositioningId: "positioning-005", sellerInteractionId: "seller-interaction-005", sellerLastResponse: "Seller asked for a higher offer and has not confirmed timeline.", sellerObjections: ["price expectation", "timeline unknown"], counterOffer: 84000, emotionalSignals: ["hesitant"], negotiationStage: "follow-up", nextMoveRecommendation: "Hold position and explain repair basis without pressure.", motivationScore: 68, priceAlignment: 58, timelineAlignment: 54, trustLevel: 64, objectionResolution: 52, contactConsistency: 66, readinessScore: 60.28, readinessLevel: "medium readiness", safetyStatus: "passed", blockedReasons: [], draftOnly: true, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false, pressureTacticsAllowed: false, legalAdviceAllowed: false }
+];
+
+export const contractReadyStates: ContractReadyState[] = [
+  { id: "contract-ready-001", dealId: "deal-001", offerPositioningId: "positioning-001", negotiationRecordId: "negotiation-001", readinessStatus: "contract_ready", contractReady: true, readyForExternalDrafting: true, sellerLikelyToSign: true, numbersLocked: true, negotiationStabilized: true, underwritingComplete: true, profitControlValidated: true, buyerDemandConfirmed: true, compliancePassed: true, noRiskFlags: true, sellerReadinessHigh: true, ownerApprovalRecorded: true, blockedReasons: [], fastestPathToContract: ["move to verbal agreement", "prepare external attorney/title drafting request"], projectedAssignmentFee: 15000, draftOnly: true, externalAttorneyTitleDraftingRequired: true, executableContractGenerated: false, contractExecutionAllowed: false, legalAdviceProvided: false, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false },
+  { id: "contract-ready-002", dealId: "deal-003", offerPositioningId: "positioning-002", negotiationRecordId: "negotiation-002", readinessStatus: "blocked", contractReady: false, readyForExternalDrafting: false, sellerLikelyToSign: false, numbersLocked: true, negotiationStabilized: false, underwritingComplete: true, profitControlValidated: false, buyerDemandConfirmed: false, compliancePassed: true, noRiskFlags: true, sellerReadinessHigh: false, ownerApprovalRecorded: false, blockedReasons: ["owner_approval_not_recorded", "buyer_demand_not_confirmed", "seller_readiness_not_high", "profit_control_not_validated"], fastestPathToContract: ["handle objection X", "adjust price within safe range", "confirm buyer demand before contract-ready state", "request owner approval review"], projectedAssignmentFee: 13000, draftOnly: true, externalAttorneyTitleDraftingRequired: true, executableContractGenerated: false, contractExecutionAllowed: false, legalAdviceProvided: false, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false },
+  { id: "contract-ready-003", dealId: "deal-005", offerPositioningId: "positioning-003", negotiationRecordId: "negotiation-003", readinessStatus: "blocked", contractReady: false, readyForExternalDrafting: false, sellerLikelyToSign: true, numbersLocked: false, negotiationStabilized: true, underwritingComplete: true, profitControlValidated: false, buyerDemandConfirmed: true, compliancePassed: false, noRiskFlags: false, sellerReadinessHigh: true, ownerApprovalRecorded: true, blockedReasons: ["compliance_not_passed", "risk_flags_present", "profit_control_not_validated"], fastestPathToContract: ["resolve compliance blocker", "disengage"], projectedAssignmentFee: 15000, draftOnly: true, externalAttorneyTitleDraftingRequired: true, executableContractGenerated: false, contractExecutionAllowed: false, legalAdviceProvided: false, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false },
+  { id: "contract-ready-004", dealId: "deal-006", offerPositioningId: "positioning-004", negotiationRecordId: "negotiation-004", readinessStatus: "blocked", contractReady: false, readyForExternalDrafting: false, sellerLikelyToSign: false, numbersLocked: false, negotiationStabilized: false, underwritingComplete: true, profitControlValidated: false, buyerDemandConfirmed: false, compliancePassed: true, noRiskFlags: false, sellerReadinessHigh: false, ownerApprovalRecorded: true, blockedReasons: ["profit_control_not_validated", "buyer_demand_not_confirmed", "risk_flags_present", "seller_readiness_not_high"], fastestPathToContract: ["send updated offer explanation", "confirm buyer demand before contract-ready state", "disengage"], projectedAssignmentFee: 8000, draftOnly: true, externalAttorneyTitleDraftingRequired: true, executableContractGenerated: false, contractExecutionAllowed: false, legalAdviceProvided: false, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false },
+  { id: "contract-ready-005", dealId: "deal-007", offerPositioningId: "positioning-005", negotiationRecordId: "negotiation-005", readinessStatus: "blocked", contractReady: false, readyForExternalDrafting: false, sellerLikelyToSign: false, numbersLocked: false, negotiationStabilized: false, underwritingComplete: true, profitControlValidated: false, buyerDemandConfirmed: false, compliancePassed: true, noRiskFlags: false, sellerReadinessHigh: false, ownerApprovalRecorded: true, blockedReasons: ["profit_control_not_validated", "buyer_demand_not_confirmed", "risk_flags_present", "seller_readiness_not_high"], fastestPathToContract: ["handle objection X", "adjust price within safe range", "confirm buyer demand before contract-ready state", "disengage"], projectedAssignmentFee: 9000, draftOnly: true, externalAttorneyTitleDraftingRequired: true, executableContractGenerated: false, contractExecutionAllowed: false, legalAdviceProvided: false, automaticAcceptanceAllowed: false, liveNegotiationAutomationAllowed: false }
+];
+
 export const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -1637,3 +1740,48 @@ export const tenKDealsWithStrongBuyerDemand = bestBuyersForHotDeals.filter(
 export const blockedDistributionPreps = dealDistributionPreps.filter(
   (prep) => prep.blockedReasons.length > 0 || prep.draftStatus === "blocked"
 );
+
+export function getOfferPositioningRecord(positioningId: string) {
+  return offerPositioningRecords.find((record) => record.id === positioningId);
+}
+
+export function getOfferPositioningByDeal(dealId: string) {
+  return offerPositioningRecords.find((record) => record.dealId === dealId);
+}
+
+export function getNegotiationRecord(recordId: string) {
+  return negotiationRecords.find((record) => record.id === recordId);
+}
+
+export function getNegotiationByDeal(dealId: string) {
+  return negotiationRecords.find((record) => record.dealId === dealId);
+}
+
+export function getContractReadyStateByDeal(dealId: string) {
+  return contractReadyStates.find((state) => state.dealId === dealId);
+}
+
+export const contractReadyDeals = contractReadyStates.filter((state) => state.contractReady);
+export const highReadinessNegotiations = negotiationRecords.filter((record) =>
+  ["high readiness", "contract-ready"].includes(record.readinessLevel)
+);
+export const stalledNegotiations = negotiationRecords.filter(
+  (record) => record.negotiationStage === "stalled"
+);
+export const dealsNeedingPriceAdjustment = negotiationRecords.filter(
+  (record) =>
+    record.counterOffer !== null &&
+    record.sellerObjections.some((objection) => objection.includes("price"))
+);
+export const offerConversionDealsAtRisk = contractReadyStates.filter(
+  (state) => state.blockedReasons.length > 0
+);
+export const fastestPathToContract = contractReadyStates.map((state) => ({
+  dealId: state.dealId,
+  stateId: state.id,
+  actions: state.fastestPathToContract,
+  blockedReasons: state.blockedReasons
+}));
+export const projected10kContractsReady = contractReadyDeals.filter((state) => {
+  return state.projectedAssignmentFee >= 10000;
+});
