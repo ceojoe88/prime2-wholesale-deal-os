@@ -1,17 +1,33 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_session
+from app.domain.buyer_portal import (
+    buyer_portal_rules,
+    portal_publish_gate,
+    sanitize_buyer_deal,
+    update_publication_gate,
+)
 from app.domain.command_center import build_command_center
 from app.domain.compliance import compliance_checklists
 from app.domain.imports import preview_lead_csv
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import system_rules, validate_action
-from app.models import Agent, Buyer, BuyerMatch, ComplianceRecord, Deal, Division, Lead
+from app.models import (
+    Agent,
+    Buyer,
+    BuyerDealPublication,
+    BuyerInterest,
+    BuyerMatch,
+    ComplianceRecord,
+    Deal,
+    Division,
+    Lead,
+)
 from app.serializers import model_to_dict
 
 router = APIRouter(prefix="/api")
@@ -25,6 +41,12 @@ class ActionRequest(BaseModel):
     compliance_reviewed: bool = False
 
 
+class BuyerInterestRequest(BaseModel):
+    buyer_id: str
+    intended_offer_amount: int | None = None
+    notes: str = ""
+
+
 def all_records(session: Session, model) -> list[dict]:
     return [model_to_dict(row) for row in session.query(model).all()]
 
@@ -36,10 +58,16 @@ def get_record(session: Session, model, record_id: str) -> dict:
     return model_to_dict(record)
 
 
+def require_buyer_invite(x_buyer_invite: str | None = Header(default=None)) -> None:
+    if x_buyer_invite != "demo-buyer-invite":
+        raise HTTPException(status_code=403, detail="Buyer portal invite is required")
+
+
 @router.get("/system/rules")
 def get_system_rules() -> dict[str, object]:
     return {
         **system_rules(),
+        "buyer_portal": buyer_portal_rules(),
         "app_name": settings.app_name,
         "overseer": settings.overseer_name,
         "target_assignment_fee": settings.target_assignment_fee,
@@ -248,6 +276,174 @@ def buyer_detail(buyer_id: str, session: Session = Depends(get_session)) -> dict
 @router.get("/buyer-matches")
 def buyer_matches(session: Session = Depends(get_session)) -> list[dict]:
     return all_records(session, BuyerMatch)
+
+
+@router.get("/buyer-portal/rules")
+def buyer_portal_policy() -> dict[str, object]:
+    return buyer_portal_rules()
+
+
+@router.get("/buyer-portal/deals")
+def buyer_portal_deals(
+    buyer_id: str = "buyer-001",
+    _: None = Depends(require_buyer_invite),
+    session: Session = Depends(get_session),
+) -> list[dict[str, object]]:
+    buyer = session.get(Buyer, buyer_id)
+    publications = session.query(BuyerDealPublication).all()
+    visible = []
+    for publication in publications:
+        update_publication_gate(publication, publication.deal)
+        if portal_publish_gate(publication.deal, publication)["can_publish"]:
+            visible.append(sanitize_buyer_deal(publication.deal, publication, buyer))
+    return visible
+
+
+@router.get("/buyer-portal/deals/{deal_id}")
+def buyer_portal_deal_detail(
+    deal_id: str,
+    buyer_id: str = "buyer-001",
+    _: None = Depends(require_buyer_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    deal = session.get(Deal, deal_id)
+    buyer = session.get(Buyer, buyer_id)
+    if deal is None or deal.buyer_publication is None:
+        raise HTTPException(status_code=404, detail="Deal is not available in buyer portal")
+    update_publication_gate(deal.buyer_publication, deal)
+    if not portal_publish_gate(deal, deal.buyer_publication)["can_publish"]:
+        raise HTTPException(status_code=404, detail="Deal is not available in buyer portal")
+    return sanitize_buyer_deal(deal, deal.buyer_publication, buyer)
+
+
+@router.post("/buyer-portal/deals/{deal_id}/interest")
+def record_buyer_interest(
+    deal_id: str,
+    payload: BuyerInterestRequest,
+    _: None = Depends(require_buyer_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    deal = session.get(Deal, deal_id)
+    buyer = session.get(Buyer, payload.buyer_id)
+    if deal is None or buyer is None or deal.buyer_publication is None:
+        raise HTTPException(status_code=404, detail="Buyer or deal not found")
+    update_publication_gate(deal.buyer_publication, deal)
+    if not portal_publish_gate(deal, deal.buyer_publication)["can_publish"]:
+        raise HTTPException(status_code=404, detail="Deal is not available in buyer portal")
+    language_guard = validate_action(
+        actor="Buyer Portal",
+        action="draft",
+        content=payload.notes,
+    )
+    if not language_guard.allowed:
+        raise HTTPException(status_code=400, detail=language_guard.as_dict())
+
+    count = session.query(BuyerInterest).count() + 1
+    interest = BuyerInterest(
+        id=f"interest-{count:03d}",
+        buyer_id=buyer.id,
+        deal_id=deal.id,
+        interest_status="owner_review_needed",
+        intended_offer_amount=payload.intended_offer_amount,
+        proof_of_funds_status=buyer.proof_of_funds_status,
+        notes=payload.notes,
+        draft_only=True,
+        contract_execution_allowed=False,
+    )
+    session.add(interest)
+    session.commit()
+    session.refresh(interest)
+    return {
+        **model_to_dict(interest),
+        "real_world_action_taken": False,
+        "payment_collected": False,
+        "contract_executed": False,
+    }
+
+
+@router.get("/buyer-portal/profile")
+def buyer_portal_profile(
+    buyer_id: str = "buyer-001",
+    _: None = Depends(require_buyer_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    buyer = session.get(Buyer, buyer_id)
+    if buyer is None:
+        raise HTTPException(status_code=404, detail="Buyer not found")
+    return {
+        "buyer_id": buyer.id,
+        "name": buyer.name,
+        "company": buyer.company,
+        "target_zip_codes": buyer.target_zip_codes,
+        "max_purchase_price": buyer.max_purchase_price,
+        "property_type": buyer.property_type,
+        "proof_of_funds_status": buyer.proof_of_funds_status,
+        "closing_speed_days": buyer.closing_speed_days,
+        "invite_gated": True,
+    }
+
+
+@router.get("/buyer-portal/watchlist")
+def buyer_portal_watchlist(
+    buyer_id: str = "buyer-001",
+    _: None = Depends(require_buyer_invite),
+    session: Session = Depends(get_session),
+) -> list[dict[str, object]]:
+    buyer = session.get(Buyer, buyer_id)
+    if buyer is None:
+        raise HTTPException(status_code=404, detail="Buyer not found")
+    watchlist = []
+    for match in buyer.matches:
+        publication = match.deal.buyer_publication
+        if publication and portal_publish_gate(match.deal, publication)["can_publish"]:
+            watchlist.append(
+                {
+                    "match_id": match.id,
+                    "match_score": match.score,
+                    "deal": sanitize_buyer_deal(match.deal, publication, buyer),
+                    "draft_only": True,
+                }
+            )
+    return watchlist
+
+
+@router.get("/buyer-portal/internal-dashboard")
+def buyer_portal_internal_dashboard(
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    publications = session.query(BuyerDealPublication).all()
+    visible_deals = []
+    blocked_deals = []
+    for publication in publications:
+        update_publication_gate(publication, publication.deal)
+        gate = portal_publish_gate(publication.deal, publication)
+        item = {
+            "deal_id": publication.deal_id,
+            "operator_marked_visible": publication.operator_marked_visible,
+            "availability_status": publication.availability_status,
+            "blocked_reasons": gate["blocked_reasons"],
+        }
+        if gate["can_publish"]:
+            visible_deals.append(item)
+        else:
+            blocked_deals.append(item)
+
+    interests = session.query(BuyerInterest).all()
+    return {
+        "buyer_visible_deals": visible_deals,
+        "buyer_interest_queue": [model_to_dict(interest) for interest in interests],
+        "proof_of_funds_needed": [
+            model_to_dict(interest)
+            for interest in interests
+            if interest.proof_of_funds_status != "verified"
+        ],
+        "offers_needing_owner_review": [
+            model_to_dict(interest)
+            for interest in interests
+            if interest.interest_status == "owner_review_needed"
+        ],
+        "deals_blocked_from_buyer_portal": blocked_deals,
+    }
 
 
 @router.get("/compliance")

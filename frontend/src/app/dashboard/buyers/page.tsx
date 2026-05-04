@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { Section } from "@/components/Section";
 import { buyers, formatCurrency } from "@/lib/demo-data";
+import { buyerInterests, buyerPortalBlockedDeals, buyerVisibleDeals } from "@/lib/demo-data";
 
 export default function BuyersPage() {
   const verified = buyers.filter((buyer) => buyer.proofOfFundsStatus === "verified");
@@ -19,6 +20,12 @@ export default function BuyersPage() {
         <MetricCard label="Verified POF" value={String(verified.length)} detail="Eligible for priority matching" />
         <MetricCard label="Fastest close" value={`${Math.min(...buyers.map((buyer) => buyer.closingSpeedDays))}d`} detail="Demo closing speed" />
         <MetricCard label="Top capacity" value={formatCurrency(Math.max(...buyers.map((buyer) => buyer.maxPurchasePrice)))} detail="Max purchase price" />
+      </div>
+      <div className="metric-grid">
+        <MetricCard label="Buyer-visible deals" value={String(buyerVisibleDeals.length)} detail="Sanitized rooms live" />
+        <MetricCard label="Interest queue" value={String(buyerInterests.length)} detail="Draft intent only" />
+        <MetricCard label="POF needed" value={String(buyerInterests.filter((interest) => interest.proofOfFundsStatus !== "verified").length)} detail="Before owner follow-up" />
+        <MetricCard label="Portal blocks" value={String(buyerPortalBlockedDeals.length)} detail="Reasons tracked internally" />
       </div>
       <Section title="Buyer Profiles">
         <table className="data-table">

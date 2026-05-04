@@ -92,6 +92,63 @@ export type BuyerMatch = {
   draftOnly: boolean;
 };
 
+export type BuyerPublication = {
+  id: string;
+  dealId: string;
+  operatorMarkedVisible: boolean;
+  complianceReviewed: boolean;
+  sellerContractControlled: boolean;
+  riskStatus: "low" | "medium" | "high";
+  availabilityStatus: string;
+  askingPrice: number | null;
+  beds: number | null;
+  baths: number | null;
+  sqft: number | null;
+  arvRange: { low: number | null; high: number | null };
+  repairEstimateRange: { low: number | null; high: number | null };
+  estimatedBuyerMargin: number | null;
+  buyerMarginStatus: "strong" | "review" | "weak";
+  photosPlaceholder: string[];
+  accessInstructionsPlaceholder: string;
+};
+
+export type BuyerPortalDeal = {
+  dealId: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  propertyType: string;
+  beds: number | null;
+  baths: number | null;
+  sqft: number | null;
+  arvRange: { low: number | null; high: number | null };
+  repairEstimateRange: { low: number | null; high: number | null };
+  askingPrice: number | null;
+  estimatedBuyerMargin: number | null;
+  photosPlaceholder: string[];
+  accessInstructionsPlaceholder: string;
+  proofOfFundsStatus: string;
+  availabilityStatus: string;
+  offerInterestAction: {
+    type: "draft_intent_only";
+    contractExecutionAllowed: false;
+    paymentCollectionAllowed: false;
+  };
+};
+
+export type BuyerInterest = {
+  id: string;
+  buyerId: string;
+  dealId: string;
+  interestStatus: string;
+  intendedOfferAmount: number | null;
+  proofOfFundsStatus: string;
+  notes: string;
+  timestamp: string;
+  draftOnly: true;
+  contractExecutionAllowed: false;
+};
+
 export const divisions: Division[] = [
   {
     id: "market-intelligence",
@@ -377,6 +434,23 @@ export const complianceRecords = [
   { id: "compliance-003", dealId: "deal-008", title: "Assignment and role disclosure review", riskWarnings: ["probate_authority_unverified", "assignment_fee_disclosure_review"], blockedActions: ["prepare_assignment_packet", "execute_contract"] }
 ];
 
+export const buyerPublications: BuyerPublication[] = [
+  { id: "publication-001", dealId: "deal-001", operatorMarkedVisible: true, complianceReviewed: true, sellerContractControlled: true, riskStatus: "low", availabilityStatus: "available", askingPrice: 166000, beds: 3, baths: 2, sqft: 1420, arvRange: { low: 263000, high: 287000 }, repairEstimateRange: { low: 39000, high: 51000 }, estimatedBuyerMargin: 52000, buyerMarginStatus: "strong", photosPlaceholder: ["Exterior photo placeholder", "Kitchen photo placeholder", "Mechanical photo placeholder"], accessInstructionsPlaceholder: "Access instructions available after owner review of buyer intent and proof of funds." },
+  { id: "publication-002", dealId: "deal-002", operatorMarkedVisible: true, complianceReviewed: true, sellerContractControlled: true, riskStatus: "low", availabilityStatus: "available", askingPrice: 127000, beds: 3, baths: 1.5, sqft: 1285, arvRange: { low: 201000, high: 219000 }, repairEstimateRange: { low: 28000, high: 36000 }, estimatedBuyerMargin: 42000, buyerMarginStatus: "strong", photosPlaceholder: ["Exterior photo placeholder", "Kitchen photo placeholder", "Mechanical photo placeholder"], accessInstructionsPlaceholder: "Access instructions available after owner review of buyer intent and proof of funds." },
+  { id: "publication-003", dealId: "deal-003", operatorMarkedVisible: true, complianceReviewed: true, sellerContractControlled: true, riskStatus: "medium", availabilityStatus: "available", askingPrice: 193000, beds: 4, baths: 2, sqft: 1840, arvRange: { low: 326000, high: 354000 }, repairEstimateRange: { low: 58000, high: 72000 }, estimatedBuyerMargin: 67000, buyerMarginStatus: "strong", photosPlaceholder: ["Exterior photo placeholder", "Kitchen photo placeholder", "Mechanical photo placeholder"], accessInstructionsPlaceholder: "Access instructions available after owner review of buyer intent and proof of funds." },
+  { id: "publication-004", dealId: "deal-004", operatorMarkedVisible: true, complianceReviewed: true, sellerContractControlled: false, riskStatus: "medium", availabilityStatus: "blocked", askingPrice: 111000, beds: 3, baths: 2, sqft: 1315, arvRange: { low: 176000, high: 194000 }, repairEstimateRange: { low: 24000, high: 33000 }, estimatedBuyerMargin: 38000, buyerMarginStatus: "strong", photosPlaceholder: ["Exterior photo placeholder"], accessInstructionsPlaceholder: "Blocked pending control confirmation." },
+  { id: "publication-005", dealId: "deal-005", operatorMarkedVisible: true, complianceReviewed: false, sellerContractControlled: true, riskStatus: "high", availabilityStatus: "blocked", askingPrice: 235000, beds: 4, baths: 2.5, sqft: 2260, arvRange: { low: 405000, high: 445000 }, repairEstimateRange: { low: 80000, high: 102000 }, estimatedBuyerMargin: 80000, buyerMarginStatus: "strong", photosPlaceholder: ["Exterior photo placeholder"], accessInstructionsPlaceholder: "Blocked pending compliance review." },
+  { id: "publication-006", dealId: "deal-006", operatorMarkedVisible: true, complianceReviewed: true, sellerContractControlled: true, riskStatus: "high", availabilityStatus: "blocked", askingPrice: 140000, beds: 3, baths: 1, sqft: 1180, arvRange: { low: 248000, high: 272000 }, repairEstimateRange: { low: 64000, high: 78000 }, estimatedBuyerMargin: 38000, buyerMarginStatus: "weak", photosPlaceholder: ["Exterior photo placeholder"], accessInstructionsPlaceholder: "Blocked pending buyer margin repair." },
+  { id: "publication-007", dealId: "deal-007", operatorMarkedVisible: false, complianceReviewed: false, sellerContractControlled: true, riskStatus: "medium", availabilityStatus: "draft", askingPrice: 84000, beds: 2, baths: 1, sqft: 980, arvRange: { low: 148000, high: 162000 }, repairEstimateRange: { low: 26000, high: 34000 }, estimatedBuyerMargin: 33000, buyerMarginStatus: "weak", photosPlaceholder: ["Exterior photo placeholder"], accessInstructionsPlaceholder: "Draft only." },
+  { id: "publication-008", dealId: "deal-008", operatorMarkedVisible: true, complianceReviewed: false, sellerContractControlled: true, riskStatus: "high", availabilityStatus: "blocked", askingPrice: 180000, beds: 4, baths: 2, sqft: 1710, arvRange: { low: 296000, high: 324000 }, repairEstimateRange: { low: 48000, high: 62000 }, estimatedBuyerMargin: 61000, buyerMarginStatus: "strong", photosPlaceholder: ["Exterior photo placeholder"], accessInstructionsPlaceholder: "Blocked pending compliance review." }
+];
+
+export const buyerInterests: BuyerInterest[] = [
+  { id: "interest-001", buyerId: "buyer-001", dealId: "deal-001", interestStatus: "owner_review_needed", intendedOfferAmount: 166000, proofOfFundsStatus: "verified", notes: "Buyer intent recorded as draft only; no contract or payment action.", timestamp: "2026-05-04T14:05:00Z", draftOnly: true, contractExecutionAllowed: false },
+  { id: "interest-002", buyerId: "buyer-002", dealId: "deal-002", interestStatus: "proof_of_funds_verified", intendedOfferAmount: 127000, proofOfFundsStatus: "verified", notes: "Owner review needed before any external follow-up.", timestamp: "2026-05-04T14:08:00Z", draftOnly: true, contractExecutionAllowed: false },
+  { id: "interest-003", buyerId: "buyer-003", dealId: "deal-003", interestStatus: "proof_of_funds_needed", intendedOfferAmount: 193000, proofOfFundsStatus: "needs_refresh", notes: "POF refresh required; buyer interest is non-binding.", timestamp: "2026-05-04T14:11:00Z", draftOnly: true, contractExecutionAllowed: false }
+];
+
 export const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -407,9 +481,72 @@ export function getAgent(id: string) {
   return agents.find((agent) => agent.id === id);
 }
 
+export function getBuyerPublication(dealId: string) {
+  return buyerPublications.find((publication) => publication.dealId === dealId);
+}
+
+export function buyerPortalBlockReasons(publication: BuyerPublication) {
+  const deal = getDeal(publication.dealId);
+  const reasons: string[] = [];
+  if (!deal) reasons.push("missing_internal_deal");
+  if (!publication.operatorMarkedVisible) reasons.push("operator_has_not_marked_buyer_visible");
+  if (!deal?.arv || publication.arvRange.low === null || publication.arvRange.high === null) reasons.push("missing_arv");
+  if (!deal?.repairs || publication.repairEstimateRange.low === null || publication.repairEstimateRange.high === null) reasons.push("missing_repair_estimate");
+  if (!publication.askingPrice) reasons.push("missing_asking_price");
+  if (!publication.complianceReviewed) reasons.push("missing_compliance_review");
+  if (!publication.sellerContractControlled) reasons.push("seller_contract_not_marked_controlled");
+  if (publication.riskStatus === "high" || (deal?.riskScore ?? 0) >= 45) reasons.push("risk_status_high");
+  if (!publication.estimatedBuyerMargin || publication.estimatedBuyerMargin < 25000 || publication.buyerMarginStatus === "weak") reasons.push("buyer_margin_weak");
+  return [...new Set(reasons)].sort();
+}
+
+export function isBuyerVisible(publication: BuyerPublication) {
+  return buyerPortalBlockReasons(publication).length === 0;
+}
+
+export function sanitizeBuyerDeal(publication: BuyerPublication, buyer: Buyer = buyers[0]): BuyerPortalDeal {
+  const deal = getDeal(publication.dealId);
+  const lead = deal ? getLead(deal.leadId) : undefined;
+  if (!deal || !lead || !isBuyerVisible(publication)) {
+    throw new Error("Deal is not buyer-visible.");
+  }
+  return {
+    dealId: deal.id,
+    city: lead.city,
+    state: lead.state,
+    zipCode: lead.zipCode,
+    propertyType: lead.propertyType,
+    beds: publication.beds,
+    baths: publication.baths,
+    sqft: publication.sqft,
+    arvRange: publication.arvRange,
+    repairEstimateRange: publication.repairEstimateRange,
+    askingPrice: publication.askingPrice,
+    estimatedBuyerMargin: publication.estimatedBuyerMargin,
+    photosPlaceholder: publication.photosPlaceholder,
+    accessInstructionsPlaceholder: publication.accessInstructionsPlaceholder,
+    proofOfFundsStatus: buyer.proofOfFundsStatus,
+    availabilityStatus: publication.availabilityStatus,
+    offerInterestAction: {
+      type: "draft_intent_only",
+      contractExecutionAllowed: false,
+      paymentCollectionAllowed: false
+    }
+  };
+}
+
 export const hotDeals = deals.filter((deal) => deal.hot);
 export const underContractDeals = deals.filter((deal) => deal.underContract);
 export const projectedAssignmentTotal = deals.reduce(
   (total, deal) => total + deal.projectedAssignmentFee,
   0
 );
+export const buyerVisibleDeals = buyerPublications
+  .filter(isBuyerVisible)
+  .map((publication) => sanitizeBuyerDeal(publication));
+export const buyerPortalBlockedDeals = buyerPublications
+  .filter((publication) => !isBuyerVisible(publication))
+  .map((publication) => ({
+    dealId: publication.dealId,
+    blockedReasons: buyerPortalBlockReasons(publication)
+  }));

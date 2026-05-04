@@ -28,7 +28,12 @@ const requiredRouteFiles = [
   "src/app/dashboard/buyers/[buyerId]/page.tsx",
   "src/app/dashboard/buyer-matches/page.tsx",
   "src/app/dashboard/compliance/page.tsx",
-  "src/app/dashboard/daily-briefing/page.tsx"
+  "src/app/dashboard/daily-briefing/page.tsx",
+  "src/app/buyer-portal/page.tsx",
+  "src/app/buyer-portal/deals/page.tsx",
+  "src/app/buyer-portal/deals/[dealId]/page.tsx",
+  "src/app/buyer-portal/profile/page.tsx",
+  "src/app/buyer-portal/watchlist/page.tsx"
 ];
 
 function walk(dir) {
@@ -48,11 +53,29 @@ test("dashboard route files exist and render a page component", () => {
   }
 });
 
-test("operator-only frontend has no public signup or portals", () => {
+test("operator-only frontend has no public signup or seller/client portals", () => {
   const files = walk(join(root, "src", "app")).filter((file) => file.endsWith(".tsx"));
   const joined = files.map((file) => readFileSync(file, "utf8")).join("\n").toLowerCase();
   assert.equal(joined.includes("/signup"), false);
-  assert.equal(joined.includes("buyer portal"), false);
   assert.equal(joined.includes("seller portal"), false);
   assert.equal(joined.includes("client portal"), false);
+});
+
+test("buyer portal route files avoid internal seller and profit logic labels", () => {
+  const files = walk(join(root, "src", "app", "buyer-portal")).filter((file) => file.endsWith(".tsx"));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n").toLowerCase();
+  for (const forbidden of [
+    "seller name",
+    "seller contact",
+    "motivation score",
+    "lead source",
+    "assignment fee",
+    "projected assignment",
+    "max seller offer",
+    "wholesale prime",
+    "compliance risk"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+  assert.equal(joined.includes("contract executionallowed: true"), false);
 });

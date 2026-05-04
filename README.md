@@ -1,6 +1,6 @@
 # Virtual Wholesale Real Estate Deal OS
 
-Private, operator-only acquisition-to-assignment command center for wholesale real estate deal analysis. This is not a SaaS, portal, public CRM, live outreach system, legal product, or contract execution tool.
+Private, operator-only acquisition-to-assignment command center for wholesale real estate deal analysis. This is not a SaaS, public-facing portal, public CRM, live outreach system, legal product, or contract execution tool.
 
 ## What Is Included
 
@@ -9,12 +9,15 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - Next.js TypeScript dashboard with all requested `/dashboard/*` routes.
 - Seed data for 9 divisions, 9 managers, 51 agents, 30 leads, 10 buyers, 8 deals, 5 hot 10K+ opportunities, 2 under-contract examples, 3 compliance-risk examples, and 3 buyer matches.
 - Tests for private mode, blocked live actions, legal-language guardrails, agent execution limits, owner approval gates, formulas, buyer matching, seed coverage, API routes, and dashboard route coverage.
+- V2 invite-gated buyer deal room with sanitized deal projections, internal publishing gates, and draft-only buyer interest records.
 
 ## Safety Boundaries
 
 The system only analyzes, scores, drafts, recommends, escalates, flags risk, and prepares checklists. In v1 it blocks live SMS, live email, calls, buyer contact, buyer blast execution, paid API calls, contract execution, public signup, portals, legal advice language, deceptive language, and guaranteed profit claims.
 
 All real-world action requires owner approval. Assignment packet preparation also requires compliance review.
+
+V2 adds a controlled buyer portal, but the private operator system remains the source of truth. The portal is invite-gated, has no public signup, shows sanitized deal-room data only, records buyer interest as non-binding draft intent, and still blocks blasts, payments, legal advice, and contract execution.
 
 ## Backend
 
@@ -34,6 +37,11 @@ Useful endpoints:
 - `GET /api/leads`
 - `GET /api/deals`
 - `GET /api/profit-control`
+- `GET /api/buyer-portal/rules`
+- `GET /api/buyer-portal/deals` with `X-Buyer-Invite: demo-buyer-invite`
+- `GET /api/buyer-portal/deals/{deal_id}` with `X-Buyer-Invite: demo-buyer-invite`
+- `POST /api/buyer-portal/deals/{deal_id}/interest` with `X-Buyer-Invite: demo-buyer-invite`
+- `GET /api/buyer-portal/internal-dashboard`
 - `GET /api/compliance`
 - `POST /api/actions/validate`
 - `POST /api/data-import/leads/preview`
@@ -56,6 +64,12 @@ npm run dev
 ```
 
 Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
+
+Buyer portal demo:
+
+- [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
+- [http://localhost:3000/buyer-portal/deals](http://localhost:3000/buyer-portal/deals)
+- [http://localhost:3000/buyer-portal/profile](http://localhost:3000/buyer-portal/profile)
 
 ## Validation
 

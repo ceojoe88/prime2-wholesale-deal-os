@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from app.models import BuyerMatch, ComplianceRecord, Deal, Division, Lead
+from app.domain.buyer_portal import portal_publish_gate, update_publication_gate
+from app.models import (
+    BuyerDealPublication,
+    BuyerInterest,
+    BuyerMatch,
+    ComplianceRecord,
+    Deal,
+    Division,
+    Lead,
+)
 
 
 def build_command_center(session: Session) -> dict[str, object]:
@@ -16,6 +25,19 @@ def build_command_center(session: Session) -> dict[str, object]:
     matches = session.query(BuyerMatch).all()
     compliance = session.query(ComplianceRecord).all()
     divisions = session.query(Division).all()
+    publications = session.query(BuyerDealPublication).all()
+    interests = session.query(BuyerInterest).all()
+    buyer_visible_deals = []
+    blocked_buyer_deals = []
+    for publication in publications:
+        update_publication_gate(publication, publication.deal)
+        gate = portal_publish_gate(publication.deal, publication)
+        if gate["can_publish"]:
+            buyer_visible_deals.append(publication.deal_id)
+        else:
+            blocked_buyer_deals.append(
+                {"deal_id": publication.deal_id, "blocked_reasons": gate["blocked_reasons"]}
+            )
 
     action_queue = [
         {
@@ -82,4 +104,15 @@ def build_command_center(session: Session) -> dict[str, object]:
             for division in divisions
         ],
         "attention_queue": action_queue,
+        "buyer_portal": {
+            "buyer_visible_deals": buyer_visible_deals,
+            "buyer_interest_queue": len(interests),
+            "proof_of_funds_needed": len(
+                [interest for interest in interests if interest.proof_of_funds_status != "verified"]
+            ),
+            "offers_needing_owner_review": len(
+                [interest for interest in interests if interest.interest_status == "owner_review_needed"]
+            ),
+            "deals_blocked_from_buyer_portal": blocked_buyer_deals,
+        },
     }

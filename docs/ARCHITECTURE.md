@@ -2,9 +2,11 @@
 
 ## System Posture
 
-The app is a private, single-owner command center. It intentionally has no public signup, no team accounts, no buyer portal, no seller portal, no client portal, and no live outreach execution. The owner is the only final approver for real-world action.
+The app is a private, single-owner command center. It intentionally has no public signup, no team accounts, no seller portal, no client portal, and no live outreach execution. The owner is the only final approver for real-world action.
 
 Wholesale Prime is the executive overseer. It can recommend, route, summarize, escalate, and block unsafe action. It cannot send messages, contact buyers or sellers, execute contracts, provide legal advice, or make guaranteed profit claims.
+
+V2 adds a controlled buyer portal. The private operator system remains the source of truth, and the buyer portal is only an invite-gated, sanitized deal-room projection. There is still no public signup, no seller portal, no live buyer blasts, no payments, no legal advice, and no contract execution.
 
 ## Backend Modules
 
@@ -12,6 +14,7 @@ Wholesale Prime is the executive overseer. It can recommend, route, summarize, e
 - `app/domain/scoring.py`: lead opportunity scoring and deal speed score.
 - `app/domain/profit_control.py`: MAO, max buyer purchase price, max seller offer, offer options, assignment spread, reasonableness scoring, and buyer margin flags.
 - `app/domain/buyer_matching.py`: draft-only buyer match scoring by area, price, property type, reliability, closing speed, and proof of funds.
+- `app/domain/buyer_portal.py`: buyer visibility publishing gate, sanitized deal-room projection, forbidden-field leak guard, and V2 portal policy.
 - `app/domain/rules.py`: private-mode rules and v1 action validation.
 - `app/domain/compliance.py`: purchase, assignment, title, seller disclosure, buyer disclosure, and state-review checklists.
 - `app/domain/imports.py`: CSV-ready lead import preview with accepted source categories.
@@ -38,7 +41,39 @@ erDiagram
   DEAL ||--o{ BUYER_MATCH : matches
   BUYER ||--o{ BUYER_MATCH : receives
   DEAL ||--o{ COMPLIANCE_RECORD : requires
+  DEAL ||--o| BUYER_DEAL_PUBLICATION : projects
+  DEAL ||--o{ BUYER_INTEREST : receives
+  BUYER ||--o{ BUYER_INTEREST : records
 ```
+
+## V2 Buyer Portal
+
+Buyer-facing routes:
+
+- `/buyer-portal`
+- `/buyer-portal/deals`
+- `/buyer-portal/deals/[dealId]`
+- `/buyer-portal/profile`
+- `/buyer-portal/watchlist`
+
+The buyer portal shows only property city/state/zip, property type, beds/baths/sqft, ARV range, repair estimate range, asking price, estimated buyer margin, photo placeholders, access instructions placeholder, proof-of-funds status, deal availability status, and a draft-only offer-interest control.
+
+The buyer portal never exposes seller identity, seller contact details, lead source, motivation score, seller temperature, seller contract price except as intentionally published asking price, assignment fee logic, projected assignment spread, max seller offer, internal notes, compliance internals, Wholesale Prime recommendations, agent queues, or manager queues.
+
+## Publishing Gate
+
+A deal can be buyer-visible only when all of these are true:
+
+- Operator explicitly marked it buyer-visible
+- ARV exists
+- Repair estimate exists
+- Asking price exists
+- Compliance review is marked complete
+- Seller contract is marked controlled
+- Risk status is not high
+- Buyer margin is not weak
+
+The internal dashboard shows buyer-visible deals, buyer interest queue, proof-of-funds needs, owner-review offer intents, and deals blocked from buyer portal with reasons.
 
 ## Frontend Routes
 
@@ -78,6 +113,8 @@ Blocked in v1:
 - Guaranteed profit claims
 - Misrepresentation or hidden assignment fee language
 - Public signup and all portals
+
+V2 exception: the controlled buyer portal is allowed only as an invite-gated sanitized deal room. Seller and client portals remain blocked.
 
 Allowed:
 

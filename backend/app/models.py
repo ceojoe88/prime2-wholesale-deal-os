@@ -118,6 +118,10 @@ class Deal(TimestampMixin, Base):
     lead: Mapped[Lead] = relationship(back_populates="deals")
     matches: Mapped[list["BuyerMatch"]] = relationship(back_populates="deal")
     compliance_records: Mapped[list["ComplianceRecord"]] = relationship(back_populates="deal")
+    buyer_publication: Mapped["BuyerDealPublication | None"] = relationship(
+        back_populates="deal", uselist=False
+    )
+    buyer_interests: Mapped[list["BuyerInterest"]] = relationship(back_populates="deal")
 
 
 class Buyer(TimestampMixin, Base):
@@ -139,6 +143,7 @@ class Buyer(TimestampMixin, Base):
     active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     matches: Mapped[list["BuyerMatch"]] = relationship(back_populates="buyer")
+    interests: Mapped[list["BuyerInterest"]] = relationship(back_populates="buyer")
 
 
 class BuyerMatch(TimestampMixin, Base):
@@ -171,3 +176,49 @@ class ComplianceRecord(TimestampMixin, Base):
     notes: Mapped[str] = mapped_column(Text, default="")
 
     deal: Mapped[Deal] = relationship(back_populates="compliance_records")
+
+
+class BuyerDealPublication(TimestampMixin, Base):
+    __tablename__ = "buyer_deal_publications"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), unique=True, nullable=False)
+    operator_marked_visible: Mapped[bool] = mapped_column(Boolean, default=False)
+    compliance_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    seller_contract_controlled: Mapped[bool] = mapped_column(Boolean, default=False)
+    risk_status: Mapped[str] = mapped_column(String(40), default="review")
+    availability_status: Mapped[str] = mapped_column(String(60), default="draft")
+    asking_price: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    beds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    baths: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sqft: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    arv_low: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    arv_high: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    repair_low: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    repair_high: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    estimated_buyer_margin: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    buyer_margin_status: Mapped[str] = mapped_column(String(40), default="review")
+    photos_placeholder: Mapped[list[str]] = mapped_column(JSON, default=list)
+    access_instructions_placeholder: Mapped[str] = mapped_column(Text, default="")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    deal: Mapped[Deal] = relationship(back_populates="buyer_publication")
+
+
+class BuyerInterest(TimestampMixin, Base):
+    __tablename__ = "buyer_interests"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    buyer_id: Mapped[str] = mapped_column(ForeignKey("buyers.id"), nullable=False)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    interest_status: Mapped[str] = mapped_column(String(60), default="intent_draft")
+    intended_offer_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    proof_of_funds_status: Mapped[str] = mapped_column(String(60), default="unverified")
+    notes: Mapped[str] = mapped_column(Text, default="")
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    buyer: Mapped[Buyer] = relationship(back_populates="interests")
+    deal: Mapped[Deal] = relationship(back_populates="buyer_interests")

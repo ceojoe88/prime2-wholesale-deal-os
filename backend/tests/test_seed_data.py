@@ -12,6 +12,8 @@ def test_seed_payload_counts_and_hot_deals():
     assert len([deal for deal in payload["deals"] if deal["is_under_contract"]]) == 2
     assert len(payload["compliance_records"]) == 3
     assert len(payload["buyer_matches"]) == 3
+    assert len(payload["buyer_deal_publications"]) == 8
+    assert len(payload["buyer_interests"]) == 3
 
 
 def test_seeded_agents_are_analysis_only():

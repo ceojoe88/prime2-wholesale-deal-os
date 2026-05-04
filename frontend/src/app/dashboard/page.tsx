@@ -6,6 +6,9 @@ import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
   buyerMatches,
+  buyerInterests,
+  buyerPortalBlockedDeals,
+  buyerVisibleDeals,
   complianceRecords,
   deals,
   divisions,
@@ -63,6 +66,14 @@ export default function DashboardPage() {
           </div>
         </Section>
       </div>
+
+      <Section title="V2 Buyer Portal Gate">
+        <div className="grid-three">
+          <RecordCard title="Buyer-visible deals" meta={`${buyerVisibleDeals.length} sanitized deal rooms`} right={<Pill tone="green">visible</Pill>} />
+          <RecordCard title="Buyer interest queue" meta={`${buyerInterests.length} draft intent records`} right={<Pill tone="gold">owner review</Pill>} />
+          <RecordCard title="Blocked from portal" meta={`${buyerPortalBlockedDeals.length} deals have gate reasons`} right={<Pill tone="red">blocked</Pill>} />
+        </div>
+      </Section>
     </div>
   );
 }

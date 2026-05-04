@@ -3,11 +3,22 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.domain.buyer_matching import score_buyer_match
+from app.domain.buyer_portal import update_publication_gate
 from app.domain.compliance import REQUIRED_CONFIRMATIONS
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import ANALYSIS_ONLY_ACTIONS, BLOCKED_ACTIONS
 from app.domain.scoring import calculate_lead_opportunity, deal_speed_score
-from app.models import Agent, Buyer, BuyerMatch, ComplianceRecord, Deal, Division, Lead
+from app.models import (
+    Agent,
+    Buyer,
+    BuyerDealPublication,
+    BuyerInterest,
+    BuyerMatch,
+    ComplianceRecord,
+    Deal,
+    Division,
+    Lead,
+)
 
 
 DIVISION_DEFINITIONS = [
@@ -564,6 +575,107 @@ def build_match_records(
     return matches
 
 
+def build_publication_records(
+    deals_by_id: dict[str, dict[str, object]]
+) -> list[dict[str, object]]:
+    property_details = {
+        "deal-001": (3, 2.0, 1420, 263000, 287000, 39000, 51000, True, True, "low", "strong"),
+        "deal-002": (3, 1.5, 1285, 201000, 219000, 28000, 36000, True, True, "low", "strong"),
+        "deal-003": (4, 2.0, 1840, 326000, 354000, 58000, 72000, True, True, "medium", "strong"),
+        "deal-004": (3, 2.0, 1315, 176000, 194000, 24000, 33000, False, True, "medium", "strong"),
+        "deal-005": (4, 2.5, 2260, 405000, 445000, 80000, 102000, True, False, "high", "strong"),
+        "deal-006": (3, 1.0, 1180, 248000, 272000, 64000, 78000, True, True, "high", "weak"),
+        "deal-007": (2, 1.0, 980, 148000, 162000, 26000, 34000, True, False, "medium", "weak"),
+        "deal-008": (4, 2.0, 1710, 296000, 324000, 48000, 62000, True, False, "high", "strong"),
+    }
+    records = []
+    for deal_id, deal in deals_by_id.items():
+        (
+            beds,
+            baths,
+            sqft,
+            arv_low,
+            arv_high,
+            repair_low,
+            repair_high,
+            seller_contract_controlled,
+            compliance_reviewed,
+            risk_status,
+            buyer_margin_status,
+        ) = property_details[deal_id]
+        asking_price = deal["buyer_purchase_price"]
+        estimated_margin = deal["arv"] - deal["repairs"] - deal["buyer_costs"] - asking_price
+        operator_marked_visible = deal_id in {"deal-001", "deal-002", "deal-003", "deal-004", "deal-005", "deal-006", "deal-008"}
+        records.append(
+            {
+                "id": f"publication-{deal_id[-3:]}",
+                "deal_id": deal_id,
+                "operator_marked_visible": operator_marked_visible,
+                "compliance_reviewed": compliance_reviewed,
+                "seller_contract_controlled": seller_contract_controlled,
+                "risk_status": risk_status,
+                "availability_status": "available" if operator_marked_visible else "draft",
+                "asking_price": asking_price,
+                "beds": beds,
+                "baths": baths,
+                "sqft": sqft,
+                "arv_low": arv_low,
+                "arv_high": arv_high,
+                "repair_low": repair_low,
+                "repair_high": repair_high,
+                "estimated_buyer_margin": estimated_margin,
+                "buyer_margin_status": buyer_margin_status,
+                "photos_placeholder": [
+                    "Exterior photo placeholder",
+                    "Kitchen photo placeholder",
+                    "Mechanical photo placeholder",
+                ],
+                "access_instructions_placeholder": "Access instructions available after owner review of buyer intent and proof of funds.",
+                "blocked_reasons": [],
+                "published_at": None,
+            }
+        )
+    return records
+
+
+def build_interest_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "interest-001",
+            "buyer_id": "buyer-001",
+            "deal_id": "deal-001",
+            "interest_status": "owner_review_needed",
+            "intended_offer_amount": 166000,
+            "proof_of_funds_status": "verified",
+            "notes": "Buyer intent recorded as draft only; no contract or payment action.",
+            "draft_only": True,
+            "contract_execution_allowed": False,
+        },
+        {
+            "id": "interest-002",
+            "buyer_id": "buyer-002",
+            "deal_id": "deal-002",
+            "interest_status": "proof_of_funds_verified",
+            "intended_offer_amount": 127000,
+            "proof_of_funds_status": "verified",
+            "notes": "Owner review needed before any external follow-up.",
+            "draft_only": True,
+            "contract_execution_allowed": False,
+        },
+        {
+            "id": "interest-003",
+            "buyer_id": "buyer-003",
+            "deal_id": "deal-003",
+            "interest_status": "proof_of_funds_needed",
+            "intended_offer_amount": 193000,
+            "proof_of_funds_status": "needs_refresh",
+            "notes": "POF refresh required; buyer interest is non-binding.",
+            "draft_only": True,
+            "contract_execution_allowed": False,
+        },
+    ]
+
+
 LEAD_LOOKUP = {lead["id"]: lead for lead in build_lead_records()}
 
 
@@ -581,12 +693,24 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "buyers": buyers,
         "deals": deals,
         "buyer_matches": build_match_records(deals_by_id, buyers_by_id),
+        "buyer_deal_publications": build_publication_records(deals_by_id),
+        "buyer_interests": build_interest_records(),
         "compliance_records": build_compliance_records(),
     }
 
 
 def seed_database(session: Session) -> dict[str, int]:
-    for model in [BuyerMatch, ComplianceRecord, Deal, Buyer, Lead, Agent, Division]:
+    for model in [
+        BuyerInterest,
+        BuyerDealPublication,
+        BuyerMatch,
+        ComplianceRecord,
+        Deal,
+        Buyer,
+        Lead,
+        Agent,
+        Division,
+    ]:
         session.query(model).delete(synchronize_session=False)
 
     payload = seed_payload()
@@ -596,6 +720,11 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(Buyer(**row) for row in payload["buyers"])
     session.add_all(Deal(**row) for row in payload["deals"])
     session.add_all(BuyerMatch(**row) for row in payload["buyer_matches"])
+    session.add_all(BuyerDealPublication(**row) for row in payload["buyer_deal_publications"])
+    session.add_all(BuyerInterest(**row) for row in payload["buyer_interests"])
     session.add_all(ComplianceRecord(**row) for row in payload["compliance_records"])
+    session.flush()
+    for publication in session.query(BuyerDealPublication).all():
+        update_publication_gate(publication, publication.deal)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

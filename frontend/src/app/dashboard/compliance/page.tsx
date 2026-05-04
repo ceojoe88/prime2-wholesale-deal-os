@@ -3,6 +3,7 @@ import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import { complianceRecords } from "@/lib/demo-data";
+import { buyerPortalBlockedDeals } from "@/lib/demo-data";
 
 const confirmations = [
   "contract reviewed by attorney/title company",
@@ -43,6 +44,13 @@ export default function CompliancePage() {
         <div className="pill-row">
           {["execute contracts", "give legal advice", "misrepresent role", "hide assignment fee", "send buyer blast", "live seller outreach"].map((item) => (
             <Pill key={item} tone="red">{item}</Pill>
+          ))}
+        </div>
+      </Section>
+      <Section title="Buyer Portal Publishing Blocks">
+        <div className="record-list">
+          {buyerPortalBlockedDeals.map((item) => (
+            <RecordCard key={item.dealId} title={item.dealId} meta={item.blockedReasons.join(", ")} right={<Pill tone="red">not visible</Pill>} />
           ))}
         </div>
       </Section>

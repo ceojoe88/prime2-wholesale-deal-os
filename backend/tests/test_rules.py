@@ -5,7 +5,7 @@ def test_private_operator_only_mode_and_no_portals():
     rules = system_rules()
     assert rules["mode"] == "private_operator_only"
     assert rules["public_signup"] is False
-    assert rules["portals"] == {"client": False, "buyer": False, "seller": False}
+    assert rules["portals"] == {"client": False, "buyer": "invite_gated_controlled", "seller": False}
     assert rules["live_outreach"] == {
         "sms": False,
         "email": False,
