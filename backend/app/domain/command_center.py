@@ -11,6 +11,7 @@ from app.domain.deal_evidence import evidence_dashboard
 from app.domain.offer_conversion import offer_conversion_dashboard
 from app.domain.seller_acquisition import seller_pipeline_command_center
 from app.domain.seller_portal import seller_portal_dashboard
+from app.domain.title_review import title_review_dashboard
 from app.models import (
     BuyerDealPublication,
     BuyerInterest,
@@ -131,4 +132,5 @@ def build_command_center(session: Session) -> dict[str, object]:
         "deal_evidence": evidence_dashboard(session),
         "buyer_demand_distribution": buyer_demand_dashboard(session),
         "offer_to_contract_conversion": offer_conversion_dashboard(session),
+        "title_attorney_review": title_review_dashboard(session),
     }

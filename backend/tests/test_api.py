@@ -38,6 +38,8 @@ def test_core_api_routes_respond():
         "/api/offer-conversion",
         "/api/negotiations",
         "/api/contract-ready",
+        "/api/title-review",
+        "/api/review-packets",
         "/api/communications",
         "/api/communications/dry-runs",
         "/api/communications/attempts",

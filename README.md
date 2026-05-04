@@ -18,6 +18,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - V8 deal evidence and assignment-fee attribution layer tying projected and verified fees to source records, evidence packets, owner review, and unsupported-claim guards.
 - V9 buyer demand intelligence and deal distribution prep with buyer demand profiles, per-deal priority rankings, sanitized private deal sheets, one-recipient draft records, POF gap tracking, and no live blasts.
 - V10 controlled offer-to-contract conversion gate with offer positioning, negotiation tracking, seller acceptance readiness scoring, contract-ready state gates, and no contract execution.
+- V11 title company/attorney review coordination gate with draft-only review records, review packet prep, missing-item queues, and no title submission, title email, legal advice, or contract execution.
 
 ## Safety Boundaries
 
@@ -42,6 +43,8 @@ V8 adds proof-backed deal evidence and assignment-fee attribution. Evidence pack
 V9 adds internal buyer demand intelligence and deal distribution prep. Buyers are ranked by area, price fit, POF, reliability, close speed, deal type, and buyer margin strength. Distribution records prepare buyer email drafts, SMS drafts, private deal sheets, call notes, and response trackers only. The deal sheet sanitizer exposes property summary, asking price, ARV range, repair range, buyer margin estimate, access placeholder, availability, and proof/inspection placeholders while hiding seller data, lead source, motivation, assignment fee logic, internal spread strategy, agent recommendations, and compliance internals. Live buyer blasts, bulk sends, misleading scarcity, fake offers, fake competition, seller/private data exposure, legal guarantees, and closing guarantees are blocked.
 
 V10 converts high-confidence seller opportunities into contract-ready internal states only. Offer positioning stores strategy type, seller pain alignment, justification, anchor/walk-away/ideal prices, concession range, and confidence. Negotiation tracking stores seller responses, objections, counteroffers, emotional signals, stage, next move, and acceptance readiness score. Contract-ready means externally draft-ready for attorney/title review, seller likely to sign, numbers locked, and negotiation stabilized; it never creates, executes, or auto-accepts a contract. Legal advice, pressure tactics, fake urgency, fake buyer claims, guaranteed close language, live negotiation automation, and deception about role or assignment are blocked.
+
+V11 prepares title/attorney review coordination for V10 contract-ready deals only. Review records track selected title company placeholders, review status, required documents, missing items, notes, and owner approval. Review packets organize property summary, seller terms, buyer/assignment readiness, timeline, access notes, compliance checklist, and document checklist. Packet prep is blocked unless V10 contract-ready, compliance passed, owner approval recorded, numbers locked, and seller acceptance readiness is high or contract-ready. Legal advice, contract execution, document submission, title-company email sending, attorney-client relationship claims, and closing guarantees are blocked.
 
 ## Backend
 
@@ -118,6 +121,11 @@ Useful endpoints:
 - `GET /api/negotiations`
 - `GET /api/negotiations/{record_id}`
 - `GET /api/contract-ready`
+- `GET /api/title-review`
+- `GET /api/title-review/{review_id}`
+- `POST /api/title-review/safety/validate`
+- `GET /api/review-packets`
+- `GET /api/review-packets/{packet_id}`
 - `GET /api/compliance`
 - `POST /api/actions/validate`
 - `POST /api/data-import/leads/preview`
@@ -198,6 +206,11 @@ Offer conversion V10 routes:
 - [http://localhost:3000/dashboard/offer-conversion](http://localhost:3000/dashboard/offer-conversion)
 - [http://localhost:3000/dashboard/negotiations](http://localhost:3000/dashboard/negotiations)
 - [http://localhost:3000/dashboard/contract-ready](http://localhost:3000/dashboard/contract-ready)
+
+Title/attorney review V11 routes:
+
+- [http://localhost:3000/dashboard/title-review](http://localhost:3000/dashboard/title-review)
+- [http://localhost:3000/dashboard/review-packets](http://localhost:3000/dashboard/review-packets)
 
 ## Validation
 

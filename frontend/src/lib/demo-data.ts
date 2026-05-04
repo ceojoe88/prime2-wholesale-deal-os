@@ -312,6 +312,56 @@ export type ContractReadyState = {
   liveNegotiationAutomationAllowed: false;
 };
 
+export type TitleReviewCoordination = {
+  id: string;
+  dealId: string;
+  contractReadyStateId: string;
+  selectedTitleCompanyPlaceholder: string;
+  attorneyTitleReviewStatus: string;
+  requiredDocuments: string[];
+  missingItems: string[];
+  reviewNotes: string;
+  ownerApprovalStatus: string;
+  packetPrepAllowed: boolean;
+  blockedReasons: string[];
+  draftOnly: true;
+  legalAdviceAllowed: false;
+  contractExecutionAllowed: false;
+  documentSubmissionAllowed: false;
+  titleCompanyEmailSendAllowed: false;
+  attorneyClientRelationshipClaimed: false;
+  closingGuaranteeAllowed: false;
+};
+
+export type ReviewPacketPrep = {
+  id: string;
+  titleReviewCoordinationId: string;
+  dealId: string;
+  propertySummary: {
+    city: string;
+    state: string;
+    zip: string;
+    propertyType: string;
+  };
+  sellerTerms: Record<string, string | number | boolean>;
+  buyerAssignmentReadinessSummary: Record<string, string | number | boolean>;
+  closingTimeline: string;
+  accessNotes: string;
+  complianceChecklist: string[];
+  documentChecklist: string[];
+  packetStatus: string;
+  prepAllowed: boolean;
+  blockedReasons: string[];
+  draftOnly: true;
+  legalAdviceAllowed: false;
+  contractExecutionAllowed: false;
+  documentSubmissionAllowed: false;
+  titleCompanyEmailSendAllowed: false;
+  submittedToTitle: false;
+  attorneyClientRelationshipClaimed: false;
+  closingGuaranteeAllowed: false;
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1009,6 +1059,28 @@ export const titleHandoffPackets: TitleHandoffPacket[] = [
   { id: "title-003", contractControlId: "contract-003", dealId: "deal-005", propertyDetails: { city: "Dallas", state: "TX", zip: "75216", propertyType: "duplex" }, sellerInfoPlaceholder: "Seller authority placeholder; heirs/title path must be reviewed.", buyerEntityInfoPlaceholder: "Buyer/entity info placeholder; blocked until compliance clears.", agreedPrice: 220000, closingTimeline: "21-30 days", accessNotes: "Access blocked until compliance review.", assignmentStatus: "compliance_blocked", requiredDocumentChecklist: [...contractChecklist, "missing seller authority documentation"], attorneyTitleReviewReminder: "Attorney/title review required before any title route is selected.", packetStatus: "blocked_compliance", draftOnly: true, titleSubmissionAllowed: false, submittedToTitle: false, legalAdviceProvided: false }
 ];
 
+export const titleReviewCoordinations: TitleReviewCoordination[] = [
+  { id: "title-review-001", dealId: "deal-001", contractReadyStateId: "contract-ready-001", selectedTitleCompanyPlaceholder: "Owner-selected investor-friendly title company placeholder", attorneyTitleReviewStatus: "packet_ready", requiredDocuments: contractChecklist, missingItems: [], reviewNotes: "Coordinate attorney/title review only after owner confirms draft packet readiness. No document submission.", ownerApprovalStatus: "approved", packetPrepAllowed: true, blockedReasons: [], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false },
+  { id: "title-review-002", dealId: "deal-003", contractReadyStateId: "contract-ready-002", selectedTitleCompanyPlaceholder: "Title preference pending owner confirmation", attorneyTitleReviewStatus: "blocked", requiredDocuments: contractChecklist, missingItems: ["owner approval", "V10 contract-ready clearance"], reviewNotes: "Keep review packet blocked until owner approval and V10 conversion gates clear.", ownerApprovalStatus: "pending", packetPrepAllowed: false, blockedReasons: ["owner_approval_not_recorded", "v10_contract_ready_not_cleared", "seller_acceptance_readiness_not_high"], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false },
+  { id: "title-review-003", dealId: "deal-005", contractReadyStateId: "contract-ready-003", selectedTitleCompanyPlaceholder: "Missing title company preference", attorneyTitleReviewStatus: "blocked", requiredDocuments: [...contractChecklist, "seller authority documentation"], missingItems: ["seller authority documentation", "compliance review"], reviewNotes: "Inherited-property authority review blocks title/attorney coordination packet prep.", ownerApprovalStatus: "approved", packetPrepAllowed: false, blockedReasons: ["v10_contract_ready_not_cleared", "compliance_not_passed", "numbers_not_locked"], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false },
+  { id: "title-review-004", dealId: "deal-006", contractReadyStateId: "contract-ready-004", selectedTitleCompanyPlaceholder: "Title preference held until profit/risk review clears", attorneyTitleReviewStatus: "blocked", requiredDocuments: [...contractChecklist, "seller accepted terms", "locked numbers"], missingItems: ["locked numbers", "seller acceptance readiness"], reviewNotes: "Profit control and readiness blocks prevent attorney/title review packet prep.", ownerApprovalStatus: "approved", packetPrepAllowed: false, blockedReasons: ["v10_contract_ready_not_cleared", "numbers_not_locked", "seller_acceptance_readiness_not_high"], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false }
+];
+
+const titleReviewComplianceChecklist = [
+  "contract reviewed by attorney/title company",
+  "seller understands role",
+  "buyer understands assignment",
+  "assignment fee disclosure reviewed",
+  "no legal advice provided",
+  "no misrepresentation"
+];
+
+export const reviewPacketPreps: ReviewPacketPrep[] = [
+  { id: "review-packet-001", titleReviewCoordinationId: "title-review-001", dealId: "deal-001", propertySummary: { city: "Dallas", state: "TX", zip: "75216", propertyType: "single_family" }, sellerTerms: { price: 151000, closingTimeline: "14-21 days", acceptedTermsRecorded: true }, buyerAssignmentReadinessSummary: { assignmentAllowed: true, buyerPofStatus: "verified", assignmentReadiness: "assignment_ready" }, closingTimeline: "14-21 days", accessNotes: "Access notes are placeholders until owner confirms the next step.", complianceChecklist: titleReviewComplianceChecklist, documentChecklist: contractChecklist, packetStatus: "draft_ready", prepAllowed: true, blockedReasons: [], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, submittedToTitle: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false },
+  { id: "review-packet-002", titleReviewCoordinationId: "title-review-002", dealId: "deal-003", propertySummary: { city: "Dallas", state: "TX", zip: "75224", propertyType: "single_family" }, sellerTerms: { price: 180000, closingTimeline: "30 days", acceptedTermsRecorded: true }, buyerAssignmentReadinessSummary: { assignmentAllowed: true, buyerPofStatus: "verified", assignmentReadiness: "blocked" }, closingTimeline: "30 days", accessNotes: "Access instructions require owner review.", complianceChecklist: titleReviewComplianceChecklist, documentChecklist: contractChecklist, packetStatus: "blocked", prepAllowed: false, blockedReasons: ["owner_approval_not_recorded", "v10_contract_ready_not_cleared"], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, submittedToTitle: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false },
+  { id: "review-packet-003", titleReviewCoordinationId: "title-review-003", dealId: "deal-005", propertySummary: { city: "Dallas", state: "TX", zip: "75216", propertyType: "duplex" }, sellerTerms: { price: 220000, closingTimeline: "21-30 days", acceptedTermsRecorded: true }, buyerAssignmentReadinessSummary: { assignmentAllowed: false, buyerPofStatus: "verified", assignmentReadiness: "blocked" }, closingTimeline: "21-30 days", accessNotes: "Access blocked until compliance review clears.", complianceChecklist: titleReviewComplianceChecklist, documentChecklist: [...contractChecklist, "seller authority documentation"], packetStatus: "blocked", prepAllowed: false, blockedReasons: ["compliance_not_passed", "v10_contract_ready_not_cleared"], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, submittedToTitle: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false }
+];
+
 export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
   { id: "assignment-ready-001", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-001", buyerMatchId: "match-001", buyerInterestId: "interest-001", readinessStatus: "assignment_ready", assignmentReady: true, blockedReasons: [], assignmentAllowedConfirmed: true, buyerPofStatus: "verified", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
   { id: "assignment-ready-002", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-003", buyerMatchId: "match-001", buyerInterestId: "interest-004", readinessStatus: "blocked", assignmentReady: false, blockedReasons: ["buyer_pof_not_verified"], assignmentAllowedConfirmed: true, buyerPofStatus: "needs_refresh", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
@@ -1365,6 +1437,22 @@ export function getContractControlByDeal(dealId: string) {
 
 export function getTitleHandoffPacket(packetId: string) {
   return titleHandoffPackets.find((packet) => packet.id === packetId);
+}
+
+export function getTitleReviewCoordination(reviewId: string) {
+  return titleReviewCoordinations.find((record) => record.id === reviewId);
+}
+
+export function getTitleReviewCoordinationByDeal(dealId: string) {
+  return titleReviewCoordinations.find((record) => record.dealId === dealId);
+}
+
+export function getReviewPacketPrep(packetId: string) {
+  return reviewPacketPreps.find((packet) => packet.id === packetId);
+}
+
+export function getReviewPacketPrepByReview(reviewId: string) {
+  return reviewPacketPreps.find((packet) => packet.titleReviewCoordinationId === reviewId);
 }
 
 export function getAssignmentReadinessRecord(recordId: string) {
@@ -1785,3 +1873,20 @@ export const fastestPathToContract = contractReadyStates.map((state) => ({
 export const projected10kContractsReady = contractReadyDeals.filter((state) => {
   return state.projectedAssignmentFee >= 10000;
 });
+
+export const titleReviewReadyRecords = titleReviewCoordinations.filter(
+  (record) => record.packetPrepAllowed
+);
+export const blockedTitleReviewCoordinations = titleReviewCoordinations.filter(
+  (record) => !record.packetPrepAllowed || record.blockedReasons.length > 0
+);
+export const reviewPacketPrepReady = reviewPacketPreps.filter((packet) => packet.prepAllowed);
+export const reviewPacketBlocks = reviewPacketPreps.filter(
+  (packet) => !packet.prepAllowed || packet.blockedReasons.length > 0
+);
+export const titleReviewMissingItems = titleReviewCoordinations.filter(
+  (record) => record.missingItems.length > 0
+);
+export const titleReviewOwnerApprovalNeeded = titleReviewCoordinations.filter(
+  (record) => record.ownerApprovalStatus !== "approved"
+);

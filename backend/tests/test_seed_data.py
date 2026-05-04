@@ -22,6 +22,8 @@ def test_seed_payload_counts_and_hot_deals():
     assert len(payload["offer_positioning_records"]) == 5
     assert len(payload["negotiation_records"]) == 5
     assert len(payload["contract_ready_states"]) == 5
+    assert len(payload["title_review_coordinations"]) == 4
+    assert len(payload["review_packet_preps"]) == 3
     assert len(payload["contract_controls"]) == 5
     assert len(payload["seller_offer_publications"]) == 5
     assert len(payload["seller_portal_responses"]) == 4

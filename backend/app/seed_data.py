@@ -25,6 +25,10 @@ from app.domain.seller_portal import (
     update_seller_visibility_gate,
     validate_seller_portal_language,
 )
+from app.domain.title_review import (
+    sync_review_packet_prep,
+    sync_title_review_coordination,
+)
 from app.models import (
     Agent,
     AssignmentFeeAttribution,
@@ -52,10 +56,12 @@ from app.models import (
     NegotiationRecord,
     OfferPacket,
     OfferPositioningRecord,
+    ReviewPacketPrep,
     SellerInteraction,
     SellerOfferPublication,
     SellerPortalResponse,
     TitleHandoffPacket,
+    TitleReviewCoordination,
     UnifiedDealRoom,
 )
 
@@ -1825,6 +1831,207 @@ def build_title_handoff_records() -> list[dict[str, object]]:
     ]
 
 
+def build_title_review_coordination_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "title-review-001",
+            "deal_id": "deal-001",
+            "contract_ready_state_id": "contract-ready-001",
+            "selected_title_company_placeholder": "Owner-selected investor-friendly title company placeholder",
+            "attorney_title_review_status": "pending_sync",
+            "required_documents": CONTRACT_DOCUMENT_CHECKLIST,
+            "missing_items": [],
+            "review_notes": "Coordinate attorney/title review only after owner confirms draft packet readiness. No document submission.",
+            "owner_approval_status": "approved",
+            "packet_prep_allowed": False,
+            "blocked_reasons": [],
+            "draft_only": True,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "document_submission_allowed": False,
+            "title_company_email_send_allowed": False,
+            "attorney_client_relationship_claimed": False,
+            "closing_guarantee_allowed": False,
+        },
+        {
+            "id": "title-review-002",
+            "deal_id": "deal-003",
+            "contract_ready_state_id": "contract-ready-002",
+            "selected_title_company_placeholder": "Title preference pending owner confirmation",
+            "attorney_title_review_status": "blocked",
+            "required_documents": CONTRACT_DOCUMENT_CHECKLIST,
+            "missing_items": ["owner approval", "V10 contract-ready clearance"],
+            "review_notes": "Keep review packet blocked until owner approval and V10 conversion gates clear.",
+            "owner_approval_status": "pending",
+            "packet_prep_allowed": False,
+            "blocked_reasons": ["owner_approval_not_recorded"],
+            "draft_only": True,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "document_submission_allowed": False,
+            "title_company_email_send_allowed": False,
+            "attorney_client_relationship_claimed": False,
+            "closing_guarantee_allowed": False,
+        },
+        {
+            "id": "title-review-003",
+            "deal_id": "deal-005",
+            "contract_ready_state_id": "contract-ready-003",
+            "selected_title_company_placeholder": "Missing title company preference",
+            "attorney_title_review_status": "blocked",
+            "required_documents": CONTRACT_DOCUMENT_CHECKLIST
+            + ["seller authority documentation"],
+            "missing_items": ["seller authority documentation", "compliance review"],
+            "review_notes": "Inherited-property authority review blocks title/attorney coordination packet prep.",
+            "owner_approval_status": "approved",
+            "packet_prep_allowed": False,
+            "blocked_reasons": ["compliance_not_passed"],
+            "draft_only": True,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "document_submission_allowed": False,
+            "title_company_email_send_allowed": False,
+            "attorney_client_relationship_claimed": False,
+            "closing_guarantee_allowed": False,
+        },
+        {
+            "id": "title-review-004",
+            "deal_id": "deal-006",
+            "contract_ready_state_id": "contract-ready-004",
+            "selected_title_company_placeholder": "Title preference held until profit/risk review clears",
+            "attorney_title_review_status": "blocked",
+            "required_documents": CONTRACT_DOCUMENT_CHECKLIST
+            + ["seller accepted terms", "locked numbers"],
+            "missing_items": ["locked numbers", "seller acceptance readiness"],
+            "review_notes": "Profit control and readiness blocks prevent attorney/title review packet prep.",
+            "owner_approval_status": "approved",
+            "packet_prep_allowed": False,
+            "blocked_reasons": ["v10_contract_ready_not_cleared"],
+            "draft_only": True,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "document_submission_allowed": False,
+            "title_company_email_send_allowed": False,
+            "attorney_client_relationship_claimed": False,
+            "closing_guarantee_allowed": False,
+        },
+    ]
+
+
+def build_review_packet_prep_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "review-packet-001",
+            "title_review_coordination_id": "title-review-001",
+            "deal_id": "deal-001",
+            "property_summary": {
+                "city": "Dallas",
+                "state": "TX",
+                "zip": "75216",
+                "property_type": "single_family",
+            },
+            "seller_terms": {
+                "price": 151000,
+                "closing_timeline": "14-21 days",
+                "accepted_terms_recorded": True,
+            },
+            "buyer_assignment_readiness_summary": {
+                "assignment_allowed": True,
+                "buyer_pof_status": "verified",
+                "assignment_readiness": "assignment_ready",
+            },
+            "closing_timeline": "14-21 days",
+            "access_notes": "Access notes are placeholders until owner confirms the next step.",
+            "compliance_checklist": REQUIRED_CONFIRMATIONS,
+            "document_checklist": CONTRACT_DOCUMENT_CHECKLIST,
+            "packet_status": "pending_sync",
+            "prep_allowed": False,
+            "blocked_reasons": [],
+            "draft_only": True,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "document_submission_allowed": False,
+            "title_company_email_send_allowed": False,
+            "submitted_to_title": False,
+            "attorney_client_relationship_claimed": False,
+            "closing_guarantee_allowed": False,
+        },
+        {
+            "id": "review-packet-002",
+            "title_review_coordination_id": "title-review-002",
+            "deal_id": "deal-003",
+            "property_summary": {
+                "city": "Dallas",
+                "state": "TX",
+                "zip": "75224",
+                "property_type": "single_family",
+            },
+            "seller_terms": {
+                "price": 180000,
+                "closing_timeline": "30 days",
+                "accepted_terms_recorded": True,
+            },
+            "buyer_assignment_readiness_summary": {
+                "assignment_allowed": True,
+                "buyer_pof_status": "verified",
+                "assignment_readiness": "blocked",
+            },
+            "closing_timeline": "30 days",
+            "access_notes": "Access instructions require owner review.",
+            "compliance_checklist": REQUIRED_CONFIRMATIONS,
+            "document_checklist": CONTRACT_DOCUMENT_CHECKLIST,
+            "packet_status": "blocked",
+            "prep_allowed": False,
+            "blocked_reasons": ["owner_approval_not_recorded"],
+            "draft_only": True,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "document_submission_allowed": False,
+            "title_company_email_send_allowed": False,
+            "submitted_to_title": False,
+            "attorney_client_relationship_claimed": False,
+            "closing_guarantee_allowed": False,
+        },
+        {
+            "id": "review-packet-003",
+            "title_review_coordination_id": "title-review-003",
+            "deal_id": "deal-005",
+            "property_summary": {
+                "city": "Dallas",
+                "state": "TX",
+                "zip": "75216",
+                "property_type": "duplex",
+            },
+            "seller_terms": {
+                "price": 220000,
+                "closing_timeline": "21-30 days",
+                "accepted_terms_recorded": True,
+            },
+            "buyer_assignment_readiness_summary": {
+                "assignment_allowed": False,
+                "buyer_pof_status": "verified",
+                "assignment_readiness": "blocked",
+            },
+            "closing_timeline": "21-30 days",
+            "access_notes": "Access blocked until compliance review clears.",
+            "compliance_checklist": REQUIRED_CONFIRMATIONS,
+            "document_checklist": CONTRACT_DOCUMENT_CHECKLIST
+            + ["seller authority documentation"],
+            "packet_status": "blocked",
+            "prep_allowed": False,
+            "blocked_reasons": ["compliance_not_passed"],
+            "draft_only": True,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "document_submission_allowed": False,
+            "title_company_email_send_allowed": False,
+            "submitted_to_title": False,
+            "attorney_client_relationship_claimed": False,
+            "closing_guarantee_allowed": False,
+        },
+    ]
+
+
 def build_assignment_readiness_records() -> list[dict[str, object]]:
     return [
         {
@@ -2956,6 +3163,8 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "offer_positioning_records": build_offer_positioning_records(),
         "negotiation_records": build_negotiation_records(),
         "contract_ready_states": build_contract_ready_state_records(),
+        "title_review_coordinations": build_title_review_coordination_records(),
+        "review_packet_preps": build_review_packet_prep_records(),
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
@@ -2980,6 +3189,8 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        ReviewPacketPrep,
+        TitleReviewCoordination,
         ContractReadyState,
         NegotiationRecord,
         OfferPositioningRecord,
@@ -3031,6 +3242,11 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(OfferPositioningRecord(**row) for row in payload["offer_positioning_records"])
     session.add_all(NegotiationRecord(**row) for row in payload["negotiation_records"])
     session.add_all(ContractReadyState(**row) for row in payload["contract_ready_states"])
+    session.add_all(
+        TitleReviewCoordination(**row)
+        for row in payload["title_review_coordinations"]
+    )
+    session.add_all(ReviewPacketPrep(**row) for row in payload["review_packet_preps"])
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
     session.add_all(
         SellerOfferPublication(**row)
@@ -3104,5 +3320,9 @@ def seed_database(session: Session) -> dict[str, int]:
         sync_negotiation_record(negotiation)
     for state in session.query(ContractReadyState).all():
         sync_contract_ready_state(state)
+    for review in session.query(TitleReviewCoordination).all():
+        sync_title_review_coordination(review)
+    for packet in session.query(ReviewPacketPrep).all():
+        sync_review_packet_prep(packet)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

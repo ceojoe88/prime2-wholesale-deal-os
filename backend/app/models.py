@@ -160,6 +160,12 @@ class Deal(TimestampMixin, Base):
     contract_ready_states: Mapped[list["ContractReadyState"]] = relationship(
         back_populates="deal"
     )
+    title_review_coordinations: Mapped[list["TitleReviewCoordination"]] = relationship(
+        back_populates="deal"
+    )
+    review_packet_preps: Mapped[list["ReviewPacketPrep"]] = relationship(
+        back_populates="deal"
+    )
 
 
 class Buyer(TimestampMixin, Base):
@@ -434,6 +440,83 @@ class ContractReadyState(TimestampMixin, Base):
     negotiation_record: Mapped[NegotiationRecord | None] = relationship(
         back_populates="contract_ready_states"
     )
+    title_review_coordinations: Mapped[list["TitleReviewCoordination"]] = relationship(
+        back_populates="contract_ready_state"
+    )
+
+
+class TitleReviewCoordination(TimestampMixin, Base):
+    __tablename__ = "title_review_coordinations"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    contract_ready_state_id: Mapped[str | None] = mapped_column(
+        ForeignKey("contract_ready_states.id"), nullable=True
+    )
+    selected_title_company_placeholder: Mapped[str] = mapped_column(Text, default="")
+    attorney_title_review_status: Mapped[str] = mapped_column(
+        String(80), default="not_started"
+    )
+    required_documents: Mapped[list[str]] = mapped_column(JSON, default=list)
+    missing_items: Mapped[list[str]] = mapped_column(JSON, default=list)
+    review_notes: Mapped[str] = mapped_column(Text, default="")
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending")
+    packet_prep_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    document_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_company_email_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    attorney_client_relationship_claimed: Mapped[bool] = mapped_column(
+        Boolean, default=False
+    )
+    closing_guarantee_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal: Mapped[Deal] = relationship(back_populates="title_review_coordinations")
+    contract_ready_state: Mapped[ContractReadyState | None] = relationship(
+        back_populates="title_review_coordinations"
+    )
+    review_packets: Mapped[list["ReviewPacketPrep"]] = relationship(
+        back_populates="title_review_coordination"
+    )
+
+
+class ReviewPacketPrep(TimestampMixin, Base):
+    __tablename__ = "review_packet_preps"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    title_review_coordination_id: Mapped[str] = mapped_column(
+        ForeignKey("title_review_coordinations.id"), nullable=False
+    )
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    property_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    seller_terms: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    buyer_assignment_readiness_summary: Mapped[dict[str, object]] = mapped_column(
+        JSON, default=dict
+    )
+    closing_timeline: Mapped[str] = mapped_column(String(120), default="")
+    access_notes: Mapped[str] = mapped_column(Text, default="")
+    compliance_checklist: Mapped[list[str]] = mapped_column(JSON, default=list)
+    document_checklist: Mapped[list[str]] = mapped_column(JSON, default=list)
+    packet_status: Mapped[str] = mapped_column(String(80), default="draft")
+    prep_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    document_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_company_email_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    submitted_to_title: Mapped[bool] = mapped_column(Boolean, default=False)
+    attorney_client_relationship_claimed: Mapped[bool] = mapped_column(
+        Boolean, default=False
+    )
+    closing_guarantee_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    title_review_coordination: Mapped[TitleReviewCoordination] = relationship(
+        back_populates="review_packets"
+    )
+    deal: Mapped[Deal] = relationship(back_populates="review_packet_preps")
 
 
 class ComplianceRecord(TimestampMixin, Base):

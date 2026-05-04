@@ -80,6 +80,12 @@ from app.domain.seller_portal import (
     update_seller_visibility_gate,
     validate_seller_portal_language,
 )
+from app.domain.title_review import (
+    review_packet_prep_summary,
+    title_review_coordination_summary,
+    title_review_dashboard,
+    validate_title_review_language,
+)
 from app.models import (
     Agent,
     AssignmentFeeAttribution,
@@ -107,9 +113,11 @@ from app.models import (
     NegotiationRecord,
     OfferPacket,
     OfferPositioningRecord,
+    ReviewPacketPrep,
     SellerInteraction,
     SellerOfferPublication,
     SellerPortalResponse,
+    TitleReviewCoordination,
     TitleHandoffPacket,
     UnifiedDealRoom,
 )
@@ -142,6 +150,10 @@ class DistributionSafetyRequest(BaseModel):
 
 
 class ConversionSafetyRequest(BaseModel):
+    content: str
+
+
+class TitleReviewSafetyRequest(BaseModel):
     content: str
 
 
@@ -930,6 +942,64 @@ def contract_ready(session: Session = Depends(get_session)) -> dict[str, object]
         "legal_advice_allowed": False,
         "automatic_acceptance_allowed": False,
     }
+
+
+@router.get("/title-review")
+def title_review(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = title_review_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/title-review/{review_id}")
+def title_review_detail(
+    review_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    record = session.get(TitleReviewCoordination, review_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Title review record not found")
+    summary = title_review_coordination_summary(record)
+    session.commit()
+    return {
+        **summary,
+        "review_packets": [
+            review_packet_prep_summary(packet) for packet in record.review_packets
+        ],
+    }
+
+
+@router.post("/title-review/safety/validate")
+def title_review_safety(payload: TitleReviewSafetyRequest) -> dict[str, object]:
+    return validate_title_review_language(payload.content)
+
+
+@router.get("/review-packets")
+def review_packets(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = title_review_dashboard(session)
+    session.commit()
+    return {
+        "review_packet_preps": dashboard["review_packet_preps"],
+        "packet_prep_ready": dashboard["packet_prep_ready"],
+        "draft_only": True,
+        "document_submission_allowed": False,
+        "title_company_email_send_allowed": False,
+        "contract_execution_allowed": False,
+        "legal_advice_allowed": False,
+    }
+
+
+@router.get("/review-packets/{packet_id}")
+def review_packet_detail(
+    packet_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    packet = session.get(ReviewPacketPrep, packet_id)
+    if packet is None:
+        raise HTTPException(status_code=404, detail="Review packet not found")
+    summary = review_packet_prep_summary(packet)
+    session.commit()
+    return summary
 
 
 @router.get("/communications")

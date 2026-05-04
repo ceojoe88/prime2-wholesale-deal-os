@@ -29,6 +29,8 @@ export const dashboardRoutes = [
   { href: "/dashboard/offer-conversion", label: "Offer Conversion", icon: "FileCheck2" },
   { href: "/dashboard/negotiations", label: "Negotiations", icon: "ListChecks" },
   { href: "/dashboard/contract-ready", label: "Contract Ready", icon: "ShieldCheck" },
+  { href: "/dashboard/title-review", label: "Title Review", icon: "ClipboardList" },
+  { href: "/dashboard/review-packets", label: "Review Packets", icon: "FileCheck2" },
   { href: "/dashboard/buyers", label: "Cash Buyers", icon: "UsersRound" },
   { href: "/dashboard/buyer-matches", label: "Buyer Matches", icon: "Handshake" },
   { href: "/dashboard/compliance", label: "Compliance", icon: "ShieldCheck" },

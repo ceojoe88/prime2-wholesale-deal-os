@@ -24,6 +24,8 @@ V9 adds buyer demand intelligence and deal distribution prep. It ranks which buy
 
 V10 adds controlled offer-to-contract conversion. It structures offer positioning, negotiation tracking, seller acceptance readiness scoring, and contract-ready state gating so the operator can move faster only when underwriting, profit control, buyer demand, compliance, risk, seller readiness, and owner approval all clear. Contract-ready is an internal coordination status only; it does not create or execute a contract.
 
+V11 adds title company/attorney review coordination. It prepares draft-only review records and review packets for V10 contract-ready deals, tracks missing documents and owner approval, and blocks legal advice, contract execution, document submission, title-company email sending, attorney-client relationship claims, and closing guarantees.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -33,6 +35,7 @@ V10 adds controlled offer-to-contract conversion. It structures offer positionin
 - `app/domain/buyer_portal.py`: buyer visibility publishing gate, sanitized deal-room projection, forbidden-field leak guard, and V2 portal policy.
 - `app/domain/buyer_demand.py`: V9 buyer demand scoring, per-deal priority ranking, sanitized private deal sheet generation, distribution prep guard, and buyer demand dashboard aggregation.
 - `app/domain/offer_conversion.py`: V10 offer positioning summaries, negotiation readiness scoring, conversion gates, deal acceleration recommendations, contract-ready state sync, and conversion safety validation.
+- `app/domain/title_review.py`: V11 title/attorney review coordination gates, draft review packet summaries, missing-item queues, safety validation, and no-submission boundaries.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -110,6 +113,10 @@ erDiagram
   DEAL ||--o{ CONTRACT_READY_STATE : gates
   OFFER_POSITIONING_RECORD ||--o{ CONTRACT_READY_STATE : supports
   NEGOTIATION_RECORD ||--o{ CONTRACT_READY_STATE : readies
+  DEAL ||--o{ TITLE_REVIEW_COORDINATION : coordinates
+  CONTRACT_READY_STATE ||--o{ TITLE_REVIEW_COORDINATION : gates
+  TITLE_REVIEW_COORDINATION ||--o{ REVIEW_PACKET_PREP : prepares
+  DEAL ||--o{ REVIEW_PACKET_PREP : drafts
 ```
 
 ## V2 Buyer Portal
@@ -428,6 +435,45 @@ The deal acceleration engine only recommends internal next moves such as sending
 
 The V10 safety guard blocks legal advice, executable contract generation, automatic acceptance, pressure tactics, fake urgency, fake buyer claims, guaranteed close language, misleading assignment language, deception about role or assignment, and live negotiation automation.
 
+## V11 Title Attorney Review Coordination
+
+Internal routes:
+
+- `/dashboard/title-review`
+- `/dashboard/title-review/[reviewId]`
+- `/dashboard/review-packets`
+
+Review coordination records track:
+
+- Deal
+- V10 contract-ready status
+- Selected title company placeholder
+- Attorney/title review status
+- Required documents
+- Missing items
+- Review notes
+- Owner approval status
+
+Review packet prep is draft-only and organizes:
+
+- Property summary
+- Seller terms
+- Buyer/assignment readiness summary
+- Closing timeline
+- Access notes
+- Compliance checklist
+- Document checklist
+
+The V11 review packet gate allows prep only when all of these are true:
+
+- V10 contract-ready state is cleared
+- Compliance passed
+- Owner approval recorded
+- Numbers locked
+- Seller acceptance readiness is high or contract-ready
+
+Even when the gate passes, the review packet is only an internal preparation artifact. It cannot submit documents, email a title company, create or execute a contract, provide legal advice, claim an attorney-client relationship, or guarantee closing.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -483,6 +529,9 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/negotiations`
 - `/dashboard/negotiations/[recordId]`
 - `/dashboard/contract-ready`
+- `/dashboard/title-review`
+- `/dashboard/title-review/[reviewId]`
+- `/dashboard/review-packets`
 
 Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
 
@@ -527,6 +576,8 @@ V8 exception: evidence and attribution records are allowed only as internal proo
 V9 exception: buyer demand and distribution prep records are allowed only as internal ranking and draft-preparation records. They can rank likely buyers, prepare one-recipient drafts, and generate sanitized deal sheets, but they cannot send blasts, send bulk messages, claim fake scarcity or buyer competition, expose seller/private data, expose internal spread logic, guarantee closing, or execute contracts.
 
 V10 exception: offer-to-contract conversion records are allowed only as internal offer positioning, negotiation tracking, readiness scoring, and contract-ready coordination records. They can recommend next moves and mark a deal ready for external attorney/title drafting when gates pass, but they cannot create executable contracts, auto-accept terms, provide legal advice, pressure sellers, fake urgency or buyer demand, guarantee closing, or automate live negotiation.
+
+V11 exception: title/attorney review records and review packets are allowed only as internal draft coordination artifacts. They can track title placeholders, required documents, missing items, compliance checklists, and owner approval, but they cannot submit documents, send title-company email, execute contracts, give legal advice, claim an attorney-client relationship, or guarantee closing.
 
 Allowed:
 

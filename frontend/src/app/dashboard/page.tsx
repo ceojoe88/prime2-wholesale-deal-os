@@ -52,6 +52,9 @@ import {
   projectedAssignmentFeesAtRisk,
   projectedEvidenceAssignmentFees,
   projectedAssignmentTotal,
+  reviewPacketBlocks,
+  reviewPacketPrepReady,
+  reviewPacketPreps,
   blockedSellerVisibilityOffers,
   sellerDocumentChecklistQueue,
   sellerInteractions,
@@ -62,6 +65,9 @@ import {
   staleSellerFollowUps,
   sentOrMockSentCommunicationAttempts,
   titleHandoffPackets,
+  titleReviewCoordinations,
+  titleReviewMissingItems,
+  titleReviewOwnerApprovalNeeded,
   tenKDealsWithStrongBuyerDemand,
   fastCloseBuyerList,
   underContractDeals,
@@ -236,6 +242,19 @@ export default function DashboardPage() {
           <RecordCard title="Fastest path to contract" meta={fastestPathToContract[0]?.actions.join(", ") ?? "No conversion path queued"} right={<Pill tone="gold">recommend</Pill>} />
           <RecordCard title="Contract creation" meta="Blocked; readiness does not generate or execute contracts." right={<Pill tone="red">off</Pill>} />
           <RecordCard title="Negotiation automation" meta="Blocked; next moves are owner-reviewed recommendations only." right={<Pill tone="red">off</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V11 Title Company Attorney Review Gate">
+        <div className="grid-three">
+          <RecordCard title="Review coordination records" meta={`${titleReviewCoordinations.length} title/attorney review records`} right={<Pill>internal</Pill>} />
+          <RecordCard title="Review packet ready" meta={`${reviewPacketPrepReady.length}/${reviewPacketPreps.length} draft packets pass V10 review gates`} right={<Pill tone="green">draft</Pill>} />
+          <RecordCard title="Blocked reviews" meta={`${reviewPacketBlocks.length} packets blocked before review prep`} right={<Pill tone="red">blocked</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Missing items" meta={`${titleReviewMissingItems.length} records need documents or approvals`} right={<Pill tone="gold">queue</Pill>} />
+          <RecordCard title="Owner approvals" meta={`${titleReviewOwnerApprovalNeeded.length} review records need owner approval`} right={<Pill tone="gold">owner</Pill>} />
+          <RecordCard title="Title submission" meta="Blocked; no documents, title email, legal advice, or contract execution." right={<Pill tone="red">off</Pill>} />
         </div>
       </Section>
     </div>

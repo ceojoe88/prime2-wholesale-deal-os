@@ -47,6 +47,9 @@ import {
   projected10kContractsReady,
   projectedAssignmentFeesAtRisk,
   projectedEvidenceAssignmentFees,
+  reviewPacketBlocks,
+  reviewPacketPrepReady,
+  reviewPacketPreps,
   sellerDocumentChecklistQueue,
   sellerInteractions,
   sellerPortalQuestions,
@@ -55,6 +58,9 @@ import {
   stalledNegotiations,
   staleSellerFollowUps,
   titleHandoffPackets,
+  titleReviewCoordinations,
+  titleReviewMissingItems,
+  titleReviewOwnerApprovalNeeded,
   tenKDealsWithStrongBuyerDemand,
   verified10kAssignmentFeeOpportunities,
   verifiedAssignmentFees
@@ -124,6 +130,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Stalled negotiations" value={String(stalledNegotiations.length)} detail="Needs owner positioning review" />
         <MetricCard label="10K+ contracts ready" value={String(projected10kContractsReady.length)} detail="Projected spreads protected" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Title review records" value={String(titleReviewCoordinations.length)} detail="Attorney/title coordination" />
+        <MetricCard label="Review packets ready" value={String(reviewPacketPrepReady.length)} detail="Draft-only packets" />
+        <MetricCard label="Review packet blocks" value={String(reviewPacketBlocks.length)} detail="No submission before gates" />
+        <MetricCard label="Review missing items" value={String(titleReviewMissingItems.length)} detail="Documents or approvals" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -165,6 +177,10 @@ export default function CommandCenterPage() {
               ["high", "Protect 10K+ contract-ready opportunities", `${projected10kContractsReady.length} ready states preserve a 10K+ projected fee`],
               ["high", "Clear offer conversion risk gates", `${offerConversionDealsAtRisk.length} conversion states have blockers before contract-ready`],
               ["normal", "Review fastest path to contract", fastestPathToContract[0]?.actions.join(", ") ?? "No conversion path queued"],
+              ["high", "Prepare title review packets", `${reviewPacketPrepReady.length}/${reviewPacketPreps.length} review packets are draft-ready`],
+              ["high", "Clear title review missing items", `${titleReviewMissingItems.length} title/attorney review records need missing items resolved`],
+              ["high", "Review title approval queue", `${titleReviewOwnerApprovalNeeded.length} review records need owner approval`],
+              ["normal", "Inspect title review blocks", `${reviewPacketBlocks.length} packets remain blocked with no document submission`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

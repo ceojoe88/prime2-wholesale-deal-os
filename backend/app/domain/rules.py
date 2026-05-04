@@ -54,6 +54,10 @@ BLOCKED_ACTIONS = {
     "generate_offer_contract": "Executable contract generation is blocked; V10 only marks readiness for external attorney/title drafting.",
     "use_pressure_tactics": "Pressure tactics are blocked in V10 offer conversion.",
     "make_fake_urgency_claim": "False urgency is blocked in V10 offer conversion.",
+    "submit_review_packet_to_title": "Title/attorney review packets are draft-only in V11; document submission is blocked.",
+    "send_title_company_email": "Title company email sending is blocked in V11 review coordination.",
+    "claim_attorney_client_relationship": "Attorney-client relationship claims are blocked in V11.",
+    "guarantee_closing": "Closing guarantees are blocked in V11 title/attorney review coordination.",
     "give_legal_advice": "Legal advice is blocked; use attorney/title review reminders.",
     "guarantee_profit": "Guaranteed profit claims are blocked.",
 }
@@ -85,6 +89,12 @@ LEGAL_ADVICE_PATTERNS = (
     "this will sell today",
     "i have buyers lined up",
     "we have buyers lined up",
+    "attorney-client relationship",
+    "we are your attorney",
+    "send documents to title",
+    "send to title company",
+    "email title company",
+    "will definitely close",
 )
 
 
