@@ -1,0 +1,19 @@
+export const dashboardRoutes = [
+  { href: "/dashboard", label: "Overview", icon: "LayoutDashboard" },
+  { href: "/dashboard/command-center", label: "Command Center", icon: "Command" },
+  { href: "/dashboard/command-hierarchy", label: "Hierarchy", icon: "Network" },
+  { href: "/dashboard/overseer", label: "Wholesale Prime", icon: "Crown" },
+  { href: "/dashboard/divisions", label: "Divisions", icon: "Building2" },
+  { href: "/dashboard/managers", label: "Managers", icon: "BriefcaseBusiness" },
+  { href: "/dashboard/manager-queue", label: "Manager Queue", icon: "ListChecks" },
+  { href: "/dashboard/agents", label: "Agents", icon: "Bot" },
+  { href: "/dashboard/leads", label: "Leads", icon: "MapPinned" },
+  { href: "/dashboard/deals", label: "Deals", icon: "BadgeDollarSign" },
+  { href: "/dashboard/underwriting", label: "Underwriting", icon: "Calculator" },
+  { href: "/dashboard/profit-control", label: "Profit Control", icon: "CircleDollarSign" },
+  { href: "/dashboard/seller-followups", label: "Seller Follow-Ups", icon: "Clock3" },
+  { href: "/dashboard/buyers", label: "Cash Buyers", icon: "UsersRound" },
+  { href: "/dashboard/buyer-matches", label: "Buyer Matches", icon: "Handshake" },
+  { href: "/dashboard/compliance", label: "Compliance", icon: "ShieldCheck" },
+  { href: "/dashboard/daily-briefing", label: "Daily Briefing", icon: "ClipboardList" }
+];
