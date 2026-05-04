@@ -17,6 +17,10 @@ from app.domain.profit_control import ProfitControlInput, calculate_profit_contr
 from app.domain.rules import ANALYSIS_ONLY_ACTIONS, BLOCKED_ACTIONS
 from app.domain.scoring import calculate_lead_opportunity, deal_speed_score
 from app.domain.seller_acquisition import update_offer_packet_gate
+from app.domain.seller_portal import (
+    update_seller_visibility_gate,
+    validate_seller_portal_language,
+)
 from app.models import (
     Agent,
     AssignmentReadinessRecord,
@@ -35,6 +39,8 @@ from app.models import (
     Lead,
     OfferPacket,
     SellerInteraction,
+    SellerOfferPublication,
+    SellerPortalResponse,
     TitleHandoffPacket,
 )
 
@@ -1252,6 +1258,226 @@ def build_assignment_readiness_records() -> list[dict[str, object]]:
     ]
 
 
+SELLER_PORTAL_DOCUMENT_CHECKLIST = [
+    "property details summary reviewed",
+    "offer amount summary reviewed",
+    "access preference placeholder",
+    "title company review reminder",
+    "seller questions intake available",
+]
+
+
+def build_seller_offer_publication_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "seller-offer-001",
+            "lead_id": "lead-001",
+            "deal_id": "deal-001",
+            "offer_packet_id": "packet-001",
+            "contract_control_id": "contract-001",
+            "portal_visibility_enabled": True,
+            "offer_status": "owner_approved_offer_ready",
+            "offer_amount": 151000,
+            "closing_timeline_estimate": "14-21 days after owner-approved next steps",
+            "inspection_access_next_step": "Share preferred access windows for operator review.",
+            "title_company_review_status": "Title/attorney review reminder active; no submission from portal.",
+            "document_checklist": SELLER_PORTAL_DOCUMENT_CHECKLIST,
+            "operator_contact_placeholder": "Owner/operator contact placeholder for questions.",
+            "offer_language": "The offer summary is ready for review. There is no pressure to decide in the portal, and questions are routed for operator review.",
+            "offer_language_safety_passed": True,
+            "offer_language_safety_result": {},
+            "compliance_check_passed": True,
+            "owner_approval_recorded": True,
+            "visibility_status": "visible",
+            "blocked_reasons": [],
+            "draft_only": True,
+            "contract_execution_allowed": False,
+            "live_negotiation_automation_allowed": False,
+            "legal_advice_provided": False,
+            "buyer_data_exposed": False,
+            "internal_profit_logic_exposed": False,
+        },
+        {
+            "id": "seller-offer-002",
+            "lead_id": "lead-003",
+            "deal_id": "deal-003",
+            "offer_packet_id": "packet-002",
+            "contract_control_id": "contract-002",
+            "portal_visibility_enabled": True,
+            "offer_status": "owner_review_required",
+            "offer_amount": 180000,
+            "closing_timeline_estimate": "30 days after owner approval",
+            "inspection_access_next_step": "Access options pending owner approval.",
+            "title_company_review_status": "Title review pending owner approval.",
+            "document_checklist": SELLER_PORTAL_DOCUMENT_CHECKLIST,
+            "operator_contact_placeholder": "Owner/operator contact placeholder.",
+            "offer_language": "Owner review is still required before this offer can be shown.",
+            "offer_language_safety_passed": True,
+            "offer_language_safety_result": {},
+            "compliance_check_passed": True,
+            "owner_approval_recorded": False,
+            "visibility_status": "blocked",
+            "blocked_reasons": ["owner_approval_not_recorded"],
+            "draft_only": True,
+            "contract_execution_allowed": False,
+            "live_negotiation_automation_allowed": False,
+            "legal_advice_provided": False,
+            "buyer_data_exposed": False,
+            "internal_profit_logic_exposed": False,
+        },
+        {
+            "id": "seller-offer-003",
+            "lead_id": "lead-005",
+            "deal_id": "deal-005",
+            "offer_packet_id": "packet-003",
+            "contract_control_id": "contract-003",
+            "portal_visibility_enabled": True,
+            "offer_status": "review_blocked",
+            "offer_amount": 220000,
+            "closing_timeline_estimate": "21-30 days after review clears",
+            "inspection_access_next_step": "Access is held until review clears.",
+            "title_company_review_status": "Review required before seller-facing visibility.",
+            "document_checklist": SELLER_PORTAL_DOCUMENT_CHECKLIST
+            + ["authority documentation placeholder"],
+            "operator_contact_placeholder": "Owner/operator contact placeholder.",
+            "offer_language": "This offer summary remains blocked until review is complete.",
+            "offer_language_safety_passed": True,
+            "offer_language_safety_result": {},
+            "compliance_check_passed": False,
+            "owner_approval_recorded": True,
+            "visibility_status": "blocked",
+            "blocked_reasons": ["compliance_check_not_passed"],
+            "draft_only": True,
+            "contract_execution_allowed": False,
+            "live_negotiation_automation_allowed": False,
+            "legal_advice_provided": False,
+            "buyer_data_exposed": False,
+            "internal_profit_logic_exposed": False,
+        },
+        {
+            "id": "seller-offer-004",
+            "lead_id": "lead-007",
+            "deal_id": "deal-007",
+            "offer_packet_id": "packet-005",
+            "contract_control_id": "contract-005",
+            "portal_visibility_enabled": False,
+            "offer_status": "draft_only",
+            "offer_amount": 75000,
+            "closing_timeline_estimate": "10-14 days after gate review",
+            "inspection_access_next_step": "Access notes held internally.",
+            "title_company_review_status": "Review pending.",
+            "document_checklist": SELLER_PORTAL_DOCUMENT_CHECKLIST,
+            "operator_contact_placeholder": "Owner/operator contact placeholder.",
+            "offer_language": "Draft-only offer summary is not visible yet.",
+            "offer_language_safety_passed": True,
+            "offer_language_safety_result": {},
+            "compliance_check_passed": True,
+            "owner_approval_recorded": True,
+            "visibility_status": "draft",
+            "blocked_reasons": ["portal_visibility_not_enabled"],
+            "draft_only": True,
+            "contract_execution_allowed": False,
+            "live_negotiation_automation_allowed": False,
+            "legal_advice_provided": False,
+            "buyer_data_exposed": False,
+            "internal_profit_logic_exposed": False,
+        },
+        {
+            "id": "seller-offer-005",
+            "lead_id": "lead-006",
+            "deal_id": "deal-006",
+            "offer_packet_id": "packet-004",
+            "contract_control_id": "contract-004",
+            "portal_visibility_enabled": True,
+            "offer_status": "blocked_safety",
+            "offer_amount": 132000,
+            "closing_timeline_estimate": "Held until safety review clears",
+            "inspection_access_next_step": "No portal action while blocked.",
+            "title_company_review_status": "Review blocked.",
+            "document_checklist": SELLER_PORTAL_DOCUMENT_CHECKLIST,
+            "operator_contact_placeholder": "Owner/operator contact placeholder.",
+            "offer_language": "You must sign now. This is your last chance and no attorney needed.",
+            "offer_language_safety_passed": False,
+            "offer_language_safety_result": {},
+            "compliance_check_passed": True,
+            "owner_approval_recorded": True,
+            "visibility_status": "blocked",
+            "blocked_reasons": ["offer_language_safety_not_passed"],
+            "draft_only": True,
+            "contract_execution_allowed": False,
+            "live_negotiation_automation_allowed": False,
+            "legal_advice_provided": False,
+            "buyer_data_exposed": False,
+            "internal_profit_logic_exposed": False,
+        },
+    ]
+
+
+def build_seller_portal_response_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "seller-response-001",
+            "seller_offer_publication_id": "seller-offer-001",
+            "response_type": "seller_portal_note",
+            "seller_portal_note": "Seller asked for a plain-language explanation of next steps.",
+            "offer_question": "",
+            "appointment_access_preference": "",
+            "document_upload_placeholder": "",
+            "response_status": "received_for_operator_review",
+            "operator_review_status": "pending_review",
+            "draft_only": True,
+            "negotiation_execution_allowed": False,
+            "contract_execution_allowed": False,
+            "automatic_acceptance_allowed": False,
+        },
+        {
+            "id": "seller-response-002",
+            "seller_offer_publication_id": "seller-offer-001",
+            "response_type": "offer_question",
+            "seller_portal_note": "",
+            "offer_question": "Can the closing timeline be closer to three weeks if access is easy?",
+            "appointment_access_preference": "",
+            "document_upload_placeholder": "",
+            "response_status": "received_for_operator_review",
+            "operator_review_status": "pending_review",
+            "draft_only": True,
+            "negotiation_execution_allowed": False,
+            "contract_execution_allowed": False,
+            "automatic_acceptance_allowed": False,
+        },
+        {
+            "id": "seller-response-003",
+            "seller_offer_publication_id": "seller-offer-001",
+            "response_type": "appointment_access_preference",
+            "seller_portal_note": "",
+            "offer_question": "",
+            "appointment_access_preference": "Weekday afternoons are easiest for access review.",
+            "document_upload_placeholder": "",
+            "response_status": "received_for_operator_review",
+            "operator_review_status": "reviewed",
+            "draft_only": True,
+            "negotiation_execution_allowed": False,
+            "contract_execution_allowed": False,
+            "automatic_acceptance_allowed": False,
+        },
+        {
+            "id": "seller-response-004",
+            "seller_offer_publication_id": "seller-offer-001",
+            "response_type": "document_upload_placeholder",
+            "seller_portal_note": "",
+            "offer_question": "",
+            "appointment_access_preference": "",
+            "document_upload_placeholder": "Seller plans to provide payoff statement placeholder after operator review.",
+            "response_status": "placeholder_only",
+            "operator_review_status": "pending_review",
+            "draft_only": True,
+            "negotiation_execution_allowed": False,
+            "contract_execution_allowed": False,
+            "automatic_acceptance_allowed": False,
+        },
+    ]
+
+
 def _draft_obj(row: dict[str, object]):
     return type("DraftSeedObj", (), row)()
 
@@ -1606,6 +1832,8 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "seller_interactions": build_seller_interaction_records(),
         "offer_packets": build_offer_packet_records(),
         "contract_controls": build_contract_control_records(),
+        "seller_offer_publications": build_seller_offer_publication_records(),
+        "seller_portal_responses": build_seller_portal_response_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
         "communication_drafts": communication_drafts,
@@ -1622,6 +1850,8 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        SellerPortalResponse,
+        SellerOfferPublication,
         CommunicationSendAttempt,
         CommunicationApproval,
         CommunicationDryRunReceipt,
@@ -1655,6 +1885,13 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(SellerInteraction(**row) for row in payload["seller_interactions"])
     session.add_all(OfferPacket(**row) for row in payload["offer_packets"])
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
+    session.add_all(
+        SellerOfferPublication(**row)
+        for row in payload["seller_offer_publications"]
+    )
+    session.add_all(
+        SellerPortalResponse(**row) for row in payload["seller_portal_responses"]
+    )
     session.add_all(TitleHandoffPacket(**row) for row in payload["title_handoff_packets"])
     session.add_all(
         AssignmentReadinessRecord(**row)
@@ -1682,6 +1919,11 @@ def seed_database(session: Session) -> dict[str, int]:
         update_contract_prep_gate(contract)
     for readiness in session.query(AssignmentReadinessRecord).all():
         update_assignment_readiness(readiness)
+    for seller_offer in session.query(SellerOfferPublication).all():
+        seller_offer.offer_language_safety_result = validate_seller_portal_language(
+            seller_offer.offer_language
+        )
+        update_seller_visibility_gate(seller_offer)
     for draft in session.query(CommunicationDraft).all():
         draft.draft_hash = communication_hash(draft.subject, draft.draft_body)
         if draft.safety_checked:

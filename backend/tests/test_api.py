@@ -34,6 +34,8 @@ def test_core_api_routes_respond():
         "/api/buyer-matches",
         "/api/buyer-portal/rules",
         "/api/buyer-portal/internal-dashboard",
+        "/api/seller-portal/rules",
+        "/api/seller-portal/internal-dashboard",
         "/api/compliance",
         "/api/daily-briefing",
     ]
@@ -46,7 +48,6 @@ def test_core_api_routes_respond():
 def test_no_public_signup_or_portal_routes_are_registered():
     paths = {route.path for route in app.routes}
     assert not any("signup" in path for path in paths)
-    assert not any("seller-portal" in path for path in paths)
     assert not any("client-portal" in path for path in paths)
 
 

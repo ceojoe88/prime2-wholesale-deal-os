@@ -29,7 +29,12 @@ import {
   offerReadyPackets,
   offerPackets,
   projectedAssignmentTotal,
+  blockedSellerVisibilityOffers,
+  sellerDocumentChecklistQueue,
   sellerInteractions,
+  sellerPortalQuestions,
+  sellerResponseQueue,
+  sellerVisibleOffers,
   staleSellerFollowUps,
   sentOrMockSentCommunicationAttempts,
   titleHandoffPackets,
@@ -128,6 +133,19 @@ export default function DashboardPage() {
           <RecordCard title="Mock-sent attempts" meta={`${sentOrMockSentCommunicationAttempts.length} placeholder sends`} right={<Pill tone="green">mock</Pill>} />
           <RecordCard title="Communication risk queue" meta={`${communicationRiskQueue.length} risky drafts`} right={<Pill tone="red">risk</Pill>} />
           <RecordCard title="Global live flag" meta="Default off; no bulk campaigns or buyer blasts." right={<Pill tone="red">off</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V6 Seller Offer Room">
+        <div className="grid-three">
+          <RecordCard title="Seller-visible offers" meta={`${sellerVisibleOffers.length} sanitized offer rooms`} right={<Pill tone="green">visible</Pill>} />
+          <RecordCard title="Seller questions" meta={`${sellerPortalQuestions.length} questions need operator review`} right={<Pill tone="gold">review</Pill>} />
+          <RecordCard title="Document checklist queue" meta={`${sellerDocumentChecklistQueue.length} offer checklists tracked`} right={<Pill>checklist</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Seller response queue" meta={`${sellerResponseQueue.length} intake records pending review`} right={<Pill tone="gold">intake</Pill>} />
+          <RecordCard title="Blocked seller visibility" meta={`${blockedSellerVisibilityOffers.length} offers blocked by gate reasons`} right={<Pill tone="red">blocked</Pill>} />
+          <RecordCard title="Negotiation automation" meta="Off; no acceptance or status change from the portal." right={<Pill tone="red">off</Pill>} />
         </div>
       </Section>
     </div>

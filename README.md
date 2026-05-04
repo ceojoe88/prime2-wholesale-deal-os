@@ -13,6 +13,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - V3 seller acquisition command center with seller interaction records, draft-only follow-up engine, and offer packet prep gate.
 - V4 contract control and title handoff prep with contract-control records, title packet placeholders, assignment readiness gates, and no legal execution or title submission.
 - V5 controlled live communication gate with draft records, safety checks, dry-run receipts, owner approvals, mock provider adapters, idempotency, and blocked-attempt audit records.
+- V6 invite-gated seller offer review room with sanitized offer status, seller visibility gates, response intake records, and no buyer/profit/internal strategy exposure.
 
 ## Safety Boundaries
 
@@ -27,6 +28,8 @@ V3 adds seller acquisition control without live outreach. Seller scripts, SMS, e
 V4 moves offer-ready opportunities into contract-control preparation only. Contract prep is blocked unless the offer packet is approved, seller accepted terms are recorded, ARV and repairs exist, buyer margin is protected, assignment spread is calculated, compliance passed, and owner approval is recorded. Title handoff packets are placeholders/checklists only; title-company submission, executable contract generation, live sending, legal advice, false assignment claims, hidden disclosure language, misrepresentation, and automatic contract status changes are blocked.
 
 V5 allows only narrow communication preparation and gated one-off attempts. Live communication is disabled by default by a global flag and per-draft live flag. A draft must pass safety checks, produce a dry-run receipt, remain unchanged after dry-run, have owner approval, have provider readiness, tie its recipient to the source record, and satisfy idempotency before any mock-send can occur. Bulk sends, campaigns, auto follow-up sequences, buyer blasts, title-company submission, legal advice, pressure, fake urgency, fake buyer claims, guaranteed close claims, unsupported claims, and hidden/deceptive assignment language are blocked.
+
+V6 adds an invite-gated seller offer review room. The operator system remains the source of truth, and seller visibility is blocked unless the offer packet is approved, compliance and owner approvals are recorded, contract-control status is valid, offer language passes safety checks, and portal visibility is explicitly enabled. Seller pages show only approved offer status, amount, property summary, timeline estimate, access next step, title review status, and document checklist. Buyer data, assignment fee logic, buyer price, spread strategy, MAO logic, motivation/temperature scores, internal notes, Wholesale Prime recommendations, compliance internals, and queues are hidden. Seller responses are draft/intake records for operator review only; no acceptance, negotiation automation, contract execution, or file transmission occurs.
 
 ## Backend
 
@@ -75,6 +78,12 @@ Useful endpoints:
 - `GET /api/buyer-portal/deals/{deal_id}` with `X-Buyer-Invite: demo-buyer-invite`
 - `POST /api/buyer-portal/deals/{deal_id}/interest` with `X-Buyer-Invite: demo-buyer-invite`
 - `GET /api/buyer-portal/internal-dashboard`
+- `GET /api/seller-portal/rules`
+- `GET /api/seller-portal/offer` with `X-Seller-Invite: demo-seller-invite`
+- `GET /api/seller-portal/offers/{offer_id}` with `X-Seller-Invite: demo-seller-invite`
+- `POST /api/seller-portal/responses` with `X-Seller-Invite: demo-seller-invite`
+- `POST /api/seller-portal/offers/{offer_id}/accept` returns a blocked response in V6
+- `GET /api/seller-portal/internal-dashboard`
 - `GET /api/compliance`
 - `POST /api/actions/validate`
 - `POST /api/data-import/leads/preview`
@@ -122,6 +131,15 @@ Communication V5 routes:
 - [http://localhost:3000/dashboard/communications/dry-runs](http://localhost:3000/dashboard/communications/dry-runs)
 - [http://localhost:3000/dashboard/communications/attempts](http://localhost:3000/dashboard/communications/attempts)
 - [http://localhost:3000/dashboard/communications/approvals](http://localhost:3000/dashboard/communications/approvals)
+
+Seller portal V6 routes:
+
+- [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)
+- [http://localhost:3000/seller-portal/offer](http://localhost:3000/seller-portal/offer)
+- [http://localhost:3000/seller-portal/property](http://localhost:3000/seller-portal/property)
+- [http://localhost:3000/seller-portal/timeline](http://localhost:3000/seller-portal/timeline)
+- [http://localhost:3000/seller-portal/documents](http://localhost:3000/seller-portal/documents)
+- [http://localhost:3000/seller-portal/messages](http://localhost:3000/seller-portal/messages)
 
 ## Validation
 

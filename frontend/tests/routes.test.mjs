@@ -48,7 +48,13 @@ const requiredRouteFiles = [
   "src/app/buyer-portal/deals/page.tsx",
   "src/app/buyer-portal/deals/[dealId]/page.tsx",
   "src/app/buyer-portal/profile/page.tsx",
-  "src/app/buyer-portal/watchlist/page.tsx"
+  "src/app/buyer-portal/watchlist/page.tsx",
+  "src/app/seller-portal/page.tsx",
+  "src/app/seller-portal/offer/page.tsx",
+  "src/app/seller-portal/property/page.tsx",
+  "src/app/seller-portal/timeline/page.tsx",
+  "src/app/seller-portal/documents/page.tsx",
+  "src/app/seller-portal/messages/page.tsx"
 ];
 
 function walk(dir) {
@@ -68,11 +74,10 @@ test("dashboard route files exist and render a page component", () => {
   }
 });
 
-test("operator-only frontend has no public signup or seller/client portals", () => {
+test("operator-only frontend has no public signup or client portals", () => {
   const files = walk(join(root, "src", "app")).filter((file) => file.endsWith(".tsx"));
   const joined = files.map((file) => readFileSync(file, "utf8")).join("\n").toLowerCase();
   assert.equal(joined.includes("/signup"), false);
-  assert.equal(joined.includes("seller portal"), false);
   assert.equal(joined.includes("client portal"), false);
 });
 
@@ -93,4 +98,26 @@ test("buyer portal route files avoid internal seller and profit logic labels", (
     assert.equal(joined.includes(forbidden), false, forbidden);
   }
   assert.equal(joined.includes("contract executionallowed: true"), false);
+});
+
+test("seller portal route files avoid buyer data and internal profit logic labels", () => {
+  const files = walk(join(root, "src", "app", "seller-portal")).filter((file) => file.endsWith(".tsx"));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n").toLowerCase();
+  for (const forbidden of [
+    "buyer list",
+    "buyer price",
+    "assignment fee",
+    "internal spread",
+    "mao",
+    "motivation score",
+    "seller temperature",
+    "wholesale prime",
+    "compliance risk",
+    "manager queue",
+    "agent queue"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+  assert.equal(joined.includes("contractexecutionallowed: true"), false);
+  assert.equal(joined.includes("automaticnegotiationallowed: true"), false);
 });

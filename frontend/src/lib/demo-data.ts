@@ -324,6 +324,70 @@ export type CommunicationSendAttempt = {
   bulkSendDetected: boolean;
 };
 
+export type SellerOfferPublication = {
+  id: string;
+  leadId: string;
+  dealId: string;
+  offerPacketId: string;
+  contractControlId: string;
+  portalVisibilityEnabled: boolean;
+  offerStatus: string;
+  offerAmount: number | null;
+  closingTimelineEstimate: string;
+  inspectionAccessNextStep: string;
+  titleCompanyReviewStatus: string;
+  documentChecklist: string[];
+  operatorContactPlaceholder: string;
+  offerLanguage: string;
+  offerLanguageSafetyPassed: boolean;
+  complianceCheckPassed: boolean;
+  ownerApprovalRecorded: boolean;
+  visibilityStatus: string;
+  blockedReasons: string[];
+  draftOnly: true;
+  contractExecutionAllowed: false;
+  liveNegotiationAutomationAllowed: false;
+  legalAdviceProvided: false;
+  buyerDataExposed: false;
+  internalProfitLogicExposed: false;
+};
+
+export type SellerPortalOffer = {
+  offerId: string;
+  propertyAddressSummary: string;
+  offerStatus: string;
+  offerAmount: number | null;
+  closingTimelineEstimate: string;
+  inspectionAccessNextStep: string;
+  titleCompanyReviewStatus: string;
+  documentChecklist: string[];
+  ownerOperatorContactPlaceholder: string;
+  sellerQuestionsNotesAction: {
+    type: "draft_intake_only";
+    operatorReviewRequired: true;
+    automaticNegotiationAllowed: false;
+    offerAcceptanceExecutionAllowed: false;
+    documentUploadIsPlaceholder: true;
+  };
+  portalVisibilityStatus: string;
+};
+
+export type SellerPortalResponse = {
+  id: string;
+  sellerOfferPublicationId: string;
+  responseType: "seller_portal_note" | "offer_question" | "appointment_access_preference" | "document_upload_placeholder";
+  sellerPortalNote: string;
+  offerQuestion: string;
+  appointmentAccessPreference: string;
+  documentUploadPlaceholder: string;
+  responseStatus: string;
+  operatorReviewStatus: string;
+  draftOnly: true;
+  negotiationExecutionAllowed: false;
+  contractExecutionAllowed: false;
+  automaticAcceptanceAllowed: false;
+};
+
 export const divisions: Division[] = [
   {
     id: "market-intelligence",
@@ -700,6 +764,29 @@ export const communicationSendAttempts: CommunicationSendAttempt[] = [
   { id: "comm-attempt-002", draftId: "comm-draft-005", dryRunReceiptId: "dryrun-003", recipient: "seller-phone-placeholder-lead-007", channel: "sms", providerMode: "mock/dry_run", attemptStatus: "blocked", blockedReasons: ["safety_not_passed"], idempotencyKey: "idem-dryrun-003", providerCalled: false, mockSent: false, liveSendRequested: true, bulkSendDetected: false }
 ];
 
+const sellerDocumentChecklist = [
+  "property details summary reviewed",
+  "offer amount summary reviewed",
+  "access preference placeholder",
+  "title company review reminder",
+  "seller questions intake available"
+];
+
+export const sellerOfferPublications: SellerOfferPublication[] = [
+  { id: "seller-offer-001", leadId: "lead-001", dealId: "deal-001", offerPacketId: "packet-001", contractControlId: "contract-001", portalVisibilityEnabled: true, offerStatus: "owner_approved_offer_ready", offerAmount: 151000, closingTimelineEstimate: "14-21 days after owner-approved next steps", inspectionAccessNextStep: "Share preferred access windows for operator review.", titleCompanyReviewStatus: "Title/attorney review reminder active; no submission from portal.", documentChecklist: sellerDocumentChecklist, operatorContactPlaceholder: "Owner/operator contact placeholder for questions.", offerLanguage: "The offer summary is ready for review. There is no pressure to decide in the portal, and questions are routed for operator review.", offerLanguageSafetyPassed: true, complianceCheckPassed: true, ownerApprovalRecorded: true, visibilityStatus: "visible", blockedReasons: [], draftOnly: true, contractExecutionAllowed: false, liveNegotiationAutomationAllowed: false, legalAdviceProvided: false, buyerDataExposed: false, internalProfitLogicExposed: false },
+  { id: "seller-offer-002", leadId: "lead-003", dealId: "deal-003", offerPacketId: "packet-002", contractControlId: "contract-002", portalVisibilityEnabled: true, offerStatus: "owner_review_required", offerAmount: 180000, closingTimelineEstimate: "30 days after owner approval", inspectionAccessNextStep: "Access options pending owner approval.", titleCompanyReviewStatus: "Title review pending owner approval.", documentChecklist: sellerDocumentChecklist, operatorContactPlaceholder: "Owner/operator contact placeholder.", offerLanguage: "Owner review is still required before this offer can be shown.", offerLanguageSafetyPassed: true, complianceCheckPassed: true, ownerApprovalRecorded: false, visibilityStatus: "blocked", blockedReasons: ["owner_approval_not_recorded"], draftOnly: true, contractExecutionAllowed: false, liveNegotiationAutomationAllowed: false, legalAdviceProvided: false, buyerDataExposed: false, internalProfitLogicExposed: false },
+  { id: "seller-offer-003", leadId: "lead-005", dealId: "deal-005", offerPacketId: "packet-003", contractControlId: "contract-003", portalVisibilityEnabled: true, offerStatus: "review_blocked", offerAmount: 220000, closingTimelineEstimate: "21-30 days after review clears", inspectionAccessNextStep: "Access is held until review clears.", titleCompanyReviewStatus: "Review required before seller-facing visibility.", documentChecklist: [...sellerDocumentChecklist, "authority documentation placeholder"], operatorContactPlaceholder: "Owner/operator contact placeholder.", offerLanguage: "This offer summary remains blocked until review is complete.", offerLanguageSafetyPassed: true, complianceCheckPassed: false, ownerApprovalRecorded: true, visibilityStatus: "blocked", blockedReasons: ["compliance_check_not_passed"], draftOnly: true, contractExecutionAllowed: false, liveNegotiationAutomationAllowed: false, legalAdviceProvided: false, buyerDataExposed: false, internalProfitLogicExposed: false },
+  { id: "seller-offer-004", leadId: "lead-007", dealId: "deal-007", offerPacketId: "packet-005", contractControlId: "contract-005", portalVisibilityEnabled: false, offerStatus: "draft_only", offerAmount: 75000, closingTimelineEstimate: "10-14 days after gate review", inspectionAccessNextStep: "Access notes held internally.", titleCompanyReviewStatus: "Review pending.", documentChecklist: sellerDocumentChecklist, operatorContactPlaceholder: "Owner/operator contact placeholder.", offerLanguage: "Draft-only offer summary is not visible yet.", offerLanguageSafetyPassed: true, complianceCheckPassed: true, ownerApprovalRecorded: true, visibilityStatus: "draft", blockedReasons: ["portal_visibility_not_enabled"], draftOnly: true, contractExecutionAllowed: false, liveNegotiationAutomationAllowed: false, legalAdviceProvided: false, buyerDataExposed: false, internalProfitLogicExposed: false },
+  { id: "seller-offer-005", leadId: "lead-006", dealId: "deal-006", offerPacketId: "packet-004", contractControlId: "contract-004", portalVisibilityEnabled: true, offerStatus: "blocked_safety", offerAmount: 132000, closingTimelineEstimate: "Held until safety review clears", inspectionAccessNextStep: "No portal action while blocked.", titleCompanyReviewStatus: "Review blocked.", documentChecklist: sellerDocumentChecklist, operatorContactPlaceholder: "Owner/operator contact placeholder.", offerLanguage: "You must sign now. This is your last chance and no attorney needed.", offerLanguageSafetyPassed: false, complianceCheckPassed: true, ownerApprovalRecorded: true, visibilityStatus: "blocked", blockedReasons: ["offer_language_safety_not_passed"], draftOnly: true, contractExecutionAllowed: false, liveNegotiationAutomationAllowed: false, legalAdviceProvided: false, buyerDataExposed: false, internalProfitLogicExposed: false }
+];
+
+export const sellerPortalResponses: SellerPortalResponse[] = [
+  { id: "seller-response-001", sellerOfferPublicationId: "seller-offer-001", responseType: "seller_portal_note", sellerPortalNote: "Seller asked for a plain-language explanation of next steps.", offerQuestion: "", appointmentAccessPreference: "", documentUploadPlaceholder: "", responseStatus: "received_for_operator_review", operatorReviewStatus: "pending_review", draftOnly: true, negotiationExecutionAllowed: false, contractExecutionAllowed: false, automaticAcceptanceAllowed: false },
+  { id: "seller-response-002", sellerOfferPublicationId: "seller-offer-001", responseType: "offer_question", sellerPortalNote: "", offerQuestion: "Can the closing timeline be closer to three weeks if access is easy?", appointmentAccessPreference: "", documentUploadPlaceholder: "", responseStatus: "received_for_operator_review", operatorReviewStatus: "pending_review", draftOnly: true, negotiationExecutionAllowed: false, contractExecutionAllowed: false, automaticAcceptanceAllowed: false },
+  { id: "seller-response-003", sellerOfferPublicationId: "seller-offer-001", responseType: "appointment_access_preference", sellerPortalNote: "", offerQuestion: "", appointmentAccessPreference: "Weekday afternoons are easiest for access review.", documentUploadPlaceholder: "", responseStatus: "received_for_operator_review", operatorReviewStatus: "reviewed", draftOnly: true, negotiationExecutionAllowed: false, contractExecutionAllowed: false, automaticAcceptanceAllowed: false },
+  { id: "seller-response-004", sellerOfferPublicationId: "seller-offer-001", responseType: "document_upload_placeholder", sellerPortalNote: "", offerQuestion: "", appointmentAccessPreference: "", documentUploadPlaceholder: "Seller plans to provide payoff statement placeholder after operator review.", responseStatus: "placeholder_only", operatorReviewStatus: "pending_review", draftOnly: true, negotiationExecutionAllowed: false, contractExecutionAllowed: false, automaticAcceptanceAllowed: false }
+];
+
 export const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -772,6 +859,58 @@ export function getCommunicationDryRun(receiptId: string) {
 
 export function getCommunicationApproval(approvalId: string) {
   return communicationApprovals.find((approval) => approval.id === approvalId);
+}
+
+export function getSellerOfferPublication(offerId: string) {
+  return sellerOfferPublications.find((offer) => offer.id === offerId);
+}
+
+export function sellerOfferBlockReasons(publication: SellerOfferPublication) {
+  const packet = getOfferPacket(publication.offerPacketId);
+  const contract = getContractControl(publication.contractControlId);
+  const reasons: string[] = [];
+  if (!publication.portalVisibilityEnabled) reasons.push("portal_visibility_not_enabled");
+  if (!packet?.packetPrepAllowed || packet.approvalStatus !== "owner_approved_draft_ready") reasons.push("offer_packet_not_approved");
+  if (!publication.complianceCheckPassed || !packet?.complianceGuardPassed || contract?.complianceReviewStatus !== "approved") reasons.push("compliance_check_not_passed");
+  if (!publication.ownerApprovalRecorded || !packet?.ownerApprovalRecorded || contract?.ownerApprovalStatus !== "approved") reasons.push("owner_approval_not_recorded");
+  if (!contract?.contractPrepAllowed || !["prep_review", "draft_prep_ready", "controlled_review", "seller_terms_recorded"].includes(contract?.contractStatus ?? "")) reasons.push("contract_control_status_not_valid");
+  if (!publication.offerLanguageSafetyPassed) reasons.push("offer_language_safety_not_passed");
+  if (publication.contractExecutionAllowed) reasons.push("contract_execution_enabled");
+  if (publication.liveNegotiationAutomationAllowed) reasons.push("live_negotiation_automation_enabled");
+  if (publication.legalAdviceProvided) reasons.push("legal_advice_flagged");
+  if (publication.buyerDataExposed) reasons.push("buyer_data_exposed");
+  if (publication.internalProfitLogicExposed) reasons.push("internal_profit_logic_exposed");
+  return [...new Set(reasons)].sort();
+}
+
+export function isSellerVisible(publication: SellerOfferPublication) {
+  return sellerOfferBlockReasons(publication).length === 0;
+}
+
+export function sanitizeSellerOffer(publication: SellerOfferPublication): SellerPortalOffer {
+  const lead = getLead(publication.leadId);
+  if (!lead || !isSellerVisible(publication)) {
+    throw new Error("Offer is not seller-visible.");
+  }
+  return {
+    offerId: publication.id,
+    propertyAddressSummary: `${lead.address}, ${lead.city}, ${lead.state} ${lead.zipCode}`,
+    offerStatus: publication.offerStatus,
+    offerAmount: publication.offerAmount,
+    closingTimelineEstimate: publication.closingTimelineEstimate,
+    inspectionAccessNextStep: publication.inspectionAccessNextStep,
+    titleCompanyReviewStatus: publication.titleCompanyReviewStatus,
+    documentChecklist: publication.documentChecklist,
+    ownerOperatorContactPlaceholder: publication.operatorContactPlaceholder,
+    sellerQuestionsNotesAction: {
+      type: "draft_intake_only",
+      operatorReviewRequired: true,
+      automaticNegotiationAllowed: false,
+      offerAcceptanceExecutionAllowed: false,
+      documentUploadIsPlaceholder: true
+    },
+    portalVisibilityStatus: "visible"
+  };
 }
 
 export function sellerDrafts(lead: Lead, interaction?: SellerInteraction) {
@@ -894,4 +1033,23 @@ export const sentOrMockSentCommunicationAttempts = communicationSendAttempts.fil
 );
 export const communicationRiskQueue = communicationDrafts.filter(
   (draft) => draft.riskStatus === "blocked" || draft.blockedReasons.length > 0
+);
+export const sellerVisibleOffers = sellerOfferPublications
+  .filter(isSellerVisible)
+  .map((publication) => sanitizeSellerOffer(publication));
+export const blockedSellerVisibilityOffers = sellerOfferPublications
+  .filter((publication) => !isSellerVisible(publication))
+  .map((publication) => ({
+    offerId: publication.id,
+    dealId: publication.dealId,
+    blockedReasons: sellerOfferBlockReasons(publication)
+  }));
+export const sellerPortalQuestions = sellerPortalResponses.filter(
+  (response) => response.responseType === "offer_question"
+);
+export const sellerDocumentChecklistQueue = sellerOfferPublications.filter(
+  (publication) => publication.documentChecklist.length > 0
+);
+export const sellerResponseQueue = sellerPortalResponses.filter(
+  (response) => response.operatorReviewStatus !== "reviewed"
 );

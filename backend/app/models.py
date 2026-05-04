@@ -82,6 +82,9 @@ class Lead(TimestampMixin, Base):
     deals: Mapped[list["Deal"]] = relationship(back_populates="lead")
     seller_interactions: Mapped[list["SellerInteraction"]] = relationship(back_populates="lead")
     contract_controls: Mapped[list["ContractControl"]] = relationship(back_populates="lead")
+    seller_offer_publications: Mapped[list["SellerOfferPublication"]] = relationship(
+        back_populates="lead"
+    )
 
 
 class Deal(TimestampMixin, Base):
@@ -128,6 +131,9 @@ class Deal(TimestampMixin, Base):
     contract_controls: Mapped[list["ContractControl"]] = relationship(back_populates="deal")
     title_handoff_packets: Mapped[list["TitleHandoffPacket"]] = relationship(back_populates="deal")
     assignment_readiness_records: Mapped[list["AssignmentReadinessRecord"]] = relationship(
+        back_populates="deal"
+    )
+    seller_offer_publications: Mapped[list["SellerOfferPublication"]] = relationship(
         back_populates="deal"
     )
 
@@ -287,6 +293,9 @@ class OfferPacket(TimestampMixin, Base):
 
     deal: Mapped[Deal] = relationship(back_populates="offer_packets")
     contract_controls: Mapped[list["ContractControl"]] = relationship(back_populates="offer_packet")
+    seller_offer_publications: Mapped[list["SellerOfferPublication"]] = relationship(
+        back_populates="offer_packet"
+    )
 
 
 class ContractControl(TimestampMixin, Base):
@@ -322,6 +331,79 @@ class ContractControl(TimestampMixin, Base):
     )
     assignment_readiness_records: Mapped[list["AssignmentReadinessRecord"]] = relationship(
         back_populates="contract_control"
+    )
+    seller_offer_publications: Mapped[list["SellerOfferPublication"]] = relationship(
+        back_populates="contract_control"
+    )
+
+
+class SellerOfferPublication(TimestampMixin, Base):
+    __tablename__ = "seller_offer_publications"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("leads.id"), nullable=False)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    offer_packet_id: Mapped[str] = mapped_column(ForeignKey("offer_packets.id"), nullable=False)
+    contract_control_id: Mapped[str] = mapped_column(
+        ForeignKey("contract_controls.id"), nullable=False
+    )
+    portal_visibility_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    offer_status: Mapped[str] = mapped_column(String(80), default="owner_review")
+    offer_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    closing_timeline_estimate: Mapped[str] = mapped_column(String(120), default="")
+    inspection_access_next_step: Mapped[str] = mapped_column(Text, default="")
+    title_company_review_status: Mapped[str] = mapped_column(String(120), default="")
+    document_checklist: Mapped[list[str]] = mapped_column(JSON, default=list)
+    operator_contact_placeholder: Mapped[str] = mapped_column(Text, default="")
+    offer_language: Mapped[str] = mapped_column(Text, default="")
+    offer_language_safety_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    offer_language_safety_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    compliance_check_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    visibility_status: Mapped[str] = mapped_column(String(80), default="draft")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    visible_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_negotiation_automation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_provided: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_data_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+    internal_profit_logic_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    lead: Mapped[Lead] = relationship(back_populates="seller_offer_publications")
+    deal: Mapped[Deal] = relationship(back_populates="seller_offer_publications")
+    offer_packet: Mapped[OfferPacket] = relationship(
+        back_populates="seller_offer_publications"
+    )
+    contract_control: Mapped[ContractControl] = relationship(
+        back_populates="seller_offer_publications"
+    )
+    seller_responses: Mapped[list["SellerPortalResponse"]] = relationship(
+        back_populates="seller_offer_publication"
+    )
+
+
+class SellerPortalResponse(TimestampMixin, Base):
+    __tablename__ = "seller_portal_responses"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    seller_offer_publication_id: Mapped[str] = mapped_column(
+        ForeignKey("seller_offer_publications.id"), nullable=False
+    )
+    response_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    seller_portal_note: Mapped[str] = mapped_column(Text, default="")
+    offer_question: Mapped[str] = mapped_column(Text, default="")
+    appointment_access_preference: Mapped[str] = mapped_column(Text, default="")
+    document_upload_placeholder: Mapped[str] = mapped_column(Text, default="")
+    response_status: Mapped[str] = mapped_column(String(80), default="received")
+    operator_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    negotiation_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    automatic_acceptance_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    seller_offer_publication: Mapped[SellerOfferPublication] = relationship(
+        back_populates="seller_responses"
     )
 
 

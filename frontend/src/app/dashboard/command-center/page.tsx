@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
-import { assignmentReadyRecords, blockedCommunicationAttempts, buyerPofGaps, communicationDraftsNeedingSafety, communicationDryRunsNeedingApproval, complianceRecords, contractPrepBlocked, deals, formatCurrency, hotDeals, hotSellerLeads, leads, offerPackets, sellerInteractions, staleSellerFollowUps, titleHandoffPackets } from "@/lib/demo-data";
+import { assignmentReadyRecords, blockedCommunicationAttempts, blockedSellerVisibilityOffers, buyerPofGaps, communicationDraftsNeedingSafety, communicationDryRunsNeedingApproval, complianceRecords, contractPrepBlocked, deals, formatCurrency, hotDeals, hotSellerLeads, leads, offerPackets, sellerDocumentChecklistQueue, sellerInteractions, sellerPortalQuestions, sellerResponseQueue, sellerVisibleOffers, staleSellerFollowUps, titleHandoffPackets } from "@/lib/demo-data";
 import { buyerInterests, buyerPortalBlockedDeals, buyerVisibleDeals } from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
@@ -41,6 +41,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Blocked comms" value={String(blockedCommunicationAttempts.length)} detail="No provider calls" />
         <MetricCard label="Live flag" value="off" detail="Default controlled mode" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Seller-visible offers" value={String(sellerVisibleOffers.length)} detail="Sanitized offer rooms" />
+        <MetricCard label="Seller questions" value={String(sellerPortalQuestions.length)} detail="Operator review" />
+        <MetricCard label="Seller docs" value={String(sellerDocumentChecklistQueue.length)} detail="Checklist queue" />
+        <MetricCard label="Seller gate blocks" value={String(blockedSellerVisibilityOffers.length)} detail="Visibility reasons" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -59,6 +65,8 @@ export default function CommandCenterPage() {
               ["high", "Clear communication safety queue", `${communicationDraftsNeedingSafety.length} drafts need safety checks before dry-run`],
               ["high", "Review communication approvals", `${communicationDryRunsNeedingApproval.length} dry-run receipts need owner approval`],
               ["normal", "Inspect blocked communication attempts", `${blockedCommunicationAttempts.length} blocked attempts were audited without provider calls`],
+              ["high", "Review seller offer room questions", `${sellerResponseQueue.length} seller intake records need operator review`],
+              ["high", "Clear seller visibility blocks", `${blockedSellerVisibilityOffers.length} seller offers blocked by approval, review, or safety gates`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

@@ -43,6 +43,16 @@ from app.domain.seller_acquisition import (
     update_offer_packet_gate,
     validate_seller_language,
 )
+from app.domain.seller_portal import (
+    response_content,
+    sanitize_seller_offer,
+    seller_portal_dashboard,
+    seller_portal_rules,
+    seller_response_is_review_only,
+    seller_visibility_gate,
+    update_seller_visibility_gate,
+    validate_seller_portal_language,
+)
 from app.models import (
     Agent,
     AssignmentReadinessRecord,
@@ -61,6 +71,8 @@ from app.models import (
     Lead,
     OfferPacket,
     SellerInteraction,
+    SellerOfferPublication,
+    SellerPortalResponse,
     TitleHandoffPacket,
 )
 from app.serializers import model_to_dict
@@ -96,6 +108,15 @@ class CommunicationSendRequest(BaseModel):
     recipients: list[str] | None = None
 
 
+class SellerPortalResponseRequest(BaseModel):
+    offer_id: str
+    response_type: str = "seller_portal_note"
+    seller_portal_note: str = ""
+    offer_question: str = ""
+    appointment_access_preference: str = ""
+    document_upload_placeholder: str = ""
+
+
 def all_records(session: Session, model) -> list[dict]:
     return [model_to_dict(row) for row in session.query(model).all()]
 
@@ -112,11 +133,17 @@ def require_buyer_invite(x_buyer_invite: str | None = Header(default=None)) -> N
         raise HTTPException(status_code=403, detail="Buyer portal invite is required")
 
 
+def require_seller_invite(x_seller_invite: str | None = Header(default=None)) -> None:
+    if x_seller_invite != "demo-seller-invite":
+        raise HTTPException(status_code=403, detail="Seller portal invite is required")
+
+
 @router.get("/system/rules")
 def get_system_rules() -> dict[str, object]:
     return {
         **system_rules(),
         "buyer_portal": buyer_portal_rules(),
+        "seller_portal": seller_portal_rules(),
         "app_name": settings.app_name,
         "overseer": settings.overseer_name,
         "target_assignment_fee": settings.target_assignment_fee,
@@ -874,6 +901,180 @@ def buyer_portal_internal_dashboard(
         ],
         "deals_blocked_from_buyer_portal": blocked_deals,
     }
+
+
+@router.get("/seller-portal/rules")
+def seller_portal_policy() -> dict[str, object]:
+    return seller_portal_rules()
+
+
+@router.get("/seller-portal/offer")
+def seller_portal_offer(
+    offer_id: str = "seller-offer-001",
+    _: None = Depends(require_seller_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    publication = session.get(SellerOfferPublication, offer_id)
+    if publication is None:
+        raise HTTPException(status_code=404, detail="Offer is not available in seller portal")
+    update_seller_visibility_gate(publication)
+    session.commit()
+    if not seller_visibility_gate(publication)["can_show"]:
+        raise HTTPException(status_code=404, detail="Offer is not available in seller portal")
+    return sanitize_seller_offer(publication)
+
+
+@router.get("/seller-portal/offers/{offer_id}")
+def seller_portal_offer_detail(
+    offer_id: str,
+    _: None = Depends(require_seller_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    publication = session.get(SellerOfferPublication, offer_id)
+    if publication is None:
+        raise HTTPException(status_code=404, detail="Offer is not available in seller portal")
+    update_seller_visibility_gate(publication)
+    session.commit()
+    if not seller_visibility_gate(publication)["can_show"]:
+        raise HTTPException(status_code=404, detail="Offer is not available in seller portal")
+    return sanitize_seller_offer(publication)
+
+
+@router.get("/seller-portal/property")
+def seller_portal_property(
+    offer_id: str = "seller-offer-001",
+    _: None = Depends(require_seller_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    offer = seller_portal_offer(offer_id, _, session)
+    return {
+        "property_address_summary": offer["property_address_summary"],
+        "inspection_access_next_step": offer["inspection_access_next_step"],
+        "seller_questions_notes_action": offer["seller_questions_notes_action"],
+    }
+
+
+@router.get("/seller-portal/timeline")
+def seller_portal_timeline(
+    offer_id: str = "seller-offer-001",
+    _: None = Depends(require_seller_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    offer = seller_portal_offer(offer_id, _, session)
+    return {
+        "offer_status": offer["offer_status"],
+        "closing_timeline_estimate": offer["closing_timeline_estimate"],
+        "title_company_review_status": offer["title_company_review_status"],
+    }
+
+
+@router.get("/seller-portal/documents")
+def seller_portal_documents(
+    offer_id: str = "seller-offer-001",
+    _: None = Depends(require_seller_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    offer = seller_portal_offer(offer_id, _, session)
+    return {
+        "document_checklist": offer["document_checklist"],
+        "seller_questions_notes_action": offer["seller_questions_notes_action"],
+    }
+
+
+@router.get("/seller-portal/messages")
+def seller_portal_messages(
+    _: None = Depends(require_seller_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    responses = session.query(SellerPortalResponse).all()
+    return {
+        "responses": [model_to_dict(response) for response in responses],
+        "draft_intake_only": True,
+        "automatic_negotiation_allowed": False,
+        "contract_execution_allowed": False,
+    }
+
+
+@router.post("/seller-portal/responses")
+def record_seller_portal_response(
+    payload: SellerPortalResponseRequest,
+    _: None = Depends(require_seller_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    publication = session.get(SellerOfferPublication, payload.offer_id)
+    if publication is None:
+        raise HTTPException(status_code=404, detail="Offer is not available in seller portal")
+    update_seller_visibility_gate(publication)
+    if not seller_visibility_gate(publication)["can_show"]:
+        raise HTTPException(status_code=404, detail="Offer is not available in seller portal")
+    if payload.response_type not in {
+        "seller_portal_note",
+        "offer_question",
+        "appointment_access_preference",
+        "document_upload_placeholder",
+    }:
+        raise HTTPException(status_code=400, detail="Unsupported seller response type")
+    language = validate_seller_portal_language(response_content(payload.model_dump()))
+    if not language["allowed"]:
+        raise HTTPException(status_code=400, detail=language)
+
+    count = session.query(SellerPortalResponse).count() + 1
+    response = SellerPortalResponse(
+        id=f"seller-response-{count:03d}",
+        seller_offer_publication_id=publication.id,
+        response_type=payload.response_type,
+        seller_portal_note=payload.seller_portal_note,
+        offer_question=payload.offer_question,
+        appointment_access_preference=payload.appointment_access_preference,
+        document_upload_placeholder=payload.document_upload_placeholder,
+        response_status="received_for_operator_review",
+        operator_review_status="pending_review",
+        draft_only=True,
+        negotiation_execution_allowed=False,
+        contract_execution_allowed=False,
+        automatic_acceptance_allowed=False,
+    )
+    session.add(response)
+    session.commit()
+    session.refresh(response)
+    return {
+        **model_to_dict(response),
+        "review_only": seller_response_is_review_only(response),
+        "automatic_negotiation_allowed": False,
+        "contract_execution_allowed": False,
+        "automatic_acceptance_allowed": False,
+    }
+
+
+@router.post("/seller-portal/offers/{offer_id}/accept")
+def seller_portal_acceptance_blocked(
+    offer_id: str,
+    _: None = Depends(require_seller_invite),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    publication = session.get(SellerOfferPublication, offer_id)
+    if publication is None:
+        raise HTTPException(status_code=404, detail="Offer is not available in seller portal")
+    raise HTTPException(
+        status_code=400,
+        detail={
+            "allowed": False,
+            "reason": "Seller portal responses are intake-only; no acceptance, negotiation automation, or contract execution is available.",
+            "offer_id": publication.id,
+            "automatic_negotiation_allowed": False,
+            "contract_execution_allowed": False,
+            "automatic_acceptance_allowed": False,
+        },
+    )
+
+
+@router.get("/seller-portal/internal-dashboard")
+def seller_portal_internal_dashboard(
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    dashboard = seller_portal_dashboard(session)
+    session.commit()
+    return dashboard
 
 
 @router.get("/compliance")

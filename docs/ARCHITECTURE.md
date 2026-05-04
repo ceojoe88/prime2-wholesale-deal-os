@@ -2,7 +2,7 @@
 
 ## System Posture
 
-The app is a private, single-owner command center. It intentionally has no public signup, no team accounts, no seller portal, no client portal, and no live outreach execution. The owner is the only final approver for real-world action.
+The app is a private, single-owner command center. It intentionally has no public signup, no team accounts, no public portals, no client portal, and no live outreach execution. The owner is the only final approver for real-world action.
 
 Wholesale Prime is the executive overseer. It can recommend, route, summarize, escalate, and block unsafe action. It cannot send messages, contact buyers or sellers, execute contracts, provide legal advice, or make guaranteed profit claims.
 
@@ -14,6 +14,8 @@ V4 adds contract control and title handoff preparation. It turns approved offer 
 
 V5 adds a controlled communication gate. It can prepare communication drafts and mock dry-runs, but any live-send path is disabled by default and must pass safety, dry-run, unchanged-draft, owner approval, provider readiness, recipient source tie, one-recipient, and idempotency gates. Bulk campaigns, buyer blasts, auto follow-up sequences, and title-company submission remain blocked.
 
+V6 adds a controlled seller offer review room. The private operator system remains the source of truth, and seller-facing visibility is invite-gated, explicitly enabled per offer, sanitized, and blocked unless offer packet, compliance, owner approval, contract-control status, and language-safety gates pass. Seller responses are intake-only for operator review; there is no acceptance execution, negotiation automation, contract execution, file transmission, legal advice, buyer data exposure, or internal profit/spread exposure.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -24,6 +26,7 @@ V5 adds a controlled communication gate. It can prepare communication drafts and
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
+- `app/domain/seller_portal.py`: V6 seller visibility gate, sanitized offer-room projection, response intake guard, forbidden-field leak guard, and seller portal policy.
 - `app/domain/rules.py`: private-mode rules and v1 action validation.
 - `app/domain/compliance.py`: purchase, assignment, title, seller disclosure, buyer disclosure, and state-review checklists.
 - `app/domain/imports.py`: CSV-ready lead import preview with accepted source categories.
@@ -68,6 +71,11 @@ erDiagram
   COMMUNICATION_DRAFT ||--o{ COMMUNICATION_DRY_RUN_RECEIPT : produces
   COMMUNICATION_DRY_RUN_RECEIPT ||--o{ COMMUNICATION_APPROVAL : gates
   COMMUNICATION_DRAFT ||--o{ COMMUNICATION_SEND_ATTEMPT : audits
+  LEAD ||--o{ SELLER_OFFER_PUBLICATION : projects
+  DEAL ||--o{ SELLER_OFFER_PUBLICATION : publishes
+  OFFER_PACKET ||--o{ SELLER_OFFER_PUBLICATION : gates
+  CONTRACT_CONTROL ||--o{ SELLER_OFFER_PUBLICATION : validates
+  SELLER_OFFER_PUBLICATION ||--o{ SELLER_PORTAL_RESPONSE : intakes
 ```
 
 ## V2 Buyer Portal
@@ -217,6 +225,47 @@ V5 live-send limits:
 - No buyer blast execution
 - No title-company submission
 
+## V6 Seller Portal
+
+Seller-facing routes:
+
+- `/seller-portal`
+- `/seller-portal/offer`
+- `/seller-portal/property`
+- `/seller-portal/timeline`
+- `/seller-portal/documents`
+- `/seller-portal/messages`
+
+The seller portal shows only approved external-facing offer information:
+
+- Property address summary
+- Offer status
+- Offer amount
+- Closing timeline estimate
+- Inspection/access next step
+- Title company review status
+- Document checklist
+- Owner/operator contact placeholder
+- Seller question/note intake action
+
+The seller portal never exposes buyer lists, buyer data, buyer purchase price, assignment fee, internal spread strategy, MAO logic, motivation score, seller temperature, lead source, internal notes, Wholesale Prime recommendations, compliance-risk internals, agent queues, or manager queues.
+
+Seller visibility is allowed only when all of these are true:
+
+- Portal visibility is explicitly enabled
+- Offer packet is approved
+- Compliance check passed
+- Owner approval is recorded
+- Contract-control status is valid
+- Offer language safety passed
+- Contract execution is disabled
+- Live negotiation automation is disabled
+- Buyer data and internal profit logic exposure are disabled
+
+Seller response records cover seller portal notes, offer questions, appointment/access preferences, and document upload placeholders. They are always review-only: `draft_only = true`, `negotiation_execution_allowed = false`, `contract_execution_allowed = false`, and `automatic_acceptance_allowed = false`.
+
+The internal dashboard shows seller-visible offers, seller portal questions, seller document checklist queue, seller response queue, and blocked seller visibility reasons.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -253,6 +302,15 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/communications/dry-runs`
 - `/dashboard/communications/attempts`
 - `/dashboard/communications/approvals`
+
+Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
+
+- `/seller-portal`
+- `/seller-portal/offer`
+- `/seller-portal/property`
+- `/seller-portal/timeline`
+- `/seller-portal/documents`
+- `/seller-portal/messages`
 - `/dashboard/buyers`
 - `/dashboard/buyers/[buyerId]`
 - `/dashboard/buyer-matches`
@@ -269,15 +327,17 @@ Blocked in v1:
 - Legal advice language
 - Guaranteed profit claims
 - Misrepresentation or hidden assignment fee language
-- Public signup and all portals
+- Public signup and public portals
 
-V2 exception: the controlled buyer portal is allowed only as an invite-gated sanitized deal room. Seller and client portals remain blocked.
+V2 exception: the controlled buyer portal is allowed only as an invite-gated sanitized deal room. Client portals remain blocked.
 
 V3 exception: seller acquisition drafting is allowed only inside the private command center. Live seller outreach remains blocked.
 
 V4 exception: contract/title preparation is allowed only as draft records, checklists, placeholders, and readiness scoring. Executable contracts, title-company submission, and automatic status changes remain blocked.
 
 V5 exception: communication attempts are allowed only through the controlled gate and default to blocked because the global live flag is off. Dry-runs and blocked attempts are auditable, provider adapters are mock-only, and bulk/campaign/title/buyer-blast paths remain blocked.
+
+V6 exception: the controlled seller portal is allowed only as an invite-gated sanitized offer review room. It can receive draft/intake responses for operator review, but it cannot execute acceptance, negotiate, transmit documents, expose buyer/profit/internal strategy, or provide legal advice.
 
 Allowed:
 

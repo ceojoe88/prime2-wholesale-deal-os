@@ -16,6 +16,7 @@ from app.models import (
     Division,
     OfferPacket,
     SellerInteraction,
+    SellerOfferPublication,
     TitleHandoffPacket,
 )
 from app.seed_data import seed_database
@@ -35,6 +36,7 @@ async def lifespan(app: FastAPI):
                 or session.query(TitleHandoffPacket).count() == 0
                 or session.query(AssignmentReadinessRecord).count() == 0
                 or session.query(CommunicationDraft).count() == 0
+                or session.query(SellerOfferPublication).count() == 0
             ):
                 seed_database(session)
     yield
