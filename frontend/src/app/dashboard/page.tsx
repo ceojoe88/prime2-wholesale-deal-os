@@ -6,6 +6,7 @@ import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
   activeDealRooms,
+  assignmentFeeAttributions,
   assignmentReadyDealRooms,
   assignmentReadyRecords,
   blockedDealRooms,
@@ -25,7 +26,10 @@ import {
   contractControls,
   contractPrepBlocked,
   contractPrepReady,
+  dealEvidencePackets,
+  dealsNeedingEvidenceOwnerReview,
   deals,
+  evidenceFeesAtRisk,
   divisions,
   formatCurrency,
   hotDeals,
@@ -33,7 +37,9 @@ import {
   leads,
   offerReadyPackets,
   offerPackets,
+  missingEvidencePackets,
   projectedAssignmentFeesAtRisk,
+  projectedEvidenceAssignmentFees,
   projectedAssignmentTotal,
   blockedSellerVisibilityOffers,
   sellerDocumentChecklistQueue,
@@ -44,7 +50,9 @@ import {
   staleSellerFollowUps,
   sentOrMockSentCommunicationAttempts,
   titleHandoffPackets,
-  underContractDeals
+  underContractDeals,
+  verified10kAssignmentFeeOpportunities,
+  verifiedAssignmentFees
 } from "@/lib/demo-data";
 
 export default function DashboardPage() {
@@ -165,6 +173,19 @@ export default function DashboardPage() {
           <RecordCard title="Assignment-ready rooms" meta={`${assignmentReadyDealRooms.length} tied to assignment readiness`} right={<Pill tone="green">ready</Pill>} />
           <RecordCard title="Next best actions" meta={`${closingNextBestActions.length} recommendations queued`} right={<Pill tone="gold">internal</Pill>} />
           <RecordCard title="Projected fees at risk" meta={formatCurrency(projectedAssignmentFeesAtRisk)} right={<Pill tone="red">at risk</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V8 Evidence and Fee Attribution">
+        <div className="grid-three">
+          <RecordCard title="Evidence packets" meta={`${dealEvidencePackets.length} proof-backed packets`} right={<Pill>internal</Pill>} />
+          <RecordCard title="Verified assignment fees" meta={formatCurrency(verifiedAssignmentFees)} right={<Pill tone="green">verified</Pill>} />
+          <RecordCard title="Evidence fees at risk" meta={formatCurrency(evidenceFeesAtRisk)} right={<Pill tone="red">at risk</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Missing evidence" meta={`${missingEvidencePackets.length} packets need source records`} right={<Pill tone="red">missing</Pill>} />
+          <RecordCard title="Owner evidence review" meta={`${dealsNeedingEvidenceOwnerReview.length} packets need owner review`} right={<Pill tone="gold">review</Pill>} />
+          <RecordCard title="10K+ verified opportunities" meta={`${verified10kAssignmentFeeOpportunities.length}/${assignmentFeeAttributions.length} attributed records`} right={<Pill tone="green">{formatCurrency(projectedEvidenceAssignmentFees)}</Pill>} />
         </div>
       </Section>
     </div>

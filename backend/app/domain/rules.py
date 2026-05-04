@@ -37,6 +37,11 @@ BLOCKED_ACTIONS = {
     "automatic_closing_submission": "Automatic closing or title submission is blocked in V7.",
     "handle_payment": "Payment handling is blocked in V7.",
     "generate_closing_contract": "Executable closing or contract generation is blocked in V7.",
+    "make_fake_profit_claim": "Fake or unsupported profit claims are blocked in V8.",
+    "make_unsupported_roi_claim": "Unsupported ROI claims are blocked in V8.",
+    "invent_buyer_seller_numbers": "Invented buyer or seller numbers are blocked; attribution must use source records.",
+    "publish_client_facing_proof": "Client-facing proof is blocked unless explicitly approved in a future controlled release.",
+    "make_legal_closing_guarantee": "Legal or closing guarantees are blocked in V8.",
     "give_legal_advice": "Legal advice is blocked; use attorney/title review reminders.",
     "guarantee_profit": "Guaranteed profit claims are blocked.",
 }
@@ -52,6 +57,12 @@ LEGAL_ADVICE_PATTERNS = (
     "submit to title",
     "generate executable contract",
     "hide the assignment",
+    "guaranteed roi",
+    "risk-free return",
+    "guaranteed close",
+    "guaranteed closing",
+    "invented buyer price",
+    "invented seller price",
 )
 
 

@@ -15,6 +15,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - V5 controlled live communication gate with draft records, safety checks, dry-run receipts, owner approvals, mock provider adapters, idempotency, and blocked-attempt audit records.
 - V6 invite-gated seller offer review room with sanitized offer status, seller visibility gates, response intake records, and no buyer/profit/internal strategy exposure.
 - V7 unified deal room and closing coordination gate connecting seller offer room, buyer deal room, contract control, title handoff, communications, and assignment readiness with blocker tracking and recommendation-only next actions.
+- V8 deal evidence and assignment-fee attribution layer tying projected and verified fees to source records, evidence packets, owner review, and unsupported-claim guards.
 
 ## Safety Boundaries
 
@@ -33,6 +34,8 @@ V5 allows only narrow communication preparation and gated one-off attempts. Live
 V6 adds an invite-gated seller offer review room. The operator system remains the source of truth, and seller visibility is blocked unless the offer packet is approved, compliance and owner approvals are recorded, contract-control status is valid, offer language passes safety checks, and portal visibility is explicitly enabled. Seller pages show only approved offer status, amount, property summary, timeline estimate, access next step, title review status, and document checklist. Buyer data, assignment fee logic, buyer price, spread strategy, MAO logic, motivation/temperature scores, internal notes, Wholesale Prime recommendations, compliance internals, and queues are hidden. Seller responses are draft/intake records for operator review only; no acceptance, negotiation automation, contract execution, or file transmission occurs.
 
 V7 adds an internal unified deal room for closing coordination. It connects seller offer room status, buyer deal room status, contract control, title handoff, communications, assignment readiness, compliance, blocker records, projected fees at risk, closing timeline, and owner approval status. This layer is coordination-only: it cannot generate executable contracts, submit to title, handle payments, auto-negotiate, or change real-world status without the owner.
+
+V8 adds proof-backed deal evidence and assignment-fee attribution. Evidence packets collect lead source, seller interaction proof, underwriting snapshot, buyer interest proof, POF status, contract/title status, communication receipts, blocker history, and compliance status. Assignment-fee records calculate the spread from buyer purchase price minus seller contract price and only flag 10K+ opportunities when the source-number formula and evidence gate support it. Fake profit claims, unsupported ROI claims, invented buyer/seller numbers, client-facing proof without approval, legal guarantees, and closing guarantees are blocked.
 
 ## Backend
 
@@ -92,6 +95,11 @@ Useful endpoints:
 - `GET /api/closing-coordination`
 - `GET /api/closing-coordination/blockers`
 - `GET /api/closing-coordination/readiness`
+- `GET /api/deal-evidence`
+- `GET /api/deal-evidence/{packet_id}`
+- `POST /api/deal-evidence/safety/validate`
+- `GET /api/assignment-fees`
+- `GET /api/assignment-fees/{fee_id}`
 - `GET /api/compliance`
 - `POST /api/actions/validate`
 - `POST /api/data-import/leads/preview`
@@ -155,6 +163,11 @@ Unified deal room V7 routes:
 - [http://localhost:3000/dashboard/closing-coordination](http://localhost:3000/dashboard/closing-coordination)
 - [http://localhost:3000/dashboard/closing-coordination/blockers](http://localhost:3000/dashboard/closing-coordination/blockers)
 - [http://localhost:3000/dashboard/closing-coordination/readiness](http://localhost:3000/dashboard/closing-coordination/readiness)
+
+Evidence/attribution V8 routes:
+
+- [http://localhost:3000/dashboard/deal-evidence](http://localhost:3000/dashboard/deal-evidence)
+- [http://localhost:3000/dashboard/assignment-fees](http://localhost:3000/dashboard/assignment-fees)
 
 ## Validation
 

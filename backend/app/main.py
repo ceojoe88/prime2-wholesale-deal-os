@@ -9,6 +9,7 @@ from app.api.routes import router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
 from app.models import (
+    AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     BuyerDealPublication,
     CommunicationDraft,
@@ -39,6 +40,7 @@ async def lifespan(app: FastAPI):
                 or session.query(CommunicationDraft).count() == 0
                 or session.query(SellerOfferPublication).count() == 0
                 or session.query(UnifiedDealRoom).count() == 0
+                or session.query(AssignmentFeeAttribution).count() == 0
             ):
                 seed_database(session)
     yield

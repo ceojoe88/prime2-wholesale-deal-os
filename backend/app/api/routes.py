@@ -39,6 +39,14 @@ from app.domain.contract_control import (
     update_contract_prep_gate,
     validate_contract_language,
 )
+from app.domain.deal_evidence import (
+    assignment_fee_summary,
+    evidence_dashboard,
+    evidence_packet_summary,
+    sync_assignment_fee_attribution,
+    sync_evidence_packet,
+    validate_profit_claims,
+)
 from app.domain.imports import preview_lead_csv
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import system_rules, validate_action
@@ -61,6 +69,7 @@ from app.domain.seller_portal import (
 )
 from app.models import (
     Agent,
+    AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     Buyer,
     BuyerDealPublication,
@@ -74,6 +83,7 @@ from app.models import (
     CommunicationSendAttempt,
     ContractControl,
     Deal,
+    DealEvidencePacket,
     DealRoomBlocker,
     Division,
     Lead,
@@ -101,6 +111,10 @@ class BuyerInterestRequest(BaseModel):
     buyer_id: str
     intended_offer_amount: int | None = None
     notes: str = ""
+
+
+class ProfitClaimValidationRequest(BaseModel):
+    content: str
 
 
 class SellerLanguageRequest(BaseModel):
@@ -648,6 +662,59 @@ def closing_coordination_readiness(session: Session = Depends(get_session)) -> l
         )
     session.commit()
     return response
+
+
+@router.get("/deal-evidence")
+def deal_evidence(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = evidence_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/deal-evidence/{packet_id}")
+def deal_evidence_detail(
+    packet_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    packet = session.get(DealEvidencePacket, packet_id)
+    if packet is None:
+        raise HTTPException(status_code=404, detail="Evidence packet not found")
+    sync_evidence_packet(session, packet)
+    session.commit()
+    return evidence_packet_summary(packet)
+
+
+@router.post("/deal-evidence/safety/validate")
+def deal_evidence_safety(payload: ProfitClaimValidationRequest) -> dict[str, object]:
+    return validate_profit_claims(payload.content)
+
+
+@router.get("/assignment-fees")
+def assignment_fees(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = evidence_dashboard(session)
+    session.commit()
+    return {
+        "assignment_fee_attributions": dashboard["assignment_fee_attributions"],
+        "projected_assignment_fees": dashboard["projected_assignment_fees"],
+        "verified_assignment_fees": dashboard["verified_assignment_fees"],
+        "fees_at_risk": dashboard["fees_at_risk"],
+        "verified_10k_opportunities": dashboard["verified_10k_opportunities"],
+        "client_facing_proof_allowed": False,
+        "legal_closing_guarantee_allowed": False,
+    }
+
+
+@router.get("/assignment-fees/{fee_id}")
+def assignment_fee_detail(
+    fee_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    attribution = session.get(AssignmentFeeAttribution, fee_id)
+    if attribution is None:
+        raise HTTPException(status_code=404, detail="Assignment fee attribution not found")
+    sync_assignment_fee_attribution(session, attribution)
+    session.commit()
+    return assignment_fee_summary(attribution)
 
 
 @router.get("/communications")

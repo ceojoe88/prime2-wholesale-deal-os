@@ -6,6 +6,7 @@ from app.domain.buyer_portal import portal_publish_gate, update_publication_gate
 from app.domain.closing_coordination import closing_coordination_dashboard
 from app.domain.communications import communication_dashboard
 from app.domain.contract_control import contract_title_dashboard
+from app.domain.deal_evidence import evidence_dashboard
 from app.domain.seller_acquisition import seller_pipeline_command_center
 from app.domain.seller_portal import seller_portal_dashboard
 from app.models import (
@@ -125,4 +126,5 @@ def build_command_center(session: Session) -> dict[str, object]:
         "communication_gate": communication_dashboard(session),
         "seller_portal": seller_portal_dashboard(session),
         "unified_deal_room": closing_coordination_dashboard(session),
+        "deal_evidence": evidence_dashboard(session),
     }

@@ -139,6 +139,12 @@ class Deal(TimestampMixin, Base):
     unified_deal_rooms: Mapped[list["UnifiedDealRoom"]] = relationship(
         back_populates="deal"
     )
+    evidence_packets: Mapped[list["DealEvidencePacket"]] = relationship(
+        back_populates="deal"
+    )
+    assignment_fee_attributions: Mapped[list["AssignmentFeeAttribution"]] = relationship(
+        back_populates="deal"
+    )
 
 
 class Buyer(TimestampMixin, Base):
@@ -669,6 +675,12 @@ class UnifiedDealRoom(TimestampMixin, Base):
     blocker_records: Mapped[list["DealRoomBlocker"]] = relationship(
         back_populates="deal_room"
     )
+    evidence_packets: Mapped[list["DealEvidencePacket"]] = relationship(
+        back_populates="deal_room"
+    )
+    assignment_fee_attributions: Mapped[list["AssignmentFeeAttribution"]] = relationship(
+        back_populates="deal_room"
+    )
 
 
 class ClosingCoordinationChecklist(TimestampMixin, Base):
@@ -721,3 +733,75 @@ class DealRoomBlocker(TimestampMixin, Base):
 
     deal_room: Mapped[UnifiedDealRoom] = relationship(back_populates="blocker_records")
     deal: Mapped[Deal] = relationship()
+
+
+class DealEvidencePacket(TimestampMixin, Base):
+    __tablename__ = "deal_evidence_packets"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_room_id: Mapped[str] = mapped_column(
+        ForeignKey("unified_deal_rooms.id"), nullable=False
+    )
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    lead_source: Mapped[str] = mapped_column(String(120), default="")
+    seller_interaction_proof: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    underwriting_snapshot: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    buyer_interest_proof: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    pof_proof_status: Mapped[str] = mapped_column(String(80), default="missing")
+    contract_control_status: Mapped[str] = mapped_column(String(80), default="missing")
+    title_handoff_status: Mapped[str] = mapped_column(String(80), default="missing")
+    communication_receipts: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    blocker_history: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    compliance_review_status: Mapped[str] = mapped_column(String(80), default="pending")
+    source_records_present: Mapped[bool] = mapped_column(Boolean, default=False)
+    unsupported_profit_claims: Mapped[list[str]] = mapped_column(JSON, default=list)
+    evidence_status: Mapped[str] = mapped_column(String(80), default="needs_review")
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    sanitized_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    internal_notes_sanitized: Mapped[bool] = mapped_column(Boolean, default=True)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_facing_proof_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_closing_guarantee_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal_room: Mapped[UnifiedDealRoom] = relationship(back_populates="evidence_packets")
+    deal: Mapped[Deal] = relationship(back_populates="evidence_packets")
+    assignment_fee_attributions: Mapped[list["AssignmentFeeAttribution"]] = relationship(
+        back_populates="evidence_packet"
+    )
+
+
+class AssignmentFeeAttribution(TimestampMixin, Base):
+    __tablename__ = "assignment_fee_attributions"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_room_id: Mapped[str] = mapped_column(
+        ForeignKey("unified_deal_rooms.id"), nullable=False
+    )
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    evidence_packet_id: Mapped[str | None] = mapped_column(
+        ForeignKey("deal_evidence_packets.id"), nullable=True
+    )
+    projected_assignment_fee: Mapped[int] = mapped_column(Integer, default=0)
+    target_assignment_fee: Mapped[int] = mapped_column(Integer, default=10_000)
+    seller_contract_price: Mapped[int] = mapped_column(Integer, default=0)
+    buyer_purchase_price: Mapped[int] = mapped_column(Integer, default=0)
+    buyer_margin: Mapped[int] = mapped_column(Integer, default=0)
+    attribution_basis: Mapped[list[str]] = mapped_column(JSON, default=list)
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    verification_status: Mapped[str] = mapped_column(String(80), default="needs_review")
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    source_records_present: Mapped[bool] = mapped_column(Boolean, default=False)
+    unsupported_profit_claims: Mapped[list[str]] = mapped_column(JSON, default=list)
+    verified_10k_opportunity: Mapped[bool] = mapped_column(Boolean, default=False)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_facing_proof_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_closing_guarantee_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal_room: Mapped[UnifiedDealRoom] = relationship(
+        back_populates="assignment_fee_attributions"
+    )
+    deal: Mapped[Deal] = relationship(back_populates="assignment_fee_attributions")
+    evidence_packet: Mapped[DealEvidencePacket | None] = relationship(
+        back_populates="assignment_fee_attributions"
+    )

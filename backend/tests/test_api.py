@@ -30,6 +30,8 @@ def test_core_api_routes_respond():
         "/api/closing-coordination",
         "/api/closing-coordination/blockers",
         "/api/closing-coordination/readiness",
+        "/api/deal-evidence",
+        "/api/assignment-fees",
         "/api/communications",
         "/api/communications/dry-runs",
         "/api/communications/attempts",

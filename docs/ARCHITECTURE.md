@@ -18,6 +18,8 @@ V6 adds a controlled seller offer review room. The private operator system remai
 
 V7 adds a unified internal deal room and closing coordination gate. It connects seller offer room, buyer deal room, contract control, title handoff, communication drafts, compliance, and assignment readiness into one governed coordination layer. It is recommendation-only and cannot execute legal documents, submit title packages, handle payments, or automate buyer/seller negotiation.
 
+V8 adds proof-backed deal evidence and assignment-fee attribution. It ties projected and verified assignment fees to source records instead of guesses, sanitizes internal notes from evidence summaries, and blocks fake profit claims, unsupported ROI claims, invented buyer/seller numbers, client-facing proof without approval, and legal or closing guarantees.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -30,6 +32,7 @@ V7 adds a unified internal deal room and closing coordination gate. It connects 
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
 - `app/domain/seller_portal.py`: V6 seller visibility gate, sanitized offer-room projection, response intake guard, forbidden-field leak guard, and seller portal policy.
 - `app/domain/closing_coordination.py`: V7 unified deal room status sync, closing checklist readiness, blocker generation, next-best-action recommendations, and coordination dashboard aggregation.
+- `app/domain/deal_evidence.py`: V8 evidence packet sync, assignment-fee attribution, source-record verification, 10K+ verification, sanitized evidence summaries, and unsupported-claim guards.
 - `app/domain/rules.py`: private-mode rules and v1 action validation.
 - `app/domain/compliance.py`: purchase, assignment, title, seller disclosure, buyer disclosure, and state-review checklists.
 - `app/domain/imports.py`: CSV-ready lead import preview with accepted source categories.
@@ -83,6 +86,10 @@ erDiagram
   CONTRACT_CONTROL ||--o{ UNIFIED_DEAL_ROOM : controls
   UNIFIED_DEAL_ROOM ||--o| CLOSING_COORDINATION_CHECKLIST : checks
   UNIFIED_DEAL_ROOM ||--o{ DEAL_ROOM_BLOCKER : blocks
+  UNIFIED_DEAL_ROOM ||--o{ DEAL_EVIDENCE_PACKET : proves
+  DEAL ||--o{ DEAL_EVIDENCE_PACKET : evidences
+  DEAL_EVIDENCE_PACKET ||--o{ ASSIGNMENT_FEE_ATTRIBUTION : attributes
+  DEAL ||--o{ ASSIGNMENT_FEE_ATTRIBUTION : calculates
 ```
 
 ## V2 Buyer Portal
@@ -305,6 +312,41 @@ The next-best-action engine only recommends internal actions such as reviewing s
 
 The V7 safety boundary blocks legal execution, executable contract generation, title-company submission, payment handling, hidden fee/deceptive language, automatic negotiation, and automatic real-world status changes.
 
+## V8 Evidence And Attribution
+
+Internal routes:
+
+- `/dashboard/deal-evidence`
+- `/dashboard/deal-evidence/[packetId]`
+- `/dashboard/assignment-fees`
+- `/dashboard/assignment-fees/[feeId]`
+
+Evidence packets connect a unified deal room to:
+
+- Lead source
+- Seller interaction proof
+- Underwriting snapshot
+- Buyer interest proof
+- POF proof status
+- Contract control status
+- Title handoff status
+- Communication receipts
+- Blocker history
+- Compliance review status
+
+The evidence review gate allows evidence approval only when contract control exists, buyer interest exists, seller acceptance is recorded, compliance passed, source records are present, and no unsupported profit claims are present. Owner review is tracked separately, so a packet may be source-ready but still sit in owner review.
+
+Assignment-fee attribution records track projected assignment fee, target assignment fee, seller contract price, buyer purchase price, buyer margin, attribution basis, confidence score, verification status, owner review status, and 10K+ verification status.
+
+The 10K+ verified flag is true only when:
+
+- The assignment fee equals buyer purchase price minus seller contract price
+- The calculated fee meets or exceeds the target assignment fee
+- The evidence packet is approved
+- Required source records are present
+
+V8 blocks fake profit claims, unsupported ROI claims, invented buyer/seller numbers, client-facing proof without approval, legal guarantees, and closing guarantees. Evidence summaries are sanitized to avoid call notes, motivation answers, pain points, objections, seller temperature, Wholesale Prime recommendations, and other internal notes.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -346,6 +388,10 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/closing-coordination`
 - `/dashboard/closing-coordination/blockers`
 - `/dashboard/closing-coordination/readiness`
+- `/dashboard/deal-evidence`
+- `/dashboard/deal-evidence/[packetId]`
+- `/dashboard/assignment-fees`
+- `/dashboard/assignment-fees/[feeId]`
 
 Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
 
@@ -384,6 +430,8 @@ V5 exception: communication attempts are allowed only through the controlled gat
 V6 exception: the controlled seller portal is allowed only as an invite-gated sanitized offer review room. It can receive draft/intake responses for operator review, but it cannot execute acceptance, negotiate, transmit documents, expose buyer/profit/internal strategy, or provide legal advice.
 
 V7 exception: unified deal rooms are allowed only as internal coordination records. They can show blocker queues, next recommended actions, projected fees at risk, and readiness status inside the operator dashboard, but they cannot execute legal documents, submit title packets, process payments, auto-negotiate, or expose internal data to buyer/seller portals.
+
+V8 exception: evidence and attribution records are allowed only as internal proof and verification records. They can show source-backed fee math, evidence gaps, missing owner review, and verified 10K+ opportunities inside the operator dashboard, but they cannot publish client-facing proof, invent profit support, guarantee ROI, guarantee closing, or expose unsanitized internal notes.
 
 Allowed:
 

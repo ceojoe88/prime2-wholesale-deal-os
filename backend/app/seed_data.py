@@ -14,6 +14,7 @@ from app.domain.communications import (
 from app.domain.closing_coordination import sync_deal_room
 from app.domain.compliance import REQUIRED_CONFIRMATIONS
 from app.domain.contract_control import update_assignment_readiness, update_contract_prep_gate
+from app.domain.deal_evidence import sync_assignment_fee_attribution, sync_evidence_packet
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import ANALYSIS_ONLY_ACTIONS, BLOCKED_ACTIONS
 from app.domain.scoring import calculate_lead_opportunity, deal_speed_score
@@ -24,6 +25,7 @@ from app.domain.seller_portal import (
 )
 from app.models import (
     Agent,
+    AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     Buyer,
     BuyerDealPublication,
@@ -37,6 +39,7 @@ from app.models import (
     CommunicationSendAttempt,
     ContractControl,
     Deal,
+    DealEvidencePacket,
     DealRoomBlocker,
     Division,
     Lead,
@@ -1755,6 +1758,200 @@ def build_deal_room_blocker_records() -> list[dict[str, object]]:
     ]
 
 
+def build_deal_evidence_packet_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "evidence-001",
+            "deal_room_id": "deal-room-001",
+            "deal_id": "deal-001",
+            "lead_source": "vacant",
+            "seller_interaction_proof": {},
+            "underwriting_snapshot": {},
+            "buyer_interest_proof": {},
+            "pof_proof_status": "verified",
+            "contract_control_status": "prep_review",
+            "title_handoff_status": "draft_ready",
+            "communication_receipts": [],
+            "blocker_history": [],
+            "compliance_review_status": "approved",
+            "source_records_present": True,
+            "unsupported_profit_claims": [],
+            "evidence_status": "approved",
+            "owner_review_status": "owner_approved",
+            "approved": True,
+            "sanitized_summary": {},
+            "internal_notes_sanitized": True,
+            "draft_only": True,
+            "client_facing_proof_allowed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+        {
+            "id": "evidence-002",
+            "deal_room_id": "deal-room-002",
+            "deal_id": "deal-003",
+            "lead_source": "absentee owner",
+            "seller_interaction_proof": {},
+            "underwriting_snapshot": {},
+            "buyer_interest_proof": {},
+            "pof_proof_status": "needs_refresh",
+            "contract_control_status": "prep_review",
+            "title_handoff_status": "blocked_owner_review",
+            "communication_receipts": [],
+            "blocker_history": [],
+            "compliance_review_status": "approved",
+            "source_records_present": True,
+            "unsupported_profit_claims": [],
+            "evidence_status": "owner_review_needed",
+            "owner_review_status": "pending_review",
+            "approved": False,
+            "sanitized_summary": {},
+            "internal_notes_sanitized": True,
+            "draft_only": True,
+            "client_facing_proof_allowed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+        {
+            "id": "evidence-003",
+            "deal_room_id": "deal-room-003",
+            "deal_id": "deal-005",
+            "lead_source": "probate",
+            "seller_interaction_proof": {},
+            "underwriting_snapshot": {},
+            "buyer_interest_proof": {},
+            "pof_proof_status": "verified",
+            "contract_control_status": "prep_review",
+            "title_handoff_status": "blocked_compliance",
+            "communication_receipts": [],
+            "blocker_history": [],
+            "compliance_review_status": "pending",
+            "source_records_present": True,
+            "unsupported_profit_claims": [],
+            "evidence_status": "blocked_missing_evidence",
+            "owner_review_status": "pending_review",
+            "approved": False,
+            "sanitized_summary": {},
+            "internal_notes_sanitized": True,
+            "draft_only": True,
+            "client_facing_proof_allowed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+        {
+            "id": "evidence-004",
+            "deal_room_id": "deal-room-004",
+            "deal_id": "deal-006",
+            "lead_source": "tax delinquent",
+            "seller_interaction_proof": {},
+            "underwriting_snapshot": {},
+            "buyer_interest_proof": {},
+            "pof_proof_status": "missing",
+            "contract_control_status": "blocked",
+            "title_handoff_status": "missing",
+            "communication_receipts": [],
+            "blocker_history": [],
+            "compliance_review_status": "approved",
+            "source_records_present": False,
+            "unsupported_profit_claims": [],
+            "evidence_status": "blocked_missing_evidence",
+            "owner_review_status": "owner_approved",
+            "approved": False,
+            "sanitized_summary": {},
+            "internal_notes_sanitized": True,
+            "draft_only": True,
+            "client_facing_proof_allowed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+    ]
+
+
+def build_assignment_fee_attribution_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "fee-001",
+            "deal_room_id": "deal-room-001",
+            "deal_id": "deal-001",
+            "evidence_packet_id": "evidence-001",
+            "projected_assignment_fee": 15000,
+            "target_assignment_fee": 10000,
+            "seller_contract_price": 151000,
+            "buyer_purchase_price": 166000,
+            "buyer_margin": 58000,
+            "attribution_basis": [],
+            "confidence_score": 92,
+            "verification_status": "verified",
+            "owner_review_status": "owner_approved",
+            "source_records_present": True,
+            "unsupported_profit_claims": [],
+            "verified_10k_opportunity": True,
+            "draft_only": True,
+            "client_facing_proof_allowed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+        {
+            "id": "fee-002",
+            "deal_room_id": "deal-room-002",
+            "deal_id": "deal-003",
+            "evidence_packet_id": "evidence-002",
+            "projected_assignment_fee": 13000,
+            "target_assignment_fee": 10000,
+            "seller_contract_price": 180000,
+            "buyer_purchase_price": 193000,
+            "buyer_margin": 74500,
+            "attribution_basis": [],
+            "confidence_score": 72,
+            "verification_status": "owner_review_needed",
+            "owner_review_status": "pending_review",
+            "source_records_present": True,
+            "unsupported_profit_claims": [],
+            "verified_10k_opportunity": False,
+            "draft_only": True,
+            "client_facing_proof_allowed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+        {
+            "id": "fee-003",
+            "deal_room_id": "deal-room-003",
+            "deal_id": "deal-005",
+            "evidence_packet_id": "evidence-003",
+            "projected_assignment_fee": 15000,
+            "target_assignment_fee": 10000,
+            "seller_contract_price": 220000,
+            "buyer_purchase_price": 235000,
+            "buyer_margin": 90000,
+            "attribution_basis": [],
+            "confidence_score": 45,
+            "verification_status": "blocked",
+            "owner_review_status": "pending_review",
+            "source_records_present": True,
+            "unsupported_profit_claims": [],
+            "verified_10k_opportunity": False,
+            "draft_only": True,
+            "client_facing_proof_allowed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+        {
+            "id": "fee-004",
+            "deal_room_id": "deal-room-004",
+            "deal_id": "deal-006",
+            "evidence_packet_id": "evidence-004",
+            "projected_assignment_fee": 8000,
+            "target_assignment_fee": 10000,
+            "seller_contract_price": 132000,
+            "buyer_purchase_price": 140000,
+            "buyer_margin": 44000,
+            "attribution_basis": [],
+            "confidence_score": 45,
+            "verification_status": "missing_evidence",
+            "owner_review_status": "owner_approved",
+            "source_records_present": False,
+            "unsupported_profit_claims": [],
+            "verified_10k_opportunity": False,
+            "draft_only": True,
+            "client_facing_proof_allowed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+    ]
+
+
 def _draft_obj(row: dict[str, object]):
     return type("DraftSeedObj", (), row)()
 
@@ -2114,6 +2311,8 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "unified_deal_rooms": build_unified_deal_room_records(),
         "closing_coordination_checklists": build_closing_coordination_checklist_records(),
         "deal_room_blockers": build_deal_room_blocker_records(),
+        "deal_evidence_packets": build_deal_evidence_packet_records(),
+        "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
         "communication_drafts": communication_drafts,
@@ -2130,6 +2329,8 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        AssignmentFeeAttribution,
+        DealEvidencePacket,
         DealRoomBlocker,
         ClosingCoordinationChecklist,
         UnifiedDealRoom,
@@ -2186,6 +2387,13 @@ def seed_database(session: Session) -> dict[str, int]:
         for row in payload["closing_coordination_checklists"]
     )
     session.add_all(DealRoomBlocker(**row) for row in payload["deal_room_blockers"])
+    session.add_all(
+        DealEvidencePacket(**row) for row in payload["deal_evidence_packets"]
+    )
+    session.add_all(
+        AssignmentFeeAttribution(**row)
+        for row in payload["assignment_fee_attributions"]
+    )
     session.add_all(CommunicationDraft(**row) for row in payload["communication_drafts"])
     session.add_all(
         CommunicationDryRunReceipt(**row)
@@ -2221,5 +2429,9 @@ def seed_database(session: Session) -> dict[str, int]:
             draft.risk_status = "clear" if draft.safety_passed else "blocked"
     for room in session.query(UnifiedDealRoom).all():
         sync_deal_room(session, room)
+    for evidence_packet in session.query(DealEvidencePacket).all():
+        sync_evidence_packet(session, evidence_packet)
+    for attribution in session.query(AssignmentFeeAttribution).all():
+        sync_assignment_fee_attribution(session, attribution)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

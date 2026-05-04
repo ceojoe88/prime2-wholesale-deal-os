@@ -21,6 +21,8 @@ export const dashboardRoutes = [
   { href: "/dashboard/communications", label: "Communications", icon: "Command" },
   { href: "/dashboard/deal-room", label: "Deal Room", icon: "Network" },
   { href: "/dashboard/closing-coordination", label: "Closing Coordination", icon: "ListChecks" },
+  { href: "/dashboard/deal-evidence", label: "Deal Evidence", icon: "ClipboardList" },
+  { href: "/dashboard/assignment-fees", label: "Assignment Fees", icon: "CircleDollarSign" },
   { href: "/dashboard/buyers", label: "Cash Buyers", icon: "UsersRound" },
   { href: "/dashboard/buyer-matches", label: "Buyer Matches", icon: "Handshake" },
   { href: "/dashboard/compliance", label: "Compliance", icon: "ShieldCheck" },

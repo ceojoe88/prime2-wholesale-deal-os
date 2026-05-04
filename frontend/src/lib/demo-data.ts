@@ -455,6 +455,54 @@ export type DealRoomBlocker = {
   draftOnly: true;
 };
 
+export type DealEvidencePacket = {
+  id: string;
+  dealRoomId: string;
+  dealId: string;
+  leadSource: string;
+  sellerInteractionProof: Record<string, string | number | boolean | null>;
+  underwritingSnapshot: Record<string, string | number | boolean>;
+  buyerInterestProof: Record<string, string | number | boolean | null>;
+  pofProofStatus: string;
+  contractControlStatus: string;
+  titleHandoffStatus: string;
+  communicationReceipts: Record<string, string | number | boolean | string[]>[];
+  blockerHistory: Record<string, string | boolean>[];
+  complianceReviewStatus: string;
+  sourceRecordsPresent: boolean;
+  unsupportedProfitClaims: string[];
+  evidenceStatus: "approved" | "owner_review_needed" | "blocked_missing_evidence";
+  ownerReviewStatus: string;
+  approved: boolean;
+  sanitizedSummary: Record<string, unknown>;
+  internalNotesSanitized: boolean;
+  draftOnly: true;
+  clientFacingProofAllowed: false;
+  legalClosingGuaranteeAllowed: false;
+};
+
+export type AssignmentFeeAttribution = {
+  id: string;
+  dealRoomId: string;
+  dealId: string;
+  evidencePacketId: string;
+  projectedAssignmentFee: number;
+  targetAssignmentFee: number;
+  sellerContractPrice: number;
+  buyerPurchasePrice: number;
+  buyerMargin: number;
+  attributionBasis: string[];
+  confidenceScore: number;
+  verificationStatus: "verified" | "owner_review_needed" | "blocked" | "missing_evidence";
+  ownerReviewStatus: string;
+  sourceRecordsPresent: boolean;
+  unsupportedProfitClaims: string[];
+  verified10kOpportunity: boolean;
+  draftOnly: true;
+  clientFacingProofAllowed: false;
+  legalClosingGuaranteeAllowed: false;
+};
+
 export const divisions: Division[] = [
   {
     id: "market-intelligence",
@@ -880,6 +928,138 @@ export const dealRoomBlockers: DealRoomBlocker[] = [
   { id: "deal-blocker-009", dealRoomId: "deal-room-004", dealId: "deal-006", blockerType: "high_risk_language", severity: "critical", status: "open", source: "closing_coordination_gate", detail: "Unsafe language is present in a seller or communication record.", recommendation: "resolve compliance blocker", blocksClosing: true, ownerActionRequired: true, resolved: false, draftOnly: true }
 ];
 
+const sourceFormulaBasis = [
+  "seller_contract_price:deal.sellerContractPrice",
+  "buyer_purchase_price:deal.buyerPurchasePrice",
+  "assignment_fee:buyer_purchase_price_minus_seller_contract_price",
+  "buyer_margin:arv_minus_repairs_minus_buyer_costs_minus_buyer_purchase_price"
+];
+
+export const dealEvidencePackets: DealEvidencePacket[] = [
+  {
+    id: "evidence-001",
+    dealRoomId: "deal-room-001",
+    dealId: "deal-001",
+    leadSource: "vacant",
+    sellerInteractionProof: { sellerInteractionId: "seller-interaction-001", sellerAcceptanceRecorded: true, acceptedTermsRecordId: "contract-001" },
+    underwritingSnapshot: { arv: 275000, repairs: 45000, buyerCosts: 6000, buyerDesiredProfit: 6000, sellerContractPrice: 151000, buyerPurchasePrice: 166000, projectedAssignmentFee: 15000 },
+    buyerInterestProof: { buyerInterestId: "interest-001", interestStatus: "owner_review_needed", intendedOfferAmount: 166000, draftOnly: true, contractExecutionAllowed: false },
+    pofProofStatus: "verified",
+    contractControlStatus: "prep_review",
+    titleHandoffStatus: "draft_ready",
+    communicationReceipts: [
+      { draftId: "comm-draft-001", sourceRecordId: "seller-interaction-001", dryRunReceipts: ["dryrun-001"], safetyPassed: true, providerMode: "mock/dry_run" },
+      { draftId: "comm-draft-002", sourceRecordId: "interest-001", dryRunReceipts: ["dryrun-002"], safetyPassed: true, providerMode: "mock/dry_run" }
+    ],
+    blockerHistory: [],
+    complianceReviewStatus: "approved",
+    sourceRecordsPresent: true,
+    unsupportedProfitClaims: [],
+    evidenceStatus: "approved",
+    ownerReviewStatus: "owner_approved",
+    approved: true,
+    sanitizedSummary: { sourceRecords: ["contract-001", "interest-001", "seller-interaction-001"], internalNotesRemoved: true },
+    internalNotesSanitized: true,
+    draftOnly: true,
+    clientFacingProofAllowed: false,
+    legalClosingGuaranteeAllowed: false
+  },
+  {
+    id: "evidence-002",
+    dealRoomId: "deal-room-002",
+    dealId: "deal-003",
+    leadSource: "absentee owner",
+    sellerInteractionProof: { sellerInteractionId: "seller-interaction-003", sellerAcceptanceRecorded: true, acceptedTermsRecordId: "contract-002" },
+    underwritingSnapshot: { arv: 340000, repairs: 65000, buyerCosts: 7500, buyerDesiredProfit: 7500, sellerContractPrice: 180000, buyerPurchasePrice: 193000, projectedAssignmentFee: 13000 },
+    buyerInterestProof: { buyerInterestId: "interest-003", interestStatus: "proof_of_funds_needed", intendedOfferAmount: 193000, draftOnly: true, contractExecutionAllowed: false },
+    pofProofStatus: "needs_refresh",
+    contractControlStatus: "prep_review",
+    titleHandoffStatus: "blocked_owner_review",
+    communicationReceipts: [
+      { draftId: "comm-draft-003", sourceRecordId: "title-002", dryRunReceipts: [], safetyPassed: false, providerMode: "mock/dry_run" }
+    ],
+    blockerHistory: [
+      { blockerId: "deal-blocker-001", blockerType: "missing_owner_approval", status: "open", resolved: false },
+      { blockerId: "deal-blocker-002", blockerType: "communication_draft_pending", status: "open", resolved: false }
+    ],
+    complianceReviewStatus: "approved",
+    sourceRecordsPresent: true,
+    unsupportedProfitClaims: [],
+    evidenceStatus: "owner_review_needed",
+    ownerReviewStatus: "pending_review",
+    approved: false,
+    sanitizedSummary: { sourceRecords: ["contract-002", "interest-003", "seller-interaction-003"], internalNotesRemoved: true },
+    internalNotesSanitized: true,
+    draftOnly: true,
+    clientFacingProofAllowed: false,
+    legalClosingGuaranteeAllowed: false
+  },
+  {
+    id: "evidence-003",
+    dealRoomId: "deal-room-003",
+    dealId: "deal-005",
+    leadSource: "probate",
+    sellerInteractionProof: { sellerInteractionId: "seller-interaction-005", sellerAcceptanceRecorded: true, acceptedTermsRecordId: "contract-003" },
+    underwritingSnapshot: { arv: 425000, repairs: 90000, buyerCosts: 10000, buyerDesiredProfit: 10000, sellerContractPrice: 220000, buyerPurchasePrice: 235000, projectedAssignmentFee: 15000 },
+    buyerInterestProof: { buyerInterestId: "interest-005", interestStatus: "owner_review_needed", intendedOfferAmount: 235000, draftOnly: true, contractExecutionAllowed: false },
+    pofProofStatus: "verified",
+    contractControlStatus: "prep_review",
+    titleHandoffStatus: "blocked_compliance",
+    communicationReceipts: [],
+    blockerHistory: [
+      { blockerId: "deal-blocker-003", blockerType: "missing_compliance_review", status: "open", resolved: false },
+      { blockerId: "deal-blocker-004", blockerType: "assignment_not_confirmed", status: "open", resolved: false }
+    ],
+    complianceReviewStatus: "pending",
+    sourceRecordsPresent: true,
+    unsupportedProfitClaims: [],
+    evidenceStatus: "blocked_missing_evidence",
+    ownerReviewStatus: "pending_review",
+    approved: false,
+    sanitizedSummary: { sourceRecords: ["contract-003", "interest-005", "seller-interaction-005"], internalNotesRemoved: true },
+    internalNotesSanitized: true,
+    draftOnly: true,
+    clientFacingProofAllowed: false,
+    legalClosingGuaranteeAllowed: false
+  },
+  {
+    id: "evidence-004",
+    dealRoomId: "deal-room-004",
+    dealId: "deal-006",
+    leadSource: "tax delinquent",
+    sellerInteractionProof: { sellerInteractionId: null, sellerAcceptanceRecorded: false, acceptedTermsRecordId: "contract-004" },
+    underwritingSnapshot: { arv: 260000, repairs: 70000, buyerCosts: 6000, buyerDesiredProfit: 6000, sellerContractPrice: 132000, buyerPurchasePrice: 140000, projectedAssignmentFee: 8000 },
+    buyerInterestProof: { buyerInterestId: null, interestStatus: "missing", intendedOfferAmount: null, draftOnly: true, contractExecutionAllowed: false },
+    pofProofStatus: "missing",
+    contractControlStatus: "blocked",
+    titleHandoffStatus: "missing",
+    communicationReceipts: [],
+    blockerHistory: [
+      { blockerId: "deal-blocker-007", blockerType: "missing_buyer_pof", status: "open", resolved: false },
+      { blockerId: "deal-blocker-008", blockerType: "weak_buyer_margin", status: "open", resolved: false },
+      { blockerId: "deal-blocker-009", blockerType: "high_risk_language", status: "open", resolved: false }
+    ],
+    complianceReviewStatus: "approved",
+    sourceRecordsPresent: false,
+    unsupportedProfitClaims: [],
+    evidenceStatus: "blocked_missing_evidence",
+    ownerReviewStatus: "owner_approved",
+    approved: false,
+    sanitizedSummary: { sourceRecords: ["contract-004"], internalNotesRemoved: true },
+    internalNotesSanitized: true,
+    draftOnly: true,
+    clientFacingProofAllowed: false,
+    legalClosingGuaranteeAllowed: false
+  }
+];
+
+export const assignmentFeeAttributions: AssignmentFeeAttribution[] = [
+  { id: "fee-001", dealRoomId: "deal-room-001", dealId: "deal-001", evidencePacketId: "evidence-001", projectedAssignmentFee: 15000, targetAssignmentFee: 10000, sellerContractPrice: 151000, buyerPurchasePrice: 166000, buyerMargin: 58000, attributionBasis: ["deal:deal-001", "deal_room:deal-room-001", "contract_control:contract-001", "buyer_interest:interest-001", "evidence_packet:evidence-001", ...sourceFormulaBasis], confidenceScore: 92, verificationStatus: "verified", ownerReviewStatus: "owner_approved", sourceRecordsPresent: true, unsupportedProfitClaims: [], verified10kOpportunity: true, draftOnly: true, clientFacingProofAllowed: false, legalClosingGuaranteeAllowed: false },
+  { id: "fee-002", dealRoomId: "deal-room-002", dealId: "deal-003", evidencePacketId: "evidence-002", projectedAssignmentFee: 13000, targetAssignmentFee: 10000, sellerContractPrice: 180000, buyerPurchasePrice: 193000, buyerMargin: 74500, attributionBasis: ["deal:deal-003", "deal_room:deal-room-002", "contract_control:contract-002", "buyer_interest:interest-003", "evidence_packet:evidence-002", ...sourceFormulaBasis], confidenceScore: 64, verificationStatus: "owner_review_needed", ownerReviewStatus: "pending_review", sourceRecordsPresent: true, unsupportedProfitClaims: [], verified10kOpportunity: false, draftOnly: true, clientFacingProofAllowed: false, legalClosingGuaranteeAllowed: false },
+  { id: "fee-003", dealRoomId: "deal-room-003", dealId: "deal-005", evidencePacketId: "evidence-003", projectedAssignmentFee: 15000, targetAssignmentFee: 10000, sellerContractPrice: 220000, buyerPurchasePrice: 235000, buyerMargin: 90000, attributionBasis: ["deal:deal-005", "deal_room:deal-room-003", "contract_control:contract-003", "buyer_interest:interest-005", "evidence_packet:evidence-003", ...sourceFormulaBasis], confidenceScore: 25, verificationStatus: "blocked", ownerReviewStatus: "pending_review", sourceRecordsPresent: true, unsupportedProfitClaims: [], verified10kOpportunity: false, draftOnly: true, clientFacingProofAllowed: false, legalClosingGuaranteeAllowed: false },
+  { id: "fee-004", dealRoomId: "deal-room-004", dealId: "deal-006", evidencePacketId: "evidence-004", projectedAssignmentFee: 8000, targetAssignmentFee: 10000, sellerContractPrice: 132000, buyerPurchasePrice: 140000, buyerMargin: 44000, attributionBasis: ["deal:deal-006", "deal_room:deal-room-004", "contract_control:contract-004", "evidence_packet:evidence-004", ...sourceFormulaBasis], confidenceScore: 17, verificationStatus: "missing_evidence", ownerReviewStatus: "owner_approved", sourceRecordsPresent: false, unsupportedProfitClaims: [], verified10kOpportunity: false, draftOnly: true, clientFacingProofAllowed: false, legalClosingGuaranteeAllowed: false }
+];
+
 export const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -1188,3 +1368,44 @@ export function getClosingCoordinationChecklist(dealRoomId: string) {
 export function getDealRoomBlockers(dealRoomId: string) {
   return dealRoomBlockers.filter((blocker) => blocker.dealRoomId === dealRoomId);
 }
+
+export function getDealEvidencePacket(packetId: string) {
+  return dealEvidencePackets.find((packet) => packet.id === packetId);
+}
+
+export function getDealEvidencePacketByRoom(dealRoomId: string) {
+  return dealEvidencePackets.find((packet) => packet.dealRoomId === dealRoomId);
+}
+
+export function getAssignmentFeeAttribution(feeId: string) {
+  return assignmentFeeAttributions.find((fee) => fee.id === feeId);
+}
+
+export function getAssignmentFeeAttributionByPacket(packetId: string) {
+  return assignmentFeeAttributions.find((fee) => fee.evidencePacketId === packetId);
+}
+
+export const projectedEvidenceAssignmentFees = assignmentFeeAttributions.reduce(
+  (total, fee) => total + fee.projectedAssignmentFee,
+  0
+);
+export const verifiedAssignmentFees = assignmentFeeAttributions
+  .filter((fee) => fee.verificationStatus === "verified")
+  .reduce((total, fee) => total + fee.projectedAssignmentFee, 0);
+export const evidenceFeesAtRisk = assignmentFeeAttributions
+  .filter((fee) => fee.verificationStatus !== "verified" && fee.projectedAssignmentFee > 0)
+  .reduce((total, fee) => total + fee.projectedAssignmentFee, 0);
+export const missingEvidencePackets = dealEvidencePackets.filter(
+  (packet) =>
+    !packet.sourceRecordsPresent ||
+    packet.evidenceStatus === "blocked_missing_evidence" ||
+    packet.unsupportedProfitClaims.length > 0
+);
+export const dealsNeedingEvidenceOwnerReview = dealEvidencePackets.filter(
+  (packet) => packet.evidenceStatus === "owner_review_needed" || packet.ownerReviewStatus !== "owner_approved"
+);
+export const verified10kAssignmentFeeOpportunities = assignmentFeeAttributions.filter(
+  (fee) =>
+    fee.verified10kOpportunity &&
+    fee.projectedAssignmentFee === fee.buyerPurchasePrice - fee.sellerContractPrice
+);

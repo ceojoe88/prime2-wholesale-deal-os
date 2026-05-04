@@ -6,6 +6,7 @@ import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
   activeDealRooms,
+  assignmentFeeAttributions,
   assignmentReadyDealRooms,
   assignmentReadyRecords,
   blockedCommunicationAttempts,
@@ -21,20 +22,27 @@ import {
   communicationDryRunsNeedingApproval,
   complianceRecords,
   contractPrepBlocked,
+  dealEvidencePackets,
+  dealsNeedingEvidenceOwnerReview,
   deals,
+  evidenceFeesAtRisk,
   formatCurrency,
   hotDeals,
   hotSellerLeads,
   leads,
   offerPackets,
+  missingEvidencePackets,
   projectedAssignmentFeesAtRisk,
+  projectedEvidenceAssignmentFees,
   sellerDocumentChecklistQueue,
   sellerInteractions,
   sellerPortalQuestions,
   sellerResponseQueue,
   sellerVisibleOffers,
   staleSellerFollowUps,
-  titleHandoffPackets
+  titleHandoffPackets,
+  verified10kAssignmentFeeOpportunities,
+  verifiedAssignmentFees
 } from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
@@ -83,6 +91,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Blocked rooms" value={String(blockedDealRooms.length)} detail="Blocker engine queue" />
         <MetricCard label="Fees at risk" value={formatCurrency(projectedAssignmentFeesAtRisk)} detail="Projected spreads behind blockers" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Evidence packets" value={String(dealEvidencePackets.length)} detail="Proof-backed deal records" />
+        <MetricCard label="Verified fees" value={formatCurrency(verifiedAssignmentFees)} detail="Approved evidence only" />
+        <MetricCard label="Evidence fee risk" value={formatCurrency(evidenceFeesAtRisk)} detail="Missing proof or review" />
+        <MetricCard label="10K+ verified" value={String(verified10kAssignmentFeeOpportunities.length)} detail="Actual source-number flag" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -108,6 +122,10 @@ export default function CommandCenterPage() {
               ["high", "Protect fees at risk", `${formatCurrency(projectedAssignmentFeesAtRisk)} projected assignment fees sit behind blockers`],
               ["normal", "Review coordination recommendations", `${closingNextBestActions.length} next best actions are internal recommendations only`],
               ["normal", "Monitor assignment-ready rooms", `${assignmentReadyDealRooms.length} room is assignment-ready inside V7 coordination`],
+              ["critical", "Review evidence-backed fees", `${formatCurrency(projectedEvidenceAssignmentFees)} projected across ${assignmentFeeAttributions.length} attribution records`],
+              ["high", "Clear missing evidence", `${missingEvidencePackets.length} packets need source-record support`],
+              ["high", "Approve evidence review queue", `${dealsNeedingEvidenceOwnerReview.length} packets need owner evidence review`],
+              ["normal", "Protect verified assignment fees", `${formatCurrency(verifiedAssignmentFees)} currently verified from source numbers`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]
