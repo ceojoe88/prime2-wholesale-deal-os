@@ -14,6 +14,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - V4 contract control and title handoff prep with contract-control records, title packet placeholders, assignment readiness gates, and no legal execution or title submission.
 - V5 controlled live communication gate with draft records, safety checks, dry-run receipts, owner approvals, mock provider adapters, idempotency, and blocked-attempt audit records.
 - V6 invite-gated seller offer review room with sanitized offer status, seller visibility gates, response intake records, and no buyer/profit/internal strategy exposure.
+- V7 unified deal room and closing coordination gate connecting seller offer room, buyer deal room, contract control, title handoff, communications, and assignment readiness with blocker tracking and recommendation-only next actions.
 
 ## Safety Boundaries
 
@@ -30,6 +31,8 @@ V4 moves offer-ready opportunities into contract-control preparation only. Contr
 V5 allows only narrow communication preparation and gated one-off attempts. Live communication is disabled by default by a global flag and per-draft live flag. A draft must pass safety checks, produce a dry-run receipt, remain unchanged after dry-run, have owner approval, have provider readiness, tie its recipient to the source record, and satisfy idempotency before any mock-send can occur. Bulk sends, campaigns, auto follow-up sequences, buyer blasts, title-company submission, legal advice, pressure, fake urgency, fake buyer claims, guaranteed close claims, unsupported claims, and hidden/deceptive assignment language are blocked.
 
 V6 adds an invite-gated seller offer review room. The operator system remains the source of truth, and seller visibility is blocked unless the offer packet is approved, compliance and owner approvals are recorded, contract-control status is valid, offer language passes safety checks, and portal visibility is explicitly enabled. Seller pages show only approved offer status, amount, property summary, timeline estimate, access next step, title review status, and document checklist. Buyer data, assignment fee logic, buyer price, spread strategy, MAO logic, motivation/temperature scores, internal notes, Wholesale Prime recommendations, compliance internals, and queues are hidden. Seller responses are draft/intake records for operator review only; no acceptance, negotiation automation, contract execution, or file transmission occurs.
+
+V7 adds an internal unified deal room for closing coordination. It connects seller offer room status, buyer deal room status, contract control, title handoff, communications, assignment readiness, compliance, blocker records, projected fees at risk, closing timeline, and owner approval status. This layer is coordination-only: it cannot generate executable contracts, submit to title, handle payments, auto-negotiate, or change real-world status without the owner.
 
 ## Backend
 
@@ -84,6 +87,11 @@ Useful endpoints:
 - `POST /api/seller-portal/responses` with `X-Seller-Invite: demo-seller-invite`
 - `POST /api/seller-portal/offers/{offer_id}/accept` returns a blocked response in V6
 - `GET /api/seller-portal/internal-dashboard`
+- `GET /api/deal-room`
+- `GET /api/deal-room/{deal_room_id}`
+- `GET /api/closing-coordination`
+- `GET /api/closing-coordination/blockers`
+- `GET /api/closing-coordination/readiness`
 - `GET /api/compliance`
 - `POST /api/actions/validate`
 - `POST /api/data-import/leads/preview`
@@ -141,10 +149,18 @@ Seller portal V6 routes:
 - [http://localhost:3000/seller-portal/documents](http://localhost:3000/seller-portal/documents)
 - [http://localhost:3000/seller-portal/messages](http://localhost:3000/seller-portal/messages)
 
+Unified deal room V7 routes:
+
+- [http://localhost:3000/dashboard/deal-room](http://localhost:3000/dashboard/deal-room)
+- [http://localhost:3000/dashboard/closing-coordination](http://localhost:3000/dashboard/closing-coordination)
+- [http://localhost:3000/dashboard/closing-coordination/blockers](http://localhost:3000/dashboard/closing-coordination/blockers)
+- [http://localhost:3000/dashboard/closing-coordination/readiness](http://localhost:3000/dashboard/closing-coordination/readiness)
+
 ## Validation
 
 ```powershell
 cd backend
+..\.venv\Scripts\python.exe seed.py
 ..\.venv\Scripts\python.exe -m pytest
 
 cd ..\frontend

@@ -16,6 +16,8 @@ V5 adds a controlled communication gate. It can prepare communication drafts and
 
 V6 adds a controlled seller offer review room. The private operator system remains the source of truth, and seller-facing visibility is invite-gated, explicitly enabled per offer, sanitized, and blocked unless offer packet, compliance, owner approval, contract-control status, and language-safety gates pass. Seller responses are intake-only for operator review; there is no acceptance execution, negotiation automation, contract execution, file transmission, legal advice, buyer data exposure, or internal profit/spread exposure.
 
+V7 adds a unified internal deal room and closing coordination gate. It connects seller offer room, buyer deal room, contract control, title handoff, communication drafts, compliance, and assignment readiness into one governed coordination layer. It is recommendation-only and cannot execute legal documents, submit title packages, handle payments, or automate buyer/seller negotiation.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -27,6 +29,7 @@ V6 adds a controlled seller offer review room. The private operator system remai
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
 - `app/domain/seller_portal.py`: V6 seller visibility gate, sanitized offer-room projection, response intake guard, forbidden-field leak guard, and seller portal policy.
+- `app/domain/closing_coordination.py`: V7 unified deal room status sync, closing checklist readiness, blocker generation, next-best-action recommendations, and coordination dashboard aggregation.
 - `app/domain/rules.py`: private-mode rules and v1 action validation.
 - `app/domain/compliance.py`: purchase, assignment, title, seller disclosure, buyer disclosure, and state-review checklists.
 - `app/domain/imports.py`: CSV-ready lead import preview with accepted source categories.
@@ -76,6 +79,10 @@ erDiagram
   OFFER_PACKET ||--o{ SELLER_OFFER_PUBLICATION : gates
   CONTRACT_CONTROL ||--o{ SELLER_OFFER_PUBLICATION : validates
   SELLER_OFFER_PUBLICATION ||--o{ SELLER_PORTAL_RESPONSE : intakes
+  DEAL ||--o{ UNIFIED_DEAL_ROOM : coordinates
+  CONTRACT_CONTROL ||--o{ UNIFIED_DEAL_ROOM : controls
+  UNIFIED_DEAL_ROOM ||--o| CLOSING_COORDINATION_CHECKLIST : checks
+  UNIFIED_DEAL_ROOM ||--o{ DEAL_ROOM_BLOCKER : blocks
 ```
 
 ## V2 Buyer Portal
@@ -266,6 +273,38 @@ Seller response records cover seller portal notes, offer questions, appointment/
 
 The internal dashboard shows seller-visible offers, seller portal questions, seller document checklist queue, seller response queue, and blocked seller visibility reasons.
 
+## V7 Unified Deal Room
+
+Internal routes:
+
+- `/dashboard/deal-room`
+- `/dashboard/deal-room/[dealRoomId]`
+- `/dashboard/closing-coordination`
+- `/dashboard/closing-coordination/blockers`
+- `/dashboard/closing-coordination/readiness`
+
+Unified deal room records connect each deal to contract control, seller portal status, buyer portal status, title handoff status, assignment readiness status, communication status, compliance status, closing timeline, blockers, next required actions, owner approval status, and projected assignment fees at risk.
+
+The closing coordination checklist tracks:
+
+- Seller accepted offer
+- Contract prep ready
+- Buyer matched
+- Buyer POF verified
+- Assignment allowed confirmed
+- Title handoff prepared
+- Inspection/access coordinated
+- Seller documents requested
+- Buyer intent recorded
+- Compliance review complete
+- Owner approval complete
+
+The blocker engine creates internal blocker records for missing buyer POF, missing seller documents, missing compliance review, missing owner approval, weak buyer margin, high-risk language, assignment not confirmed, title handoff incomplete, and communication drafts pending.
+
+The next-best-action engine only recommends internal actions such as reviewing seller response, verifying buyer POF, preparing title handoff, approving a communication dry-run, updating the closing timeline, resolving a compliance blocker, or reviewing assignment readiness.
+
+The V7 safety boundary blocks legal execution, executable contract generation, title-company submission, payment handling, hidden fee/deceptive language, automatic negotiation, and automatic real-world status changes.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -302,6 +341,11 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/communications/dry-runs`
 - `/dashboard/communications/attempts`
 - `/dashboard/communications/approvals`
+- `/dashboard/deal-room`
+- `/dashboard/deal-room/[dealRoomId]`
+- `/dashboard/closing-coordination`
+- `/dashboard/closing-coordination/blockers`
+- `/dashboard/closing-coordination/readiness`
 
 Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
 
@@ -338,6 +382,8 @@ V4 exception: contract/title preparation is allowed only as draft records, check
 V5 exception: communication attempts are allowed only through the controlled gate and default to blocked because the global live flag is off. Dry-runs and blocked attempts are auditable, provider adapters are mock-only, and bulk/campaign/title/buyer-blast paths remain blocked.
 
 V6 exception: the controlled seller portal is allowed only as an invite-gated sanitized offer review room. It can receive draft/intake responses for operator review, but it cannot execute acceptance, negotiate, transmit documents, expose buyer/profit/internal strategy, or provide legal advice.
+
+V7 exception: unified deal rooms are allowed only as internal coordination records. They can show blocker queues, next recommended actions, projected fees at risk, and readiness status inside the operator dashboard, but they cannot execute legal documents, submit title packets, process payments, auto-negotiate, or expose internal data to buyer/seller portals.
 
 Allowed:
 

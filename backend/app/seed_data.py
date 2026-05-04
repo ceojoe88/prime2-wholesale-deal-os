@@ -11,6 +11,7 @@ from app.domain.communications import (
     idempotency_key_for,
     validate_communication_safety,
 )
+from app.domain.closing_coordination import sync_deal_room
 from app.domain.compliance import REQUIRED_CONFIRMATIONS
 from app.domain.contract_control import update_assignment_readiness, update_contract_prep_gate
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
@@ -28,6 +29,7 @@ from app.models import (
     BuyerDealPublication,
     BuyerInterest,
     BuyerMatch,
+    ClosingCoordinationChecklist,
     ComplianceRecord,
     CommunicationApproval,
     CommunicationDraft,
@@ -35,6 +37,7 @@ from app.models import (
     CommunicationSendAttempt,
     ContractControl,
     Deal,
+    DealRoomBlocker,
     Division,
     Lead,
     OfferPacket,
@@ -42,6 +45,7 @@ from app.models import (
     SellerOfferPublication,
     SellerPortalResponse,
     TitleHandoffPacket,
+    UnifiedDealRoom,
 )
 
 
@@ -1478,6 +1482,279 @@ def build_seller_portal_response_records() -> list[dict[str, object]]:
     ]
 
 
+def build_unified_deal_room_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "deal-room-001",
+            "deal_id": "deal-001",
+            "contract_control_id": "contract-001",
+            "seller_offer_publication_id": "seller-offer-001",
+            "buyer_deal_publication_id": "publication-001",
+            "title_handoff_packet_id": "title-001",
+            "assignment_readiness_record_id": "assignment-ready-001",
+            "seller_portal_status": "visible",
+            "buyer_portal_status": "visible",
+            "title_handoff_status": "draft_ready",
+            "assignment_readiness_status": "assignment_ready",
+            "communication_status": "ready",
+            "compliance_status": "complete",
+            "closing_timeline": "14-21 days",
+            "blockers": [],
+            "next_required_actions": [],
+            "owner_approval_status": "approved",
+            "coordination_status": "closing_ready",
+            "projected_assignment_fee_at_risk": 0,
+            "draft_only": True,
+            "legal_execution_allowed": False,
+            "executable_contract_generated": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "automatic_negotiation_allowed": False,
+        },
+        {
+            "id": "deal-room-002",
+            "deal_id": "deal-003",
+            "contract_control_id": "contract-002",
+            "seller_offer_publication_id": "seller-offer-002",
+            "buyer_deal_publication_id": "publication-003",
+            "title_handoff_packet_id": "title-002",
+            "assignment_readiness_record_id": "assignment-ready-004",
+            "seller_portal_status": "blocked",
+            "buyer_portal_status": "visible",
+            "title_handoff_status": "blocked_owner_review",
+            "assignment_readiness_status": "blocked",
+            "communication_status": "missing",
+            "compliance_status": "complete",
+            "closing_timeline": "30 days",
+            "blockers": ["missing_owner_approval", "assignment_not_confirmed"],
+            "next_required_actions": ["update closing timeline", "review assignment readiness"],
+            "owner_approval_status": "pending",
+            "coordination_status": "blocked",
+            "projected_assignment_fee_at_risk": 13000,
+            "draft_only": True,
+            "legal_execution_allowed": False,
+            "executable_contract_generated": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "automatic_negotiation_allowed": False,
+        },
+        {
+            "id": "deal-room-003",
+            "deal_id": "deal-005",
+            "contract_control_id": "contract-003",
+            "seller_offer_publication_id": "seller-offer-003",
+            "buyer_deal_publication_id": "publication-005",
+            "title_handoff_packet_id": "title-003",
+            "assignment_readiness_record_id": "assignment-ready-003",
+            "seller_portal_status": "blocked",
+            "buyer_portal_status": "blocked",
+            "title_handoff_status": "blocked_compliance",
+            "assignment_readiness_status": "blocked",
+            "communication_status": "missing",
+            "compliance_status": "pending",
+            "closing_timeline": "21-30 days",
+            "blockers": ["missing_compliance_review", "assignment_not_confirmed"],
+            "next_required_actions": ["resolve compliance blocker", "review assignment readiness"],
+            "owner_approval_status": "approved",
+            "coordination_status": "blocked",
+            "projected_assignment_fee_at_risk": 15000,
+            "draft_only": True,
+            "legal_execution_allowed": False,
+            "executable_contract_generated": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "automatic_negotiation_allowed": False,
+        },
+        {
+            "id": "deal-room-004",
+            "deal_id": "deal-006",
+            "contract_control_id": "contract-004",
+            "seller_offer_publication_id": "seller-offer-005",
+            "buyer_deal_publication_id": "publication-006",
+            "title_handoff_packet_id": None,
+            "assignment_readiness_record_id": None,
+            "seller_portal_status": "blocked",
+            "buyer_portal_status": "blocked",
+            "title_handoff_status": "missing",
+            "assignment_readiness_status": "blocked",
+            "communication_status": "missing",
+            "compliance_status": "complete",
+            "closing_timeline": "",
+            "blockers": ["weak_buyer_margin", "high_risk_language"],
+            "next_required_actions": ["review assignment readiness", "resolve compliance blocker"],
+            "owner_approval_status": "approved",
+            "coordination_status": "blocked",
+            "projected_assignment_fee_at_risk": 8000,
+            "draft_only": True,
+            "legal_execution_allowed": False,
+            "executable_contract_generated": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "automatic_negotiation_allowed": False,
+        },
+    ]
+
+
+def build_closing_coordination_checklist_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "closing-checklist-001",
+            "deal_room_id": "deal-room-001",
+            "seller_accepted_offer": True,
+            "contract_prep_ready": True,
+            "buyer_matched": True,
+            "buyer_pof_verified": True,
+            "assignment_allowed_confirmed": True,
+            "title_handoff_prepared": True,
+            "inspection_access_coordinated": True,
+            "seller_documents_requested": True,
+            "buyer_intent_recorded": True,
+            "compliance_review_complete": True,
+            "owner_approval_complete": True,
+            "readiness_status": "checklist_complete",
+            "blocked_reasons": [],
+            "draft_only": True,
+            "legal_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "automatic_negotiation_allowed": False,
+        },
+        {
+            "id": "closing-checklist-002",
+            "deal_room_id": "deal-room-002",
+            "seller_accepted_offer": True,
+            "contract_prep_ready": False,
+            "buyer_matched": False,
+            "buyer_pof_verified": True,
+            "assignment_allowed_confirmed": True,
+            "title_handoff_prepared": True,
+            "inspection_access_coordinated": True,
+            "seller_documents_requested": True,
+            "buyer_intent_recorded": True,
+            "compliance_review_complete": True,
+            "owner_approval_complete": False,
+            "readiness_status": "blocked",
+            "blocked_reasons": ["contract_prep_ready", "buyer_matched", "owner_approval_complete"],
+            "draft_only": True,
+            "legal_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "automatic_negotiation_allowed": False,
+        },
+        {
+            "id": "closing-checklist-003",
+            "deal_room_id": "deal-room-003",
+            "seller_accepted_offer": True,
+            "contract_prep_ready": False,
+            "buyer_matched": True,
+            "buyer_pof_verified": True,
+            "assignment_allowed_confirmed": False,
+            "title_handoff_prepared": False,
+            "inspection_access_coordinated": False,
+            "seller_documents_requested": False,
+            "buyer_intent_recorded": True,
+            "compliance_review_complete": False,
+            "owner_approval_complete": True,
+            "readiness_status": "blocked",
+            "blocked_reasons": [
+                "contract_prep_ready",
+                "assignment_allowed_confirmed",
+                "title_handoff_prepared",
+                "inspection_access_coordinated",
+                "seller_documents_requested",
+                "compliance_review_complete",
+            ],
+            "draft_only": True,
+            "legal_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "automatic_negotiation_allowed": False,
+        },
+        {
+            "id": "closing-checklist-004",
+            "deal_room_id": "deal-room-004",
+            "seller_accepted_offer": False,
+            "contract_prep_ready": False,
+            "buyer_matched": False,
+            "buyer_pof_verified": False,
+            "assignment_allowed_confirmed": False,
+            "title_handoff_prepared": False,
+            "inspection_access_coordinated": False,
+            "seller_documents_requested": False,
+            "buyer_intent_recorded": False,
+            "compliance_review_complete": True,
+            "owner_approval_complete": True,
+            "readiness_status": "blocked",
+            "blocked_reasons": [
+                "seller_accepted_offer",
+                "contract_prep_ready",
+                "buyer_matched",
+                "buyer_pof_verified",
+                "assignment_allowed_confirmed",
+                "title_handoff_prepared",
+                "inspection_access_coordinated",
+                "seller_documents_requested",
+                "buyer_intent_recorded",
+            ],
+            "draft_only": True,
+            "legal_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "automatic_negotiation_allowed": False,
+        },
+    ]
+
+
+def build_deal_room_blocker_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "deal-blocker-001",
+            "deal_room_id": "deal-room-002",
+            "deal_id": "deal-003",
+            "blocker_type": "missing_owner_approval",
+            "severity": "critical",
+            "status": "open",
+            "source": "closing_coordination_gate",
+            "detail": "Owner approval is required for real-world coordination steps.",
+            "recommendation": "update closing timeline",
+            "blocks_closing": True,
+            "owner_action_required": True,
+            "resolved": False,
+            "draft_only": True,
+        },
+        {
+            "id": "deal-blocker-002",
+            "deal_room_id": "deal-room-003",
+            "deal_id": "deal-005",
+            "blocker_type": "missing_compliance_review",
+            "severity": "critical",
+            "status": "open",
+            "source": "closing_coordination_gate",
+            "detail": "Compliance review must be complete before closing coordination can clear.",
+            "recommendation": "resolve compliance blocker",
+            "blocks_closing": True,
+            "owner_action_required": True,
+            "resolved": False,
+            "draft_only": True,
+        },
+        {
+            "id": "deal-blocker-003",
+            "deal_room_id": "deal-room-004",
+            "deal_id": "deal-006",
+            "blocker_type": "weak_buyer_margin",
+            "severity": "critical",
+            "status": "open",
+            "source": "closing_coordination_gate",
+            "detail": "Buyer margin is below the protected threshold.",
+            "recommendation": "review assignment readiness",
+            "blocks_closing": True,
+            "owner_action_required": True,
+            "resolved": False,
+            "draft_only": True,
+        },
+    ]
+
+
 def _draft_obj(row: dict[str, object]):
     return type("DraftSeedObj", (), row)()
 
@@ -1594,10 +1871,10 @@ def build_communication_draft_records() -> list[dict[str, object]]:
             "recipient_email_placeholder": "title-company-placeholder@example.test",
             "recipient_phone_placeholder": "",
             "source_record_type": "title_handoff_packet",
-            "source_record_id": "title-001",
+            "source_record_id": "title-002",
             "seller_interaction_id": None,
             "buyer_interest_id": None,
-            "title_handoff_packet_id": "title-001",
+            "title_handoff_packet_id": "title-002",
             "subject": "Draft title handoff packet for owner review",
             "draft_body": "Draft only: attached packet placeholders need owner and attorney/title review before any title-company submission or external message.",
             "status": "safety_needed",
@@ -1834,6 +2111,9 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
+        "unified_deal_rooms": build_unified_deal_room_records(),
+        "closing_coordination_checklists": build_closing_coordination_checklist_records(),
+        "deal_room_blockers": build_deal_room_blocker_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
         "communication_drafts": communication_drafts,
@@ -1850,6 +2130,9 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        DealRoomBlocker,
+        ClosingCoordinationChecklist,
+        UnifiedDealRoom,
         SellerPortalResponse,
         SellerOfferPublication,
         CommunicationSendAttempt,
@@ -1897,6 +2180,12 @@ def seed_database(session: Session) -> dict[str, int]:
         AssignmentReadinessRecord(**row)
         for row in payload["assignment_readiness_records"]
     )
+    session.add_all(UnifiedDealRoom(**row) for row in payload["unified_deal_rooms"])
+    session.add_all(
+        ClosingCoordinationChecklist(**row)
+        for row in payload["closing_coordination_checklists"]
+    )
+    session.add_all(DealRoomBlocker(**row) for row in payload["deal_room_blockers"])
     session.add_all(CommunicationDraft(**row) for row in payload["communication_drafts"])
     session.add_all(
         CommunicationDryRunReceipt(**row)
@@ -1930,5 +2219,7 @@ def seed_database(session: Session) -> dict[str, int]:
             draft.safety_result = validate_communication_safety(draft)
             draft.safety_passed = bool(draft.safety_result["allowed"])
             draft.risk_status = "clear" if draft.safety_passed else "blocked"
+    for room in session.query(UnifiedDealRoom).all():
+        sync_deal_room(session, room)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

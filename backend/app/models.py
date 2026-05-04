@@ -136,6 +136,9 @@ class Deal(TimestampMixin, Base):
     seller_offer_publications: Mapped[list["SellerOfferPublication"]] = relationship(
         back_populates="deal"
     )
+    unified_deal_rooms: Mapped[list["UnifiedDealRoom"]] = relationship(
+        back_populates="deal"
+    )
 
 
 class Buyer(TimestampMixin, Base):
@@ -333,6 +336,9 @@ class ContractControl(TimestampMixin, Base):
         back_populates="contract_control"
     )
     seller_offer_publications: Mapped[list["SellerOfferPublication"]] = relationship(
+        back_populates="contract_control"
+    )
+    unified_deal_rooms: Mapped[list["UnifiedDealRoom"]] = relationship(
         back_populates="contract_control"
     )
 
@@ -607,3 +613,111 @@ class CommunicationSendAttempt(TimestampMixin, Base):
     dry_run_receipt: Mapped[CommunicationDryRunReceipt | None] = relationship(
         back_populates="send_attempts"
     )
+
+
+class UnifiedDealRoom(TimestampMixin, Base):
+    __tablename__ = "unified_deal_rooms"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    contract_control_id: Mapped[str] = mapped_column(
+        ForeignKey("contract_controls.id"), nullable=False
+    )
+    seller_offer_publication_id: Mapped[str | None] = mapped_column(
+        ForeignKey("seller_offer_publications.id"), nullable=True
+    )
+    buyer_deal_publication_id: Mapped[str | None] = mapped_column(
+        ForeignKey("buyer_deal_publications.id"), nullable=True
+    )
+    title_handoff_packet_id: Mapped[str | None] = mapped_column(
+        ForeignKey("title_handoff_packets.id"), nullable=True
+    )
+    assignment_readiness_record_id: Mapped[str | None] = mapped_column(
+        ForeignKey("assignment_readiness_records.id"), nullable=True
+    )
+    seller_portal_status: Mapped[str] = mapped_column(String(80), default="missing")
+    buyer_portal_status: Mapped[str] = mapped_column(String(80), default="missing")
+    title_handoff_status: Mapped[str] = mapped_column(String(80), default="missing")
+    assignment_readiness_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    communication_status: Mapped[str] = mapped_column(String(80), default="pending")
+    compliance_status: Mapped[str] = mapped_column(String(80), default="pending")
+    closing_timeline: Mapped[str] = mapped_column(String(120), default="")
+    blockers: Mapped[list[str]] = mapped_column(JSON, default=list)
+    next_required_actions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending")
+    coordination_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    projected_assignment_fee_at_risk: Mapped[int] = mapped_column(Integer, default=0)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    legal_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    executable_contract_generated: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    payment_handling_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    automatic_negotiation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal: Mapped[Deal] = relationship(back_populates="unified_deal_rooms")
+    contract_control: Mapped[ContractControl] = relationship(
+        back_populates="unified_deal_rooms"
+    )
+    seller_offer_publication: Mapped[SellerOfferPublication | None] = relationship()
+    buyer_deal_publication: Mapped[BuyerDealPublication | None] = relationship()
+    title_handoff_packet: Mapped[TitleHandoffPacket | None] = relationship()
+    assignment_readiness_record: Mapped[AssignmentReadinessRecord | None] = relationship()
+    closing_checklist: Mapped["ClosingCoordinationChecklist | None"] = relationship(
+        back_populates="deal_room",
+        uselist=False,
+    )
+    blocker_records: Mapped[list["DealRoomBlocker"]] = relationship(
+        back_populates="deal_room"
+    )
+
+
+class ClosingCoordinationChecklist(TimestampMixin, Base):
+    __tablename__ = "closing_coordination_checklists"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_room_id: Mapped[str] = mapped_column(
+        ForeignKey("unified_deal_rooms.id"), unique=True, nullable=False
+    )
+    seller_accepted_offer: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_prep_ready: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_matched: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_pof_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    assignment_allowed_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_handoff_prepared: Mapped[bool] = mapped_column(Boolean, default=False)
+    inspection_access_coordinated: Mapped[bool] = mapped_column(Boolean, default=False)
+    seller_documents_requested: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_intent_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    compliance_review_complete: Mapped[bool] = mapped_column(Boolean, default=False)
+    owner_approval_complete: Mapped[bool] = mapped_column(Boolean, default=False)
+    readiness_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    legal_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    payment_handling_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    automatic_negotiation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal_room: Mapped[UnifiedDealRoom] = relationship(back_populates="closing_checklist")
+
+
+class DealRoomBlocker(TimestampMixin, Base):
+    __tablename__ = "deal_room_blockers"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_room_id: Mapped[str] = mapped_column(
+        ForeignKey("unified_deal_rooms.id"), nullable=False
+    )
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    blocker_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    severity: Mapped[str] = mapped_column(String(40), default="medium")
+    status: Mapped[str] = mapped_column(String(80), default="open")
+    source: Mapped[str] = mapped_column(String(100), default="")
+    detail: Mapped[str] = mapped_column(Text, default="")
+    recommendation: Mapped[str] = mapped_column(Text, default="")
+    blocks_closing: Mapped[bool] = mapped_column(Boolean, default=True)
+    owner_action_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    resolved: Mapped[bool] = mapped_column(Boolean, default=False)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    deal_room: Mapped[UnifiedDealRoom] = relationship(back_populates="blocker_records")
+    deal: Mapped[Deal] = relationship()

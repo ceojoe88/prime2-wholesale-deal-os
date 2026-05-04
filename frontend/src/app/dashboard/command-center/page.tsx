@@ -4,8 +4,38 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
-import { assignmentReadyRecords, blockedCommunicationAttempts, blockedSellerVisibilityOffers, buyerPofGaps, communicationDraftsNeedingSafety, communicationDryRunsNeedingApproval, complianceRecords, contractPrepBlocked, deals, formatCurrency, hotDeals, hotSellerLeads, leads, offerPackets, sellerDocumentChecklistQueue, sellerInteractions, sellerPortalQuestions, sellerResponseQueue, sellerVisibleOffers, staleSellerFollowUps, titleHandoffPackets } from "@/lib/demo-data";
-import { buyerInterests, buyerPortalBlockedDeals, buyerVisibleDeals } from "@/lib/demo-data";
+import {
+  activeDealRooms,
+  assignmentReadyDealRooms,
+  assignmentReadyRecords,
+  blockedCommunicationAttempts,
+  blockedDealRooms,
+  blockedSellerVisibilityOffers,
+  buyerInterests,
+  buyerPofGaps,
+  buyerPortalBlockedDeals,
+  buyerVisibleDeals,
+  closingNextBestActions,
+  closingReadyDealRooms,
+  communicationDraftsNeedingSafety,
+  communicationDryRunsNeedingApproval,
+  complianceRecords,
+  contractPrepBlocked,
+  deals,
+  formatCurrency,
+  hotDeals,
+  hotSellerLeads,
+  leads,
+  offerPackets,
+  projectedAssignmentFeesAtRisk,
+  sellerDocumentChecklistQueue,
+  sellerInteractions,
+  sellerPortalQuestions,
+  sellerResponseQueue,
+  sellerVisibleOffers,
+  staleSellerFollowUps,
+  titleHandoffPackets
+} from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
   const staleFollowUps = leads.filter((lead) => lead.stage === "follow_up");
@@ -47,6 +77,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Seller docs" value={String(sellerDocumentChecklistQueue.length)} detail="Checklist queue" />
         <MetricCard label="Seller gate blocks" value={String(blockedSellerVisibilityOffers.length)} detail="Visibility reasons" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Deal rooms" value={String(activeDealRooms.length)} detail="Unified coordination records" />
+        <MetricCard label="Closing-ready" value={String(closingReadyDealRooms.length)} detail="Buyer, seller, title, compliance clear" />
+        <MetricCard label="Blocked rooms" value={String(blockedDealRooms.length)} detail="Blocker engine queue" />
+        <MetricCard label="Fees at risk" value={formatCurrency(projectedAssignmentFeesAtRisk)} detail="Projected spreads behind blockers" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -67,6 +103,11 @@ export default function CommandCenterPage() {
               ["normal", "Inspect blocked communication attempts", `${blockedCommunicationAttempts.length} blocked attempts were audited without provider calls`],
               ["high", "Review seller offer room questions", `${sellerResponseQueue.length} seller intake records need operator review`],
               ["high", "Clear seller visibility blocks", `${blockedSellerVisibilityOffers.length} seller offers blocked by approval, review, or safety gates`],
+              ["critical", "Resolve closing coordination blockers", `${blockedDealRooms.length} unified rooms are blocked`],
+              ["high", "Review closing-ready deal rooms", `${closingReadyDealRooms.length} room can move with owner-controlled next steps`],
+              ["high", "Protect fees at risk", `${formatCurrency(projectedAssignmentFeesAtRisk)} projected assignment fees sit behind blockers`],
+              ["normal", "Review coordination recommendations", `${closingNextBestActions.length} next best actions are internal recommendations only`],
+              ["normal", "Monitor assignment-ready rooms", `${assignmentReadyDealRooms.length} room is assignment-ready inside V7 coordination`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

@@ -39,6 +39,11 @@ const requiredRouteFiles = [
   "src/app/dashboard/communications/dry-runs/page.tsx",
   "src/app/dashboard/communications/attempts/page.tsx",
   "src/app/dashboard/communications/approvals/page.tsx",
+  "src/app/dashboard/deal-room/page.tsx",
+  "src/app/dashboard/deal-room/[dealRoomId]/page.tsx",
+  "src/app/dashboard/closing-coordination/page.tsx",
+  "src/app/dashboard/closing-coordination/blockers/page.tsx",
+  "src/app/dashboard/closing-coordination/readiness/page.tsx",
   "src/app/dashboard/buyers/page.tsx",
   "src/app/dashboard/buyers/[buyerId]/page.tsx",
   "src/app/dashboard/buyer-matches/page.tsx",
@@ -69,7 +74,7 @@ test("dashboard route files exist and render a page component", () => {
     const absolute = join(root, routeFile);
     assert.equal(existsSync(absolute), true, routeFile);
     const source = readFileSync(absolute, "utf8");
-    assert.match(source, /export default function/);
+    assert.match(source, /export default (async )?function/);
     assert.match(source, /return \(/);
   }
 });

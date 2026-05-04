@@ -23,6 +23,12 @@ from app.domain.communications import (
     update_draft_safety,
     validate_communication_safety,
 )
+from app.domain.closing_coordination import (
+    closing_coordination_dashboard,
+    closing_readiness_gate,
+    sync_deal_room,
+    unified_deal_room_summary,
+)
 from app.domain.compliance import compliance_checklists
 from app.domain.contract_control import (
     assignment_readiness_gate,
@@ -60,6 +66,7 @@ from app.models import (
     BuyerDealPublication,
     BuyerInterest,
     BuyerMatch,
+    ClosingCoordinationChecklist,
     ComplianceRecord,
     CommunicationApproval,
     CommunicationDraft,
@@ -67,6 +74,7 @@ from app.models import (
     CommunicationSendAttempt,
     ContractControl,
     Deal,
+    DealRoomBlocker,
     Division,
     Lead,
     OfferPacket,
@@ -74,6 +82,7 @@ from app.models import (
     SellerOfferPublication,
     SellerPortalResponse,
     TitleHandoffPacket,
+    UnifiedDealRoom,
 )
 from app.serializers import model_to_dict
 
@@ -559,6 +568,82 @@ def assignment_readiness(session: Session = Depends(get_session)) -> list[dict[s
                 "draft_only": True,
                 "contract_execution_allowed": False,
                 "title_submission_allowed": False,
+            }
+        )
+    session.commit()
+    return response
+
+
+@router.get("/deal-room")
+def unified_deal_rooms(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = closing_coordination_dashboard(session)
+    session.commit()
+    return {
+        "active_deal_rooms": dashboard["active_deal_rooms"],
+        "closing_ready_deals": dashboard["closing_ready_deals"],
+        "blocked_deals": dashboard["blocked_deals"],
+        "assignment_ready_deals": dashboard["assignment_ready_deals"],
+        "next_best_actions": dashboard["next_best_actions"],
+        "projected_assignment_fees_at_risk": dashboard["projected_assignment_fees_at_risk"],
+        "recommendation_only": True,
+        "legal_execution_allowed": False,
+        "title_submission_allowed": False,
+        "payment_handling_allowed": False,
+        "automatic_negotiation_allowed": False,
+    }
+
+
+@router.get("/deal-room/{deal_room_id}")
+def unified_deal_room_detail(
+    deal_room_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    room = session.get(UnifiedDealRoom, deal_room_id)
+    if room is None:
+        raise HTTPException(status_code=404, detail="Deal room not found")
+    sync_deal_room(session, room)
+    session.commit()
+    return unified_deal_room_summary(room)
+
+
+@router.get("/closing-coordination")
+def closing_coordination(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = closing_coordination_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/closing-coordination/blockers")
+def closing_coordination_blockers(session: Session = Depends(get_session)) -> list[dict]:
+    rooms = session.query(UnifiedDealRoom).all()
+    for room in rooms:
+        sync_deal_room(session, room)
+    session.commit()
+    return [
+        model_to_dict(blocker)
+        for blocker in session.query(DealRoomBlocker).all()
+        if not blocker.resolved
+    ]
+
+
+@router.get("/closing-coordination/readiness")
+def closing_coordination_readiness(session: Session = Depends(get_session)) -> list[dict[str, object]]:
+    rooms = session.query(UnifiedDealRoom).all()
+    response = []
+    for room in rooms:
+        gate = sync_deal_room(session, room)
+        response.append(
+            {
+                "deal_room_id": room.id,
+                "deal_id": room.deal_id,
+                "coordination_status": room.coordination_status,
+                "checklist": model_to_dict(room.closing_checklist) if room.closing_checklist else None,
+                "gate": gate,
+                "recommendation_only": True,
+                "legal_execution_allowed": False,
+                "title_submission_allowed": False,
+                "payment_handling_allowed": False,
+                "automatic_negotiation_allowed": False,
             }
         )
     session.commit()

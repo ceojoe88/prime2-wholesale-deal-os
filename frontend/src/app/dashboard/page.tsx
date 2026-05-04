@@ -5,18 +5,23 @@ import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
+  activeDealRooms,
+  assignmentReadyDealRooms,
+  assignmentReadyRecords,
+  blockedDealRooms,
   buyerMatches,
   buyerInterests,
   buyerPortalBlockedDeals,
   buyerVisibleDeals,
-  complianceRecords,
-  assignmentReadyRecords,
   buyerPofGaps,
   blockedCommunicationAttempts,
+  closingNextBestActions,
+  closingReadyDealRooms,
   communicationDrafts,
   communicationDraftsNeedingSafety,
   communicationDryRunsNeedingApproval,
   communicationRiskQueue,
+  complianceRecords,
   contractControls,
   contractPrepBlocked,
   contractPrepReady,
@@ -28,6 +33,7 @@ import {
   leads,
   offerReadyPackets,
   offerPackets,
+  projectedAssignmentFeesAtRisk,
   projectedAssignmentTotal,
   blockedSellerVisibilityOffers,
   sellerDocumentChecklistQueue,
@@ -146,6 +152,19 @@ export default function DashboardPage() {
           <RecordCard title="Seller response queue" meta={`${sellerResponseQueue.length} intake records pending review`} right={<Pill tone="gold">intake</Pill>} />
           <RecordCard title="Blocked seller visibility" meta={`${blockedSellerVisibilityOffers.length} offers blocked by gate reasons`} right={<Pill tone="red">blocked</Pill>} />
           <RecordCard title="Negotiation automation" meta="Off; no acceptance or status change from the portal." right={<Pill tone="red">off</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V7 Unified Deal Room">
+        <div className="grid-three">
+          <RecordCard title="Active deal rooms" meta={`${activeDealRooms.length} internal coordination rooms`} right={<Pill>source truth</Pill>} />
+          <RecordCard title="Closing-ready deals" meta={`${closingReadyDealRooms.length} rooms have all gates clear`} right={<Pill tone="green">ready</Pill>} />
+          <RecordCard title="Blocked deals" meta={`${blockedDealRooms.length} rooms have blocker records`} right={<Pill tone="red">blocked</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Assignment-ready rooms" meta={`${assignmentReadyDealRooms.length} tied to assignment readiness`} right={<Pill tone="green">ready</Pill>} />
+          <RecordCard title="Next best actions" meta={`${closingNextBestActions.length} recommendations queued`} right={<Pill tone="gold">internal</Pill>} />
+          <RecordCard title="Projected fees at risk" meta={formatCurrency(projectedAssignmentFeesAtRisk)} right={<Pill tone="red">at risk</Pill>} />
         </div>
       </Section>
     </div>

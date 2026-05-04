@@ -388,6 +388,73 @@ export type SellerPortalResponse = {
   automaticAcceptanceAllowed: false;
 };
 
+export type UnifiedDealRoom = {
+  id: string;
+  dealId: string;
+  contractControlId: string;
+  sellerOfferPublicationId: string | null;
+  buyerDealPublicationId: string | null;
+  titleHandoffPacketId: string | null;
+  assignmentReadinessRecordId: string | null;
+  sellerPortalStatus: string;
+  buyerPortalStatus: string;
+  titleHandoffStatus: string;
+  assignmentReadinessStatus: string;
+  communicationStatus: string;
+  complianceStatus: string;
+  closingTimeline: string;
+  blockers: string[];
+  nextRequiredActions: string[];
+  ownerApprovalStatus: string;
+  coordinationStatus: "closing_ready" | "blocked";
+  projectedAssignmentFeeAtRisk: number;
+  draftOnly: true;
+  legalExecutionAllowed: false;
+  executableContractGenerated: false;
+  titleSubmissionAllowed: false;
+  paymentHandlingAllowed: false;
+  automaticNegotiationAllowed: false;
+};
+
+export type ClosingCoordinationChecklist = {
+  id: string;
+  dealRoomId: string;
+  sellerAcceptedOffer: boolean;
+  contractPrepReady: boolean;
+  buyerMatched: boolean;
+  buyerPofVerified: boolean;
+  assignmentAllowedConfirmed: boolean;
+  titleHandoffPrepared: boolean;
+  inspectionAccessCoordinated: boolean;
+  sellerDocumentsRequested: boolean;
+  buyerIntentRecorded: boolean;
+  complianceReviewComplete: boolean;
+  ownerApprovalComplete: boolean;
+  readinessStatus: string;
+  blockedReasons: string[];
+  draftOnly: true;
+  legalExecutionAllowed: false;
+  titleSubmissionAllowed: false;
+  paymentHandlingAllowed: false;
+  automaticNegotiationAllowed: false;
+};
+
+export type DealRoomBlocker = {
+  id: string;
+  dealRoomId: string;
+  dealId: string;
+  blockerType: string;
+  severity: "medium" | "high" | "critical";
+  status: "open" | "resolved";
+  source: string;
+  detail: string;
+  recommendation: string;
+  blocksClosing: boolean;
+  ownerActionRequired: boolean;
+  resolved: boolean;
+  draftOnly: true;
+};
+
 export const divisions: Division[] = [
   {
     id: "market-intelligence",
@@ -741,7 +808,7 @@ export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
 export const communicationDrafts: CommunicationDraft[] = [
   { id: "comm-draft-001", draftType: "seller_follow_up", channel: "sms", recipientType: "seller", recipientEmailPlaceholder: "", recipientPhonePlaceholder: "seller-phone-placeholder-lead-001", sourceRecordType: "seller_interaction", sourceRecordId: "seller-interaction-001", subject: "", draftBody: "Hi Angela, this is a draft follow-up for owner review. We can talk through the as-is offer basis when it is convenient. Reply STOP to opt out.", status: "dry_run_ready", safetyChecked: true, safetyPassed: true, ownerApprovalRecorded: false, communicationLiveFlagEnabled: false, providerReadiness: false, lastDryRunReceiptId: "dryrun-001", approvedDryRunReceiptId: null, riskStatus: "clear", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
   { id: "comm-draft-002", draftType: "buyer_interest_response", channel: "email", recipientType: "buyer", recipientEmailPlaceholder: "jules@example.test", recipientPhonePlaceholder: "", sourceRecordType: "buyer_interest", sourceRecordId: "interest-001", subject: "Draft response on Dallas deal interest", draftBody: "Thanks for the draft interest. The owner will review proof of funds and deal-room details before any next step. This is not a contract or commitment.", status: "owner_approved_waiting_live_flags", safetyChecked: true, safetyPassed: true, ownerApprovalRecorded: true, communicationLiveFlagEnabled: false, providerReadiness: true, lastDryRunReceiptId: "dryrun-002", approvedDryRunReceiptId: "dryrun-002", riskStatus: "clear", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
-  { id: "comm-draft-003", draftType: "title_handoff_email", channel: "email", recipientType: "title_company", recipientEmailPlaceholder: "title-company-placeholder@example.test", recipientPhonePlaceholder: "", sourceRecordType: "title_handoff_packet", sourceRecordId: "title-001", subject: "Draft title handoff packet for owner review", draftBody: "Draft only: attached packet placeholders need owner and attorney/title review before any title-company submission or external message.", status: "safety_needed", safetyChecked: false, safetyPassed: false, ownerApprovalRecorded: false, communicationLiveFlagEnabled: false, providerReadiness: false, lastDryRunReceiptId: null, approvedDryRunReceiptId: null, riskStatus: "unchecked", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
+  { id: "comm-draft-003", draftType: "title_handoff_email", channel: "email", recipientType: "title_company", recipientEmailPlaceholder: "title-company-placeholder@example.test", recipientPhonePlaceholder: "", sourceRecordType: "title_handoff_packet", sourceRecordId: "title-002", subject: "Draft title handoff packet for owner review", draftBody: "Draft only: attached packet placeholders need owner and attorney/title review before any title-company submission or external message.", status: "safety_needed", safetyChecked: false, safetyPassed: false, ownerApprovalRecorded: false, communicationLiveFlagEnabled: false, providerReadiness: false, lastDryRunReceiptId: null, approvedDryRunReceiptId: null, riskStatus: "unchecked", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
   { id: "comm-draft-004", draftType: "internal_owner_note", channel: "internal", recipientType: "owner", recipientEmailPlaceholder: "owner", recipientPhonePlaceholder: "", sourceRecordType: "contract_control", sourceRecordId: "contract-001", subject: "Owner note: communication gate review", draftBody: "Review dry-run receipts, safety results, recipient source tie, and live flags before authorizing any one-off communication.", status: "draft", safetyChecked: true, safetyPassed: true, ownerApprovalRecorded: false, communicationLiveFlagEnabled: false, providerReadiness: true, lastDryRunReceiptId: null, approvedDryRunReceiptId: null, riskStatus: "clear", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
   { id: "comm-draft-005", draftType: "seller_follow_up", channel: "sms", recipientType: "seller", recipientEmailPlaceholder: "", recipientPhonePlaceholder: "seller-phone-placeholder-lead-007", sourceRecordType: "seller_interaction", sourceRecordId: "seller-interaction-005", subject: "", draftBody: "You must sign now. This is your last chance and we already have a buyer.", status: "blocked_safety", safetyChecked: true, safetyPassed: false, ownerApprovalRecorded: false, communicationLiveFlagEnabled: false, providerReadiness: false, lastDryRunReceiptId: "dryrun-003", approvedDryRunReceiptId: null, riskStatus: "blocked", blockedReasons: ["pressure_language", "fake_buyer_claim", "missing_sms_opt_out"], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
   { id: "comm-draft-006", draftType: "buyer_interest_response", channel: "email", recipientType: "buyer", recipientEmailPlaceholder: "priya@example.test", recipientPhonePlaceholder: "", sourceRecordType: "buyer_interest", sourceRecordId: "interest-002", subject: "Updated buyer response after dry-run", draftBody: "The owner updated this draft after the dry-run, so it must be dry-run again before any approval can be used.", status: "changed_after_dry_run", safetyChecked: true, safetyPassed: true, ownerApprovalRecorded: true, communicationLiveFlagEnabled: true, providerReadiness: true, lastDryRunReceiptId: "dryrun-004", approvedDryRunReceiptId: "dryrun-004", riskStatus: "clear", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false }
@@ -785,6 +852,32 @@ export const sellerPortalResponses: SellerPortalResponse[] = [
   { id: "seller-response-002", sellerOfferPublicationId: "seller-offer-001", responseType: "offer_question", sellerPortalNote: "", offerQuestion: "Can the closing timeline be closer to three weeks if access is easy?", appointmentAccessPreference: "", documentUploadPlaceholder: "", responseStatus: "received_for_operator_review", operatorReviewStatus: "pending_review", draftOnly: true, negotiationExecutionAllowed: false, contractExecutionAllowed: false, automaticAcceptanceAllowed: false },
   { id: "seller-response-003", sellerOfferPublicationId: "seller-offer-001", responseType: "appointment_access_preference", sellerPortalNote: "", offerQuestion: "", appointmentAccessPreference: "Weekday afternoons are easiest for access review.", documentUploadPlaceholder: "", responseStatus: "received_for_operator_review", operatorReviewStatus: "reviewed", draftOnly: true, negotiationExecutionAllowed: false, contractExecutionAllowed: false, automaticAcceptanceAllowed: false },
   { id: "seller-response-004", sellerOfferPublicationId: "seller-offer-001", responseType: "document_upload_placeholder", sellerPortalNote: "", offerQuestion: "", appointmentAccessPreference: "", documentUploadPlaceholder: "Seller plans to provide payoff statement placeholder after operator review.", responseStatus: "placeholder_only", operatorReviewStatus: "pending_review", draftOnly: true, negotiationExecutionAllowed: false, contractExecutionAllowed: false, automaticAcceptanceAllowed: false }
+];
+
+export const unifiedDealRooms: UnifiedDealRoom[] = [
+  { id: "deal-room-001", dealId: "deal-001", contractControlId: "contract-001", sellerOfferPublicationId: "seller-offer-001", buyerDealPublicationId: "publication-001", titleHandoffPacketId: "title-001", assignmentReadinessRecordId: "assignment-ready-001", sellerPortalStatus: "visible", buyerPortalStatus: "visible", titleHandoffStatus: "draft_ready", assignmentReadinessStatus: "assignment_ready", communicationStatus: "ready", complianceStatus: "complete", closingTimeline: "14-21 days", blockers: [], nextRequiredActions: [], ownerApprovalStatus: "approved", coordinationStatus: "closing_ready", projectedAssignmentFeeAtRisk: 0, draftOnly: true, legalExecutionAllowed: false, executableContractGenerated: false, titleSubmissionAllowed: false, paymentHandlingAllowed: false, automaticNegotiationAllowed: false },
+  { id: "deal-room-002", dealId: "deal-003", contractControlId: "contract-002", sellerOfferPublicationId: "seller-offer-002", buyerDealPublicationId: "publication-003", titleHandoffPacketId: "title-002", assignmentReadinessRecordId: "assignment-ready-004", sellerPortalStatus: "blocked", buyerPortalStatus: "visible", titleHandoffStatus: "blocked_owner_review", assignmentReadinessStatus: "blocked", communicationStatus: "pending", complianceStatus: "complete", closingTimeline: "30 days", blockers: ["missing_owner_approval", "communication_draft_pending"], nextRequiredActions: ["update closing timeline", "approve communication dry-run"], ownerApprovalStatus: "pending", coordinationStatus: "blocked", projectedAssignmentFeeAtRisk: 13000, draftOnly: true, legalExecutionAllowed: false, executableContractGenerated: false, titleSubmissionAllowed: false, paymentHandlingAllowed: false, automaticNegotiationAllowed: false },
+  { id: "deal-room-003", dealId: "deal-005", contractControlId: "contract-003", sellerOfferPublicationId: "seller-offer-003", buyerDealPublicationId: "publication-005", titleHandoffPacketId: "title-003", assignmentReadinessRecordId: "assignment-ready-003", sellerPortalStatus: "blocked", buyerPortalStatus: "blocked", titleHandoffStatus: "blocked_compliance", assignmentReadinessStatus: "blocked", communicationStatus: "missing", complianceStatus: "pending", closingTimeline: "21-30 days", blockers: ["missing_compliance_review", "assignment_not_confirmed", "missing_seller_document", "title_handoff_incomplete", "communication_draft_pending"], nextRequiredActions: ["resolve compliance blocker", "review assignment readiness", "review seller response", "prepare title handoff", "approve communication dry-run"], ownerApprovalStatus: "approved", coordinationStatus: "blocked", projectedAssignmentFeeAtRisk: 15000, draftOnly: true, legalExecutionAllowed: false, executableContractGenerated: false, titleSubmissionAllowed: false, paymentHandlingAllowed: false, automaticNegotiationAllowed: false },
+  { id: "deal-room-004", dealId: "deal-006", contractControlId: "contract-004", sellerOfferPublicationId: "seller-offer-005", buyerDealPublicationId: "publication-006", titleHandoffPacketId: null, assignmentReadinessRecordId: null, sellerPortalStatus: "blocked", buyerPortalStatus: "blocked", titleHandoffStatus: "missing", assignmentReadinessStatus: "blocked", communicationStatus: "missing", complianceStatus: "complete", closingTimeline: "", blockers: ["missing_buyer_pof", "missing_seller_document", "weak_buyer_margin", "high_risk_language", "assignment_not_confirmed", "title_handoff_incomplete", "communication_draft_pending"], nextRequiredActions: ["verify buyer POF", "review seller response", "review assignment readiness", "resolve compliance blocker", "prepare title handoff", "approve communication dry-run"], ownerApprovalStatus: "approved", coordinationStatus: "blocked", projectedAssignmentFeeAtRisk: 8000, draftOnly: true, legalExecutionAllowed: false, executableContractGenerated: false, titleSubmissionAllowed: false, paymentHandlingAllowed: false, automaticNegotiationAllowed: false }
+];
+
+export const closingCoordinationChecklists: ClosingCoordinationChecklist[] = [
+  { id: "closing-checklist-001", dealRoomId: "deal-room-001", sellerAcceptedOffer: true, contractPrepReady: true, buyerMatched: true, buyerPofVerified: true, assignmentAllowedConfirmed: true, titleHandoffPrepared: true, inspectionAccessCoordinated: true, sellerDocumentsRequested: true, buyerIntentRecorded: true, complianceReviewComplete: true, ownerApprovalComplete: true, readinessStatus: "checklist_complete", blockedReasons: [], draftOnly: true, legalExecutionAllowed: false, titleSubmissionAllowed: false, paymentHandlingAllowed: false, automaticNegotiationAllowed: false },
+  { id: "closing-checklist-002", dealRoomId: "deal-room-002", sellerAcceptedOffer: true, contractPrepReady: false, buyerMatched: false, buyerPofVerified: true, assignmentAllowedConfirmed: true, titleHandoffPrepared: true, inspectionAccessCoordinated: true, sellerDocumentsRequested: true, buyerIntentRecorded: true, complianceReviewComplete: true, ownerApprovalComplete: false, readinessStatus: "blocked", blockedReasons: ["contract_prep_ready", "buyer_matched", "owner_approval_complete"], draftOnly: true, legalExecutionAllowed: false, titleSubmissionAllowed: false, paymentHandlingAllowed: false, automaticNegotiationAllowed: false },
+  { id: "closing-checklist-003", dealRoomId: "deal-room-003", sellerAcceptedOffer: true, contractPrepReady: false, buyerMatched: true, buyerPofVerified: true, assignmentAllowedConfirmed: false, titleHandoffPrepared: false, inspectionAccessCoordinated: false, sellerDocumentsRequested: false, buyerIntentRecorded: true, complianceReviewComplete: false, ownerApprovalComplete: true, readinessStatus: "blocked", blockedReasons: ["contract_prep_ready", "assignment_allowed_confirmed", "title_handoff_prepared", "inspection_access_coordinated", "seller_documents_requested", "compliance_review_complete"], draftOnly: true, legalExecutionAllowed: false, titleSubmissionAllowed: false, paymentHandlingAllowed: false, automaticNegotiationAllowed: false },
+  { id: "closing-checklist-004", dealRoomId: "deal-room-004", sellerAcceptedOffer: false, contractPrepReady: false, buyerMatched: false, buyerPofVerified: false, assignmentAllowedConfirmed: false, titleHandoffPrepared: false, inspectionAccessCoordinated: false, sellerDocumentsRequested: false, buyerIntentRecorded: false, complianceReviewComplete: true, ownerApprovalComplete: true, readinessStatus: "blocked", blockedReasons: ["seller_accepted_offer", "contract_prep_ready", "buyer_matched", "buyer_pof_verified", "assignment_allowed_confirmed", "title_handoff_prepared", "inspection_access_coordinated", "seller_documents_requested", "buyer_intent_recorded"], draftOnly: true, legalExecutionAllowed: false, titleSubmissionAllowed: false, paymentHandlingAllowed: false, automaticNegotiationAllowed: false }
+];
+
+export const dealRoomBlockers: DealRoomBlocker[] = [
+  { id: "deal-blocker-001", dealRoomId: "deal-room-002", dealId: "deal-003", blockerType: "missing_owner_approval", severity: "critical", status: "open", source: "closing_coordination_gate", detail: "Owner approval is required for real-world coordination steps.", recommendation: "update closing timeline", blocksClosing: true, ownerActionRequired: true, resolved: false, draftOnly: true },
+  { id: "deal-blocker-002", dealRoomId: "deal-room-002", dealId: "deal-003", blockerType: "communication_draft_pending", severity: "medium", status: "open", source: "closing_coordination_gate", detail: "Communication draft still needs safety or dry-run review.", recommendation: "approve communication dry-run", blocksClosing: true, ownerActionRequired: false, resolved: false, draftOnly: true },
+  { id: "deal-blocker-003", dealRoomId: "deal-room-003", dealId: "deal-005", blockerType: "missing_compliance_review", severity: "critical", status: "open", source: "closing_coordination_gate", detail: "Compliance review must be complete before closing coordination can clear.", recommendation: "resolve compliance blocker", blocksClosing: true, ownerActionRequired: true, resolved: false, draftOnly: true },
+  { id: "deal-blocker-004", dealRoomId: "deal-room-003", dealId: "deal-005", blockerType: "assignment_not_confirmed", severity: "high", status: "open", source: "closing_coordination_gate", detail: "Assignment allowed status must be confirmed.", recommendation: "review assignment readiness", blocksClosing: true, ownerActionRequired: false, resolved: false, draftOnly: true },
+  { id: "deal-blocker-005", dealRoomId: "deal-room-003", dealId: "deal-005", blockerType: "title_handoff_incomplete", severity: "high", status: "open", source: "closing_coordination_gate", detail: "Title handoff packet is missing or incomplete.", recommendation: "prepare title handoff", blocksClosing: true, ownerActionRequired: false, resolved: false, draftOnly: true },
+  { id: "deal-blocker-006", dealRoomId: "deal-room-003", dealId: "deal-005", blockerType: "missing_seller_document", severity: "medium", status: "open", source: "closing_coordination_gate", detail: "Seller document or access item still needs operator review.", recommendation: "review seller response", blocksClosing: true, ownerActionRequired: false, resolved: false, draftOnly: true },
+  { id: "deal-blocker-007", dealRoomId: "deal-room-004", dealId: "deal-006", blockerType: "missing_buyer_pof", severity: "high", status: "open", source: "closing_coordination_gate", detail: "Buyer proof of funds must be verified before assignment readiness.", recommendation: "verify buyer POF", blocksClosing: true, ownerActionRequired: false, resolved: false, draftOnly: true },
+  { id: "deal-blocker-008", dealRoomId: "deal-room-004", dealId: "deal-006", blockerType: "weak_buyer_margin", severity: "critical", status: "open", source: "closing_coordination_gate", detail: "Buyer margin is below the protected threshold.", recommendation: "review assignment readiness", blocksClosing: true, ownerActionRequired: true, resolved: false, draftOnly: true },
+  { id: "deal-blocker-009", dealRoomId: "deal-room-004", dealId: "deal-006", blockerType: "high_risk_language", severity: "critical", status: "open", source: "closing_coordination_gate", detail: "Unsafe language is present in a seller or communication record.", recommendation: "resolve compliance blocker", blocksClosing: true, ownerActionRequired: true, resolved: false, draftOnly: true }
 ];
 
 export const money = new Intl.NumberFormat("en-US", {
@@ -1053,3 +1146,45 @@ export const sellerDocumentChecklistQueue = sellerOfferPublications.filter(
 export const sellerResponseQueue = sellerPortalResponses.filter(
   (response) => response.operatorReviewStatus !== "reviewed"
 );
+export const activeDealRooms = unifiedDealRooms;
+export const closingReadyDealRooms = unifiedDealRooms.filter(
+  (room) => room.coordinationStatus === "closing_ready"
+);
+export const blockedDealRooms = unifiedDealRooms.filter(
+  (room) => room.coordinationStatus !== "closing_ready"
+);
+export const assignmentReadyDealRooms = unifiedDealRooms.filter(
+  (room) => room.assignmentReadinessStatus === "assignment_ready"
+);
+export const projectedAssignmentFeesAtRisk = blockedDealRooms.reduce(
+  (total, room) => total + room.projectedAssignmentFeeAtRisk,
+  0
+);
+export const closingNextBestActions = unifiedDealRooms.flatMap((room) =>
+  room.nextRequiredActions.map((action) => ({
+    dealRoomId: room.id,
+    dealId: room.dealId,
+    action,
+    recommendationOnly: true,
+    legalExecutionAllowed: false,
+    titleSubmissionAllowed: false,
+    paymentHandlingAllowed: false,
+    automaticNegotiationAllowed: false
+  }))
+);
+
+export function getUnifiedDealRoom(id: string) {
+  return unifiedDealRooms.find((room) => room.id === id);
+}
+
+export function getUnifiedDealRoomByDeal(dealId: string) {
+  return unifiedDealRooms.find((room) => room.dealId === dealId);
+}
+
+export function getClosingCoordinationChecklist(dealRoomId: string) {
+  return closingCoordinationChecklists.find((checklist) => checklist.dealRoomId === dealRoomId);
+}
+
+export function getDealRoomBlockers(dealRoomId: string) {
+  return dealRoomBlockers.filter((blocker) => blocker.dealRoomId === dealRoomId);
+}

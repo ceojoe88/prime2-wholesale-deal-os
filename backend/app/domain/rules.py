@@ -34,6 +34,9 @@ BLOCKED_ACTIONS = {
     "create_client_portal": "Client portals are out of scope for v1.",
     "execute_seller_portal_acceptance": "Seller portal acceptance execution is blocked; responses are owner-reviewed intake only.",
     "auto_negotiate_seller_offer": "Live negotiation automation is blocked in V6.",
+    "automatic_closing_submission": "Automatic closing or title submission is blocked in V7.",
+    "handle_payment": "Payment handling is blocked in V7.",
+    "generate_closing_contract": "Executable closing or contract generation is blocked in V7.",
     "give_legal_advice": "Legal advice is blocked; use attorney/title review reminders.",
     "guarantee_profit": "Guaranteed profit claims are blocked.",
 }
