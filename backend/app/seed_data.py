@@ -7,22 +7,26 @@ from sqlalchemy.orm import Session
 from app.domain.buyer_matching import score_buyer_match
 from app.domain.buyer_portal import update_publication_gate
 from app.domain.compliance import REQUIRED_CONFIRMATIONS
+from app.domain.contract_control import update_assignment_readiness, update_contract_prep_gate
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import ANALYSIS_ONLY_ACTIONS, BLOCKED_ACTIONS
 from app.domain.scoring import calculate_lead_opportunity, deal_speed_score
 from app.domain.seller_acquisition import update_offer_packet_gate
 from app.models import (
     Agent,
+    AssignmentReadinessRecord,
     Buyer,
     BuyerDealPublication,
     BuyerInterest,
     BuyerMatch,
     ComplianceRecord,
+    ContractControl,
     Deal,
     Division,
     Lead,
     OfferPacket,
     SellerInteraction,
+    TitleHandoffPacket,
 )
 
 
@@ -678,6 +682,28 @@ def build_interest_records() -> list[dict[str, object]]:
             "draft_only": True,
             "contract_execution_allowed": False,
         },
+        {
+            "id": "interest-004",
+            "buyer_id": "buyer-003",
+            "deal_id": "deal-001",
+            "interest_status": "proof_of_funds_needed",
+            "intended_offer_amount": 166000,
+            "proof_of_funds_status": "needs_refresh",
+            "notes": "V4 readiness example: buyer intent exists but POF refresh blocks assignment readiness.",
+            "draft_only": True,
+            "contract_execution_allowed": False,
+        },
+        {
+            "id": "interest-005",
+            "buyer_id": "buyer-004",
+            "deal_id": "deal-005",
+            "interest_status": "owner_review_needed",
+            "intended_offer_amount": 235000,
+            "proof_of_funds_status": "verified",
+            "notes": "V4 readiness example: buyer intent exists while compliance review remains blocked.",
+            "draft_only": True,
+            "contract_execution_allowed": False,
+        },
     ]
 
 
@@ -903,6 +929,320 @@ def build_offer_packet_records() -> list[dict[str, object]]:
     ]
 
 
+CONTRACT_DOCUMENT_CHECKLIST = [
+    "seller accepted terms captured",
+    "property details verified",
+    "assignment language review required",
+    "seller role disclosure reminder",
+    "attorney/title review reminder",
+]
+
+
+def build_contract_control_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "contract-001",
+            "lead_id": "lead-001",
+            "deal_id": "deal-001",
+            "offer_packet_id": "packet-001",
+            "seller_accepted_terms": {
+                "price": 151000,
+                "closing_timeline": "14-21 days",
+                "seller_acknowledges_draft_only": True,
+            },
+            "contract_status": "prep_review",
+            "assignment_allowed_flag": True,
+            "inspection_access_notes": "Access instructions are placeholders until owner confirms next step.",
+            "earnest_money_notes": "EMD amount to be reviewed by owner and title/attorney before any action.",
+            "closing_timeline": "14-21 days",
+            "title_company_preference": "Owner-selected investor-friendly title company placeholder",
+            "required_documents_checklist": CONTRACT_DOCUMENT_CHECKLIST,
+            "owner_approval_status": "approved",
+            "compliance_review_status": "approved",
+            "contract_prep_allowed": True,
+            "blocked_reasons": [],
+            "draft_only": True,
+            "executable_contract_generated": False,
+            "live_sending_allowed": False,
+            "title_submission_allowed": False,
+            "automatic_status_change_allowed": False,
+        },
+        {
+            "id": "contract-002",
+            "lead_id": "lead-003",
+            "deal_id": "deal-003",
+            "offer_packet_id": "packet-002",
+            "seller_accepted_terms": {
+                "price": 180000,
+                "closing_timeline": "30 days",
+                "seller_acknowledges_draft_only": True,
+            },
+            "contract_status": "prep_review",
+            "assignment_allowed_flag": True,
+            "inspection_access_notes": "Seller will review access options after owner approval.",
+            "earnest_money_notes": "Draft-only EMD note; no funds are collected in V4.",
+            "closing_timeline": "30 days",
+            "title_company_preference": "Title preference pending owner confirmation",
+            "required_documents_checklist": CONTRACT_DOCUMENT_CHECKLIST,
+            "owner_approval_status": "pending",
+            "compliance_review_status": "approved",
+            "contract_prep_allowed": False,
+            "blocked_reasons": ["offer_packet_not_approved", "owner_approval_not_recorded"],
+            "draft_only": True,
+            "executable_contract_generated": False,
+            "live_sending_allowed": False,
+            "title_submission_allowed": False,
+            "automatic_status_change_allowed": False,
+        },
+        {
+            "id": "contract-003",
+            "lead_id": "lead-005",
+            "deal_id": "deal-005",
+            "offer_packet_id": "packet-003",
+            "seller_accepted_terms": {
+                "price": 220000,
+                "closing_timeline": "21-30 days",
+                "seller_acknowledges_draft_only": True,
+            },
+            "contract_status": "prep_review",
+            "assignment_allowed_flag": False,
+            "inspection_access_notes": "Access blocked until authority and compliance review clear.",
+            "earnest_money_notes": "No EMD action until title/attorney review.",
+            "closing_timeline": "21-30 days",
+            "title_company_preference": "Missing title company preference",
+            "required_documents_checklist": CONTRACT_DOCUMENT_CHECKLIST
+            + ["missing seller authority documentation"],
+            "owner_approval_status": "approved",
+            "compliance_review_status": "pending",
+            "contract_prep_allowed": False,
+            "blocked_reasons": ["compliance_guard_not_passed"],
+            "draft_only": True,
+            "executable_contract_generated": False,
+            "live_sending_allowed": False,
+            "title_submission_allowed": False,
+            "automatic_status_change_allowed": False,
+        },
+        {
+            "id": "contract-004",
+            "lead_id": "lead-006",
+            "deal_id": "deal-006",
+            "offer_packet_id": "packet-004",
+            "seller_accepted_terms": {},
+            "contract_status": "blocked",
+            "assignment_allowed_flag": False,
+            "inspection_access_notes": "No accepted terms; contract prep blocked.",
+            "earnest_money_notes": "No EMD action.",
+            "closing_timeline": "",
+            "title_company_preference": "",
+            "required_documents_checklist": CONTRACT_DOCUMENT_CHECKLIST
+            + ["missing seller accepted terms", "missing title company preference"],
+            "owner_approval_status": "approved",
+            "compliance_review_status": "approved",
+            "contract_prep_allowed": False,
+            "blocked_reasons": [
+                "seller_accepted_terms_missing",
+                "buyer_margin_not_protected",
+                "offer_packet_not_approved",
+            ],
+            "draft_only": True,
+            "executable_contract_generated": False,
+            "live_sending_allowed": False,
+            "title_submission_allowed": False,
+            "automatic_status_change_allowed": False,
+        },
+        {
+            "id": "contract-005",
+            "lead_id": "lead-007",
+            "deal_id": "deal-007",
+            "offer_packet_id": "packet-005",
+            "seller_accepted_terms": {
+                "price": 75000,
+                "closing_timeline": "10-14 days",
+                "seller_acknowledges_draft_only": True,
+            },
+            "contract_status": "prep_review",
+            "assignment_allowed_flag": True,
+            "inspection_access_notes": "Access notes held for owner review; no live scheduling.",
+            "earnest_money_notes": "No EMD action; target assignment fee remains below threshold.",
+            "closing_timeline": "10-14 days",
+            "title_company_preference": "Title preference pending compliance review",
+            "required_documents_checklist": CONTRACT_DOCUMENT_CHECKLIST,
+            "owner_approval_status": "approved",
+            "compliance_review_status": "approved",
+            "contract_prep_allowed": False,
+            "blocked_reasons": ["offer_packet_not_approved"],
+            "draft_only": True,
+            "executable_contract_generated": False,
+            "live_sending_allowed": False,
+            "title_submission_allowed": False,
+            "automatic_status_change_allowed": False,
+        },
+    ]
+
+
+def build_title_handoff_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "title-001",
+            "contract_control_id": "contract-001",
+            "deal_id": "deal-001",
+            "property_details": {
+                "city": "Dallas",
+                "state": "TX",
+                "zip": "75216",
+                "property_type": "single_family",
+            },
+            "seller_info_placeholder": "Seller info placeholder; verify before any title-company contact.",
+            "buyer_entity_info_placeholder": "Buyer/entity info placeholder; owner must confirm before use.",
+            "agreed_price": 151000,
+            "closing_timeline": "14-21 days",
+            "access_notes": "Access notes remain placeholders until owner-approved next step.",
+            "assignment_status": "assignment_allowed_reviewed",
+            "required_document_checklist": CONTRACT_DOCUMENT_CHECKLIST,
+            "attorney_title_review_reminder": "Attorney/title review required before any real-world contract or handoff action.",
+            "packet_status": "draft_ready",
+            "draft_only": True,
+            "title_submission_allowed": False,
+            "submitted_to_title": False,
+            "legal_advice_provided": False,
+        },
+        {
+            "id": "title-002",
+            "contract_control_id": "contract-002",
+            "deal_id": "deal-003",
+            "property_details": {
+                "city": "Dallas",
+                "state": "TX",
+                "zip": "75224",
+                "property_type": "single_family",
+            },
+            "seller_info_placeholder": "Seller info placeholder; owner approval is still pending.",
+            "buyer_entity_info_placeholder": "Buyer/entity info placeholder; no title submission.",
+            "agreed_price": 180000,
+            "closing_timeline": "30 days",
+            "access_notes": "Access instructions require owner review.",
+            "assignment_status": "owner_review_required",
+            "required_document_checklist": CONTRACT_DOCUMENT_CHECKLIST,
+            "attorney_title_review_reminder": "Attorney/title review reminder only; no legal advice.",
+            "packet_status": "blocked_owner_review",
+            "draft_only": True,
+            "title_submission_allowed": False,
+            "submitted_to_title": False,
+            "legal_advice_provided": False,
+        },
+        {
+            "id": "title-003",
+            "contract_control_id": "contract-003",
+            "deal_id": "deal-005",
+            "property_details": {
+                "city": "Dallas",
+                "state": "TX",
+                "zip": "75216",
+                "property_type": "duplex",
+            },
+            "seller_info_placeholder": "Seller authority placeholder; heirs/title path must be reviewed.",
+            "buyer_entity_info_placeholder": "Buyer/entity info placeholder; blocked until compliance clears.",
+            "agreed_price": 220000,
+            "closing_timeline": "21-30 days",
+            "access_notes": "Access blocked until compliance review.",
+            "assignment_status": "compliance_blocked",
+            "required_document_checklist": CONTRACT_DOCUMENT_CHECKLIST
+            + ["missing seller authority documentation"],
+            "attorney_title_review_reminder": "Attorney/title review required before any title route is selected.",
+            "packet_status": "blocked_compliance",
+            "draft_only": True,
+            "title_submission_allowed": False,
+            "submitted_to_title": False,
+            "legal_advice_provided": False,
+        },
+    ]
+
+
+def build_assignment_readiness_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "assignment-ready-001",
+            "contract_control_id": "contract-001",
+            "deal_id": "deal-001",
+            "buyer_id": "buyer-001",
+            "buyer_match_id": "match-001",
+            "buyer_interest_id": "interest-001",
+            "readiness_status": "assignment_ready",
+            "assignment_ready": True,
+            "blocked_reasons": [],
+            "assignment_allowed_confirmed": True,
+            "buyer_pof_status": "verified",
+            "compliance_review_passed": True,
+            "owner_approval_recorded": True,
+            "draft_only": True,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+        },
+        {
+            "id": "assignment-ready-002",
+            "contract_control_id": "contract-001",
+            "deal_id": "deal-001",
+            "buyer_id": "buyer-003",
+            "buyer_match_id": "match-001",
+            "buyer_interest_id": "interest-004",
+            "readiness_status": "blocked",
+            "assignment_ready": False,
+            "blocked_reasons": ["buyer_pof_not_verified"],
+            "assignment_allowed_confirmed": True,
+            "buyer_pof_status": "needs_refresh",
+            "compliance_review_passed": True,
+            "owner_approval_recorded": True,
+            "draft_only": True,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+        },
+        {
+            "id": "assignment-ready-003",
+            "contract_control_id": "contract-003",
+            "deal_id": "deal-005",
+            "buyer_id": "buyer-004",
+            "buyer_match_id": "match-003",
+            "buyer_interest_id": "interest-005",
+            "readiness_status": "blocked",
+            "assignment_ready": False,
+            "blocked_reasons": [
+                "assignment_allowed_not_confirmed",
+                "compliance_review_not_passed",
+                "contract_control_not_ready",
+            ],
+            "assignment_allowed_confirmed": False,
+            "buyer_pof_status": "verified",
+            "compliance_review_passed": False,
+            "owner_approval_recorded": True,
+            "draft_only": True,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+        },
+        {
+            "id": "assignment-ready-004",
+            "contract_control_id": "contract-002",
+            "deal_id": "deal-003",
+            "buyer_id": "buyer-001",
+            "buyer_match_id": None,
+            "buyer_interest_id": "interest-003",
+            "readiness_status": "blocked",
+            "assignment_ready": False,
+            "blocked_reasons": [
+                "buyer_match_missing",
+                "contract_control_not_ready",
+                "owner_approval_not_recorded",
+            ],
+            "assignment_allowed_confirmed": True,
+            "buyer_pof_status": "verified",
+            "compliance_review_passed": True,
+            "owner_approval_recorded": False,
+            "draft_only": True,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+        },
+    ]
+
+
 LEAD_LOOKUP = {lead["id"]: lead for lead in build_lead_records()}
 
 
@@ -924,12 +1264,18 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "buyer_interests": build_interest_records(),
         "seller_interactions": build_seller_interaction_records(),
         "offer_packets": build_offer_packet_records(),
+        "contract_controls": build_contract_control_records(),
+        "title_handoff_packets": build_title_handoff_records(),
+        "assignment_readiness_records": build_assignment_readiness_records(),
         "compliance_records": build_compliance_records(),
     }
 
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        AssignmentReadinessRecord,
+        TitleHandoffPacket,
+        ContractControl,
         OfferPacket,
         SellerInteraction,
         BuyerInterest,
@@ -955,11 +1301,21 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(BuyerInterest(**row) for row in payload["buyer_interests"])
     session.add_all(SellerInteraction(**row) for row in payload["seller_interactions"])
     session.add_all(OfferPacket(**row) for row in payload["offer_packets"])
+    session.add_all(ContractControl(**row) for row in payload["contract_controls"])
+    session.add_all(TitleHandoffPacket(**row) for row in payload["title_handoff_packets"])
+    session.add_all(
+        AssignmentReadinessRecord(**row)
+        for row in payload["assignment_readiness_records"]
+    )
     session.add_all(ComplianceRecord(**row) for row in payload["compliance_records"])
     session.flush()
     for publication in session.query(BuyerDealPublication).all():
         update_publication_gate(publication, publication.deal)
     for packet in session.query(OfferPacket).all():
         update_offer_packet_gate(packet, packet.deal)
+    for contract in session.query(ContractControl).all():
+        update_contract_prep_gate(contract)
+    for readiness in session.query(AssignmentReadinessRecord).all():
+        update_assignment_readiness(readiness)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

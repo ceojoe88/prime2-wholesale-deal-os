@@ -10,6 +10,11 @@ import {
   buyerPortalBlockedDeals,
   buyerVisibleDeals,
   complianceRecords,
+  assignmentReadyRecords,
+  buyerPofGaps,
+  contractControls,
+  contractPrepBlocked,
+  contractPrepReady,
   deals,
   divisions,
   formatCurrency,
@@ -21,6 +26,7 @@ import {
   projectedAssignmentTotal,
   sellerInteractions,
   staleSellerFollowUps,
+  titleHandoffPackets,
   underContractDeals
 } from "@/lib/demo-data";
 
@@ -90,6 +96,19 @@ export default function DashboardPage() {
           {sellerInteractions.slice(0, 3).map((interaction) => (
             <RecordCard key={interaction.id} title={interaction.nextBestSellerAction} meta={`${interaction.objectionStatus} / ${interaction.followUpUrgency}`} right={<Pill>{interaction.sellerTemperatureScore}</Pill>} />
           ))}
+        </div>
+      </Section>
+
+      <Section title="V4 Contract and Title Control">
+        <div className="grid-three">
+          <RecordCard title="Contracts in prep" meta={`${contractControls.length} control records`} right={<Pill tone="gold">owner gated</Pill>} />
+          <RecordCard title="Title handoff packets" meta={`${titleHandoffPackets.length} draft packets`} right={<Pill tone="red">no submission</Pill>} />
+          <RecordCard title="Assignment-ready deals" meta={`${assignmentReadyRecords.length} cleared records`} right={<Pill tone="green">ready</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Blocked contract prep" meta={`${contractPrepBlocked.length} records have gate reasons`} right={<Pill tone="red">blocked</Pill>} />
+          <RecordCard title="Prep-ready controls" meta={`${contractPrepReady.length} records can be drafted`} right={<Pill tone="green">draft only</Pill>} />
+          <RecordCard title="Buyer POF gaps" meta={`${buyerPofGaps.length} readiness records need POF review`} right={<Pill tone="gold">review</Pill>} />
         </div>
       </Section>
     </div>

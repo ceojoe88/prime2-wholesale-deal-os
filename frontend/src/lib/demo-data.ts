@@ -185,6 +185,74 @@ export type OfferPacket = {
   realWorldActionTaken: false;
 };
 
+export type ContractControlRecord = {
+  id: string;
+  leadId: string;
+  dealId: string;
+  offerPacketId: string;
+  sellerAcceptedTerms: Record<string, string | number | boolean>;
+  contractStatus: string;
+  assignmentAllowedFlag: boolean;
+  inspectionAccessNotes: string;
+  earnestMoneyNotes: string;
+  closingTimeline: string;
+  titleCompanyPreference: string;
+  requiredDocumentsChecklist: string[];
+  ownerApprovalStatus: string;
+  complianceReviewStatus: string;
+  contractPrepAllowed: boolean;
+  blockedReasons: string[];
+  draftOnly: true;
+  executableContractGenerated: false;
+  liveSendingAllowed: false;
+  titleSubmissionAllowed: false;
+  automaticStatusChangeAllowed: false;
+};
+
+export type TitleHandoffPacket = {
+  id: string;
+  contractControlId: string;
+  dealId: string;
+  propertyDetails: {
+    city: string;
+    state: string;
+    zip: string;
+    propertyType: string;
+  };
+  sellerInfoPlaceholder: string;
+  buyerEntityInfoPlaceholder: string;
+  agreedPrice: number;
+  closingTimeline: string;
+  accessNotes: string;
+  assignmentStatus: string;
+  requiredDocumentChecklist: string[];
+  attorneyTitleReviewReminder: string;
+  packetStatus: string;
+  draftOnly: true;
+  titleSubmissionAllowed: false;
+  submittedToTitle: false;
+  legalAdviceProvided: false;
+};
+
+export type AssignmentReadinessRecord = {
+  id: string;
+  contractControlId: string;
+  dealId: string;
+  buyerId: string | null;
+  buyerMatchId: string | null;
+  buyerInterestId: string | null;
+  readinessStatus: string;
+  assignmentReady: boolean;
+  blockedReasons: string[];
+  assignmentAllowedConfirmed: boolean;
+  buyerPofStatus: string;
+  complianceReviewPassed: boolean;
+  ownerApprovalRecorded: boolean;
+  draftOnly: true;
+  contractExecutionAllowed: false;
+  titleSubmissionAllowed: false;
+};
+
 export const divisions: Division[] = [
   {
     id: "market-intelligence",
@@ -484,7 +552,9 @@ export const buyerPublications: BuyerPublication[] = [
 export const buyerInterests: BuyerInterest[] = [
   { id: "interest-001", buyerId: "buyer-001", dealId: "deal-001", interestStatus: "owner_review_needed", intendedOfferAmount: 166000, proofOfFundsStatus: "verified", notes: "Buyer intent recorded as draft only; no contract or payment action.", timestamp: "2026-05-04T14:05:00Z", draftOnly: true, contractExecutionAllowed: false },
   { id: "interest-002", buyerId: "buyer-002", dealId: "deal-002", interestStatus: "proof_of_funds_verified", intendedOfferAmount: 127000, proofOfFundsStatus: "verified", notes: "Owner review needed before any external follow-up.", timestamp: "2026-05-04T14:08:00Z", draftOnly: true, contractExecutionAllowed: false },
-  { id: "interest-003", buyerId: "buyer-003", dealId: "deal-003", interestStatus: "proof_of_funds_needed", intendedOfferAmount: 193000, proofOfFundsStatus: "needs_refresh", notes: "POF refresh required; buyer interest is non-binding.", timestamp: "2026-05-04T14:11:00Z", draftOnly: true, contractExecutionAllowed: false }
+  { id: "interest-003", buyerId: "buyer-003", dealId: "deal-003", interestStatus: "proof_of_funds_needed", intendedOfferAmount: 193000, proofOfFundsStatus: "needs_refresh", notes: "POF refresh required; buyer interest is non-binding.", timestamp: "2026-05-04T14:11:00Z", draftOnly: true, contractExecutionAllowed: false },
+  { id: "interest-004", buyerId: "buyer-003", dealId: "deal-001", interestStatus: "proof_of_funds_needed", intendedOfferAmount: 166000, proofOfFundsStatus: "needs_refresh", notes: "V4 readiness example: buyer intent exists but POF refresh blocks assignment readiness.", timestamp: "2026-05-04T14:18:00Z", draftOnly: true, contractExecutionAllowed: false },
+  { id: "interest-005", buyerId: "buyer-004", dealId: "deal-005", interestStatus: "owner_review_needed", intendedOfferAmount: 235000, proofOfFundsStatus: "verified", notes: "V4 readiness example: buyer intent exists while compliance review remains blocked.", timestamp: "2026-05-04T14:21:00Z", draftOnly: true, contractExecutionAllowed: false }
 ];
 
 export const sellerInteractions: SellerInteraction[] = [
@@ -502,6 +572,35 @@ export const offerPackets: OfferPacket[] = [
   { id: "packet-003", dealId: "deal-005", packetStatus: "blocked", ownerApprovalRecorded: true, complianceGuardPassed: false, buyerMarginProtected: true, targetAssignmentFeeChecked: true, underwritingComplete: true, packetPrepAllowed: false, blockedReasons: ["compliance_guard_not_passed"], approvalStatus: "blocked", draftSummary: "Inherited-property authority review blocks offer packet prep.", draftOnly: true, realWorldActionTaken: false },
   { id: "packet-004", dealId: "deal-006", packetStatus: "blocked", ownerApprovalRecorded: true, complianceGuardPassed: true, buyerMarginProtected: false, targetAssignmentFeeChecked: false, underwritingComplete: true, packetPrepAllowed: false, blockedReasons: ["buyer_margin_not_protected", "target_assignment_fee_not_checked"], approvalStatus: "blocked", draftSummary: "Buyer margin and target assignment fee fail the gate.", draftOnly: true, realWorldActionTaken: false },
   { id: "packet-005", dealId: "deal-007", packetStatus: "blocked", ownerApprovalRecorded: true, complianceGuardPassed: true, buyerMarginProtected: true, targetAssignmentFeeChecked: false, underwritingComplete: true, packetPrepAllowed: false, blockedReasons: ["target_assignment_fee_not_checked"], approvalStatus: "blocked", draftSummary: "Projected assignment fee is below target.", draftOnly: true, realWorldActionTaken: false }
+];
+
+const contractChecklist = [
+  "seller accepted terms captured",
+  "property details verified",
+  "assignment language review required",
+  "seller role disclosure reminder",
+  "attorney/title review reminder"
+];
+
+export const contractControls: ContractControlRecord[] = [
+  { id: "contract-001", leadId: "lead-001", dealId: "deal-001", offerPacketId: "packet-001", sellerAcceptedTerms: { price: 151000, closingTimeline: "14-21 days", sellerAcknowledgesDraftOnly: true }, contractStatus: "prep_review", assignmentAllowedFlag: true, inspectionAccessNotes: "Access instructions are placeholders until owner confirms next step.", earnestMoneyNotes: "EMD amount to be reviewed by owner and title/attorney before any action.", closingTimeline: "14-21 days", titleCompanyPreference: "Owner-selected investor-friendly title company placeholder", requiredDocumentsChecklist: contractChecklist, ownerApprovalStatus: "approved", complianceReviewStatus: "approved", contractPrepAllowed: true, blockedReasons: [], draftOnly: true, executableContractGenerated: false, liveSendingAllowed: false, titleSubmissionAllowed: false, automaticStatusChangeAllowed: false },
+  { id: "contract-002", leadId: "lead-003", dealId: "deal-003", offerPacketId: "packet-002", sellerAcceptedTerms: { price: 180000, closingTimeline: "30 days", sellerAcknowledgesDraftOnly: true }, contractStatus: "prep_review", assignmentAllowedFlag: true, inspectionAccessNotes: "Seller will review access options after owner approval.", earnestMoneyNotes: "Draft-only EMD note; no funds are collected in V4.", closingTimeline: "30 days", titleCompanyPreference: "Title preference pending owner confirmation", requiredDocumentsChecklist: contractChecklist, ownerApprovalStatus: "pending", complianceReviewStatus: "approved", contractPrepAllowed: false, blockedReasons: ["offer_packet_not_approved", "owner_approval_not_recorded"], draftOnly: true, executableContractGenerated: false, liveSendingAllowed: false, titleSubmissionAllowed: false, automaticStatusChangeAllowed: false },
+  { id: "contract-003", leadId: "lead-005", dealId: "deal-005", offerPacketId: "packet-003", sellerAcceptedTerms: { price: 220000, closingTimeline: "21-30 days", sellerAcknowledgesDraftOnly: true }, contractStatus: "prep_review", assignmentAllowedFlag: false, inspectionAccessNotes: "Access blocked until authority and compliance review clear.", earnestMoneyNotes: "No EMD action until title/attorney review.", closingTimeline: "21-30 days", titleCompanyPreference: "Missing title company preference", requiredDocumentsChecklist: [...contractChecklist, "missing seller authority documentation"], ownerApprovalStatus: "approved", complianceReviewStatus: "pending", contractPrepAllowed: false, blockedReasons: ["compliance_guard_not_passed"], draftOnly: true, executableContractGenerated: false, liveSendingAllowed: false, titleSubmissionAllowed: false, automaticStatusChangeAllowed: false },
+  { id: "contract-004", leadId: "lead-006", dealId: "deal-006", offerPacketId: "packet-004", sellerAcceptedTerms: {}, contractStatus: "blocked", assignmentAllowedFlag: false, inspectionAccessNotes: "No accepted terms; contract prep blocked.", earnestMoneyNotes: "No EMD action.", closingTimeline: "", titleCompanyPreference: "", requiredDocumentsChecklist: [...contractChecklist, "missing seller accepted terms", "missing title company preference"], ownerApprovalStatus: "approved", complianceReviewStatus: "approved", contractPrepAllowed: false, blockedReasons: ["seller_accepted_terms_missing", "buyer_margin_not_protected", "offer_packet_not_approved"], draftOnly: true, executableContractGenerated: false, liveSendingAllowed: false, titleSubmissionAllowed: false, automaticStatusChangeAllowed: false },
+  { id: "contract-005", leadId: "lead-007", dealId: "deal-007", offerPacketId: "packet-005", sellerAcceptedTerms: { price: 75000, closingTimeline: "10-14 days", sellerAcknowledgesDraftOnly: true }, contractStatus: "prep_review", assignmentAllowedFlag: true, inspectionAccessNotes: "Access notes held for owner review; no live scheduling.", earnestMoneyNotes: "No EMD action; target assignment fee remains below threshold.", closingTimeline: "10-14 days", titleCompanyPreference: "Title preference pending compliance review", requiredDocumentsChecklist: contractChecklist, ownerApprovalStatus: "approved", complianceReviewStatus: "approved", contractPrepAllowed: false, blockedReasons: ["offer_packet_not_approved"], draftOnly: true, executableContractGenerated: false, liveSendingAllowed: false, titleSubmissionAllowed: false, automaticStatusChangeAllowed: false }
+];
+
+export const titleHandoffPackets: TitleHandoffPacket[] = [
+  { id: "title-001", contractControlId: "contract-001", dealId: "deal-001", propertyDetails: { city: "Dallas", state: "TX", zip: "75216", propertyType: "single_family" }, sellerInfoPlaceholder: "Seller info placeholder; verify before any title-company contact.", buyerEntityInfoPlaceholder: "Buyer/entity info placeholder; owner must confirm before use.", agreedPrice: 151000, closingTimeline: "14-21 days", accessNotes: "Access notes remain placeholders until owner-approved next step.", assignmentStatus: "assignment_allowed_reviewed", requiredDocumentChecklist: contractChecklist, attorneyTitleReviewReminder: "Attorney/title review required before any real-world contract or handoff action.", packetStatus: "draft_ready", draftOnly: true, titleSubmissionAllowed: false, submittedToTitle: false, legalAdviceProvided: false },
+  { id: "title-002", contractControlId: "contract-002", dealId: "deal-003", propertyDetails: { city: "Dallas", state: "TX", zip: "75224", propertyType: "single_family" }, sellerInfoPlaceholder: "Seller info placeholder; owner approval is still pending.", buyerEntityInfoPlaceholder: "Buyer/entity info placeholder; no title submission.", agreedPrice: 180000, closingTimeline: "30 days", accessNotes: "Access instructions require owner review.", assignmentStatus: "owner_review_required", requiredDocumentChecklist: contractChecklist, attorneyTitleReviewReminder: "Attorney/title review reminder only; no legal advice.", packetStatus: "blocked_owner_review", draftOnly: true, titleSubmissionAllowed: false, submittedToTitle: false, legalAdviceProvided: false },
+  { id: "title-003", contractControlId: "contract-003", dealId: "deal-005", propertyDetails: { city: "Dallas", state: "TX", zip: "75216", propertyType: "duplex" }, sellerInfoPlaceholder: "Seller authority placeholder; heirs/title path must be reviewed.", buyerEntityInfoPlaceholder: "Buyer/entity info placeholder; blocked until compliance clears.", agreedPrice: 220000, closingTimeline: "21-30 days", accessNotes: "Access blocked until compliance review.", assignmentStatus: "compliance_blocked", requiredDocumentChecklist: [...contractChecklist, "missing seller authority documentation"], attorneyTitleReviewReminder: "Attorney/title review required before any title route is selected.", packetStatus: "blocked_compliance", draftOnly: true, titleSubmissionAllowed: false, submittedToTitle: false, legalAdviceProvided: false }
+];
+
+export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
+  { id: "assignment-ready-001", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-001", buyerMatchId: "match-001", buyerInterestId: "interest-001", readinessStatus: "assignment_ready", assignmentReady: true, blockedReasons: [], assignmentAllowedConfirmed: true, buyerPofStatus: "verified", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
+  { id: "assignment-ready-002", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-003", buyerMatchId: "match-001", buyerInterestId: "interest-004", readinessStatus: "blocked", assignmentReady: false, blockedReasons: ["buyer_pof_not_verified"], assignmentAllowedConfirmed: true, buyerPofStatus: "needs_refresh", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
+  { id: "assignment-ready-003", contractControlId: "contract-003", dealId: "deal-005", buyerId: "buyer-004", buyerMatchId: "match-003", buyerInterestId: "interest-005", readinessStatus: "blocked", assignmentReady: false, blockedReasons: ["assignment_allowed_not_confirmed", "compliance_review_not_passed", "contract_control_not_ready"], assignmentAllowedConfirmed: false, buyerPofStatus: "verified", complianceReviewPassed: false, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
+  { id: "assignment-ready-004", contractControlId: "contract-002", dealId: "deal-003", buyerId: "buyer-001", buyerMatchId: null, buyerInterestId: "interest-003", readinessStatus: "blocked", assignmentReady: false, blockedReasons: ["buyer_match_missing", "contract_control_not_ready", "owner_approval_not_recorded"], assignmentAllowedConfirmed: true, buyerPofStatus: "verified", complianceReviewPassed: true, ownerApprovalRecorded: false, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false }
 ];
 
 export const money = new Intl.NumberFormat("en-US", {
@@ -548,6 +647,22 @@ export function getOfferPacket(packetId: string) {
 
 export function getOfferPacketByDeal(dealId: string) {
   return offerPackets.find((packet) => packet.dealId === dealId);
+}
+
+export function getContractControl(contractId: string) {
+  return contractControls.find((contract) => contract.id === contractId);
+}
+
+export function getContractControlByDeal(dealId: string) {
+  return contractControls.find((contract) => contract.dealId === dealId);
+}
+
+export function getTitleHandoffPacket(packetId: string) {
+  return titleHandoffPackets.find((packet) => packet.id === packetId);
+}
+
+export function getAssignmentReadinessRecord(recordId: string) {
+  return assignmentReadinessRecords.find((record) => record.id === recordId);
 }
 
 export function sellerDrafts(lead: Lead, interaction?: SellerInteraction) {
@@ -641,3 +756,14 @@ export const underContractCandidates = leads.filter(
   (lead) => ["offer_sent", "negotiating"].includes(lead.stage) && lead.opportunityScore >= 72
 );
 export const offerReadyPackets = offerPackets.filter((packet) => packet.packetPrepAllowed);
+export const contractPrepReady = contractControls.filter((contract) => contract.contractPrepAllowed);
+export const contractPrepBlocked = contractControls.filter((contract) => !contract.contractPrepAllowed);
+export const assignmentReadyRecords = assignmentReadinessRecords.filter(
+  (record) => record.assignmentReady
+);
+export const blockedAssignmentReadiness = assignmentReadinessRecords.filter(
+  (record) => !record.assignmentReady
+);
+export const buyerPofGaps = assignmentReadinessRecords.filter(
+  (record) => record.buyerPofStatus !== "verified"
+);

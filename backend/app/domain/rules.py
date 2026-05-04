@@ -21,6 +21,9 @@ BLOCKED_ACTIONS = {
     "contact_buyer": "Live buyer contact is blocked in v1.",
     "execute_contract": "Contract execution is blocked in v1.",
     "buyer_blast_execute": "Buyer blasts are draft-only in v1.",
+    "generate_executable_contract": "Executable legal contract generation is blocked; V4 prepares checklists and placeholders only.",
+    "submit_to_title_company": "Title-company submission is blocked in V4.",
+    "change_contract_status_automatically": "Automatic contract status changes are blocked; owner approval controls real-world status changes.",
     "skip_trace_paid_api": "Paid skip tracing and external paid API calls are blocked in v1.",
     "public_signup": "Public signup is blocked; this is a single-owner private OS.",
     "create_public_buyer_portal": "Public buyer portals are blocked; V2 allows only an invite-gated controlled deal room.",
@@ -38,6 +41,9 @@ LEGAL_ADVICE_PATTERNS = (
     "no attorney needed",
     "hide the assignment fee",
     "misrepresent",
+    "submit to title",
+    "generate executable contract",
+    "hide the assignment",
 )
 
 

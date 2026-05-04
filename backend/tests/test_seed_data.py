@@ -13,9 +13,12 @@ def test_seed_payload_counts_and_hot_deals():
     assert len(payload["compliance_records"]) == 3
     assert len(payload["buyer_matches"]) == 3
     assert len(payload["buyer_deal_publications"]) == 8
-    assert len(payload["buyer_interests"]) == 3
+    assert len(payload["buyer_interests"]) == 5
     assert len(payload["seller_interactions"]) == 6
     assert len(payload["offer_packets"]) == 5
+    assert len(payload["contract_controls"]) == 5
+    assert len(payload["title_handoff_packets"]) == 3
+    assert len(payload["assignment_readiness_records"]) == 4
 
 
 def test_seeded_agents_are_analysis_only():

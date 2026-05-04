@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
-import { complianceRecords } from "@/lib/demo-data";
+import { complianceRecords, contractPrepBlocked, titleHandoffPackets } from "@/lib/demo-data";
 import { buyerPortalBlockedDeals } from "@/lib/demo-data";
 
 const confirmations = [
@@ -51,6 +51,16 @@ export default function CompliancePage() {
         <div className="record-list">
           {buyerPortalBlockedDeals.map((item) => (
             <RecordCard key={item.dealId} title={item.dealId} meta={item.blockedReasons.join(", ")} right={<Pill tone="red">not visible</Pill>} />
+          ))}
+        </div>
+      </Section>
+      <Section title="V4 Contract and Title Blocks">
+        <div className="record-list">
+          {contractPrepBlocked.map((contract) => (
+            <RecordCard key={contract.id} title={contract.id} meta={contract.blockedReasons.join(", ")} right={<Pill tone="red">prep blocked</Pill>} />
+          ))}
+          {titleHandoffPackets.map((packet) => (
+            <RecordCard key={packet.id} title={packet.id} meta={packet.packetStatus} right={<Pill tone="red">no title submission</Pill>} />
           ))}
         </div>
       </Section>

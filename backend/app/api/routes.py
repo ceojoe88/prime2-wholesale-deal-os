@@ -14,6 +14,15 @@ from app.domain.buyer_portal import (
 )
 from app.domain.command_center import build_command_center
 from app.domain.compliance import compliance_checklists
+from app.domain.contract_control import (
+    assignment_readiness_gate,
+    contract_prep_gate,
+    contract_title_dashboard,
+    title_handoff_summary,
+    update_assignment_readiness,
+    update_contract_prep_gate,
+    validate_contract_language,
+)
 from app.domain.imports import preview_lead_csv
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import system_rules, validate_action
@@ -26,16 +35,19 @@ from app.domain.seller_acquisition import (
 )
 from app.models import (
     Agent,
+    AssignmentReadinessRecord,
     Buyer,
     BuyerDealPublication,
     BuyerInterest,
     BuyerMatch,
     ComplianceRecord,
+    ContractControl,
     Deal,
     Division,
     Lead,
     OfferPacket,
     SellerInteraction,
+    TitleHandoffPacket,
 )
 from app.serializers import model_to_dict
 
@@ -57,6 +69,10 @@ class BuyerInterestRequest(BaseModel):
 
 
 class SellerLanguageRequest(BaseModel):
+    content: str
+
+
+class ContractLanguageRequest(BaseModel):
     content: str
 
 
@@ -204,6 +220,10 @@ def deal_detail(deal_id: str, session: Session = Depends(get_session)) -> dict:
         "lead": model_to_dict(deal.lead),
         "buyer_matches": [model_to_dict(match) for match in deal.matches],
         "compliance_records": [model_to_dict(record) for record in deal.compliance_records],
+        "contract_controls": [model_to_dict(record) for record in deal.contract_controls],
+        "title_handoff_packets": [
+            model_to_dict(packet) for packet in deal.title_handoff_packets
+        ],
     }
 
 
@@ -376,6 +396,126 @@ def prepare_offer_packet(packet_id: str, session: Session = Depends(get_session)
         "real_world_action_taken": False,
         "gate": gate,
     }
+
+
+@router.get("/contract-control")
+def contract_control_queue(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = contract_title_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/contract-control/{contract_id}")
+def contract_control_detail(
+    contract_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    contract = session.get(ContractControl, contract_id)
+    if contract is None:
+        raise HTTPException(status_code=404, detail="Contract control not found")
+    update_contract_prep_gate(contract)
+    session.commit()
+    return {
+        **model_to_dict(contract),
+        "lead": model_to_dict(contract.lead),
+        "deal": model_to_dict(contract.deal),
+        "offer_packet": model_to_dict(contract.offer_packet),
+        "gate": contract_prep_gate(contract),
+        "draft_only": True,
+        "contract_execution_allowed": False,
+        "title_submission_allowed": False,
+        "live_sending_allowed": False,
+    }
+
+
+@router.post("/contract-control/{contract_id}/prepare")
+def prepare_contract_control(
+    contract_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    contract = session.get(ContractControl, contract_id)
+    if contract is None:
+        raise HTTPException(status_code=404, detail="Contract control not found")
+    update_contract_prep_gate(contract)
+    gate = contract_prep_gate(contract)
+    session.commit()
+    if not gate["can_prepare"]:
+        raise HTTPException(status_code=400, detail=gate)
+    return {
+        "contract_id": contract.id,
+        "contract_status": contract.contract_status,
+        "seller_accepted_terms": contract.seller_accepted_terms,
+        "required_documents_checklist": contract.required_documents_checklist,
+        "attorney_title_review_reminder": True,
+        "draft_only": True,
+        "executable_contract_generated": False,
+        "contract_execution_allowed": False,
+        "live_sending_allowed": False,
+        "title_submission_allowed": False,
+        "automatic_status_change_allowed": False,
+        "gate": gate,
+    }
+
+
+@router.post("/contract-control/safety/validate")
+def contract_safety_validate(payload: ContractLanguageRequest) -> dict[str, object]:
+    return validate_contract_language(payload.content)
+
+
+@router.get("/title-handoff")
+def title_handoff_packets(session: Session = Depends(get_session)) -> list[dict[str, object]]:
+    return [title_handoff_summary(packet) for packet in session.query(TitleHandoffPacket).all()]
+
+
+@router.get("/title-handoff/{packet_id}")
+def title_handoff_detail(
+    packet_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    packet = session.get(TitleHandoffPacket, packet_id)
+    if packet is None:
+        raise HTTPException(status_code=404, detail="Title handoff packet not found")
+    return {
+        **title_handoff_summary(packet),
+        "contract_control": model_to_dict(packet.contract_control),
+        "deal": model_to_dict(packet.deal),
+    }
+
+
+@router.post("/title-handoff/{packet_id}/submit")
+def submit_title_handoff_blocked(packet_id: str, session: Session = Depends(get_session)) -> dict:
+    packet = session.get(TitleHandoffPacket, packet_id)
+    if packet is None:
+        raise HTTPException(status_code=404, detail="Title handoff packet not found")
+    raise HTTPException(
+        status_code=400,
+        detail={
+            "allowed": False,
+            "reason": "Title-company submission is blocked in V4.",
+            "packet_id": packet.id,
+            "title_submission_allowed": False,
+            "submitted_to_title": False,
+        },
+    )
+
+
+@router.get("/assignment-readiness")
+def assignment_readiness(session: Session = Depends(get_session)) -> list[dict[str, object]]:
+    records = session.query(AssignmentReadinessRecord).all()
+    response = []
+    for record in records:
+        update_assignment_readiness(record)
+        response.append(
+            {
+                **model_to_dict(record),
+                "gate": assignment_readiness_gate(record),
+                "draft_only": True,
+                "contract_execution_allowed": False,
+                "title_submission_allowed": False,
+            }
+        )
+    session.commit()
+    return response
 
 
 @router.get("/buyers")

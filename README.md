@@ -11,6 +11,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - Tests for private mode, blocked live actions, legal-language guardrails, agent execution limits, owner approval gates, formulas, buyer matching, seed coverage, API routes, and dashboard route coverage.
 - V2 invite-gated buyer deal room with sanitized deal projections, internal publishing gates, and draft-only buyer interest records.
 - V3 seller acquisition command center with seller interaction records, draft-only follow-up engine, and offer packet prep gate.
+- V4 contract control and title handoff prep with contract-control records, title packet placeholders, assignment readiness gates, and no legal execution or title submission.
 
 ## Safety Boundaries
 
@@ -21,6 +22,8 @@ All real-world action requires owner approval. Assignment packet preparation als
 V2 adds a controlled buyer portal, but the private operator system remains the source of truth. The portal is invite-gated, has no public signup, shows sanitized deal-room data only, records buyer interest as non-binding draft intent, and still blocks blasts, payments, legal advice, and contract execution.
 
 V3 adds seller acquisition control without live outreach. Seller scripts, SMS, email, objection responses, offer explanations, and follow-up sequences are draft-only. Offer packet prep is blocked until underwriting, buyer margin, target assignment fee, compliance guard, and owner approval are all recorded.
+
+V4 moves offer-ready opportunities into contract-control preparation only. Contract prep is blocked unless the offer packet is approved, seller accepted terms are recorded, ARV and repairs exist, buyer margin is protected, assignment spread is calculated, compliance passed, and owner approval is recorded. Title handoff packets are placeholders/checklists only; title-company submission, executable contract generation, live sending, legal advice, false assignment claims, hidden disclosure language, misrepresentation, and automatic contract status changes are blocked.
 
 ## Backend
 
@@ -47,6 +50,14 @@ Useful endpoints:
 - `GET /api/offer-packets`
 - `GET /api/offer-packets/{packet_id}`
 - `POST /api/offer-packets/{packet_id}/prepare`
+- `GET /api/contract-control`
+- `GET /api/contract-control/{contract_id}`
+- `POST /api/contract-control/{contract_id}/prepare`
+- `POST /api/contract-control/safety/validate`
+- `GET /api/title-handoff`
+- `GET /api/title-handoff/{packet_id}`
+- `POST /api/title-handoff/{packet_id}/submit` returns a blocked response in V4
+- `GET /api/assignment-readiness`
 - `GET /api/buyer-portal/rules`
 - `GET /api/buyer-portal/deals` with `X-Buyer-Invite: demo-buyer-invite`
 - `GET /api/buyer-portal/deals/{deal_id}` with `X-Buyer-Invite: demo-buyer-invite`
@@ -86,6 +97,12 @@ Seller acquisition V3 routes:
 - [http://localhost:3000/dashboard/seller-acquisition](http://localhost:3000/dashboard/seller-acquisition)
 - [http://localhost:3000/dashboard/follow-up-control](http://localhost:3000/dashboard/follow-up-control)
 - [http://localhost:3000/dashboard/offer-packets](http://localhost:3000/dashboard/offer-packets)
+
+Contract/title V4 routes:
+
+- [http://localhost:3000/dashboard/contract-control](http://localhost:3000/dashboard/contract-control)
+- [http://localhost:3000/dashboard/title-handoff](http://localhost:3000/dashboard/title-handoff)
+- [http://localhost:3000/dashboard/assignment-readiness](http://localhost:3000/dashboard/assignment-readiness)
 
 ## Validation
 

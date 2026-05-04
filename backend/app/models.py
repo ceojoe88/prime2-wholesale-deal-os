@@ -81,6 +81,7 @@ class Lead(TimestampMixin, Base):
 
     deals: Mapped[list["Deal"]] = relationship(back_populates="lead")
     seller_interactions: Mapped[list["SellerInteraction"]] = relationship(back_populates="lead")
+    contract_controls: Mapped[list["ContractControl"]] = relationship(back_populates="lead")
 
 
 class Deal(TimestampMixin, Base):
@@ -124,6 +125,11 @@ class Deal(TimestampMixin, Base):
     )
     buyer_interests: Mapped[list["BuyerInterest"]] = relationship(back_populates="deal")
     offer_packets: Mapped[list["OfferPacket"]] = relationship(back_populates="deal")
+    contract_controls: Mapped[list["ContractControl"]] = relationship(back_populates="deal")
+    title_handoff_packets: Mapped[list["TitleHandoffPacket"]] = relationship(back_populates="deal")
+    assignment_readiness_records: Mapped[list["AssignmentReadinessRecord"]] = relationship(
+        back_populates="deal"
+    )
 
 
 class Buyer(TimestampMixin, Base):
@@ -146,6 +152,9 @@ class Buyer(TimestampMixin, Base):
 
     matches: Mapped[list["BuyerMatch"]] = relationship(back_populates="buyer")
     interests: Mapped[list["BuyerInterest"]] = relationship(back_populates="buyer")
+    assignment_readiness_records: Mapped[list["AssignmentReadinessRecord"]] = relationship(
+        back_populates="buyer"
+    )
 
 
 class BuyerMatch(TimestampMixin, Base):
@@ -162,6 +171,9 @@ class BuyerMatch(TimestampMixin, Base):
 
     deal: Mapped[Deal] = relationship(back_populates="matches")
     buyer: Mapped[Buyer] = relationship(back_populates="matches")
+    assignment_readiness_records: Mapped[list["AssignmentReadinessRecord"]] = relationship(
+        back_populates="buyer_match"
+    )
 
 
 class ComplianceRecord(TimestampMixin, Base):
@@ -224,6 +236,9 @@ class BuyerInterest(TimestampMixin, Base):
 
     buyer: Mapped[Buyer] = relationship(back_populates="interests")
     deal: Mapped[Deal] = relationship(back_populates="buyer_interests")
+    assignment_readiness_records: Mapped[list["AssignmentReadinessRecord"]] = relationship(
+        back_populates="buyer_interest"
+    )
 
 
 class SellerInteraction(TimestampMixin, Base):
@@ -268,3 +283,108 @@ class OfferPacket(TimestampMixin, Base):
     real_world_action_taken: Mapped[bool] = mapped_column(Boolean, default=False)
 
     deal: Mapped[Deal] = relationship(back_populates="offer_packets")
+    contract_controls: Mapped[list["ContractControl"]] = relationship(back_populates="offer_packet")
+
+
+class ContractControl(TimestampMixin, Base):
+    __tablename__ = "contract_controls"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("leads.id"), nullable=False)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    offer_packet_id: Mapped[str] = mapped_column(ForeignKey("offer_packets.id"), nullable=False)
+    seller_accepted_terms: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    contract_status: Mapped[str] = mapped_column(String(80), default="prep_review")
+    assignment_allowed_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    inspection_access_notes: Mapped[str] = mapped_column(Text, default="")
+    earnest_money_notes: Mapped[str] = mapped_column(Text, default="")
+    closing_timeline: Mapped[str] = mapped_column(String(120), default="")
+    title_company_preference: Mapped[str] = mapped_column(String(160), default="")
+    required_documents_checklist: Mapped[list[str]] = mapped_column(JSON, default=list)
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending")
+    compliance_review_status: Mapped[str] = mapped_column(String(80), default="pending")
+    contract_prep_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    executable_contract_generated: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_sending_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    automatic_status_change_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    lead: Mapped[Lead] = relationship(back_populates="contract_controls")
+    deal: Mapped[Deal] = relationship(back_populates="contract_controls")
+    offer_packet: Mapped[OfferPacket] = relationship(back_populates="contract_controls")
+    title_handoff_packets: Mapped[list["TitleHandoffPacket"]] = relationship(
+        back_populates="contract_control"
+    )
+    assignment_readiness_records: Mapped[list["AssignmentReadinessRecord"]] = relationship(
+        back_populates="contract_control"
+    )
+
+
+class TitleHandoffPacket(TimestampMixin, Base):
+    __tablename__ = "title_handoff_packets"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    contract_control_id: Mapped[str] = mapped_column(
+        ForeignKey("contract_controls.id"), nullable=False
+    )
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    property_details: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    seller_info_placeholder: Mapped[str] = mapped_column(Text, default="")
+    buyer_entity_info_placeholder: Mapped[str] = mapped_column(Text, default="")
+    agreed_price: Mapped[int] = mapped_column(Integer, nullable=False)
+    closing_timeline: Mapped[str] = mapped_column(String(120), default="")
+    access_notes: Mapped[str] = mapped_column(Text, default="")
+    assignment_status: Mapped[str] = mapped_column(String(80), default="assignment_review")
+    required_document_checklist: Mapped[list[str]] = mapped_column(JSON, default=list)
+    attorney_title_review_reminder: Mapped[str] = mapped_column(Text, default="")
+    packet_status: Mapped[str] = mapped_column(String(80), default="draft")
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    submitted_to_title: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_provided: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    contract_control: Mapped[ContractControl] = relationship(
+        back_populates="title_handoff_packets"
+    )
+    deal: Mapped[Deal] = relationship(back_populates="title_handoff_packets")
+
+
+class AssignmentReadinessRecord(TimestampMixin, Base):
+    __tablename__ = "assignment_readiness_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    contract_control_id: Mapped[str] = mapped_column(
+        ForeignKey("contract_controls.id"), nullable=False
+    )
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    buyer_id: Mapped[str | None] = mapped_column(ForeignKey("buyers.id"), nullable=True)
+    buyer_match_id: Mapped[str | None] = mapped_column(
+        ForeignKey("buyer_matches.id"), nullable=True
+    )
+    buyer_interest_id: Mapped[str | None] = mapped_column(
+        ForeignKey("buyer_interests.id"), nullable=True
+    )
+    readiness_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    assignment_ready: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    assignment_allowed_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_pof_status: Mapped[str] = mapped_column(String(80), default="unverified")
+    compliance_review_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    contract_control: Mapped[ContractControl] = relationship(
+        back_populates="assignment_readiness_records"
+    )
+    deal: Mapped[Deal] = relationship(back_populates="assignment_readiness_records")
+    buyer: Mapped[Buyer | None] = relationship(back_populates="assignment_readiness_records")
+    buyer_match: Mapped[BuyerMatch | None] = relationship(
+        back_populates="assignment_readiness_records"
+    )
+    buyer_interest: Mapped[BuyerInterest | None] = relationship(
+        back_populates="assignment_readiness_records"
+    )
