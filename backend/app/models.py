@@ -519,6 +519,178 @@ class ReviewPacketPrep(TimestampMixin, Base):
     deal: Mapped[Deal] = relationship(back_populates="review_packet_preps")
 
 
+class AutomationRule(TimestampMixin, Base):
+    __tablename__ = "automation_rules"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    workflow_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    autonomy_level: Mapped[int] = mapped_column(Integer, default=2)
+    trigger_event: Mapped[str] = mapped_column(String(120), default="")
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    allowed_actions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    blocked_actions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    schedule_label: Mapped[str] = mapped_column(String(120), default="")
+    owner_approval_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    safety_status: Mapped[str] = mapped_column(String(80), default="guarded")
+    last_run_status: Mapped[str] = mapped_column(String(80), default="not_run")
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    level_5_disabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    payment_collection_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    notes: Mapped[str] = mapped_column(Text, default="")
+
+    runs: Mapped[list["SchedulerRun"]] = relationship(back_populates="rule")
+    tasks: Mapped[list["AutonomousAgentTask"]] = relationship(back_populates="rule")
+    event_triggers: Mapped[list["AutomationEventTrigger"]] = relationship(
+        back_populates="rule"
+    )
+
+
+class SchedulerRun(TimestampMixin, Base):
+    __tablename__ = "scheduler_runs"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    rule_id: Mapped[str | None] = mapped_column(
+        ForeignKey("automation_rules.id"), nullable=True
+    )
+    workflow_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    run_status: Mapped[str] = mapped_column(String(80), default="queued")
+    scheduled_for: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+    created_tasks: Mapped[int] = mapped_column(Integer, default=0)
+    created_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    escalation_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    daily_briefing_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    owner_approval_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    autonomy_level: Mapped[int] = mapped_column(Integer, default=2)
+    idempotent_replay: Mapped[bool] = mapped_column(Boolean, default=False)
+    real_world_action_taken: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    rule: Mapped[AutomationRule | None] = relationship(back_populates="runs")
+    attempts: Mapped[list["AutomationAttempt"]] = relationship(back_populates="run")
+    tasks: Mapped[list["AutonomousAgentTask"]] = relationship(back_populates="run")
+    briefings: Mapped[list["DailyCommandBriefing"]] = relationship(back_populates="run")
+    escalations: Mapped[list["AutonomyEscalation"]] = relationship(back_populates="run")
+
+
+class AutomationAttempt(TimestampMixin, Base):
+    __tablename__ = "automation_attempts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    run_id: Mapped[str | None] = mapped_column(ForeignKey("scheduler_runs.id"), nullable=True)
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(100), default="")
+    attempt_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    autonomy_level: Mapped[int] = mapped_column(Integer, default=2)
+    safety_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    owner_approval_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    real_world_action_taken: Mapped[bool] = mapped_column(Boolean, default=False)
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+
+    run: Mapped[SchedulerRun | None] = relationship(back_populates="attempts")
+
+
+class AutonomousAgentTask(TimestampMixin, Base):
+    __tablename__ = "autonomous_agent_tasks"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    rule_id: Mapped[str | None] = mapped_column(
+        ForeignKey("automation_rules.id"), nullable=True
+    )
+    run_id: Mapped[str | None] = mapped_column(ForeignKey("scheduler_runs.id"), nullable=True)
+    agent_name: Mapped[str] = mapped_column(String(140), nullable=False)
+    division: Mapped[str] = mapped_column(String(140), nullable=False)
+    task_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(100), default="")
+    priority: Mapped[str] = mapped_column(String(40), default="normal")
+    status: Mapped[str] = mapped_column(String(80), default="queued")
+    recommendation: Mapped[str] = mapped_column(Text, default="")
+    due_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+    owner_approval_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    readiness_marked: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    rule: Mapped[AutomationRule | None] = relationship(back_populates="tasks")
+    run: Mapped[SchedulerRun | None] = relationship(back_populates="tasks")
+
+
+class AutomationEventTrigger(TimestampMixin, Base):
+    __tablename__ = "automation_event_triggers"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    rule_id: Mapped[str | None] = mapped_column(
+        ForeignKey("automation_rules.id"), nullable=True
+    )
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(100), default="")
+    workflow_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    payload: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(80), default="queued")
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+    processed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    rule: Mapped[AutomationRule | None] = relationship(back_populates="event_triggers")
+
+
+class DailyCommandBriefing(TimestampMixin, Base):
+    __tablename__ = "daily_command_briefings"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    run_id: Mapped[str | None] = mapped_column(ForeignKey("scheduler_runs.id"), nullable=True)
+    briefing_date: Mapped[str] = mapped_column(String(40), nullable=False)
+    generated_by: Mapped[str] = mapped_column(String(120), default="Wholesale Prime")
+    hot_deals: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    priority_actions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    manager_queue: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    escalations: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    safety_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    owner_review_items: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    run: Mapped[SchedulerRun | None] = relationship(back_populates="briefings")
+
+
+class AutonomyEscalation(TimestampMixin, Base):
+    __tablename__ = "autonomy_escalations"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    run_id: Mapped[str | None] = mapped_column(ForeignKey("scheduler_runs.id"), nullable=True)
+    deal_id: Mapped[str | None] = mapped_column(ForeignKey("deals.id"), nullable=True)
+    lead_id: Mapped[str | None] = mapped_column(ForeignKey("leads.id"), nullable=True)
+    escalation_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(40), default="medium")
+    reason: Mapped[str] = mapped_column(Text, default="")
+    recommended_action: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(80), default="open")
+    owner_action_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    autonomy_level: Mapped[int] = mapped_column(Integer, default=3)
+    real_world_action_blocked: Mapped[bool] = mapped_column(Boolean, default=True)
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+
+    run: Mapped[SchedulerRun | None] = relationship(back_populates="escalations")
+
+
 class ComplianceRecord(TimestampMixin, Base):
     __tablename__ = "compliance_records"
 

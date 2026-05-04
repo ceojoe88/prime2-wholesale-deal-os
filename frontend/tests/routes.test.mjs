@@ -9,6 +9,12 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const requiredRouteFiles = [
   "src/app/dashboard/page.tsx",
   "src/app/dashboard/command-center/page.tsx",
+  "src/app/dashboard/autonomy/page.tsx",
+  "src/app/dashboard/autonomy/rules/page.tsx",
+  "src/app/dashboard/autonomy/runs/page.tsx",
+  "src/app/dashboard/autonomy/tasks/page.tsx",
+  "src/app/dashboard/autonomy/daily-briefing/page.tsx",
+  "src/app/dashboard/autonomy/escalations/page.tsx",
   "src/app/dashboard/command-hierarchy/page.tsx",
   "src/app/dashboard/overseer/page.tsx",
   "src/app/dashboard/divisions/page.tsx",

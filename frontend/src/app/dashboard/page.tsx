@@ -6,10 +6,16 @@ import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
   activeDealRooms,
+  automationRules,
+  autonomousAgentTasks,
+  autonomyEscalationQueue,
+  autonomyLevel4Rules,
+  autonomyOpenTasks,
   assignmentFeeAttributions,
   assignmentReadyDealRooms,
   assignmentReadyRecords,
   blockedDealRooms,
+  blockedAutomationAttempts,
   blockedDistributionPreps,
   buyerMatches,
   buyerInterests,
@@ -31,6 +37,7 @@ import {
   contractControls,
   contractPrepBlocked,
   contractPrepReady,
+  dailyCommandBriefings,
   dealEvidencePackets,
   dealsNeedingPriceAdjustment,
   distributionDraftsPendingApproval,
@@ -255,6 +262,19 @@ export default function DashboardPage() {
           <RecordCard title="Missing items" meta={`${titleReviewMissingItems.length} records need documents or approvals`} right={<Pill tone="gold">queue</Pill>} />
           <RecordCard title="Owner approvals" meta={`${titleReviewOwnerApprovalNeeded.length} review records need owner approval`} right={<Pill tone="gold">owner</Pill>} />
           <RecordCard title="Title submission" meta="Blocked; no documents, title email, legal advice, or contract execution." right={<Pill tone="red">off</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V12 Near-Autonomous Execution Engine">
+        <div className="grid-three">
+          <RecordCard title="Automation rules" meta={`${automationRules.length} rules govern Level 2-4 internal prep`} right={<Pill tone="green">guarded</Pill>} />
+          <RecordCard title="Agent task queue" meta={`${autonomyOpenTasks.length}/${autonomousAgentTasks.length} tasks await internal review`} right={<Pill tone="gold">queue</Pill>} />
+          <RecordCard title="Daily briefings" meta={`${dailyCommandBriefings.length} Wholesale Prime briefing record`} right={<Pill>brief</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Escalation queue" meta={`${autonomyEscalationQueue.length} urgent recommendations require owner attention`} right={<Pill tone="red">owner</Pill>} />
+          <RecordCard title="Blocked attempts" meta={`${blockedAutomationAttempts.length} live or unsafe attempts audited without provider calls`} right={<Pill tone="red">blocked</Pill>} />
+          <RecordCard title="Level 4 / Level 5" meta={`${autonomyLevel4Rules.length} Level 4 owner-gated rule; Level 5 unavailable`} right={<Pill tone="gold">controlled</Pill>} />
         </div>
       </Section>
     </div>

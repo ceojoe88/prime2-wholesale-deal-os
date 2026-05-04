@@ -362,6 +362,132 @@ export type ReviewPacketPrep = {
   closingGuaranteeAllowed: false;
 };
 
+export type AutomationRule = {
+  id: string;
+  name: string;
+  workflowType: string;
+  autonomyLevel: number;
+  triggerEvent: string;
+  enabled: boolean;
+  allowedActions: string[];
+  blockedActions: string[];
+  scheduleLabel: string;
+  ownerApprovalRequired: boolean;
+  safetyStatus: string;
+  lastRunStatus: string;
+  draftOnly: true;
+  liveActionAllowed: false;
+  level5Disabled: true;
+  portalPublishAllowed: false;
+  contractExecutionAllowed: false;
+  titleSubmissionAllowed: false;
+  paymentCollectionAllowed: false;
+  notes: string;
+};
+
+export type SchedulerRun = {
+  id: string;
+  ruleId: string;
+  workflowType: string;
+  runStatus: string;
+  scheduledFor: string;
+  idempotencyKey: string;
+  createdTasks: number;
+  createdAttempts: number;
+  escalationCreated: boolean;
+  dailyBriefingCreated: boolean;
+  summary: Record<string, string | number | boolean | string[]>;
+  ownerApprovalRequired: boolean;
+  autonomyLevel: number;
+  idempotentReplay: boolean;
+  realWorldActionTaken: false;
+};
+
+export type AutomationAttempt = {
+  id: string;
+  runId: string;
+  actionType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  attemptStatus: string;
+  autonomyLevel: number;
+  safetyResult: Record<string, string | number | boolean | string[]>;
+  blockedReasons: string[];
+  ownerApprovalRequired: boolean;
+  ownerApprovalRecorded: boolean;
+  providerCalled: false;
+  realWorldActionTaken: false;
+  idempotencyKey: string;
+};
+
+export type AutonomousAgentTask = {
+  id: string;
+  ruleId: string;
+  runId: string;
+  agentName: string;
+  division: string;
+  taskType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  priority: string;
+  status: string;
+  recommendation: string;
+  dueAt: string;
+  idempotencyKey: string;
+  ownerApprovalRequired: boolean;
+  draftOnly: true;
+  liveActionAllowed: false;
+  readinessMarked: boolean;
+};
+
+export type AutomationEventTrigger = {
+  id: string;
+  ruleId: string;
+  eventType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  workflowType: string;
+  payload: Record<string, string | number | boolean>;
+  status: string;
+  idempotencyKey: string;
+  processed: boolean;
+};
+
+export type DailyCommandBriefing = {
+  id: string;
+  runId: string;
+  briefingDate: string;
+  generatedBy: string;
+  hotDeals: { dealId: string; projectedAssignmentFee: number; dealSpeedScore: number }[];
+  priorityActions: string[];
+  managerQueue: { division: string; manager: string; nextBestAction: string }[];
+  escalations: { id: string; severity: string; reason: string }[];
+  safetySummary: Record<string, boolean>;
+  ownerReviewItems: string[];
+  draftOnly: true;
+  legalAdviceAllowed: false;
+  liveOutreachAllowed: false;
+  portalPublishAllowed: false;
+  titleSubmissionAllowed: false;
+  contractExecutionAllowed: false;
+};
+
+export type AutonomyEscalation = {
+  id: string;
+  runId: string;
+  dealId: string;
+  leadId: string;
+  escalationType: string;
+  severity: string;
+  reason: string;
+  recommendedAction: string;
+  status: string;
+  ownerActionRequired: boolean;
+  autonomyLevel: number;
+  realWorldActionBlocked: true;
+  idempotencyKey: string;
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1079,6 +1205,79 @@ export const reviewPacketPreps: ReviewPacketPrep[] = [
   { id: "review-packet-001", titleReviewCoordinationId: "title-review-001", dealId: "deal-001", propertySummary: { city: "Dallas", state: "TX", zip: "75216", propertyType: "single_family" }, sellerTerms: { price: 151000, closingTimeline: "14-21 days", acceptedTermsRecorded: true }, buyerAssignmentReadinessSummary: { assignmentAllowed: true, buyerPofStatus: "verified", assignmentReadiness: "assignment_ready" }, closingTimeline: "14-21 days", accessNotes: "Access notes are placeholders until owner confirms the next step.", complianceChecklist: titleReviewComplianceChecklist, documentChecklist: contractChecklist, packetStatus: "draft_ready", prepAllowed: true, blockedReasons: [], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, submittedToTitle: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false },
   { id: "review-packet-002", titleReviewCoordinationId: "title-review-002", dealId: "deal-003", propertySummary: { city: "Dallas", state: "TX", zip: "75224", propertyType: "single_family" }, sellerTerms: { price: 180000, closingTimeline: "30 days", acceptedTermsRecorded: true }, buyerAssignmentReadinessSummary: { assignmentAllowed: true, buyerPofStatus: "verified", assignmentReadiness: "blocked" }, closingTimeline: "30 days", accessNotes: "Access instructions require owner review.", complianceChecklist: titleReviewComplianceChecklist, documentChecklist: contractChecklist, packetStatus: "blocked", prepAllowed: false, blockedReasons: ["owner_approval_not_recorded", "v10_contract_ready_not_cleared"], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, submittedToTitle: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false },
   { id: "review-packet-003", titleReviewCoordinationId: "title-review-003", dealId: "deal-005", propertySummary: { city: "Dallas", state: "TX", zip: "75216", propertyType: "duplex" }, sellerTerms: { price: 220000, closingTimeline: "21-30 days", acceptedTermsRecorded: true }, buyerAssignmentReadinessSummary: { assignmentAllowed: false, buyerPofStatus: "verified", assignmentReadiness: "blocked" }, closingTimeline: "21-30 days", accessNotes: "Access blocked until compliance review clears.", complianceChecklist: titleReviewComplianceChecklist, documentChecklist: [...contractChecklist, "seller authority documentation"], packetStatus: "blocked", prepAllowed: false, blockedReasons: ["compliance_not_passed", "v10_contract_ready_not_cleared"], draftOnly: true, legalAdviceAllowed: false, contractExecutionAllowed: false, documentSubmissionAllowed: false, titleCompanyEmailSendAllowed: false, submittedToTitle: false, attorneyClientRelationshipClaimed: false, closingGuaranteeAllowed: false }
+];
+
+const autonomousBlockedActions = [
+  "send_sms",
+  "send_email",
+  "call_seller",
+  "contact_buyer",
+  "buyer_blast_execute",
+  "bulk_send",
+  "execute_contract",
+  "submit_to_title_company",
+  "publish_buyer_portal",
+  "publish_seller_portal",
+  "collect_payment",
+  "give_legal_advice"
+];
+
+export const automationRules: AutomationRule[] = [
+  { id: "rule-new-lead-intake", name: "New Lead Intake", workflowType: "new_lead_intake", autonomyLevel: 2, triggerEvent: "lead_imported", enabled: true, allowedActions: ["score_leads", "update_priority_queues", "create_agent_task"], blockedActions: autonomousBlockedActions, scheduleLabel: "event-triggered", ownerApprovalRequired: false, safetyStatus: "guarded", lastRunStatus: "completed", draftOnly: true, liveActionAllowed: false, level5Disabled: true, portalPublishAllowed: false, contractExecutionAllowed: false, titleSubmissionAllowed: false, paymentCollectionAllowed: false, notes: "Scores and routes new leads internally only." },
+  { id: "rule-hot-deal-acceleration", name: "Hot Deal Acceleration", workflowType: "hot_deal_acceleration", autonomyLevel: 3, triggerEvent: "deal_speed_score_high", enabled: true, allowedActions: ["create_next_best_action", "create_follow_up_draft", "create_blocker_record", "escalate_urgent_deal"], blockedActions: autonomousBlockedActions, scheduleLabel: "every 30 minutes while active", ownerApprovalRequired: false, safetyStatus: "guarded", lastRunStatus: "completed", draftOnly: true, liveActionAllowed: false, level5Disabled: true, portalPublishAllowed: false, contractExecutionAllowed: false, titleSubmissionAllowed: false, paymentCollectionAllowed: false, notes: "Creates drafts, blockers, and owner escalations without outreach." },
+  { id: "rule-buyer-demand-refresh", name: "Buyer Demand Refresh", workflowType: "buyer_demand_refresh", autonomyLevel: 2, triggerEvent: "buyer_queue_refresh", enabled: true, allowedActions: ["refresh_buyer_demand", "create_buyer_distribution_draft", "update_priority_queues"], blockedActions: autonomousBlockedActions, scheduleLabel: "twice daily", ownerApprovalRequired: false, safetyStatus: "guarded", lastRunStatus: "completed", draftOnly: true, liveActionAllowed: false, level5Disabled: true, portalPublishAllowed: false, contractExecutionAllowed: false, titleSubmissionAllowed: false, paymentCollectionAllowed: false, notes: "Refreshes buyer fit and prepares one-recipient drafts only." },
+  { id: "rule-contract-readiness", name: "Contract Readiness", workflowType: "contract_readiness", autonomyLevel: 3, triggerEvent: "gates_passed", enabled: true, allowedActions: ["mark_internal_readiness", "create_offer_packet_draft", "create_evidence_packet"], blockedActions: autonomousBlockedActions, scheduleLabel: "event-triggered", ownerApprovalRequired: false, safetyStatus: "guarded", lastRunStatus: "completed", draftOnly: true, liveActionAllowed: false, level5Disabled: true, portalPublishAllowed: false, contractExecutionAllowed: false, titleSubmissionAllowed: false, paymentCollectionAllowed: false, notes: "Marks internal readiness states only when gates pass." },
+  { id: "rule-daily-command-briefing", name: "Daily Command Briefing", workflowType: "daily_command_briefing", autonomyLevel: 3, triggerEvent: "daily_schedule", enabled: true, allowedActions: ["create_daily_briefing", "create_manager_queue"], blockedActions: autonomousBlockedActions, scheduleLabel: "daily 7:00 AM", ownerApprovalRequired: false, safetyStatus: "guarded", lastRunStatus: "completed", draftOnly: true, liveActionAllowed: false, level5Disabled: true, portalPublishAllowed: false, contractExecutionAllowed: false, titleSubmissionAllowed: false, paymentCollectionAllowed: false, notes: "Creates internal Wholesale Prime briefings and owner queues." },
+  { id: "rule-controlled-live-review", name: "Controlled Live Action Review", workflowType: "controlled_live_action_review", autonomyLevel: 4, triggerEvent: "owner_requested_live_review", enabled: true, allowedActions: ["controlled_live_action_review"], blockedActions: autonomousBlockedActions, scheduleLabel: "manual owner approval only", ownerApprovalRequired: true, safetyStatus: "owner_approval_required", lastRunStatus: "not_run", draftOnly: true, liveActionAllowed: false, level5Disabled: true, portalPublishAllowed: false, contractExecutionAllowed: false, titleSubmissionAllowed: false, paymentCollectionAllowed: false, notes: "Level 4 can queue review only; execution stays behind owner and provider gates." }
+];
+
+export const schedulerRuns: SchedulerRun[] = [
+  { id: "run-new-lead-001", ruleId: "rule-new-lead-intake", workflowType: "new_lead_intake", runStatus: "completed", scheduledFor: "2026-05-04T13:00:00Z", idempotencyKey: "seed:new-lead-intake:2026-05-04", createdTasks: 2, createdAttempts: 1, escalationCreated: false, dailyBriefingCreated: false, summary: { leadIds: "lead-001, lead-002", realWorldActionTaken: false }, ownerApprovalRequired: false, autonomyLevel: 2, idempotentReplay: false, realWorldActionTaken: false },
+  { id: "run-hot-deal-001", ruleId: "rule-hot-deal-acceleration", workflowType: "hot_deal_acceleration", runStatus: "completed", scheduledFor: "2026-05-04T13:00:00Z", idempotencyKey: "seed:hot-deal-acceleration:deal-001", createdTasks: 2, createdAttempts: 1, escalationCreated: true, dailyBriefingCreated: false, summary: { dealId: "deal-001", escalation: "hot_10k_spread" }, ownerApprovalRequired: false, autonomyLevel: 3, idempotentReplay: false, realWorldActionTaken: false },
+  { id: "run-buyer-demand-001", ruleId: "rule-buyer-demand-refresh", workflowType: "buyer_demand_refresh", runStatus: "completed", scheduledFor: "2026-05-04T13:00:00Z", idempotencyKey: "seed:buyer-demand-refresh:2026-05-04", createdTasks: 1, createdAttempts: 1, escalationCreated: false, dailyBriefingCreated: false, summary: { buyersRefreshed: 10, buyerBlastsSent: 0 }, ownerApprovalRequired: false, autonomyLevel: 2, idempotentReplay: false, realWorldActionTaken: false },
+  { id: "run-contract-readiness-001", ruleId: "rule-contract-readiness", workflowType: "contract_readiness", runStatus: "completed", scheduledFor: "2026-05-04T13:00:00Z", idempotencyKey: "seed:contract-readiness:deal-001", createdTasks: 2, createdAttempts: 1, escalationCreated: false, dailyBriefingCreated: false, summary: { dealId: "deal-001", internalReadinessMarked: true }, ownerApprovalRequired: false, autonomyLevel: 3, idempotentReplay: false, realWorldActionTaken: false },
+  { id: "run-daily-briefing-001", ruleId: "rule-daily-command-briefing", workflowType: "daily_command_briefing", runStatus: "completed", scheduledFor: "2026-05-04T13:00:00Z", idempotencyKey: "seed:daily-briefing:2026-05-04", createdTasks: 1, createdAttempts: 1, escalationCreated: false, dailyBriefingCreated: true, summary: { briefingId: "daily-briefing-001", recommendationsOnly: true }, ownerApprovalRequired: false, autonomyLevel: 3, idempotentReplay: false, realWorldActionTaken: false }
+];
+
+export const automationAttempts: AutomationAttempt[] = [
+  { id: "attempt-score-leads-001", runId: "run-new-lead-001", actionType: "score_leads", sourceRecordType: "lead", sourceRecordId: "lead-001", attemptStatus: "prepared", autonomyLevel: 2, safetyResult: { allowed: true, realWorldActionAllowed: false }, blockedReasons: [], ownerApprovalRequired: false, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:attempt-score-leads-001" },
+  { id: "attempt-hot-deal-nba-001", runId: "run-hot-deal-001", actionType: "create_next_best_action", sourceRecordType: "deal", sourceRecordId: "deal-001", attemptStatus: "prepared", autonomyLevel: 3, safetyResult: { allowed: true, realWorldActionAllowed: false }, blockedReasons: [], ownerApprovalRequired: false, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:attempt-hot-deal-nba-001" },
+  { id: "attempt-buyer-demand-001", runId: "run-buyer-demand-001", actionType: "refresh_buyer_demand", sourceRecordType: "deal", sourceRecordId: "deal-001", attemptStatus: "prepared", autonomyLevel: 2, safetyResult: { allowed: true, realWorldActionAllowed: false }, blockedReasons: [], ownerApprovalRequired: false, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:attempt-buyer-demand-001" },
+  { id: "attempt-readiness-001", runId: "run-contract-readiness-001", actionType: "mark_internal_readiness", sourceRecordType: "deal", sourceRecordId: "deal-001", attemptStatus: "prepared", autonomyLevel: 3, safetyResult: { allowed: true, realWorldActionAllowed: false }, blockedReasons: [], ownerApprovalRequired: false, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:attempt-readiness-001" },
+  { id: "attempt-briefing-001", runId: "run-daily-briefing-001", actionType: "create_daily_briefing", sourceRecordType: "system", sourceRecordId: "wholesale-prime", attemptStatus: "prepared", autonomyLevel: 3, safetyResult: { allowed: true, realWorldActionAllowed: false }, blockedReasons: [], ownerApprovalRequired: false, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:attempt-briefing-001" },
+  { id: "attempt-blocked-send-sms", runId: "run-hot-deal-001", actionType: "send_sms", sourceRecordType: "deal", sourceRecordId: "deal-001", attemptStatus: "blocked", autonomyLevel: 3, safetyResult: { allowed: false, realWorldActionAllowed: false }, blockedReasons: ["send_sms"], ownerApprovalRequired: false, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:blocked:send_sms" },
+  { id: "attempt-blocked-buyer-blast-execute", runId: "run-hot-deal-001", actionType: "buyer_blast_execute", sourceRecordType: "deal", sourceRecordId: "deal-001", attemptStatus: "blocked", autonomyLevel: 3, safetyResult: { allowed: false, realWorldActionAllowed: false }, blockedReasons: ["buyer_blast_execute"], ownerApprovalRequired: false, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:blocked:buyer_blast_execute" },
+  { id: "attempt-blocked-execute-contract", runId: "run-hot-deal-001", actionType: "execute_contract", sourceRecordType: "deal", sourceRecordId: "deal-001", attemptStatus: "blocked", autonomyLevel: 3, safetyResult: { allowed: false, realWorldActionAllowed: false }, blockedReasons: ["execute_contract"], ownerApprovalRequired: false, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:blocked:execute_contract" },
+  { id: "attempt-blocked-submit-to-title-company", runId: "run-hot-deal-001", actionType: "submit_to_title_company", sourceRecordType: "deal", sourceRecordId: "deal-001", attemptStatus: "blocked", autonomyLevel: 3, safetyResult: { allowed: false, realWorldActionAllowed: false }, blockedReasons: ["submit_to_title_company"], ownerApprovalRequired: false, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:blocked:submit_to_title_company" },
+  { id: "attempt-blocked-publish-buyer-portal", runId: "run-hot-deal-001", actionType: "publish_buyer_portal", sourceRecordType: "deal", sourceRecordId: "deal-001", attemptStatus: "blocked", autonomyLevel: 3, safetyResult: { allowed: false, realWorldActionAllowed: false }, blockedReasons: ["publish_buyer_portal"], ownerApprovalRequired: true, ownerApprovalRecorded: false, providerCalled: false, realWorldActionTaken: false, idempotencyKey: "seed:blocked:publish_buyer_portal" }
+];
+
+export const autonomousAgentTasks: AutonomousAgentTask[] = [
+  { id: "auto-task-001", ruleId: "rule-new-lead-intake", runId: "run-new-lead-001", agentName: "Attention Queue Agent", division: "Operations Command Division", taskType: "lead_scoring", sourceRecordType: "lead", sourceRecordId: "lead-001", priority: "high", status: "queued_for_internal_review", recommendation: "Refresh motivation, equity, contactability, and data confidence; route missing repair inputs.", dueAt: "2026-05-04T16:00:00Z", idempotencyKey: "seed:auto-task-001", ownerApprovalRequired: false, draftOnly: true, liveActionAllowed: false, readinessMarked: false },
+  { id: "auto-task-002", ruleId: "rule-new-lead-intake", runId: "run-new-lead-001", agentName: "KPI Agent", division: "Operations Command Division", taskType: "priority_queue_update", sourceRecordType: "lead", sourceRecordId: "lead-002", priority: "high", status: "queued_for_internal_review", recommendation: "Move the inherited vacant lead into the offer-needed review queue.", dueAt: "2026-05-04T16:00:00Z", idempotencyKey: "seed:auto-task-002", ownerApprovalRequired: false, draftOnly: true, liveActionAllowed: false, readinessMarked: false },
+  { id: "auto-task-003", ruleId: "rule-hot-deal-acceleration", runId: "run-hot-deal-001", agentName: "Seller Script Agent", division: "Seller Acquisition Division", taskType: "follow_up_draft", sourceRecordType: "lead", sourceRecordId: "lead-001", priority: "critical", status: "draft_ready_for_owner", recommendation: "Prepare safe follow-up language explaining the as-is offer basis without pressure or fake buyer claims.", dueAt: "2026-05-04T16:00:00Z", idempotencyKey: "seed:auto-task-003", ownerApprovalRequired: true, draftOnly: true, liveActionAllowed: false, readinessMarked: false },
+  { id: "auto-task-004", ruleId: "rule-buyer-demand-refresh", runId: "run-buyer-demand-001", agentName: "Buyer Demand Agent", division: "Buyer Disposition Division", taskType: "buyer_distribution_draft", sourceRecordType: "deal", sourceRecordId: "deal-001", priority: "high", status: "draft_ready_for_owner", recommendation: "Create one-buyer sanitized deal sheet draft for the highest-ranked verified buyer only.", dueAt: "2026-05-04T16:00:00Z", idempotencyKey: "seed:auto-task-004", ownerApprovalRequired: true, draftOnly: true, liveActionAllowed: false, readinessMarked: false },
+  { id: "auto-task-005", ruleId: "rule-contract-readiness", runId: "run-contract-readiness-001", agentName: "Offer Explanation Agent", division: "Seller Acquisition Division", taskType: "offer_packet_draft", sourceRecordType: "deal", sourceRecordId: "deal-001", priority: "high", status: "draft_ready_for_owner", recommendation: "Assemble offer packet draft after checking underwriting, buyer margin, target spread, compliance, and owner approval.", dueAt: "2026-05-04T16:00:00Z", idempotencyKey: "seed:auto-task-005", ownerApprovalRequired: true, draftOnly: true, liveActionAllowed: false, readinessMarked: false },
+  { id: "auto-task-006", ruleId: "rule-contract-readiness", runId: "run-contract-readiness-001", agentName: "Deal Confidence Agent", division: "Deal Underwriting Division", taskType: "contract_readiness", sourceRecordType: "deal", sourceRecordId: "deal-001", priority: "high", status: "readiness_marked_internal", recommendation: "Mark contract-ready only as internal readiness for external attorney/title drafting review.", dueAt: "2026-05-04T16:00:00Z", idempotencyKey: "seed:auto-task-006", ownerApprovalRequired: true, draftOnly: true, liveActionAllowed: false, readinessMarked: true },
+  { id: "auto-task-007", ruleId: "rule-hot-deal-acceleration", runId: "run-hot-deal-001", agentName: "Risk Escalation Agent", division: "Operations Command Division", taskType: "blocker_record", sourceRecordType: "deal", sourceRecordId: "deal-005", priority: "critical", status: "queued_for_internal_review", recommendation: "Create blocker for missing seller authority and compliance review before title or portal movement.", dueAt: "2026-05-04T16:00:00Z", idempotencyKey: "seed:auto-task-007", ownerApprovalRequired: true, draftOnly: true, liveActionAllowed: false, readinessMarked: false },
+  { id: "auto-task-008", ruleId: "rule-daily-command-briefing", runId: "run-daily-briefing-001", agentName: "Daily Briefing Agent", division: "Operations Command Division", taskType: "daily_briefing", sourceRecordType: "system", sourceRecordId: "wholesale-prime", priority: "normal", status: "completed", recommendation: "Publish internal command briefing to the owner dashboard only.", dueAt: "2026-05-04T16:00:00Z", idempotencyKey: "seed:auto-task-008", ownerApprovalRequired: false, draftOnly: true, liveActionAllowed: false, readinessMarked: false }
+];
+
+export const automationEventTriggers: AutomationEventTrigger[] = [
+  { id: "auto-trigger-001", ruleId: "rule-new-lead-intake", eventType: "lead_imported", sourceRecordType: "lead", sourceRecordId: "lead-001", workflowType: "new_lead_intake", payload: { source: "driving_for_dollars", csvReady: true }, status: "processed", idempotencyKey: "seed:auto-trigger-001", processed: true },
+  { id: "auto-trigger-002", ruleId: "rule-hot-deal-acceleration", eventType: "deal_speed_score_high", sourceRecordType: "deal", sourceRecordId: "deal-001", workflowType: "hot_deal_acceleration", payload: { projectedAssignmentFee: 17000, dealSpeedScore: 93 }, status: "processed", idempotencyKey: "seed:auto-trigger-002", processed: true },
+  { id: "auto-trigger-003", ruleId: "rule-buyer-demand-refresh", eventType: "buyer_queue_refresh", sourceRecordType: "buyer", sourceRecordId: "buyer-001", workflowType: "buyer_demand_refresh", payload: { pofStatus: "verified", closingSpeedScore: 92 }, status: "processed", idempotencyKey: "seed:auto-trigger-003", processed: true },
+  { id: "auto-trigger-004", ruleId: "rule-contract-readiness", eventType: "gates_passed", sourceRecordType: "deal", sourceRecordId: "deal-001", workflowType: "contract_readiness", payload: { contractReady: true, ownerApprovalRecorded: true }, status: "processed", idempotencyKey: "seed:auto-trigger-004", processed: true },
+  { id: "auto-trigger-005", ruleId: "rule-daily-command-briefing", eventType: "daily_schedule", sourceRecordType: "system", sourceRecordId: "wholesale-prime", workflowType: "daily_command_briefing", payload: { localTime: "07:00" }, status: "processed", idempotencyKey: "seed:auto-trigger-005", processed: true }
+];
+
+export const dailyCommandBriefings: DailyCommandBriefing[] = [
+  { id: "daily-briefing-001", runId: "run-daily-briefing-001", briefingDate: "2026-05-04", generatedBy: "Wholesale Prime", hotDeals: [{ dealId: "deal-001", projectedAssignmentFee: 17000, dealSpeedScore: 93 }, { dealId: "deal-003", projectedAssignmentFee: 15000, dealSpeedScore: 90 }, { dealId: "deal-005", projectedAssignmentFee: 18000, dealSpeedScore: 87 }], priorityActions: ["Review hot deal escalation for deal-001.", "Resolve seller authority blocker on deal-005 before title movement.", "Approve or reject draft-only buyer distribution packet for deal-001.", "Keep all live outreach, contracts, title submission, and portal publishing owner-gated."], managerQueue: [{ division: "Operations Command Division", manager: "Sofia Grant", nextBestAction: "Review escalations and blocked automation attempts." }, { division: "Buyer Disposition Division", manager: "Darius Cole", nextBestAction: "Verify POF gaps before any distribution draft review." }], escalations: [{ id: "auto-escalation-001", severity: "critical", reason: "Hot 10K+ spread needs owner review." }], safetySummary: { autonomousLiveOutreach: false, autonomousBuyerBlasts: false, autonomousContractExecution: false, autonomousTitleSubmission: false, autonomousPortalPublishing: false, level5Available: false }, ownerReviewItems: ["Owner approval remains required for Level 4.", "Blocked attempts were recorded without provider calls.", "No binding commitments were created."], draftOnly: true, legalAdviceAllowed: false, liveOutreachAllowed: false, portalPublishAllowed: false, titleSubmissionAllowed: false, contractExecutionAllowed: false }
+];
+
+export const autonomyEscalations: AutonomyEscalation[] = [
+  { id: "auto-escalation-001", runId: "run-hot-deal-001", dealId: "deal-001", leadId: "lead-001", escalationType: "hot_deal_acceleration", severity: "critical", reason: "Deal-001 protects a 10K+ spread and has verified buyer demand, but owner review is still required before any real-world move.", recommendedAction: "Review seller follow-up draft, buyer POF, compliance status, and owner approvals.", status: "open", ownerActionRequired: true, autonomyLevel: 3, realWorldActionBlocked: true, idempotencyKey: "seed:auto-escalation-001" },
+  { id: "auto-escalation-002", runId: "run-hot-deal-001", dealId: "deal-005", leadId: "lead-005", escalationType: "compliance_blocker", severity: "high", reason: "Inherited property path needs seller authority and compliance review before title, portal, or assignment readiness movement.", recommendedAction: "Resolve compliance blocker and missing seller documents; do not publish or submit anything.", status: "open", ownerActionRequired: true, autonomyLevel: 3, realWorldActionBlocked: true, idempotencyKey: "seed:auto-escalation-002" }
 ];
 
 export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
@@ -1890,3 +2089,35 @@ export const titleReviewMissingItems = titleReviewCoordinations.filter(
 export const titleReviewOwnerApprovalNeeded = titleReviewCoordinations.filter(
   (record) => record.ownerApprovalStatus !== "approved"
 );
+
+export const autonomyEnabledRules = automationRules.filter((rule) => rule.enabled);
+export const autonomyLevel4Rules = automationRules.filter((rule) => rule.autonomyLevel === 4);
+export const autonomyLevel5Disabled = automationRules.every((rule) => rule.level5Disabled);
+export const blockedAutomationAttempts = automationAttempts.filter(
+  (attempt) => attempt.attemptStatus === "blocked" || attempt.blockedReasons.length > 0
+);
+export const autonomousLiveOutreachBlocks = blockedAutomationAttempts.filter((attempt) =>
+  ["send_sms", "send_email", "call_seller", "contact_buyer", "buyer_blast_execute", "bulk_send"].includes(attempt.actionType)
+);
+export const autonomyOpenTasks = autonomousAgentTasks.filter(
+  (task) => task.status !== "completed"
+);
+export const autonomyDraftTasks = autonomousAgentTasks.filter((task) =>
+  ["follow_up_draft", "buyer_distribution_draft", "offer_packet_draft", "daily_briefing"].includes(task.taskType)
+);
+export const autonomyOwnerApprovalTasks = autonomousAgentTasks.filter(
+  (task) => task.ownerApprovalRequired
+);
+export const autonomyEscalationQueue = autonomyEscalations.filter(
+  (escalation) => escalation.status === "open"
+);
+export const autonomyCriticalEscalations = autonomyEscalationQueue.filter(
+  (escalation) => escalation.severity === "critical"
+);
+export const latestAutonomyDailyBriefing = dailyCommandBriefings[0];
+export const autonomySafetyBoundaryCards = [
+  { label: "Live outreach", value: "off", detail: `${autonomousLiveOutreachBlocks.length} blocked attempts recorded` },
+  { label: "Portal publishing", value: "off", detail: "Buyer/seller portal visibility remains operator-gated" },
+  { label: "Contracts/title", value: "off", detail: "No execution, no title submission, no review packet send" },
+  { label: "Level 5", value: "disabled", detail: autonomyLevel5Disabled ? "Unavailable in V12" : "Review configuration" }
+];

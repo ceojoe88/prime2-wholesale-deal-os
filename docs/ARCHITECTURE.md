@@ -26,6 +26,8 @@ V10 adds controlled offer-to-contract conversion. It structures offer positionin
 
 V11 adds title company/attorney review coordination. It prepares draft-only review records and review packets for V10 contract-ready deals, tracks missing documents and owner approval, and blocks legal advice, contract execution, document submission, title-company email sending, attorney-client relationship claims, and closing guarantees.
 
+V12 adds near-autonomous internal execution. Wholesale Prime and its divisions can continuously analyze, prepare, prioritize, route, schedule, escalate, and brief the operator. The default autonomy model is Level 2 for autonomous internal prep, Level 3 for autonomous draft creation and scheduling, Level 4 for controlled live-action review with owner approval only, and Level 5 disabled/unavailable. Real-world actions remain blocked unless a prior controlled gate explicitly allows owner-reviewed next steps.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -36,6 +38,7 @@ V11 adds title company/attorney review coordination. It prepares draft-only revi
 - `app/domain/buyer_demand.py`: V9 buyer demand scoring, per-deal priority ranking, sanitized private deal sheet generation, distribution prep guard, and buyer demand dashboard aggregation.
 - `app/domain/offer_conversion.py`: V10 offer positioning summaries, negotiation readiness scoring, conversion gates, deal acceleration recommendations, contract-ready state sync, and conversion safety validation.
 - `app/domain/title_review.py`: V11 title/attorney review coordination gates, draft review packet summaries, missing-item queues, safety validation, and no-submission boundaries.
+- `app/domain/autonomy.py`: V12 automation rule engine, scheduler runtime, run/attempt ledgers, idempotency guard, autonomous task queue, event trigger summaries, daily command briefing generation, escalation queue, and autonomy safety guard.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -117,6 +120,15 @@ erDiagram
   CONTRACT_READY_STATE ||--o{ TITLE_REVIEW_COORDINATION : gates
   TITLE_REVIEW_COORDINATION ||--o{ REVIEW_PACKET_PREP : prepares
   DEAL ||--o{ REVIEW_PACKET_PREP : drafts
+  AUTOMATION_RULE ||--o{ SCHEDULER_RUN : schedules
+  SCHEDULER_RUN ||--o{ AUTOMATION_ATTEMPT : audits
+  AUTOMATION_RULE ||--o{ AUTONOMOUS_AGENT_TASK : routes
+  SCHEDULER_RUN ||--o{ AUTONOMOUS_AGENT_TASK : creates
+  AUTOMATION_RULE ||--o{ AUTOMATION_EVENT_TRIGGER : listens
+  SCHEDULER_RUN ||--o{ DAILY_COMMAND_BRIEFING : generates
+  SCHEDULER_RUN ||--o{ AUTONOMY_ESCALATION : escalates
+  DEAL ||--o{ AUTONOMY_ESCALATION : raises
+  LEAD ||--o{ AUTONOMY_ESCALATION : raises
 ```
 
 ## V2 Buyer Portal
@@ -474,6 +486,52 @@ The V11 review packet gate allows prep only when all of these are true:
 
 Even when the gate passes, the review packet is only an internal preparation artifact. It cannot submit documents, email a title company, create or execute a contract, provide legal advice, claim an attorney-client relationship, or guarantee closing.
 
+## V12 Near-Autonomous Execution
+
+Internal routes:
+
+- `/dashboard/autonomy`
+- `/dashboard/autonomy/rules`
+- `/dashboard/autonomy/runs`
+- `/dashboard/autonomy/tasks`
+- `/dashboard/autonomy/daily-briefing`
+- `/dashboard/autonomy/escalations`
+
+Automation rules define workflow type, autonomy level, trigger event, allowed prep actions, blocked real-world actions, schedule label, owner approval requirement, and safety status.
+
+The scheduler runtime supports these workflows:
+
+- New Lead Intake
+- Hot Deal Acceleration
+- Buyer Demand Refresh
+- Contract Readiness
+- Daily Command Briefing
+
+Each scheduler run records idempotency, workflow status, created tasks, attempts, escalation creation, briefing creation, owner approval requirements, autonomy level, and whether any real-world action was taken. V12 always records `real_world_action_taken = false`.
+
+Attempt ledgers record prepared internal actions and blocked real-world attempts. Blocked attempts store action type, source record, blocked reasons, provider-call status, owner approval status, and safety result. Provider calls remain false for blocked attempts.
+
+Autonomous agent tasks route work to divisions and agents for lead scoring, priority queues, seller follow-up drafts, buyer distribution drafts, offer packet drafts, evidence packets, blocker records, contract readiness checks, and daily briefings. Tasks are recommendations or draft preparation only.
+
+Event triggers capture source events such as lead import, hot deal score, buyer demand refresh, gate pass, and daily schedule. Triggers can create runs but cannot publish portals, submit title packets, execute contracts, send messages, contact buyers/sellers, change terms, collect payments, or make commitments.
+
+Daily command briefings are generated by Wholesale Prime and contain hot deals, priority actions, manager queues, escalations, owner review items, and safety summary. They are internal recommendations only.
+
+Escalations flag urgent owner-review items such as hot 10K+ opportunities, compliance blockers, POF gaps, missing approvals, title blockers, and communication risk. Escalation records never perform the action they recommend.
+
+The autonomy safety guard blocks:
+
+- Autonomous SMS, email, calls, buyer contact, buyer blasts, bulk sends, and campaigns
+- Autonomous contract execution, executable contract generation, or binding commitments
+- Autonomous title-company submission or review packet submission
+- Autonomous buyer/seller portal publishing
+- Autonomous payment collection
+- Autonomous seller/buyer term changes
+- Legal advice
+- Level 5 autonomy
+
+Level 4 is owner-approval-required and still cannot bypass the specific communication, portal, title, contract, payment, or compliance gates.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -532,6 +590,12 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/title-review`
 - `/dashboard/title-review/[reviewId]`
 - `/dashboard/review-packets`
+- `/dashboard/autonomy`
+- `/dashboard/autonomy/rules`
+- `/dashboard/autonomy/runs`
+- `/dashboard/autonomy/tasks`
+- `/dashboard/autonomy/daily-briefing`
+- `/dashboard/autonomy/escalations`
 
 Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
 
@@ -578,6 +642,8 @@ V9 exception: buyer demand and distribution prep records are allowed only as int
 V10 exception: offer-to-contract conversion records are allowed only as internal offer positioning, negotiation tracking, readiness scoring, and contract-ready coordination records. They can recommend next moves and mark a deal ready for external attorney/title drafting when gates pass, but they cannot create executable contracts, auto-accept terms, provide legal advice, pressure sellers, fake urgency or buyer demand, guarantee closing, or automate live negotiation.
 
 V11 exception: title/attorney review records and review packets are allowed only as internal draft coordination artifacts. They can track title placeholders, required documents, missing items, compliance checklists, and owner approval, but they cannot submit documents, send title-company email, execute contracts, give legal advice, claim an attorney-client relationship, or guarantee closing.
+
+V12 exception: near-autonomous execution is allowed only for internal scoring, routing, scheduling, draft creation, blocker/evidence creation, readiness marking when existing gates pass, daily briefings, and escalation records. It cannot autonomously send messages, contact buyers or sellers, publish portal data, execute contracts, submit title packets, collect payments, change deal terms, provide legal advice, make commitments, or use Level 5 autonomy. Level 4 remains owner-approval-required and subordinate to every underlying gate.
 
 Allowed:
 

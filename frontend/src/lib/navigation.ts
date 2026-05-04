@@ -1,6 +1,7 @@
 export const dashboardRoutes = [
   { href: "/dashboard", label: "Overview", icon: "LayoutDashboard" },
   { href: "/dashboard/command-center", label: "Command Center", icon: "Command" },
+  { href: "/dashboard/autonomy", label: "Autonomy", icon: "Command" },
   { href: "/dashboard/command-hierarchy", label: "Hierarchy", icon: "Network" },
   { href: "/dashboard/overseer", label: "Wholesale Prime", icon: "Crown" },
   { href: "/dashboard/divisions", label: "Divisions", icon: "Building2" },

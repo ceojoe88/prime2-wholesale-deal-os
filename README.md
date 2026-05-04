@@ -19,6 +19,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - V9 buyer demand intelligence and deal distribution prep with buyer demand profiles, per-deal priority rankings, sanitized private deal sheets, one-recipient draft records, POF gap tracking, and no live blasts.
 - V10 controlled offer-to-contract conversion gate with offer positioning, negotiation tracking, seller acceptance readiness scoring, contract-ready state gates, and no contract execution.
 - V11 title company/attorney review coordination gate with draft-only review records, review packet prep, missing-item queues, and no title submission, title email, legal advice, or contract execution.
+- V12 near-autonomous execution engine with automation rules, scheduler runtime, run/attempt ledgers, autonomous agent task queues, event triggers, daily command briefings, escalation queues, and a Wholesale Prime autonomy panel.
 
 ## Safety Boundaries
 
@@ -45,6 +46,8 @@ V9 adds internal buyer demand intelligence and deal distribution prep. Buyers ar
 V10 converts high-confidence seller opportunities into contract-ready internal states only. Offer positioning stores strategy type, seller pain alignment, justification, anchor/walk-away/ideal prices, concession range, and confidence. Negotiation tracking stores seller responses, objections, counteroffers, emotional signals, stage, next move, and acceptance readiness score. Contract-ready means externally draft-ready for attorney/title review, seller likely to sign, numbers locked, and negotiation stabilized; it never creates, executes, or auto-accepts a contract. Legal advice, pressure tactics, fake urgency, fake buyer claims, guaranteed close language, live negotiation automation, and deception about role or assignment are blocked.
 
 V11 prepares title/attorney review coordination for V10 contract-ready deals only. Review records track selected title company placeholders, review status, required documents, missing items, notes, and owner approval. Review packets organize property summary, seller terms, buyer/assignment readiness, timeline, access notes, compliance checklist, and document checklist. Packet prep is blocked unless V10 contract-ready, compliance passed, owner approval recorded, numbers locked, and seller acceptance readiness is high or contract-ready. Legal advice, contract execution, document submission, title-company email sending, attorney-client relationship claims, and closing guarantees are blocked.
+
+V12 adds near-autonomous internal execution. Level 2 allows autonomous internal prep, Level 3 allows autonomous draft creation and scheduling, Level 4 allows only controlled live-action review with owner approval, and Level 5 is disabled. Wholesale Prime can score leads, refresh deal scores, update queues, create drafts, create evidence packets, create blockers, schedule reminders, escalate urgent deals, mark internal readiness when gates pass, and generate daily briefings. It cannot autonomously send SMS/email, call sellers, contact buyers, execute contracts, submit title packets, collect payments, publish buyer/seller portal data, change terms, give legal advice, or make binding commitments. Scheduler runs and blocked attempts are auditable, and idempotency prevents duplicate task creation.
 
 ## Backend
 
@@ -126,6 +129,14 @@ Useful endpoints:
 - `POST /api/title-review/safety/validate`
 - `GET /api/review-packets`
 - `GET /api/review-packets/{packet_id}`
+- `GET /api/autonomy`
+- `GET /api/autonomy/rules`
+- `GET /api/autonomy/runs`
+- `GET /api/autonomy/tasks`
+- `GET /api/autonomy/daily-briefing`
+- `GET /api/autonomy/escalations`
+- `POST /api/autonomy/safety/validate`
+- `POST /api/autonomy/run`
 - `GET /api/compliance`
 - `POST /api/actions/validate`
 - `POST /api/data-import/leads/preview`
@@ -211,6 +222,15 @@ Title/attorney review V11 routes:
 
 - [http://localhost:3000/dashboard/title-review](http://localhost:3000/dashboard/title-review)
 - [http://localhost:3000/dashboard/review-packets](http://localhost:3000/dashboard/review-packets)
+
+Near-autonomous execution V12 routes:
+
+- [http://localhost:3000/dashboard/autonomy](http://localhost:3000/dashboard/autonomy)
+- [http://localhost:3000/dashboard/autonomy/rules](http://localhost:3000/dashboard/autonomy/rules)
+- [http://localhost:3000/dashboard/autonomy/runs](http://localhost:3000/dashboard/autonomy/runs)
+- [http://localhost:3000/dashboard/autonomy/tasks](http://localhost:3000/dashboard/autonomy/tasks)
+- [http://localhost:3000/dashboard/autonomy/daily-briefing](http://localhost:3000/dashboard/autonomy/daily-briefing)
+- [http://localhost:3000/dashboard/autonomy/escalations](http://localhost:3000/dashboard/autonomy/escalations)
 
 ## Validation
 

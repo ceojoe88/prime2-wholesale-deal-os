@@ -6,6 +6,12 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_session
+from app.domain.autonomy import (
+    autonomy_dashboard,
+    autonomy_safety_guard,
+    daily_briefing_summary,
+    run_scheduler_workflow,
+)
 from app.domain.buyer_portal import (
     buyer_portal_rules,
     portal_publish_gate,
@@ -90,6 +96,11 @@ from app.models import (
     Agent,
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
+    AutomationAttempt,
+    AutomationEventTrigger,
+    AutomationRule,
+    AutonomousAgentTask,
+    AutonomyEscalation,
     Buyer,
     BuyerDealPriority,
     BuyerDealPublication,
@@ -104,6 +115,7 @@ from app.models import (
     CommunicationSendAttempt,
     ContractControl,
     ContractReadyState,
+    DailyCommandBriefing,
     Deal,
     DealDistributionPrep,
     DealEvidencePacket,
@@ -117,6 +129,7 @@ from app.models import (
     SellerInteraction,
     SellerOfferPublication,
     SellerPortalResponse,
+    SchedulerRun,
     TitleReviewCoordination,
     TitleHandoffPacket,
     UnifiedDealRoom,
@@ -155,6 +168,18 @@ class ConversionSafetyRequest(BaseModel):
 
 class TitleReviewSafetyRequest(BaseModel):
     content: str
+
+
+class AutonomySafetyRequest(BaseModel):
+    action: str
+    autonomy_level: int = 2
+    owner_approval_recorded: bool = False
+
+
+class AutonomyRunRequest(BaseModel):
+    workflow_type: str
+    idempotency_key: str
+    owner_approval_recorded: bool = False
 
 
 class SellerLanguageRequest(BaseModel):
@@ -1000,6 +1025,110 @@ def review_packet_detail(
     summary = review_packet_prep_summary(packet)
     session.commit()
     return summary
+
+
+@router.get("/autonomy")
+def autonomy(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = autonomy_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/autonomy/rules")
+def autonomy_rules(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = autonomy_dashboard(session)
+    session.commit()
+    return {
+        "automation_rules": dashboard["automation_rules"],
+        "level_4_owner_approval_required": dashboard[
+            "level_4_owner_approval_required"
+        ],
+        "level_5_available": False,
+        "live_action_allowed": False,
+    }
+
+
+@router.get("/autonomy/runs")
+def autonomy_runs(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = autonomy_dashboard(session)
+    session.commit()
+    return {
+        "scheduler_runs": dashboard["scheduler_runs"],
+        "automation_attempts": dashboard["automation_attempts"],
+        "blocked_attempts": dashboard["blocked_attempts"],
+        "real_world_action_taken": False,
+    }
+
+
+@router.get("/autonomy/tasks")
+def autonomy_tasks(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = autonomy_dashboard(session)
+    session.commit()
+    return {
+        "autonomous_agent_tasks": dashboard["autonomous_agent_tasks"],
+        "draft_creation_tasks": dashboard["draft_creation_tasks"],
+        "recommendations_only": True,
+        "live_action_allowed": False,
+    }
+
+
+@router.get("/autonomy/daily-briefing")
+def autonomy_daily_briefing(session: Session = Depends(get_session)) -> dict[str, object]:
+    briefings = (
+        session.query(DailyCommandBriefing)
+        .order_by(DailyCommandBriefing.created_at.desc())
+        .all()
+    )
+    if not briefings:
+        return {
+            "daily_command_briefings": [],
+            "latest": None,
+            "generated_by": "Wholesale Prime",
+            "recommendations_only": True,
+        }
+    return {
+        "daily_command_briefings": [
+            daily_briefing_summary(briefing) for briefing in briefings
+        ],
+        "latest": daily_briefing_summary(briefings[0]),
+        "generated_by": "Wholesale Prime",
+        "recommendations_only": True,
+        "live_outreach_allowed": False,
+    }
+
+
+@router.get("/autonomy/escalations")
+def autonomy_escalations(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = autonomy_dashboard(session)
+    session.commit()
+    return {
+        "escalations": dashboard["escalations"],
+        "escalation_queue": dashboard["escalation_queue"],
+        "recommendations_only": True,
+        "real_world_action_blocked": True,
+    }
+
+
+@router.post("/autonomy/safety/validate")
+def autonomy_safety(payload: AutonomySafetyRequest) -> dict[str, object]:
+    return autonomy_safety_guard(
+        payload.action,
+        payload.autonomy_level,
+        owner_approval_recorded=payload.owner_approval_recorded,
+    )
+
+
+@router.post("/autonomy/run")
+def autonomy_run(
+    payload: AutonomyRunRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return run_scheduler_workflow(
+        session,
+        payload.workflow_type,
+        payload.idempotency_key,
+        owner_approval_recorded=payload.owner_approval_recorded,
+    )
 
 
 @router.get("/communications")

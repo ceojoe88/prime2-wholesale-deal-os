@@ -11,6 +11,7 @@ from app.core.database import Base, SessionLocal, engine
 from app.models import (
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
+    AutomationRule,
     BuyerDealPublication,
     BuyerDemandProfile,
     CommunicationDraft,
@@ -41,6 +42,7 @@ async def lifespan(app: FastAPI):
                 or session.query(ContractControl).count() == 0
                 or session.query(ContractReadyState).count() == 0
                 or session.query(TitleReviewCoordination).count() == 0
+                or session.query(AutomationRule).count() == 0
                 or session.query(TitleHandoffPacket).count() == 0
                 or session.query(AssignmentReadinessRecord).count() == 0
                 or session.query(CommunicationDraft).count() == 0
