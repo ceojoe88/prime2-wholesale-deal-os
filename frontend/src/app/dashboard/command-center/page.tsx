@@ -13,8 +13,11 @@ import {
   blockedDealRooms,
   blockedSellerVisibilityOffers,
   buyerInterests,
+  buyerDemandProfiles,
+  buyerReadyDealsFromDemand,
   buyerPofGaps,
   buyerPortalBlockedDeals,
+  buyerPriorityPofGaps,
   buyerVisibleDeals,
   closingNextBestActions,
   closingReadyDealRooms,
@@ -23,12 +26,16 @@ import {
   complianceRecords,
   contractPrepBlocked,
   dealEvidencePackets,
+  blockedDistributionPreps,
   dealsNeedingEvidenceOwnerReview,
+  distributionDraftsPendingApproval,
   deals,
   evidenceFeesAtRisk,
+  fastCloseBuyerList,
   formatCurrency,
   hotDeals,
   hotSellerLeads,
+  highestDemandZipCodes,
   leads,
   offerPackets,
   missingEvidencePackets,
@@ -41,6 +48,7 @@ import {
   sellerVisibleOffers,
   staleSellerFollowUps,
   titleHandoffPackets,
+  tenKDealsWithStrongBuyerDemand,
   verified10kAssignmentFeeOpportunities,
   verifiedAssignmentFees
 } from "@/lib/demo-data";
@@ -97,6 +105,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Evidence fee risk" value={formatCurrency(evidenceFeesAtRisk)} detail="Missing proof or review" />
         <MetricCard label="10K+ verified" value={String(verified10kAssignmentFeeOpportunities.length)} detail="Actual source-number flag" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Buyer demand profiles" value={String(buyerDemandProfiles.length)} detail="V9 buyer intelligence records" />
+        <MetricCard label="Fast-close buyers" value={String(fastCloseBuyerList.length)} detail="Verified POF, 10 days or faster" />
+        <MetricCard label="Distribution approvals" value={String(distributionDraftsPendingApproval.length)} detail="Drafts waiting on owner review" />
+        <MetricCard label="10K+ strong demand" value={String(tenKDealsWithStrongBuyerDemand.length)} detail="Buyer fit plus source-number spread" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -126,6 +140,12 @@ export default function CommandCenterPage() {
               ["high", "Clear missing evidence", `${missingEvidencePackets.length} packets need source-record support`],
               ["high", "Approve evidence review queue", `${dealsNeedingEvidenceOwnerReview.length} packets need owner evidence review`],
               ["normal", "Protect verified assignment fees", `${formatCurrency(verifiedAssignmentFees)} currently verified from source numbers`],
+              ["critical", "Review buyer demand ranking", `${highestDemandZipCodes[0]?.zipCode ?? "n/a"} is the current highest-demand zip`],
+              ["high", "Approve distribution drafts", `${distributionDraftsPendingApproval.length} buyer distribution drafts need owner review`],
+              ["high", "Resolve buyer ranking POF gaps", `${buyerPriorityPofGaps.length} priority records need POF refresh or verification`],
+              ["high", "Review buyer-ready demand", `${buyerReadyDealsFromDemand.length} deals have strong buyer demand and visible deal rooms`],
+              ["normal", "Monitor fast-close buyer list", `${fastCloseBuyerList.length} verified buyers can close in 10 days or faster`],
+              ["high", "Clear blocked distribution preps", `${blockedDistributionPreps.length} drafts are blocked by compliance or publication gates`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

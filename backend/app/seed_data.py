@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from sqlalchemy.orm import Session
 
 from app.domain.buyer_matching import score_buyer_match
+from app.domain.buyer_demand import sync_buyer_deal_priority, sync_distribution_prep
 from app.domain.buyer_portal import update_publication_gate
 from app.domain.communications import (
     communication_hash,
@@ -28,7 +29,9 @@ from app.models import (
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     Buyer,
+    BuyerDealPriority,
     BuyerDealPublication,
+    BuyerDemandProfile,
     BuyerInterest,
     BuyerMatch,
     ClosingCoordinationChecklist,
@@ -39,6 +42,7 @@ from app.models import (
     CommunicationSendAttempt,
     ContractControl,
     Deal,
+    DealDistributionPrep,
     DealEvidencePacket,
     DealRoomBlocker,
     Division,
@@ -725,6 +729,228 @@ def build_interest_records() -> list[dict[str, object]]:
             "notes": "V4 readiness example: buyer intent exists while compliance review remains blocked.",
             "draft_only": True,
             "contract_execution_allowed": False,
+        },
+    ]
+
+
+def build_buyer_demand_profile_records() -> list[dict[str, object]]:
+    demand_rows = [
+        ("buyer-demand-001", "buyer-001", 96, 94, 93, 95, "2026-05-03", "Prefers 30K+ buyer margin with fast assignment review."),
+        ("buyer-demand-002", "buyer-002", 92, 89, 91, 96, "2026-05-04", "Fast close buyer; strongest below 150K asking price."),
+        ("buyer-demand-003", "buyer-003", 78, 74, 82, 84, "2026-04-29", "Needs POF refresh before any owner-approved response."),
+        ("buyer-demand-004", "buyer-004", 88, 92, 86, 86, "2026-05-01", "Best for duplex or larger inherited-property margins."),
+        ("buyer-demand-005", "buyer-005", 72, 78, 70, 66, "2026-04-22", "High price capacity but slower closing coordination."),
+        ("buyer-demand-006", "buyer-006", 85, 84, 87, 95, "2026-05-02", "Good fit for repair-heavy south Dallas single-family deals."),
+        ("buyer-demand-007", "buyer-007", 69, 70, 72, 66, "2026-04-20", "Responsive but POF verification is still missing."),
+        ("buyer-demand-008", "buyer-008", 82, 76, 80, 98, "2026-05-03", "Fast small-deal buyer; price ceiling limits larger opportunities."),
+        ("buyer-demand-009", "buyer-009", 75, 79, 73, 70, "2026-04-25", "Rental buyer with clean POF and moderate close speed."),
+        ("buyer-demand-010", "buyer-010", 80, 81, 83, 92, "2026-04-28", "Good demand in 75216 after POF refresh and disclosure review."),
+    ]
+    buyers_by_id = {buyer["id"]: buyer for buyer in build_buyer_records()}
+    records: list[dict[str, object]] = []
+    for (
+        profile_id,
+        buyer_id,
+        activity,
+        zip_score,
+        property_score,
+        price_fit,
+        last_engaged,
+        notes,
+    ) in demand_rows:
+        buyer = buyers_by_id[buyer_id]
+        pof_strength = {"verified": 100, "needs_refresh": 58, "unverified": 25}[
+            str(buyer["proof_of_funds_status"])
+        ]
+        records.append(
+            {
+                "id": profile_id,
+                "buyer_id": buyer_id,
+                "buyer_activity_score": activity,
+                "zip_code_demand_score": zip_score,
+                "property_type_demand_score": property_score,
+                "price_band_fit_score": price_fit,
+                "closing_speed_score": max(48, 104 - int(buyer["closing_speed_days"]) * 3),
+                "proof_of_funds_strength": pof_strength,
+                "reliability_score": buyer["reliability_score"],
+                "last_engaged_date": datetime.fromisoformat(f"{last_engaged}T15:00:00+00:00"),
+                "preferred_spread_margin_notes": notes,
+                "target_zip_codes": buyer["target_zip_codes"],
+                "property_type": buyer["property_type"],
+                "price_band": f"0-{buyer['max_purchase_price']}",
+                "active": True,
+                "draft_only": True,
+            }
+        )
+    return records
+
+
+def build_buyer_deal_priority_records(
+    deals_by_id: dict[str, dict[str, object]],
+    buyers_by_id: dict[str, dict[str, object]],
+) -> list[dict[str, object]]:
+    pairs = [
+        ("priority-001", "deal-001", "buyer-001", "buyer-demand-001"),
+        ("priority-002", "deal-001", "buyer-004", "buyer-demand-004"),
+        ("priority-003", "deal-001", "buyer-010", "buyer-demand-010"),
+        ("priority-004", "deal-002", "buyer-002", "buyer-demand-002"),
+        ("priority-005", "deal-002", "buyer-008", "buyer-demand-008"),
+        ("priority-006", "deal-003", "buyer-003", "buyer-demand-003"),
+        ("priority-007", "deal-003", "buyer-005", "buyer-demand-005"),
+        ("priority-008", "deal-005", "buyer-004", "buyer-demand-004"),
+        ("priority-009", "deal-005", "buyer-005", "buyer-demand-005"),
+        ("priority-010", "deal-006", "buyer-006", "buyer-demand-006"),
+        ("priority-011", "deal-006", "buyer-010", "buyer-demand-010"),
+        ("priority-012", "deal-008", "buyer-005", "buyer-demand-005"),
+    ]
+    records: list[dict[str, object]] = []
+    for priority_id, deal_id, buyer_id, profile_id in pairs:
+        deal = deals_by_id[deal_id]
+        buyer = buyers_by_id[buyer_id]
+        lead = LEAD_LOOKUP[deal["lead_id"]]
+        asking_price = deal["buyer_purchase_price"]
+        area_match = 100 if lead["zip_code"] in buyer["target_zip_codes"] else 35
+        max_price_fit = 100 if asking_price <= buyer["max_purchase_price"] else 25
+        pof_score = {"verified": 100, "needs_refresh": 58, "unverified": 25}[
+            str(buyer["proof_of_funds_status"])
+        ]
+        closing_speed = max(48, 104 - int(buyer["closing_speed_days"]) * 3)
+        deal_type_fit = 100 if buyer["property_type"] in {lead["property_type"], "any"} else 45
+        buyer_margin_strength = 100 if deal["projected_assignment_fee"] >= 10_000 else 55
+        priority_score = round(
+            area_match * 0.22
+            + max_price_fit * 0.18
+            + pof_score * 0.16
+            + float(buyer["reliability_score"]) * 0.16
+            + closing_speed * 0.12
+            + deal_type_fit * 0.08
+            + buyer_margin_strength * 0.08,
+            2,
+        )
+        records.append(
+            {
+                "id": priority_id,
+                "deal_id": deal_id,
+                "buyer_id": buyer_id,
+                "buyer_demand_profile_id": profile_id,
+                "target_area_match": area_match,
+                "max_price_fit": max_price_fit,
+                "proof_of_funds_score": pof_score,
+                "past_reliability_score": buyer["reliability_score"],
+                "closing_speed_score": closing_speed,
+                "deal_type_fit": deal_type_fit,
+                "buyer_margin_strength": buyer_margin_strength,
+                "priority_score": priority_score,
+                "rank": 0,
+                "ranking_reasons": ["draft_rank_seed"],
+                "risk_flags": [],
+                "recommended_next_step": "Sync ranking before owner-reviewed distribution prep.",
+                "draft_only": True,
+                "live_contact_allowed": False,
+                "buyer_blast_allowed": False,
+                "internal_profit_logic_exposed": False,
+            }
+        )
+    return records
+
+
+def build_deal_distribution_prep_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "distribution-001",
+            "deal_id": "deal-001",
+            "buyer_id": "buyer-001",
+            "buyer_priority_id": "priority-001",
+            "buyer_deal_publication_id": "publication-001",
+            "buyer_deal_email_draft": "Draft for Jules: Dallas 75216 single-family opportunity with asking price, ARV range, repair estimate range, and access placeholder. Owner review required before any send.",
+            "buyer_sms_draft": "Draft only: Dallas 75216 deal sheet ready for owner review. Reply path and send are disabled until approval.",
+            "private_deal_sheet_draft": {},
+            "buyer_call_notes": "Prepare one-buyer call note after POF confirmation; no live call placed.",
+            "buyer_response_tracker": [
+                {"status": "draft_prepared", "operator_review": "pending", "timestamp": "2026-05-04T12:00:00Z"}
+            ],
+            "approval_status": "owner_review_needed",
+            "draft_status": "draft",
+            "safety_status": "pending",
+            "blocked_reasons": [],
+            "draft_only": True,
+            "live_send_allowed": False,
+            "bulk_blast_allowed": False,
+            "seller_private_data_exposed": False,
+            "assignment_fee_exposed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+        {
+            "id": "distribution-002",
+            "deal_id": "deal-002",
+            "buyer_id": "buyer-002",
+            "buyer_priority_id": "priority-004",
+            "buyer_deal_publication_id": "publication-002",
+            "buyer_deal_email_draft": "Draft for Priya: controlled Dallas opportunity with asking price and inspection placeholder. No contract action or title submission.",
+            "buyer_sms_draft": "Draft only: 75216 deal sheet can be reviewed after owner approval.",
+            "private_deal_sheet_draft": {},
+            "buyer_call_notes": "Buyer is fast-close and POF verified; record interest only after owner review.",
+            "buyer_response_tracker": [
+                {"status": "ready_for_owner_review", "operator_review": "pending", "timestamp": "2026-05-04T12:15:00Z"}
+            ],
+            "approval_status": "owner_review_needed",
+            "draft_status": "draft",
+            "safety_status": "pending",
+            "blocked_reasons": [],
+            "draft_only": True,
+            "live_send_allowed": False,
+            "bulk_blast_allowed": False,
+            "seller_private_data_exposed": False,
+            "assignment_fee_exposed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+        {
+            "id": "distribution-003",
+            "deal_id": "deal-003",
+            "buyer_id": "buyer-003",
+            "buyer_priority_id": "priority-006",
+            "buyer_deal_publication_id": "publication-003",
+            "buyer_deal_email_draft": "Draft for Marcus: Fort Worth deal sheet with POF refresh reminder and safe access placeholder.",
+            "buyer_sms_draft": "Draft only: Fort Worth deal sheet is available after POF refresh and owner review.",
+            "private_deal_sheet_draft": {},
+            "buyer_call_notes": "POF refresh blocks priority response; no live outreach.",
+            "buyer_response_tracker": [
+                {"status": "pof_needed", "operator_review": "pending", "timestamp": "2026-05-04T12:30:00Z"}
+            ],
+            "approval_status": "owner_review_needed",
+            "draft_status": "draft",
+            "safety_status": "pending",
+            "blocked_reasons": [],
+            "draft_only": True,
+            "live_send_allowed": False,
+            "bulk_blast_allowed": False,
+            "seller_private_data_exposed": False,
+            "assignment_fee_exposed": False,
+            "legal_closing_guarantee_allowed": False,
+        },
+        {
+            "id": "distribution-004",
+            "deal_id": "deal-005",
+            "buyer_id": "buyer-004",
+            "buyer_priority_id": "priority-008",
+            "buyer_deal_publication_id": "publication-005",
+            "buyer_deal_email_draft": "Draft held: larger Dallas opportunity requires compliance clearance before any buyer-facing deal sheet.",
+            "buyer_sms_draft": "Draft only and blocked pending compliance review.",
+            "private_deal_sheet_draft": {},
+            "buyer_call_notes": "Strong buyer fit but buyer portal publication is blocked by compliance risk.",
+            "buyer_response_tracker": [
+                {"status": "blocked_compliance", "operator_review": "pending", "timestamp": "2026-05-04T12:45:00Z"}
+            ],
+            "approval_status": "blocked_compliance_review",
+            "draft_status": "draft",
+            "safety_status": "pending",
+            "blocked_reasons": ["compliance_review_required"],
+            "draft_only": True,
+            "live_send_allowed": False,
+            "bulk_blast_allowed": False,
+            "seller_private_data_exposed": False,
+            "assignment_fee_exposed": False,
+            "legal_closing_guarantee_allowed": False,
         },
     ]
 
@@ -2303,6 +2529,9 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "buyer_matches": build_match_records(deals_by_id, buyers_by_id),
         "buyer_deal_publications": build_publication_records(deals_by_id),
         "buyer_interests": build_interest_records(),
+        "buyer_demand_profiles": build_buyer_demand_profile_records(),
+        "buyer_deal_priorities": build_buyer_deal_priority_records(deals_by_id, buyers_by_id),
+        "deal_distribution_preps": build_deal_distribution_prep_records(),
         "seller_interactions": build_seller_interaction_records(),
         "offer_packets": build_offer_packet_records(),
         "contract_controls": build_contract_control_records(),
@@ -2329,6 +2558,9 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        DealDistributionPrep,
+        BuyerDealPriority,
+        BuyerDemandProfile,
         AssignmentFeeAttribution,
         DealEvidencePacket,
         DealRoomBlocker,
@@ -2366,6 +2598,9 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(BuyerMatch(**row) for row in payload["buyer_matches"])
     session.add_all(BuyerDealPublication(**row) for row in payload["buyer_deal_publications"])
     session.add_all(BuyerInterest(**row) for row in payload["buyer_interests"])
+    session.add_all(BuyerDemandProfile(**row) for row in payload["buyer_demand_profiles"])
+    session.add_all(BuyerDealPriority(**row) for row in payload["buyer_deal_priorities"])
+    session.add_all(DealDistributionPrep(**row) for row in payload["deal_distribution_preps"])
     session.add_all(SellerInteraction(**row) for row in payload["seller_interactions"])
     session.add_all(OfferPacket(**row) for row in payload["offer_packets"])
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
@@ -2433,5 +2668,9 @@ def seed_database(session: Session) -> dict[str, int]:
         sync_evidence_packet(session, evidence_packet)
     for attribution in session.query(AssignmentFeeAttribution).all():
         sync_assignment_fee_attribution(session, attribution)
+    for priority in session.query(BuyerDealPriority).all():
+        sync_buyer_deal_priority(priority)
+    for prep in session.query(DealDistributionPrep).all():
+        sync_distribution_prep(prep)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

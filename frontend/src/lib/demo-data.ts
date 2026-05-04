@@ -149,6 +149,90 @@ export type BuyerInterest = {
   contractExecutionAllowed: false;
 };
 
+export type BuyerDemandProfile = {
+  id: string;
+  buyerId: string;
+  buyerActivityScore: number;
+  zipCodeDemandScore: number;
+  propertyTypeDemandScore: number;
+  priceBandFitScore: number;
+  closingSpeedScore: number;
+  proofOfFundsStrength: number;
+  reliabilityScore: number;
+  lastEngagedDate: string;
+  preferredSpreadMarginNotes: string;
+  targetZipCodes: string[];
+  propertyType: string;
+  priceBand: string;
+  active: boolean;
+  draftOnly: true;
+};
+
+export type BuyerDealPriority = {
+  id: string;
+  dealId: string;
+  buyerId: string;
+  buyerDemandProfileId: string;
+  targetAreaMatch: number;
+  maxPriceFit: number;
+  proofOfFundsScore: number;
+  pastReliabilityScore: number;
+  closingSpeedScore: number;
+  dealTypeFit: number;
+  buyerMarginStrength: number;
+  priorityScore: number;
+  rank: number;
+  rankingReasons: string[];
+  riskFlags: string[];
+  recommendedNextStep: string;
+  draftOnly: true;
+  liveContactAllowed: false;
+  buyerBlastAllowed: false;
+  internalProfitLogicExposed: false;
+};
+
+export type SanitizedBuyerDealSheet = {
+  propertySummary: {
+    city: string;
+    state: string;
+    zipCode: string;
+    propertyType: string;
+    beds: number | null;
+    baths: number | null;
+    sqft: number | null;
+  };
+  askingPrice: number | null;
+  arvRange: { low: number | null; high: number | null };
+  repairEstimateRange: { low: number | null; high: number | null };
+  buyerMarginEstimate: number | null;
+  accessInstructionsPlaceholder: string;
+  availabilityStatus: string;
+  proofInspectionNotesPlaceholder: string;
+};
+
+export type DealDistributionPrep = {
+  id: string;
+  dealId: string;
+  buyerId: string;
+  buyerPriorityId: string;
+  buyerDealPublicationId: string;
+  buyerDealEmailDraft: string;
+  buyerSmsDraft: string;
+  privateDealSheetDraft: SanitizedBuyerDealSheet;
+  buyerCallNotes: string;
+  buyerResponseTracker: { status: string; operatorReview: string; timestamp: string }[];
+  approvalStatus: string;
+  draftStatus: string;
+  safetyStatus: string;
+  blockedReasons: string[];
+  draftOnly: true;
+  liveSendAllowed: false;
+  bulkBlastAllowed: false;
+  sellerPrivateDataExposed: false;
+  assignmentFeeExposed: false;
+  legalClosingGuaranteeAllowed: false;
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1060,6 +1144,68 @@ export const assignmentFeeAttributions: AssignmentFeeAttribution[] = [
   { id: "fee-004", dealRoomId: "deal-room-004", dealId: "deal-006", evidencePacketId: "evidence-004", projectedAssignmentFee: 8000, targetAssignmentFee: 10000, sellerContractPrice: 132000, buyerPurchasePrice: 140000, buyerMargin: 44000, attributionBasis: ["deal:deal-006", "deal_room:deal-room-004", "contract_control:contract-004", "evidence_packet:evidence-004", ...sourceFormulaBasis], confidenceScore: 17, verificationStatus: "missing_evidence", ownerReviewStatus: "owner_approved", sourceRecordsPresent: false, unsupportedProfitClaims: [], verified10kOpportunity: false, draftOnly: true, clientFacingProofAllowed: false, legalClosingGuaranteeAllowed: false }
 ];
 
+function sanitizedDistributionSheet(dealId: string): SanitizedBuyerDealSheet {
+  const deal = deals.find((item) => item.id === dealId);
+  const lead = deal ? leads.find((item) => item.id === deal.leadId) : undefined;
+  const publication = buyerPublications.find((item) => item.dealId === dealId);
+  if (!deal || !lead || !publication) {
+    throw new Error("Missing distribution sheet source data.");
+  }
+  return {
+    propertySummary: {
+      city: lead.city,
+      state: lead.state,
+      zipCode: lead.zipCode,
+      propertyType: lead.propertyType,
+      beds: publication.beds,
+      baths: publication.baths,
+      sqft: publication.sqft
+    },
+    askingPrice: publication.askingPrice,
+    arvRange: publication.arvRange,
+    repairEstimateRange: publication.repairEstimateRange,
+    buyerMarginEstimate: publication.estimatedBuyerMargin,
+    accessInstructionsPlaceholder: publication.accessInstructionsPlaceholder,
+    availabilityStatus: publication.availabilityStatus,
+    proofInspectionNotesPlaceholder: "POF verification and inspection/access notes placeholder only."
+  };
+}
+
+export const buyerDemandProfiles: BuyerDemandProfile[] = [
+  { id: "buyer-demand-001", buyerId: "buyer-001", buyerActivityScore: 96, zipCodeDemandScore: 94, propertyTypeDemandScore: 93, priceBandFitScore: 95, closingSpeedScore: 95, proofOfFundsStrength: 100, reliabilityScore: 94, lastEngagedDate: "2026-05-03", preferredSpreadMarginNotes: "Prefers 30K+ buyer margin with fast assignment review.", targetZipCodes: ["75216", "75224", "75208"], propertyType: "single_family", priceBand: "0-210000", active: true, draftOnly: true },
+  { id: "buyer-demand-002", buyerId: "buyer-002", buyerActivityScore: 92, zipCodeDemandScore: 89, propertyTypeDemandScore: 91, priceBandFitScore: 96, closingSpeedScore: 100, proofOfFundsStrength: 100, reliabilityScore: 91, lastEngagedDate: "2026-05-04", preferredSpreadMarginNotes: "Fast close buyer; strongest below 150K asking price.", targetZipCodes: ["75216", "75241"], propertyType: "single_family", priceBand: "0-150000", active: true, draftOnly: true },
+  { id: "buyer-demand-003", buyerId: "buyer-003", buyerActivityScore: 78, zipCodeDemandScore: 74, propertyTypeDemandScore: 82, priceBandFitScore: 84, closingSpeedScore: 84, proofOfFundsStrength: 58, reliabilityScore: 82, lastEngagedDate: "2026-04-29", preferredSpreadMarginNotes: "Needs POF refresh before any owner-approved response.", targetZipCodes: ["76104", "76115"], propertyType: "single_family", priceBand: "0-140000", active: true, draftOnly: true },
+  { id: "buyer-demand-004", buyerId: "buyer-004", buyerActivityScore: 88, zipCodeDemandScore: 92, propertyTypeDemandScore: 86, priceBandFitScore: 86, closingSpeedScore: 86, proofOfFundsStrength: 100, reliabilityScore: 88, lastEngagedDate: "2026-05-01", preferredSpreadMarginNotes: "Best for duplex or larger inherited-property margins.", targetZipCodes: ["75216", "75208", "75212"], propertyType: "duplex", priceBand: "0-260000", active: true, draftOnly: true },
+  { id: "buyer-demand-005", buyerId: "buyer-005", buyerActivityScore: 72, zipCodeDemandScore: 78, propertyTypeDemandScore: 70, priceBandFitScore: 66, closingSpeedScore: 66, proofOfFundsStrength: 100, reliabilityScore: 78, lastEngagedDate: "2026-04-22", preferredSpreadMarginNotes: "High price capacity but slower closing coordination.", targetZipCodes: ["75229", "75220", "75218"], propertyType: "single_family", priceBand: "0-360000", active: true, draftOnly: true },
+  { id: "buyer-demand-006", buyerId: "buyer-006", buyerActivityScore: 85, zipCodeDemandScore: 84, propertyTypeDemandScore: 87, priceBandFitScore: 95, closingSpeedScore: 95, proofOfFundsStrength: 100, reliabilityScore: 86, lastEngagedDate: "2026-05-02", preferredSpreadMarginNotes: "Good fit for repair-heavy south Dallas single-family deals.", targetZipCodes: ["75211", "75212", "75210"], propertyType: "single_family", priceBand: "0-175000", active: true, draftOnly: true },
+  { id: "buyer-demand-007", buyerId: "buyer-007", buyerActivityScore: 69, zipCodeDemandScore: 70, propertyTypeDemandScore: 72, priceBandFitScore: 66, closingSpeedScore: 66, proofOfFundsStrength: 25, reliabilityScore: 74, lastEngagedDate: "2026-04-20", preferredSpreadMarginNotes: "Responsive but POF verification is still missing.", targetZipCodes: ["75217", "75227"], propertyType: "single_family", priceBand: "0-135000", active: true, draftOnly: true },
+  { id: "buyer-demand-008", buyerId: "buyer-008", buyerActivityScore: 82, zipCodeDemandScore: 76, propertyTypeDemandScore: 80, priceBandFitScore: 98, closingSpeedScore: 98, proofOfFundsStrength: 100, reliabilityScore: 83, lastEngagedDate: "2026-05-03", preferredSpreadMarginNotes: "Fast small-deal buyer; price ceiling limits larger opportunities.", targetZipCodes: ["76104", "75216"], propertyType: "any", priceBand: "0-120000", active: true, draftOnly: true },
+  { id: "buyer-demand-009", buyerId: "buyer-009", buyerActivityScore: 75, zipCodeDemandScore: 79, propertyTypeDemandScore: 73, priceBandFitScore: 70, closingSpeedScore: 70, proofOfFundsStrength: 100, reliabilityScore: 80, lastEngagedDate: "2026-04-25", preferredSpreadMarginNotes: "Rental buyer with clean POF and moderate close speed.", targetZipCodes: ["75237", "75241"], propertyType: "single_family", priceBand: "0-125000", active: true, draftOnly: true },
+  { id: "buyer-demand-010", buyerId: "buyer-010", buyerActivityScore: 80, zipCodeDemandScore: 81, propertyTypeDemandScore: 83, priceBandFitScore: 92, closingSpeedScore: 92, proofOfFundsStrength: 58, reliabilityScore: 81, lastEngagedDate: "2026-04-28", preferredSpreadMarginNotes: "Good demand in 75216 after POF refresh and disclosure review.", targetZipCodes: ["75215", "75216", "75210"], propertyType: "single_family", priceBand: "0-155000", active: true, draftOnly: true }
+];
+
+export const buyerDealPriorities: BuyerDealPriority[] = [
+  { id: "priority-001", dealId: "deal-001", buyerId: "buyer-001", buyerDemandProfileId: "buyer-demand-001", targetAreaMatch: 100, maxPriceFit: 100, proofOfFundsScore: 100, pastReliabilityScore: 94, closingSpeedScore: 95, dealTypeFit: 100, buyerMarginStrength: 100, priorityScore: 98.34, rank: 1, rankingReasons: ["target_area_match", "max_price_fit", "proof_of_funds_verified", "fast_close", "buyer_margin_strong"], riskFlags: [], recommendedNextStep: "Prepare one-buyer distribution draft for owner review.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-002", dealId: "deal-001", buyerId: "buyer-004", buyerDemandProfileId: "buyer-demand-004", targetAreaMatch: 100, maxPriceFit: 100, proofOfFundsScore: 100, pastReliabilityScore: 88, closingSpeedScore: 86, dealTypeFit: 45, buyerMarginStrength: 100, priorityScore: 90.4, rank: 2, rankingReasons: ["target_area_match", "max_price_fit", "proof_of_funds_verified", "buyer_margin_strong"], riskFlags: ["property_type_fit_review"], recommendedNextStep: "Review property-type fit before buyer response draft.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-003", dealId: "deal-001", buyerId: "buyer-010", buyerDemandProfileId: "buyer-demand-010", targetAreaMatch: 100, maxPriceFit: 25, proofOfFundsScore: 58, pastReliabilityScore: 81, closingSpeedScore: 92, dealTypeFit: 100, buyerMarginStrength: 100, priorityScore: 75.5, rank: 3, rankingReasons: ["target_area_match", "deal_type_fit", "buyer_margin_strong"], riskFlags: ["proof_of_funds_gap", "max_price_gap"], recommendedNextStep: "POF and price fit review required.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-004", dealId: "deal-002", buyerId: "buyer-002", buyerDemandProfileId: "buyer-demand-002", targetAreaMatch: 100, maxPriceFit: 100, proofOfFundsScore: 100, pastReliabilityScore: 91, closingSpeedScore: 100, dealTypeFit: 100, buyerMarginStrength: 86, priorityScore: 97.32, rank: 1, rankingReasons: ["target_area_match", "max_price_fit", "proof_of_funds_verified", "fast_close"], riskFlags: [], recommendedNextStep: "Prepare one-buyer distribution draft for owner review.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-005", dealId: "deal-002", buyerId: "buyer-008", buyerDemandProfileId: "buyer-demand-008", targetAreaMatch: 100, maxPriceFit: 25, proofOfFundsScore: 100, pastReliabilityScore: 83, closingSpeedScore: 98, dealTypeFit: 100, buyerMarginStrength: 86, priorityScore: 82.56, rank: 2, rankingReasons: ["target_area_match", "proof_of_funds_verified", "fast_close"], riskFlags: ["max_price_gap"], recommendedNextStep: "Price capacity blocks distribution until reviewed.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-006", dealId: "deal-003", buyerId: "buyer-003", buyerDemandProfileId: "buyer-demand-003", targetAreaMatch: 100, maxPriceFit: 25, proofOfFundsScore: 58, pastReliabilityScore: 82, closingSpeedScore: 84, dealTypeFit: 100, buyerMarginStrength: 100, priorityScore: 74.42, rank: 1, rankingReasons: ["target_area_match", "deal_type_fit", "buyer_margin_strong"], riskFlags: ["proof_of_funds_gap", "max_price_gap"], recommendedNextStep: "POF refresh required before any buyer response draft.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-007", dealId: "deal-003", buyerId: "buyer-005", buyerDemandProfileId: "buyer-demand-005", targetAreaMatch: 35, maxPriceFit: 100, proofOfFundsScore: 100, pastReliabilityScore: 78, closingSpeedScore: 66, dealTypeFit: 100, buyerMarginStrength: 100, priorityScore: 78.1, rank: 2, rankingReasons: ["max_price_fit", "proof_of_funds_verified", "buyer_margin_strong"], riskFlags: ["target_area_mismatch"], recommendedNextStep: "Area mismatch review before distribution prep.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-008", dealId: "deal-005", buyerId: "buyer-004", buyerDemandProfileId: "buyer-demand-004", targetAreaMatch: 100, maxPriceFit: 100, proofOfFundsScore: 100, pastReliabilityScore: 88, closingSpeedScore: 86, dealTypeFit: 100, buyerMarginStrength: 100, priorityScore: 96.4, rank: 1, rankingReasons: ["target_area_match", "max_price_fit", "proof_of_funds_verified", "buyer_margin_strong"], riskFlags: [], recommendedNextStep: "Hold distribution until compliance clears high-risk publication.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-009", dealId: "deal-005", buyerId: "buyer-005", buyerDemandProfileId: "buyer-demand-005", targetAreaMatch: 35, maxPriceFit: 100, proofOfFundsScore: 100, pastReliabilityScore: 78, closingSpeedScore: 66, dealTypeFit: 100, buyerMarginStrength: 100, priorityScore: 78.1, rank: 2, rankingReasons: ["max_price_fit", "proof_of_funds_verified", "buyer_margin_strong"], riskFlags: ["target_area_mismatch"], recommendedNextStep: "Area mismatch review before distribution prep.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-010", dealId: "deal-006", buyerId: "buyer-006", buyerDemandProfileId: "buyer-demand-006", targetAreaMatch: 35, maxPriceFit: 100, proofOfFundsScore: 100, pastReliabilityScore: 86, closingSpeedScore: 95, dealTypeFit: 100, buyerMarginStrength: 86, priorityScore: 84.42, rank: 1, rankingReasons: ["max_price_fit", "proof_of_funds_verified", "fast_close"], riskFlags: ["target_area_mismatch"], recommendedNextStep: "Review margin exception before distribution prep.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-011", dealId: "deal-006", buyerId: "buyer-010", buyerDemandProfileId: "buyer-demand-010", targetAreaMatch: 35, maxPriceFit: 100, proofOfFundsScore: 58, pastReliabilityScore: 81, closingSpeedScore: 92, dealTypeFit: 100, buyerMarginStrength: 86, priorityScore: 77.34, rank: 2, rankingReasons: ["max_price_fit", "deal_type_fit"], riskFlags: ["target_area_mismatch", "proof_of_funds_gap"], recommendedNextStep: "POF refresh and margin review required.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false },
+  { id: "priority-012", dealId: "deal-008", buyerId: "buyer-005", buyerDemandProfileId: "buyer-demand-005", targetAreaMatch: 35, maxPriceFit: 100, proofOfFundsScore: 100, pastReliabilityScore: 78, closingSpeedScore: 66, dealTypeFit: 100, buyerMarginStrength: 100, priorityScore: 78.1, rank: 1, rankingReasons: ["max_price_fit", "proof_of_funds_verified", "buyer_margin_strong"], riskFlags: ["target_area_mismatch"], recommendedNextStep: "Compliance and area fit review before draft distribution.", draftOnly: true, liveContactAllowed: false, buyerBlastAllowed: false, internalProfitLogicExposed: false }
+];
+
+export const dealDistributionPreps: DealDistributionPrep[] = [
+  { id: "distribution-001", dealId: "deal-001", buyerId: "buyer-001", buyerPriorityId: "priority-001", buyerDealPublicationId: "publication-001", buyerDealEmailDraft: "Draft for Jules: Dallas 75216 single-family opportunity with asking price, ARV range, repair estimate range, and access placeholder. Owner review required before any send.", buyerSmsDraft: "Draft only: Dallas 75216 deal sheet ready for owner review. Reply path and send are disabled until approval.", privateDealSheetDraft: sanitizedDistributionSheet("deal-001"), buyerCallNotes: "Prepare one-buyer call note after POF confirmation; no live call placed.", buyerResponseTracker: [{ status: "draft_prepared", operatorReview: "pending", timestamp: "2026-05-04T12:00:00Z" }], approvalStatus: "owner_review_needed", draftStatus: "draft_ready", safetyStatus: "passed", blockedReasons: [], draftOnly: true, liveSendAllowed: false, bulkBlastAllowed: false, sellerPrivateDataExposed: false, assignmentFeeExposed: false, legalClosingGuaranteeAllowed: false },
+  { id: "distribution-002", dealId: "deal-002", buyerId: "buyer-002", buyerPriorityId: "priority-004", buyerDealPublicationId: "publication-002", buyerDealEmailDraft: "Draft for Priya: controlled Dallas opportunity with asking price and inspection placeholder. No contract action or title submission.", buyerSmsDraft: "Draft only: 75216 deal sheet can be reviewed after owner approval.", privateDealSheetDraft: sanitizedDistributionSheet("deal-002"), buyerCallNotes: "Buyer is fast-close and POF verified; record interest only after owner review.", buyerResponseTracker: [{ status: "ready_for_owner_review", operatorReview: "pending", timestamp: "2026-05-04T12:15:00Z" }], approvalStatus: "owner_review_needed", draftStatus: "draft_ready", safetyStatus: "passed", blockedReasons: [], draftOnly: true, liveSendAllowed: false, bulkBlastAllowed: false, sellerPrivateDataExposed: false, assignmentFeeExposed: false, legalClosingGuaranteeAllowed: false },
+  { id: "distribution-003", dealId: "deal-003", buyerId: "buyer-003", buyerPriorityId: "priority-006", buyerDealPublicationId: "publication-003", buyerDealEmailDraft: "Draft for Marcus: Fort Worth deal sheet with POF refresh reminder and safe access placeholder.", buyerSmsDraft: "Draft only: Fort Worth deal sheet is available after POF refresh and owner review.", privateDealSheetDraft: sanitizedDistributionSheet("deal-003"), buyerCallNotes: "POF refresh blocks priority response; no live outreach.", buyerResponseTracker: [{ status: "pof_needed", operatorReview: "pending", timestamp: "2026-05-04T12:30:00Z" }], approvalStatus: "owner_review_needed", draftStatus: "draft_ready", safetyStatus: "passed", blockedReasons: [], draftOnly: true, liveSendAllowed: false, bulkBlastAllowed: false, sellerPrivateDataExposed: false, assignmentFeeExposed: false, legalClosingGuaranteeAllowed: false },
+  { id: "distribution-004", dealId: "deal-005", buyerId: "buyer-004", buyerPriorityId: "priority-008", buyerDealPublicationId: "publication-005", buyerDealEmailDraft: "Draft held: larger Dallas opportunity requires compliance clearance before any buyer-facing deal sheet.", buyerSmsDraft: "Draft only and blocked pending compliance review.", privateDealSheetDraft: sanitizedDistributionSheet("deal-005"), buyerCallNotes: "Strong buyer fit but buyer portal publication is blocked by compliance risk.", buyerResponseTracker: [{ status: "blocked_compliance", operatorReview: "pending", timestamp: "2026-05-04T12:45:00Z" }], approvalStatus: "blocked_compliance_review", draftStatus: "blocked", safetyStatus: "passed", blockedReasons: ["buyer_publication_missing_compliance_review", "buyer_publication_risk_status_high"], draftOnly: true, liveSendAllowed: false, bulkBlastAllowed: false, sellerPrivateDataExposed: false, assignmentFeeExposed: false, legalClosingGuaranteeAllowed: false }
+];
+
 export const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -1408,4 +1554,86 @@ export const verified10kAssignmentFeeOpportunities = assignmentFeeAttributions.f
   (fee) =>
     fee.verified10kOpportunity &&
     fee.projectedAssignmentFee === fee.buyerPurchasePrice - fee.sellerContractPrice
+);
+
+export function getBuyerDemandProfile(buyerId: string) {
+  return buyerDemandProfiles.find((profile) => profile.buyerId === buyerId || profile.id === buyerId);
+}
+
+export function getBuyerDealPriority(priorityId: string) {
+  return buyerDealPriorities.find((priority) => priority.id === priorityId);
+}
+
+export function getBuyerDealPrioritiesForDeal(dealId: string) {
+  return buyerDealPriorities
+    .filter((priority) => priority.dealId === dealId)
+    .sort((first, second) => first.rank - second.rank);
+}
+
+export function getDealDistributionPrep(distributionId: string) {
+  return dealDistributionPreps.find((prep) => prep.id === distributionId);
+}
+
+export function getDealDistributionPrepsForBuyer(buyerId: string) {
+  return dealDistributionPreps.filter((prep) => prep.buyerId === buyerId);
+}
+
+export const highestDemandZipCodes = Object.values(
+  buyerDemandProfiles.reduce<Record<string, { zipCode: string; demandScore: number; buyerCount: number }>>(
+    (acc, profile) => {
+      profile.targetZipCodes.forEach((zipCode) => {
+        const current = acc[zipCode] ?? { zipCode, demandScore: 0, buyerCount: 0 };
+        current.demandScore += profile.zipCodeDemandScore;
+        current.buyerCount += 1;
+        acc[zipCode] = current;
+      });
+      return acc;
+    },
+    {}
+  )
+)
+  .map((item) => ({ ...item, demandScore: Math.round(item.demandScore / item.buyerCount) }))
+  .sort((first, second) => second.demandScore - first.demandScore || second.buyerCount - first.buyerCount);
+
+export const bestBuyersForHotDeals = hotDeals
+  .map((deal) => {
+    const priority = getBuyerDealPrioritiesForDeal(deal.id)[0];
+    return priority ? { deal, priority, buyer: getBuyer(priority.buyerId) } : null;
+  })
+  .filter((item): item is { deal: Deal; priority: BuyerDealPriority; buyer: Buyer | undefined } => Boolean(item));
+
+export const distributionDraftsPendingApproval = dealDistributionPreps.filter(
+  (prep) => prep.approvalStatus !== "owner_approved"
+);
+
+export const fastCloseBuyerList = buyerDemandProfiles
+  .map((profile) => ({ profile, buyer: getBuyer(profile.buyerId) }))
+  .filter((item) => item.buyer?.proofOfFundsStatus === "verified" && (item.buyer?.closingSpeedDays ?? 99) <= 10)
+  .sort(
+    (first, second) =>
+      (first.buyer?.closingSpeedDays ?? 99) - (second.buyer?.closingSpeedDays ?? 99) ||
+      second.profile.reliabilityScore - first.profile.reliabilityScore
+  );
+
+export const buyerPriorityPofGaps = buyerDealPriorities.filter((priority) => {
+  const buyer = getBuyer(priority.buyerId);
+  return buyer?.proofOfFundsStatus !== "verified";
+});
+
+export const buyerReadyDealsFromDemand = bestBuyersForHotDeals.filter(
+  ({ priority, buyer }) =>
+    priority.priorityScore >= 85 &&
+    buyer?.proofOfFundsStatus === "verified" &&
+    getBuyerPublication(priority.dealId)?.availabilityStatus === "available"
+);
+
+export const tenKDealsWithStrongBuyerDemand = bestBuyersForHotDeals.filter(
+  ({ deal, priority }) =>
+    deal.projectedAssignmentFee >= 10000 &&
+    priority.priorityScore >= 85 &&
+    priority.riskFlags.length === 0
+);
+
+export const blockedDistributionPreps = dealDistributionPreps.filter(
+  (prep) => prep.blockedReasons.length > 0 || prep.draftStatus === "blocked"
 );

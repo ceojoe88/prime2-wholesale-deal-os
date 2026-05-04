@@ -16,6 +16,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - V6 invite-gated seller offer review room with sanitized offer status, seller visibility gates, response intake records, and no buyer/profit/internal strategy exposure.
 - V7 unified deal room and closing coordination gate connecting seller offer room, buyer deal room, contract control, title handoff, communications, and assignment readiness with blocker tracking and recommendation-only next actions.
 - V8 deal evidence and assignment-fee attribution layer tying projected and verified fees to source records, evidence packets, owner review, and unsupported-claim guards.
+- V9 buyer demand intelligence and deal distribution prep with buyer demand profiles, per-deal priority rankings, sanitized private deal sheets, one-recipient draft records, POF gap tracking, and no live blasts.
 
 ## Safety Boundaries
 
@@ -36,6 +37,8 @@ V6 adds an invite-gated seller offer review room. The operator system remains th
 V7 adds an internal unified deal room for closing coordination. It connects seller offer room status, buyer deal room status, contract control, title handoff, communications, assignment readiness, compliance, blocker records, projected fees at risk, closing timeline, and owner approval status. This layer is coordination-only: it cannot generate executable contracts, submit to title, handle payments, auto-negotiate, or change real-world status without the owner.
 
 V8 adds proof-backed deal evidence and assignment-fee attribution. Evidence packets collect lead source, seller interaction proof, underwriting snapshot, buyer interest proof, POF status, contract/title status, communication receipts, blocker history, and compliance status. Assignment-fee records calculate the spread from buyer purchase price minus seller contract price and only flag 10K+ opportunities when the source-number formula and evidence gate support it. Fake profit claims, unsupported ROI claims, invented buyer/seller numbers, client-facing proof without approval, legal guarantees, and closing guarantees are blocked.
+
+V9 adds internal buyer demand intelligence and deal distribution prep. Buyers are ranked by area, price fit, POF, reliability, close speed, deal type, and buyer margin strength. Distribution records prepare buyer email drafts, SMS drafts, private deal sheets, call notes, and response trackers only. The deal sheet sanitizer exposes property summary, asking price, ARV range, repair range, buyer margin estimate, access placeholder, availability, and proof/inspection placeholders while hiding seller data, lead source, motivation, assignment fee logic, internal spread strategy, agent recommendations, and compliance internals. Live buyer blasts, bulk sends, misleading scarcity, fake offers, fake competition, seller/private data exposure, legal guarantees, and closing guarantees are blocked.
 
 ## Backend
 
@@ -100,6 +103,12 @@ Useful endpoints:
 - `POST /api/deal-evidence/safety/validate`
 - `GET /api/assignment-fees`
 - `GET /api/assignment-fees/{fee_id}`
+- `GET /api/buyer-demand`
+- `GET /api/buyer-demand/{buyer_id}`
+- `GET /api/buyer-priority`
+- `GET /api/deal-distribution`
+- `GET /api/deal-distribution/{distribution_id}`
+- `POST /api/deal-distribution/safety/validate`
 - `GET /api/compliance`
 - `POST /api/actions/validate`
 - `POST /api/data-import/leads/preview`
@@ -168,6 +177,12 @@ Evidence/attribution V8 routes:
 
 - [http://localhost:3000/dashboard/deal-evidence](http://localhost:3000/dashboard/deal-evidence)
 - [http://localhost:3000/dashboard/assignment-fees](http://localhost:3000/dashboard/assignment-fees)
+
+Buyer demand/distribution V9 routes:
+
+- [http://localhost:3000/dashboard/buyer-demand](http://localhost:3000/dashboard/buyer-demand)
+- [http://localhost:3000/dashboard/buyer-priority](http://localhost:3000/dashboard/buyer-priority)
+- [http://localhost:3000/dashboard/deal-distribution](http://localhost:3000/dashboard/deal-distribution)
 
 ## Validation
 

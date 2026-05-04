@@ -10,10 +10,14 @@ import {
   assignmentReadyDealRooms,
   assignmentReadyRecords,
   blockedDealRooms,
+  blockedDistributionPreps,
   buyerMatches,
   buyerInterests,
+  buyerDemandProfiles,
+  buyerReadyDealsFromDemand,
   buyerPortalBlockedDeals,
   buyerVisibleDeals,
+  buyerPriorityPofGaps,
   buyerPofGaps,
   blockedCommunicationAttempts,
   closingNextBestActions,
@@ -27,6 +31,7 @@ import {
   contractPrepBlocked,
   contractPrepReady,
   dealEvidencePackets,
+  distributionDraftsPendingApproval,
   dealsNeedingEvidenceOwnerReview,
   deals,
   evidenceFeesAtRisk,
@@ -34,6 +39,7 @@ import {
   formatCurrency,
   hotDeals,
   hotSellerLeads,
+  highestDemandZipCodes,
   leads,
   offerReadyPackets,
   offerPackets,
@@ -50,6 +56,8 @@ import {
   staleSellerFollowUps,
   sentOrMockSentCommunicationAttempts,
   titleHandoffPackets,
+  tenKDealsWithStrongBuyerDemand,
+  fastCloseBuyerList,
   underContractDeals,
   verified10kAssignmentFeeOpportunities,
   verifiedAssignmentFees
@@ -186,6 +194,24 @@ export default function DashboardPage() {
           <RecordCard title="Missing evidence" meta={`${missingEvidencePackets.length} packets need source records`} right={<Pill tone="red">missing</Pill>} />
           <RecordCard title="Owner evidence review" meta={`${dealsNeedingEvidenceOwnerReview.length} packets need owner review`} right={<Pill tone="gold">review</Pill>} />
           <RecordCard title="10K+ verified opportunities" meta={`${verified10kAssignmentFeeOpportunities.length}/${assignmentFeeAttributions.length} attributed records`} right={<Pill tone="green">{formatCurrency(projectedEvidenceAssignmentFees)}</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V9 Buyer Demand and Distribution Prep">
+        <div className="grid-three">
+          <RecordCard title="Buyer demand profiles" meta={`${buyerDemandProfiles.length} buyers scored for speed and fit`} right={<Pill tone="green">ranked</Pill>} />
+          <RecordCard title="Highest-demand zip" meta={`${highestDemandZipCodes[0]?.zipCode ?? "n/a"} leads current buyer demand`} right={<Pill>{highestDemandZipCodes[0]?.demandScore ?? 0}</Pill>} />
+          <RecordCard title="Fast-close buyers" meta={`${fastCloseBuyerList.length} verified buyers can close in 10 days or faster`} right={<Pill tone="green">fast</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Distribution approvals" meta={`${distributionDraftsPendingApproval.length} one-buyer drafts need owner review`} right={<Pill tone="gold">draft</Pill>} />
+          <RecordCard title="Distribution blocks" meta={`${blockedDistributionPreps.length} drafts blocked by safety or publication gates`} right={<Pill tone="red">blocked</Pill>} />
+          <RecordCard title="Strong-demand 10K+ deals" meta={`${tenKDealsWithStrongBuyerDemand.length} deals protect spread with buyer fit`} right={<Pill tone="green">ready</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Buyer-ready demand" meta={`${buyerReadyDealsFromDemand.length} deals have strong buyer fit and visible rooms`} right={<Pill tone="green">ready</Pill>} />
+          <RecordCard title="Buyer priority POF gaps" meta={`${buyerPriorityPofGaps.length} rankings need POF refresh`} right={<Pill tone="gold">review</Pill>} />
+          <RecordCard title="Bulk distribution" meta="Blocked; no campaigns, blasts, or automatic buyer outreach." right={<Pill tone="red">off</Pill>} />
         </div>
       </Section>
     </div>

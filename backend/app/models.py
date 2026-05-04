@@ -122,6 +122,12 @@ class Deal(TimestampMixin, Base):
 
     lead: Mapped[Lead] = relationship(back_populates="deals")
     matches: Mapped[list["BuyerMatch"]] = relationship(back_populates="deal")
+    buyer_priorities: Mapped[list["BuyerDealPriority"]] = relationship(
+        back_populates="deal"
+    )
+    distribution_preps: Mapped[list["DealDistributionPrep"]] = relationship(
+        back_populates="deal"
+    )
     compliance_records: Mapped[list["ComplianceRecord"]] = relationship(back_populates="deal")
     buyer_publication: Mapped["BuyerDealPublication | None"] = relationship(
         back_populates="deal", uselist=False
@@ -167,6 +173,15 @@ class Buyer(TimestampMixin, Base):
 
     matches: Mapped[list["BuyerMatch"]] = relationship(back_populates="buyer")
     interests: Mapped[list["BuyerInterest"]] = relationship(back_populates="buyer")
+    demand_profile: Mapped["BuyerDemandProfile | None"] = relationship(
+        back_populates="buyer", uselist=False
+    )
+    deal_priorities: Mapped[list["BuyerDealPriority"]] = relationship(
+        back_populates="buyer"
+    )
+    distribution_preps: Mapped[list["DealDistributionPrep"]] = relationship(
+        back_populates="buyer"
+    )
     assignment_readiness_records: Mapped[list["AssignmentReadinessRecord"]] = relationship(
         back_populates="buyer"
     )
@@ -189,6 +204,104 @@ class BuyerMatch(TimestampMixin, Base):
     assignment_readiness_records: Mapped[list["AssignmentReadinessRecord"]] = relationship(
         back_populates="buyer_match"
     )
+
+
+class BuyerDemandProfile(TimestampMixin, Base):
+    __tablename__ = "buyer_demand_profiles"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    buyer_id: Mapped[str] = mapped_column(ForeignKey("buyers.id"), unique=True, nullable=False)
+    buyer_activity_score: Mapped[float] = mapped_column(Float, default=0)
+    zip_code_demand_score: Mapped[float] = mapped_column(Float, default=0)
+    property_type_demand_score: Mapped[float] = mapped_column(Float, default=0)
+    price_band_fit_score: Mapped[float] = mapped_column(Float, default=0)
+    closing_speed_score: Mapped[float] = mapped_column(Float, default=0)
+    proof_of_funds_strength: Mapped[float] = mapped_column(Float, default=0)
+    reliability_score: Mapped[float] = mapped_column(Float, default=0)
+    last_engaged_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    preferred_spread_margin_notes: Mapped[str] = mapped_column(Text, default="")
+    target_zip_codes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    property_type: Mapped[str] = mapped_column(String(80), default="any")
+    price_band: Mapped[str] = mapped_column(String(80), default="")
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    buyer: Mapped[Buyer] = relationship(back_populates="demand_profile")
+    deal_priorities: Mapped[list["BuyerDealPriority"]] = relationship(
+        back_populates="demand_profile"
+    )
+
+
+class BuyerDealPriority(TimestampMixin, Base):
+    __tablename__ = "buyer_deal_priorities"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    buyer_id: Mapped[str] = mapped_column(ForeignKey("buyers.id"), nullable=False)
+    buyer_demand_profile_id: Mapped[str | None] = mapped_column(
+        ForeignKey("buyer_demand_profiles.id"), nullable=True
+    )
+    target_area_match: Mapped[float] = mapped_column(Float, default=0)
+    max_price_fit: Mapped[float] = mapped_column(Float, default=0)
+    proof_of_funds_score: Mapped[float] = mapped_column(Float, default=0)
+    past_reliability_score: Mapped[float] = mapped_column(Float, default=0)
+    closing_speed_score: Mapped[float] = mapped_column(Float, default=0)
+    deal_type_fit: Mapped[float] = mapped_column(Float, default=0)
+    buyer_margin_strength: Mapped[float] = mapped_column(Float, default=0)
+    priority_score: Mapped[float] = mapped_column(Float, default=0)
+    rank: Mapped[int] = mapped_column(Integer, default=0)
+    ranking_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    risk_flags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_contact_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    internal_profit_logic_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal: Mapped[Deal] = relationship(back_populates="buyer_priorities")
+    buyer: Mapped[Buyer] = relationship(back_populates="deal_priorities")
+    demand_profile: Mapped[BuyerDemandProfile | None] = relationship(
+        back_populates="deal_priorities"
+    )
+    distribution_preps: Mapped[list["DealDistributionPrep"]] = relationship(
+        back_populates="buyer_priority"
+    )
+
+
+class DealDistributionPrep(TimestampMixin, Base):
+    __tablename__ = "deal_distribution_preps"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    buyer_id: Mapped[str | None] = mapped_column(ForeignKey("buyers.id"), nullable=True)
+    buyer_priority_id: Mapped[str | None] = mapped_column(
+        ForeignKey("buyer_deal_priorities.id"), nullable=True
+    )
+    buyer_deal_publication_id: Mapped[str | None] = mapped_column(
+        ForeignKey("buyer_deal_publications.id"), nullable=True
+    )
+    buyer_deal_email_draft: Mapped[str] = mapped_column(Text, default="")
+    buyer_sms_draft: Mapped[str] = mapped_column(Text, default="")
+    private_deal_sheet_draft: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    buyer_call_notes: Mapped[str] = mapped_column(Text, default="")
+    buyer_response_tracker: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    approval_status: Mapped[str] = mapped_column(String(80), default="owner_review_needed")
+    draft_status: Mapped[str] = mapped_column(String(80), default="draft")
+    safety_status: Mapped[str] = mapped_column(String(80), default="pending")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    seller_private_data_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+    assignment_fee_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_closing_guarantee_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal: Mapped[Deal] = relationship(back_populates="distribution_preps")
+    buyer: Mapped[Buyer | None] = relationship(back_populates="distribution_preps")
+    buyer_priority: Mapped[BuyerDealPriority | None] = relationship(
+        back_populates="distribution_preps"
+    )
+    buyer_deal_publication: Mapped[BuyerDealPublication | None] = relationship()
 
 
 class ComplianceRecord(TimestampMixin, Base):

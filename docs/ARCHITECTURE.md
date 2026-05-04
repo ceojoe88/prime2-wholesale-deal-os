@@ -20,6 +20,8 @@ V7 adds a unified internal deal room and closing coordination gate. It connects 
 
 V8 adds proof-backed deal evidence and assignment-fee attribution. It ties projected and verified assignment fees to source records instead of guesses, sanitizes internal notes from evidence summaries, and blocks fake profit claims, unsupported ROI claims, invented buyer/seller numbers, client-facing proof without approval, and legal or closing guarantees.
 
+V9 adds buyer demand intelligence and deal distribution prep. It ranks which buyers are most likely to close fast using demand, price, POF, reliability, closing speed, deal type, and buyer margin signals, then prepares sanitized one-recipient distribution drafts without live blasts, bulk sends, fake scarcity, fake competition, or seller/private data exposure.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -27,6 +29,7 @@ V8 adds proof-backed deal evidence and assignment-fee attribution. It ties proje
 - `app/domain/profit_control.py`: MAO, max buyer purchase price, max seller offer, offer options, assignment spread, reasonableness scoring, and buyer margin flags.
 - `app/domain/buyer_matching.py`: draft-only buyer match scoring by area, price, property type, reliability, closing speed, and proof of funds.
 - `app/domain/buyer_portal.py`: buyer visibility publishing gate, sanitized deal-room projection, forbidden-field leak guard, and V2 portal policy.
+- `app/domain/buyer_demand.py`: V9 buyer demand scoring, per-deal priority ranking, sanitized private deal sheet generation, distribution prep guard, and buyer demand dashboard aggregation.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -90,6 +93,13 @@ erDiagram
   DEAL ||--o{ DEAL_EVIDENCE_PACKET : evidences
   DEAL_EVIDENCE_PACKET ||--o{ ASSIGNMENT_FEE_ATTRIBUTION : attributes
   DEAL ||--o{ ASSIGNMENT_FEE_ATTRIBUTION : calculates
+  BUYER ||--o| BUYER_DEMAND_PROFILE : profiles
+  DEAL ||--o{ BUYER_DEAL_PRIORITY : ranks
+  BUYER ||--o{ BUYER_DEAL_PRIORITY : scores
+  BUYER_DEMAND_PROFILE ||--o{ BUYER_DEAL_PRIORITY : informs
+  DEAL ||--o{ DEAL_DISTRIBUTION_PREP : prepares
+  BUYER ||--o{ DEAL_DISTRIBUTION_PREP : targets
+  BUYER_DEAL_PRIORITY ||--o{ DEAL_DISTRIBUTION_PREP : sources
 ```
 
 ## V2 Buyer Portal
@@ -347,6 +357,28 @@ The 10K+ verified flag is true only when:
 
 V8 blocks fake profit claims, unsupported ROI claims, invented buyer/seller numbers, client-facing proof without approval, legal guarantees, and closing guarantees. Evidence summaries are sanitized to avoid call notes, motivation answers, pain points, objections, seller temperature, Wholesale Prime recommendations, and other internal notes.
 
+## V9 Buyer Demand And Distribution Prep
+
+Internal routes:
+
+- `/dashboard/buyer-demand`
+- `/dashboard/buyer-demand/[buyerId]`
+- `/dashboard/buyer-priority`
+- `/dashboard/deal-distribution`
+- `/dashboard/deal-distribution/[distributionId]`
+
+Buyer demand profiles track buyer activity score, zip-code demand score, property-type demand score, price-band fit, closing-speed score, proof-of-funds strength, reliability score, last-engaged date, and preferred spread/margin notes.
+
+Buyer priority records rank buyers per deal by target area match, max price fit, POF status, past reliability, closing speed, deal type fit, and buyer margin strength. These rankings create internal recommendations only. They do not contact buyers, negotiate, execute contracts, or publish deal data.
+
+Distribution prep records are draft-only and one-recipient scoped. They store buyer deal email drafts, SMS drafts, a sanitized private deal sheet, buyer call notes, and buyer response trackers. No live send, bulk send, campaign, auto-follow-up, buyer blast, title submission, payment handling, or contract execution is available in V9.
+
+The buyer deal sheet sanitizer exposes only property summary, asking price, ARV range, repair estimate range, buyer margin estimate, access instructions placeholder, availability status, and proof/inspection placeholder notes.
+
+The sanitizer hides seller name/contact, seller contract price unless intentionally represented as asking price, assignment fee logic, lead source, motivation score, internal spread logic, agent recommendations, compliance internals, Wholesale Prime recommendations, and manager queues.
+
+The V9 safety guard blocks live buyer blasts, bulk sends, misleading scarcity, fake offers, fake buyer competition, seller/private data exposure, assignment fee exposure without approval, legal guarantees, and closing guarantees.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -392,6 +424,11 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/deal-evidence/[packetId]`
 - `/dashboard/assignment-fees`
 - `/dashboard/assignment-fees/[feeId]`
+- `/dashboard/buyer-demand`
+- `/dashboard/buyer-demand/[buyerId]`
+- `/dashboard/buyer-priority`
+- `/dashboard/deal-distribution`
+- `/dashboard/deal-distribution/[distributionId]`
 
 Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
 
@@ -432,6 +469,8 @@ V6 exception: the controlled seller portal is allowed only as an invite-gated sa
 V7 exception: unified deal rooms are allowed only as internal coordination records. They can show blocker queues, next recommended actions, projected fees at risk, and readiness status inside the operator dashboard, but they cannot execute legal documents, submit title packets, process payments, auto-negotiate, or expose internal data to buyer/seller portals.
 
 V8 exception: evidence and attribution records are allowed only as internal proof and verification records. They can show source-backed fee math, evidence gaps, missing owner review, and verified 10K+ opportunities inside the operator dashboard, but they cannot publish client-facing proof, invent profit support, guarantee ROI, guarantee closing, or expose unsanitized internal notes.
+
+V9 exception: buyer demand and distribution prep records are allowed only as internal ranking and draft-preparation records. They can rank likely buyers, prepare one-recipient drafts, and generate sanitized deal sheets, but they cannot send blasts, send bulk messages, claim fake scarcity or buyer competition, expose seller/private data, expose internal spread logic, guarantee closing, or execute contracts.
 
 Allowed:
 

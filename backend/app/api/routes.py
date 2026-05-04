@@ -12,6 +12,12 @@ from app.domain.buyer_portal import (
     sanitize_buyer_deal,
     update_publication_gate,
 )
+from app.domain.buyer_demand import (
+    buyer_deal_priority_summary,
+    buyer_demand_dashboard,
+    distribution_prep_summary,
+    validate_distribution_language,
+)
 from app.domain.command_center import build_command_center
 from app.domain.communications import (
     approval_gate,
@@ -72,7 +78,9 @@ from app.models import (
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     Buyer,
+    BuyerDealPriority,
     BuyerDealPublication,
+    BuyerDemandProfile,
     BuyerInterest,
     BuyerMatch,
     ClosingCoordinationChecklist,
@@ -83,6 +91,7 @@ from app.models import (
     CommunicationSendAttempt,
     ContractControl,
     Deal,
+    DealDistributionPrep,
     DealEvidencePacket,
     DealRoomBlocker,
     Division,
@@ -115,6 +124,11 @@ class BuyerInterestRequest(BaseModel):
 
 class ProfitClaimValidationRequest(BaseModel):
     content: str
+
+
+class DistributionSafetyRequest(BaseModel):
+    content: str
+    assignment_fee_exposure_approved: bool = False
 
 
 class SellerLanguageRequest(BaseModel):
@@ -715,6 +729,100 @@ def assignment_fee_detail(
     sync_assignment_fee_attribution(session, attribution)
     session.commit()
     return assignment_fee_summary(attribution)
+
+
+@router.get("/buyer-demand")
+def buyer_demand(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = buyer_demand_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/buyer-demand/{buyer_id}")
+def buyer_demand_detail(
+    buyer_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    buyer = session.get(Buyer, buyer_id)
+    if buyer is None:
+        raise HTTPException(status_code=404, detail="Buyer not found")
+    dashboard = buyer_demand_dashboard(session)
+    session.commit()
+    profile = session.query(BuyerDemandProfile).filter(BuyerDemandProfile.buyer_id == buyer_id).first()
+    return {
+        "buyer": model_to_dict(buyer),
+        "demand_profile": model_to_dict(profile) if profile else None,
+        "deal_priorities": [
+            buyer_deal_priority_summary(priority)
+            for priority in session.query(BuyerDealPriority)
+            .filter(BuyerDealPriority.buyer_id == buyer_id)
+            .order_by(BuyerDealPriority.priority_score.desc())
+            .all()
+        ],
+        "distribution_preps": [
+            distribution_prep_summary(prep)
+            for prep in session.query(DealDistributionPrep)
+            .filter(DealDistributionPrep.buyer_id == buyer_id)
+            .all()
+        ],
+        "highest_demand_zip_codes": dashboard["highest_demand_zip_codes"],
+        "draft_only": True,
+        "live_buyer_blast_allowed": False,
+        "bulk_send_allowed": False,
+    }
+
+
+@router.get("/buyer-priority")
+def buyer_priority(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = buyer_demand_dashboard(session)
+    session.commit()
+    return {
+        "buyer_priority_rankings": dashboard["buyer_priority_rankings"],
+        "best_buyers_for_hot_deals": dashboard["best_buyers_for_hot_deals"],
+        "buyer_ready_deals": dashboard["buyer_ready_deals"],
+        "proof_of_funds_gaps": dashboard["proof_of_funds_gaps"],
+        "live_contact_allowed": False,
+        "buyer_blast_allowed": False,
+        "bulk_send_allowed": False,
+    }
+
+
+@router.get("/deal-distribution")
+def deal_distribution(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = buyer_demand_dashboard(session)
+    session.commit()
+    return {
+        "distribution_preps": dashboard["distribution_preps"],
+        "distribution_drafts_pending_approval": dashboard["distribution_drafts_pending_approval"],
+        "buyer_ready_deals": dashboard["buyer_ready_deals"],
+        "ten_k_deals_with_strong_buyer_demand": dashboard[
+            "ten_k_deals_with_strong_buyer_demand"
+        ],
+        "live_send_allowed": False,
+        "bulk_blast_allowed": False,
+        "buyer_blast_allowed": False,
+    }
+
+
+@router.post("/deal-distribution/safety/validate")
+def deal_distribution_safety(payload: DistributionSafetyRequest) -> dict[str, object]:
+    return validate_distribution_language(
+        payload.content,
+        assignment_fee_exposure_approved=payload.assignment_fee_exposure_approved,
+    )
+
+
+@router.get("/deal-distribution/{distribution_id}")
+def deal_distribution_detail(
+    distribution_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    prep = session.get(DealDistributionPrep, distribution_id)
+    if prep is None:
+        raise HTTPException(status_code=404, detail="Distribution prep not found")
+    summary = distribution_prep_summary(prep)
+    session.commit()
+    return summary
 
 
 @router.get("/communications")

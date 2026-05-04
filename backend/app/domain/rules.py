@@ -42,6 +42,12 @@ BLOCKED_ACTIONS = {
     "invent_buyer_seller_numbers": "Invented buyer or seller numbers are blocked; attribution must use source records.",
     "publish_client_facing_proof": "Client-facing proof is blocked unless explicitly approved in a future controlled release.",
     "make_legal_closing_guarantee": "Legal or closing guarantees are blocked in V8.",
+    "live_buyer_blast": "Live buyer blasts are blocked; V9 prepares one-buyer draft distribution only.",
+    "prepare_bulk_buyer_distribution": "Bulk buyer distribution is blocked in V9.",
+    "make_misleading_scarcity_claim": "Misleading scarcity is blocked in buyer distribution drafts.",
+    "make_fake_buyer_competition_claim": "Fake buyer competition or fake offers are blocked in buyer distribution drafts.",
+    "expose_seller_private_data": "Seller/private lead data must not be exposed in buyer distribution prep.",
+    "expose_assignment_fee_without_approval": "Assignment fee logic is hidden from buyer distribution unless explicitly approved in a future gate.",
     "give_legal_advice": "Legal advice is blocked; use attorney/title review reminders.",
     "guarantee_profit": "Guaranteed profit claims are blocked.",
 }
@@ -63,6 +69,13 @@ LEGAL_ADVICE_PATTERNS = (
     "guaranteed closing",
     "invented buyer price",
     "invented seller price",
+    "buyer blast",
+    "send to all buyers",
+    "fake buyer competition",
+    "fake offer",
+    "misleading scarcity",
+    "only buyer getting this",
+    "we already have offers",
 )
 
 
