@@ -12,6 +12,8 @@ V3 adds seller acquisition and follow-up control. It turns leads into controlled
 
 V4 adds contract control and title handoff preparation. It turns approved offer packets into internal control records, title handoff placeholders, and assignment-readiness checks without executable contract generation, live sending, title-company submission, legal advice, or automatic contract status changes.
 
+V5 adds a controlled communication gate. It can prepare communication drafts and mock dry-runs, but any live-send path is disabled by default and must pass safety, dry-run, unchanged-draft, owner approval, provider readiness, recipient source tie, one-recipient, and idempotency gates. Bulk campaigns, buyer blasts, auto follow-up sequences, and title-company submission remain blocked.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -21,6 +23,7 @@ V4 adds contract control and title handoff preparation. It turns approved offer 
 - `app/domain/buyer_portal.py`: buyer visibility publishing gate, sanitized deal-room projection, forbidden-field leak guard, and V2 portal policy.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
+- `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
 - `app/domain/rules.py`: private-mode rules and v1 action validation.
 - `app/domain/compliance.py`: purchase, assignment, title, seller disclosure, buyer disclosure, and state-review checklists.
 - `app/domain/imports.py`: CSV-ready lead import preview with accepted source categories.
@@ -59,6 +62,12 @@ erDiagram
   CONTRACT_CONTROL ||--o{ ASSIGNMENT_READINESS_RECORD : checks
   DEAL ||--o{ ASSIGNMENT_READINESS_RECORD : readies
   BUYER ||--o{ ASSIGNMENT_READINESS_RECORD : verifies
+  SELLER_INTERACTION ||--o{ COMMUNICATION_DRAFT : sources
+  BUYER_INTEREST ||--o{ COMMUNICATION_DRAFT : sources
+  TITLE_HANDOFF_PACKET ||--o{ COMMUNICATION_DRAFT : sources
+  COMMUNICATION_DRAFT ||--o{ COMMUNICATION_DRY_RUN_RECEIPT : produces
+  COMMUNICATION_DRY_RUN_RECEIPT ||--o{ COMMUNICATION_APPROVAL : gates
+  COMMUNICATION_DRAFT ||--o{ COMMUNICATION_SEND_ATTEMPT : audits
 ```
 
 ## V2 Buyer Portal
@@ -157,6 +166,57 @@ Assignment readiness is true only when contract control exists, assignment allow
 
 The V4 safety guard blocks executable contract generation, legal advice language, live email/SMS/calls, title-company submission, false assignment claims, hidden disclosure language, buyer/seller misrepresentation, and automatic contract status changes.
 
+## V5 Communication Gate
+
+Internal routes:
+
+- `/dashboard/communications`
+- `/dashboard/communications/[draftId]`
+- `/dashboard/communications/dry-runs`
+- `/dashboard/communications/attempts`
+- `/dashboard/communications/approvals`
+
+Communication draft records cover seller follow-up drafts, buyer interest response drafts, title handoff email drafts, and internal owner notes. Each draft stores recipient type, recipient email/phone placeholder, source record type/id, subject, draft body, status, safety result, owner approval status, communication live flag, provider readiness, dry-run references, and blocked reasons.
+
+Before a dry-run or send attempt, the safety check blocks pressure language, legal advice, fake urgency, fake buyer claims, guaranteed close claims, misleading assignment language, hidden fee or deception language, missing SMS opt-out language, unsupported claims, bulk language, and campaign language.
+
+Dry-run receipts record:
+
+- Recipient
+- Subject/body hash
+- Source record
+- Risk status
+- Safety result
+- Timestamp
+- Provider mode `mock/dry_run`
+- Idempotency key
+
+The live-send gate requires all of these before a mock-send can occur:
+
+- Draft unchanged after dry-run
+- Safety passed
+- Dry-run receipt exists
+- Owner approval recorded
+- Global live flag enabled
+- Draft communication live flag enabled
+- Provider readiness true
+- Recipient tied to the source record
+- One-send idempotency not already used
+- Exactly one recipient
+
+The provider layer contains mock email and SMS adapters only. No provider secrets are required. Blocked attempts create audit records with `provider_called = false`. Even a successful gated attempt is `mock_sent` unless a future owner-controlled provider integration is explicitly added.
+
+V5 live-send limits:
+
+- One recipient only
+- One approved draft only
+- One source record only
+- No bulk send
+- No campaigns
+- No auto-follow-up sequence
+- No buyer blast execution
+- No title-company submission
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -188,6 +248,11 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/title-handoff`
 - `/dashboard/title-handoff/[packetId]`
 - `/dashboard/assignment-readiness`
+- `/dashboard/communications`
+- `/dashboard/communications/[draftId]`
+- `/dashboard/communications/dry-runs`
+- `/dashboard/communications/attempts`
+- `/dashboard/communications/approvals`
 - `/dashboard/buyers`
 - `/dashboard/buyers/[buyerId]`
 - `/dashboard/buyer-matches`
@@ -211,6 +276,8 @@ V2 exception: the controlled buyer portal is allowed only as an invite-gated san
 V3 exception: seller acquisition drafting is allowed only inside the private command center. Live seller outreach remains blocked.
 
 V4 exception: contract/title preparation is allowed only as draft records, checklists, placeholders, and readiness scoring. Executable contracts, title-company submission, and automatic status changes remain blocked.
+
+V5 exception: communication attempts are allowed only through the controlled gate and default to blocked because the global live flag is off. Dry-runs and blocked attempts are auditable, provider adapters are mock-only, and bulk/campaign/title/buyer-blast paths remain blocked.
 
 Allowed:
 

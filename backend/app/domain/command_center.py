@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.domain.buyer_portal import portal_publish_gate, update_publication_gate
+from app.domain.communications import communication_dashboard
 from app.domain.contract_control import contract_title_dashboard
 from app.domain.seller_acquisition import seller_pipeline_command_center
 from app.models import (
@@ -119,4 +120,5 @@ def build_command_center(session: Session) -> dict[str, object]:
         },
         "seller_acquisition": seller_pipeline_command_center(session),
         "contract_title_control": contract_title_dashboard(session),
+        "communication_gate": communication_dashboard(session),
     }

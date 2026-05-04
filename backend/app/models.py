@@ -262,6 +262,9 @@ class SellerInteraction(TimestampMixin, Base):
     live_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
 
     lead: Mapped[Lead] = relationship(back_populates="seller_interactions")
+    communication_drafts: Mapped[list["CommunicationDraft"]] = relationship(
+        back_populates="seller_interaction"
+    )
 
 
 class OfferPacket(TimestampMixin, Base):
@@ -349,6 +352,9 @@ class TitleHandoffPacket(TimestampMixin, Base):
         back_populates="title_handoff_packets"
     )
     deal: Mapped[Deal] = relationship(back_populates="title_handoff_packets")
+    communication_drafts: Mapped[list["CommunicationDraft"]] = relationship(
+        back_populates="title_handoff_packet"
+    )
 
 
 class AssignmentReadinessRecord(TimestampMixin, Base):
@@ -387,4 +393,135 @@ class AssignmentReadinessRecord(TimestampMixin, Base):
     )
     buyer_interest: Mapped[BuyerInterest | None] = relationship(
         back_populates="assignment_readiness_records"
+    )
+
+
+class CommunicationDraft(TimestampMixin, Base):
+    __tablename__ = "communication_drafts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    draft_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    channel: Mapped[str] = mapped_column(String(40), nullable=False)
+    recipient_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    recipient_email_placeholder: Mapped[str] = mapped_column(String(180), default="")
+    recipient_phone_placeholder: Mapped[str] = mapped_column(String(80), default="")
+    source_record_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    source_record_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    seller_interaction_id: Mapped[str | None] = mapped_column(
+        ForeignKey("seller_interactions.id"), nullable=True
+    )
+    buyer_interest_id: Mapped[str | None] = mapped_column(
+        ForeignKey("buyer_interests.id"), nullable=True
+    )
+    title_handoff_packet_id: Mapped[str | None] = mapped_column(
+        ForeignKey("title_handoff_packets.id"), nullable=True
+    )
+    subject: Mapped[str] = mapped_column(String(200), default="")
+    draft_body: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(80), default="draft")
+    safety_checked: Mapped[bool] = mapped_column(Boolean, default=False)
+    safety_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    safety_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    communication_live_flag_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_readiness: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_dry_run_receipt_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    approved_dry_run_receipt_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    draft_hash: Mapped[str] = mapped_column(String(128), default="")
+    risk_status: Mapped[str] = mapped_column(String(80), default="unchecked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    live_send_count: Mapped[int] = mapped_column(Integer, default=0)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    bulk_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    campaign_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    auto_followup_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    seller_interaction: Mapped[SellerInteraction | None] = relationship(
+        back_populates="communication_drafts"
+    )
+    buyer_interest: Mapped[BuyerInterest | None] = relationship()
+    title_handoff_packet: Mapped[TitleHandoffPacket | None] = relationship(
+        back_populates="communication_drafts"
+    )
+    dry_run_receipts: Mapped[list["CommunicationDryRunReceipt"]] = relationship(
+        back_populates="draft"
+    )
+    approvals: Mapped[list["CommunicationApproval"]] = relationship(back_populates="draft")
+    send_attempts: Mapped[list["CommunicationSendAttempt"]] = relationship(
+        back_populates="draft"
+    )
+
+
+class CommunicationDryRunReceipt(TimestampMixin, Base):
+    __tablename__ = "communication_dry_run_receipts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    draft_id: Mapped[str] = mapped_column(
+        ForeignKey("communication_drafts.id"), nullable=False
+    )
+    recipient: Mapped[str] = mapped_column(String(180), nullable=False)
+    subject_body_hash: Mapped[str] = mapped_column(String(128), nullable=False)
+    source_record_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    source_record_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    risk_status: Mapped[str] = mapped_column(String(80), default="review")
+    safety_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    provider_mode: Mapped[str] = mapped_column(String(80), default="mock/dry_run")
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+
+    draft: Mapped[CommunicationDraft] = relationship(back_populates="dry_run_receipts")
+    approvals: Mapped[list["CommunicationApproval"]] = relationship(back_populates="dry_run_receipt")
+    send_attempts: Mapped[list["CommunicationSendAttempt"]] = relationship(
+        back_populates="dry_run_receipt"
+    )
+
+
+class CommunicationApproval(TimestampMixin, Base):
+    __tablename__ = "communication_approvals"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    draft_id: Mapped[str] = mapped_column(
+        ForeignKey("communication_drafts.id"), nullable=False
+    )
+    dry_run_receipt_id: Mapped[str] = mapped_column(
+        ForeignKey("communication_dry_run_receipts.id"), nullable=False
+    )
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    approval_status: Mapped[str] = mapped_column(String(80), default="pending")
+    approval_notes: Mapped[str] = mapped_column(Text, default="")
+    approved_by: Mapped[str] = mapped_column(String(80), default="Owner")
+    draft_hash_at_approval: Mapped[str] = mapped_column(String(128), default="")
+
+    draft: Mapped[CommunicationDraft] = relationship(back_populates="approvals")
+    dry_run_receipt: Mapped[CommunicationDryRunReceipt] = relationship(
+        back_populates="approvals"
+    )
+
+
+class CommunicationSendAttempt(TimestampMixin, Base):
+    __tablename__ = "communication_send_attempts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    draft_id: Mapped[str] = mapped_column(
+        ForeignKey("communication_drafts.id"), nullable=False
+    )
+    dry_run_receipt_id: Mapped[str | None] = mapped_column(
+        ForeignKey("communication_dry_run_receipts.id"), nullable=True
+    )
+    recipient: Mapped[str] = mapped_column(String(180), default="")
+    channel: Mapped[str] = mapped_column(String(40), default="")
+    provider_mode: Mapped[str] = mapped_column(String(80), default="mock/dry_run")
+    attempt_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    safety_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    idempotency_key: Mapped[str] = mapped_column(String(160), default="")
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    mock_sent: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_send_requested: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_send_detected: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    draft: Mapped[CommunicationDraft] = relationship(back_populates="send_attempts")
+    dry_run_receipt: Mapped[CommunicationDryRunReceipt | None] = relationship(
+        back_populates="send_attempts"
     )

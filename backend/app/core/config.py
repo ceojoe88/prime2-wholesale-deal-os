@@ -14,6 +14,12 @@ class Settings:
     overseer_name: str = "Wholesale Prime"
     target_assignment_fee: int = 10_000
     auto_seed: bool = os.getenv("AUTO_SEED", "true").lower() == "true"
+    communication_global_live_enabled: bool = (
+        os.getenv("COMMUNICATION_GLOBAL_LIVE_ENABLED", "false").lower() == "true"
+    )
+    communication_provider_mode: str = os.getenv(
+        "COMMUNICATION_PROVIDER_MODE", "mock/dry_run"
+    )
 
 
 settings = Settings()

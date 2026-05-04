@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
-import { assignmentReadyRecords, buyerPofGaps, complianceRecords, contractPrepBlocked, deals, formatCurrency, hotDeals, hotSellerLeads, leads, offerPackets, sellerInteractions, staleSellerFollowUps, titleHandoffPackets } from "@/lib/demo-data";
+import { assignmentReadyRecords, blockedCommunicationAttempts, buyerPofGaps, communicationDraftsNeedingSafety, communicationDryRunsNeedingApproval, complianceRecords, contractPrepBlocked, deals, formatCurrency, hotDeals, hotSellerLeads, leads, offerPackets, sellerInteractions, staleSellerFollowUps, titleHandoffPackets } from "@/lib/demo-data";
 import { buyerInterests, buyerPortalBlockedDeals, buyerVisibleDeals } from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
@@ -35,6 +35,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Assignment-ready" value={String(assignmentReadyRecords.length)} detail="POF and compliance clear" />
         <MetricCard label="Buyer POF gaps" value={String(buyerPofGaps.length)} detail="Readiness blocked" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Comm safety queue" value={String(communicationDraftsNeedingSafety.length)} detail="Drafts needing check" />
+        <MetricCard label="Comm approvals" value={String(communicationDryRunsNeedingApproval.length)} detail="Dry-runs waiting" />
+        <MetricCard label="Blocked comms" value={String(blockedCommunicationAttempts.length)} detail="No provider calls" />
+        <MetricCard label="Live flag" value="off" detail="Default controlled mode" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -50,6 +56,9 @@ export default function CommandCenterPage() {
               ["high", "Clear contract prep blocks", `${contractPrepBlocked.length} contract controls need missing approval, compliance, or title items`],
               ["high", "Resolve buyer POF gaps", `${buyerPofGaps.length} readiness records need POF verification`],
               ["normal", "Review title handoff packets", `${titleHandoffPackets.length} title packets are draft-only and not submitted`],
+              ["high", "Clear communication safety queue", `${communicationDraftsNeedingSafety.length} drafts need safety checks before dry-run`],
+              ["high", "Review communication approvals", `${communicationDryRunsNeedingApproval.length} dry-run receipts need owner approval`],
+              ["normal", "Inspect blocked communication attempts", `${blockedCommunicationAttempts.length} blocked attempts were audited without provider calls`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

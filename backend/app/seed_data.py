@@ -6,6 +6,11 @@ from sqlalchemy.orm import Session
 
 from app.domain.buyer_matching import score_buyer_match
 from app.domain.buyer_portal import update_publication_gate
+from app.domain.communications import (
+    communication_hash,
+    idempotency_key_for,
+    validate_communication_safety,
+)
 from app.domain.compliance import REQUIRED_CONFIRMATIONS
 from app.domain.contract_control import update_assignment_readiness, update_contract_prep_gate
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
@@ -20,6 +25,10 @@ from app.models import (
     BuyerInterest,
     BuyerMatch,
     ComplianceRecord,
+    CommunicationApproval,
+    CommunicationDraft,
+    CommunicationDryRunReceipt,
+    CommunicationSendAttempt,
     ContractControl,
     Deal,
     Division,
@@ -1243,6 +1252,336 @@ def build_assignment_readiness_records() -> list[dict[str, object]]:
     ]
 
 
+def _draft_obj(row: dict[str, object]):
+    return type("DraftSeedObj", (), row)()
+
+
+def _draft_recipient(row: dict[str, object]) -> str:
+    if row["channel"] == "sms":
+        return str(row["recipient_phone_placeholder"])
+    return str(row["recipient_email_placeholder"] or "owner")
+
+
+def _dry_run_for(
+    receipt_id: str,
+    draft: dict[str, object],
+    *,
+    outdated: bool = False,
+) -> dict[str, object]:
+    draft_obj = _draft_obj(draft)
+    safety = validate_communication_safety(draft_obj)
+    recipient = _draft_recipient(draft)
+    subject_hash = (
+        "outdated-dry-run-hash"
+        if outdated
+        else communication_hash(str(draft["subject"]), str(draft["draft_body"]))
+    )
+    return {
+        "id": receipt_id,
+        "draft_id": draft["id"],
+        "recipient": recipient,
+        "subject_body_hash": subject_hash,
+        "source_record_type": draft["source_record_type"],
+        "source_record_id": draft["source_record_id"],
+        "risk_status": "clear" if safety["allowed"] and not outdated else "blocked" if not safety["allowed"] else "stale",
+        "safety_result": safety,
+        "provider_mode": "mock/dry_run",
+        "idempotency_key": idempotency_key_for(draft_obj, recipient, subject_hash),
+    }
+
+
+def build_communication_draft_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "comm-draft-001",
+            "draft_type": "seller_follow_up",
+            "channel": "sms",
+            "recipient_type": "seller",
+            "recipient_email_placeholder": "",
+            "recipient_phone_placeholder": "seller-phone-placeholder-lead-001",
+            "source_record_type": "seller_interaction",
+            "source_record_id": "seller-interaction-001",
+            "seller_interaction_id": "seller-interaction-001",
+            "buyer_interest_id": None,
+            "title_handoff_packet_id": None,
+            "subject": "",
+            "draft_body": "Hi Angela, this is a draft follow-up for owner review. We can talk through the as-is offer basis when it is convenient. Reply STOP to opt out.",
+            "status": "dry_run_ready",
+            "safety_checked": True,
+            "safety_passed": True,
+            "safety_result": {"allowed": True, "risk_flags": [], "reason": "Communication draft passed safety checks."},
+            "owner_approval_recorded": False,
+            "communication_live_flag_enabled": False,
+            "provider_readiness": False,
+            "last_dry_run_receipt_id": "dryrun-001",
+            "approved_dry_run_receipt_id": None,
+            "draft_hash": "",
+            "risk_status": "clear",
+            "blocked_reasons": [],
+            "live_send_count": 0,
+            "draft_only": True,
+            "bulk_send_allowed": False,
+            "campaign_allowed": False,
+            "auto_followup_allowed": False,
+            "buyer_blast_allowed": False,
+            "title_submission_allowed": False,
+        },
+        {
+            "id": "comm-draft-002",
+            "draft_type": "buyer_interest_response",
+            "channel": "email",
+            "recipient_type": "buyer",
+            "recipient_email_placeholder": "jules@example.test",
+            "recipient_phone_placeholder": "",
+            "source_record_type": "buyer_interest",
+            "source_record_id": "interest-001",
+            "seller_interaction_id": None,
+            "buyer_interest_id": "interest-001",
+            "title_handoff_packet_id": None,
+            "subject": "Draft response on Dallas deal interest",
+            "draft_body": "Thanks for the draft interest. The owner will review proof of funds and deal-room details before any next step. This is not a contract or commitment.",
+            "status": "owner_approved_waiting_live_flags",
+            "safety_checked": True,
+            "safety_passed": True,
+            "safety_result": {"allowed": True, "risk_flags": [], "reason": "Communication draft passed safety checks."},
+            "owner_approval_recorded": True,
+            "communication_live_flag_enabled": False,
+            "provider_readiness": True,
+            "last_dry_run_receipt_id": "dryrun-002",
+            "approved_dry_run_receipt_id": "dryrun-002",
+            "draft_hash": "",
+            "risk_status": "clear",
+            "blocked_reasons": [],
+            "live_send_count": 0,
+            "draft_only": True,
+            "bulk_send_allowed": False,
+            "campaign_allowed": False,
+            "auto_followup_allowed": False,
+            "buyer_blast_allowed": False,
+            "title_submission_allowed": False,
+        },
+        {
+            "id": "comm-draft-003",
+            "draft_type": "title_handoff_email",
+            "channel": "email",
+            "recipient_type": "title_company",
+            "recipient_email_placeholder": "title-company-placeholder@example.test",
+            "recipient_phone_placeholder": "",
+            "source_record_type": "title_handoff_packet",
+            "source_record_id": "title-001",
+            "seller_interaction_id": None,
+            "buyer_interest_id": None,
+            "title_handoff_packet_id": "title-001",
+            "subject": "Draft title handoff packet for owner review",
+            "draft_body": "Draft only: attached packet placeholders need owner and attorney/title review before any title-company submission or external message.",
+            "status": "safety_needed",
+            "safety_checked": False,
+            "safety_passed": False,
+            "safety_result": {},
+            "owner_approval_recorded": False,
+            "communication_live_flag_enabled": False,
+            "provider_readiness": False,
+            "last_dry_run_receipt_id": None,
+            "approved_dry_run_receipt_id": None,
+            "draft_hash": "",
+            "risk_status": "unchecked",
+            "blocked_reasons": [],
+            "live_send_count": 0,
+            "draft_only": True,
+            "bulk_send_allowed": False,
+            "campaign_allowed": False,
+            "auto_followup_allowed": False,
+            "buyer_blast_allowed": False,
+            "title_submission_allowed": False,
+        },
+        {
+            "id": "comm-draft-004",
+            "draft_type": "internal_owner_note",
+            "channel": "internal",
+            "recipient_type": "owner",
+            "recipient_email_placeholder": "owner",
+            "recipient_phone_placeholder": "",
+            "source_record_type": "contract_control",
+            "source_record_id": "contract-001",
+            "seller_interaction_id": None,
+            "buyer_interest_id": None,
+            "title_handoff_packet_id": None,
+            "subject": "Owner note: communication gate review",
+            "draft_body": "Review dry-run receipts, safety results, recipient source tie, and live flags before authorizing any one-off communication.",
+            "status": "draft",
+            "safety_checked": True,
+            "safety_passed": True,
+            "safety_result": {"allowed": True, "risk_flags": [], "reason": "Communication draft passed safety checks."},
+            "owner_approval_recorded": False,
+            "communication_live_flag_enabled": False,
+            "provider_readiness": True,
+            "last_dry_run_receipt_id": None,
+            "approved_dry_run_receipt_id": None,
+            "draft_hash": "",
+            "risk_status": "clear",
+            "blocked_reasons": [],
+            "live_send_count": 0,
+            "draft_only": True,
+            "bulk_send_allowed": False,
+            "campaign_allowed": False,
+            "auto_followup_allowed": False,
+            "buyer_blast_allowed": False,
+            "title_submission_allowed": False,
+        },
+        {
+            "id": "comm-draft-005",
+            "draft_type": "seller_follow_up",
+            "channel": "sms",
+            "recipient_type": "seller",
+            "recipient_email_placeholder": "",
+            "recipient_phone_placeholder": "seller-phone-placeholder-lead-007",
+            "source_record_type": "seller_interaction",
+            "source_record_id": "seller-interaction-005",
+            "seller_interaction_id": "seller-interaction-005",
+            "buyer_interest_id": None,
+            "title_handoff_packet_id": None,
+            "subject": "",
+            "draft_body": "You must sign now. This is your last chance and we already have a buyer.",
+            "status": "blocked_safety",
+            "safety_checked": True,
+            "safety_passed": False,
+            "safety_result": {},
+            "owner_approval_recorded": False,
+            "communication_live_flag_enabled": False,
+            "provider_readiness": False,
+            "last_dry_run_receipt_id": "dryrun-003",
+            "approved_dry_run_receipt_id": None,
+            "draft_hash": "",
+            "risk_status": "blocked",
+            "blocked_reasons": ["pressure_language", "fake_buyer_claim", "missing_sms_opt_out"],
+            "live_send_count": 0,
+            "draft_only": True,
+            "bulk_send_allowed": False,
+            "campaign_allowed": False,
+            "auto_followup_allowed": False,
+            "buyer_blast_allowed": False,
+            "title_submission_allowed": False,
+        },
+        {
+            "id": "comm-draft-006",
+            "draft_type": "buyer_interest_response",
+            "channel": "email",
+            "recipient_type": "buyer",
+            "recipient_email_placeholder": "priya@example.test",
+            "recipient_phone_placeholder": "",
+            "source_record_type": "buyer_interest",
+            "source_record_id": "interest-002",
+            "seller_interaction_id": None,
+            "buyer_interest_id": "interest-002",
+            "title_handoff_packet_id": None,
+            "subject": "Updated buyer response after dry-run",
+            "draft_body": "The owner updated this draft after the dry-run, so it must be dry-run again before any approval can be used.",
+            "status": "changed_after_dry_run",
+            "safety_checked": True,
+            "safety_passed": True,
+            "safety_result": {"allowed": True, "risk_flags": [], "reason": "Communication draft passed safety checks."},
+            "owner_approval_recorded": True,
+            "communication_live_flag_enabled": True,
+            "provider_readiness": True,
+            "last_dry_run_receipt_id": "dryrun-004",
+            "approved_dry_run_receipt_id": "dryrun-004",
+            "draft_hash": "",
+            "risk_status": "clear",
+            "blocked_reasons": [],
+            "live_send_count": 0,
+            "draft_only": True,
+            "bulk_send_allowed": False,
+            "campaign_allowed": False,
+            "auto_followup_allowed": False,
+            "buyer_blast_allowed": False,
+            "title_submission_allowed": False,
+        },
+    ]
+
+
+def build_communication_dry_run_records(
+    drafts: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    by_id = {draft["id"]: draft for draft in drafts}
+    return [
+        _dry_run_for("dryrun-001", by_id["comm-draft-001"]),
+        _dry_run_for("dryrun-002", by_id["comm-draft-002"]),
+        _dry_run_for("dryrun-003", by_id["comm-draft-005"]),
+        _dry_run_for("dryrun-004", by_id["comm-draft-006"], outdated=True),
+    ]
+
+
+def build_communication_approval_records(
+    receipts: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    by_id = {receipt["id"]: receipt for receipt in receipts}
+    return [
+        {
+            "id": "comm-approval-001",
+            "draft_id": "comm-draft-002",
+            "dry_run_receipt_id": "dryrun-002",
+            "owner_approval_recorded": True,
+            "approval_status": "approved",
+            "approval_notes": "Owner approved one-off mock-send eligibility; global live flag remains disabled.",
+            "approved_by": "Owner",
+            "draft_hash_at_approval": by_id["dryrun-002"]["subject_body_hash"],
+        },
+        {
+            "id": "comm-approval-002",
+            "draft_id": "comm-draft-006",
+            "dry_run_receipt_id": "dryrun-004",
+            "owner_approval_recorded": True,
+            "approval_status": "stale_after_draft_change",
+            "approval_notes": "Approval is stale because the draft changed after dry-run.",
+            "approved_by": "Owner",
+            "draft_hash_at_approval": by_id["dryrun-004"]["subject_body_hash"],
+        },
+    ]
+
+
+def build_communication_attempt_records(
+    receipts: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    by_id = {receipt["id"]: receipt for receipt in receipts}
+    return [
+        {
+            "id": "comm-attempt-001",
+            "draft_id": "comm-draft-002",
+            "dry_run_receipt_id": "dryrun-002",
+            "recipient": "jules@example.test",
+            "channel": "email",
+            "provider_mode": "mock/dry_run",
+            "attempt_status": "blocked",
+            "blocked_reasons": [
+                "global_live_flag_disabled",
+                "communication_live_flag_disabled",
+            ],
+            "safety_result": by_id["dryrun-002"]["safety_result"],
+            "idempotency_key": by_id["dryrun-002"]["idempotency_key"],
+            "provider_called": False,
+            "mock_sent": False,
+            "live_send_requested": True,
+            "bulk_send_detected": False,
+        },
+        {
+            "id": "comm-attempt-002",
+            "draft_id": "comm-draft-005",
+            "dry_run_receipt_id": "dryrun-003",
+            "recipient": "seller-phone-placeholder-lead-007",
+            "channel": "sms",
+            "provider_mode": "mock/dry_run",
+            "attempt_status": "blocked",
+            "blocked_reasons": ["safety_not_passed"],
+            "safety_result": by_id["dryrun-003"]["safety_result"],
+            "idempotency_key": by_id["dryrun-003"]["idempotency_key"],
+            "provider_called": False,
+            "mock_sent": False,
+            "live_send_requested": True,
+            "bulk_send_detected": False,
+        },
+    ]
+
+
 LEAD_LOOKUP = {lead["id"]: lead for lead in build_lead_records()}
 
 
@@ -1253,6 +1592,8 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
     buyers_by_id = {buyer["id"]: buyer for buyer in buyers}
     deals = build_deal_records(leads_by_id)
     deals_by_id = {deal["id"]: deal for deal in deals}
+    communication_drafts = build_communication_draft_records()
+    communication_dry_runs = build_communication_dry_run_records(communication_drafts)
     return {
         "divisions": DIVISION_DEFINITIONS,
         "agents": build_agents(),
@@ -1267,12 +1608,24 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "contract_controls": build_contract_control_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
+        "communication_drafts": communication_drafts,
+        "communication_dry_run_receipts": communication_dry_runs,
+        "communication_approvals": build_communication_approval_records(
+            communication_dry_runs
+        ),
+        "communication_send_attempts": build_communication_attempt_records(
+            communication_dry_runs
+        ),
         "compliance_records": build_compliance_records(),
     }
 
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        CommunicationSendAttempt,
+        CommunicationApproval,
+        CommunicationDryRunReceipt,
+        CommunicationDraft,
         AssignmentReadinessRecord,
         TitleHandoffPacket,
         ContractControl,
@@ -1307,6 +1660,18 @@ def seed_database(session: Session) -> dict[str, int]:
         AssignmentReadinessRecord(**row)
         for row in payload["assignment_readiness_records"]
     )
+    session.add_all(CommunicationDraft(**row) for row in payload["communication_drafts"])
+    session.add_all(
+        CommunicationDryRunReceipt(**row)
+        for row in payload["communication_dry_run_receipts"]
+    )
+    session.add_all(
+        CommunicationApproval(**row) for row in payload["communication_approvals"]
+    )
+    session.add_all(
+        CommunicationSendAttempt(**row)
+        for row in payload["communication_send_attempts"]
+    )
     session.add_all(ComplianceRecord(**row) for row in payload["compliance_records"])
     session.flush()
     for publication in session.query(BuyerDealPublication).all():
@@ -1317,5 +1682,11 @@ def seed_database(session: Session) -> dict[str, int]:
         update_contract_prep_gate(contract)
     for readiness in session.query(AssignmentReadinessRecord).all():
         update_assignment_readiness(readiness)
+    for draft in session.query(CommunicationDraft).all():
+        draft.draft_hash = communication_hash(draft.subject, draft.draft_body)
+        if draft.safety_checked:
+            draft.safety_result = validate_communication_safety(draft)
+            draft.safety_passed = bool(draft.safety_result["allowed"])
+            draft.risk_status = "clear" if draft.safety_passed else "blocked"
     session.commit()
     return {key: len(value) for key, value in payload.items()}

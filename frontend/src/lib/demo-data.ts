@@ -253,6 +253,77 @@ export type AssignmentReadinessRecord = {
   titleSubmissionAllowed: false;
 };
 
+export type CommunicationDraft = {
+  id: string;
+  draftType: "seller_follow_up" | "buyer_interest_response" | "title_handoff_email" | "internal_owner_note";
+  channel: "email" | "sms" | "internal";
+  recipientType: string;
+  recipientEmailPlaceholder: string;
+  recipientPhonePlaceholder: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  subject: string;
+  draftBody: string;
+  status: string;
+  safetyChecked: boolean;
+  safetyPassed: boolean;
+  ownerApprovalRecorded: boolean;
+  communicationLiveFlagEnabled: boolean;
+  providerReadiness: boolean;
+  lastDryRunReceiptId: string | null;
+  approvedDryRunReceiptId: string | null;
+  riskStatus: "unchecked" | "clear" | "blocked";
+  blockedReasons: string[];
+  liveSendCount: number;
+  draftOnly: true;
+  bulkSendAllowed: false;
+  campaignAllowed: false;
+  autoFollowupAllowed: false;
+  buyerBlastAllowed: false;
+  titleSubmissionAllowed: false;
+};
+
+export type CommunicationDryRunReceipt = {
+  id: string;
+  draftId: string;
+  recipient: string;
+  subjectBodyHash: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  riskStatus: string;
+  safetyResult: { allowed: boolean; riskFlags: string[]; reason: string };
+  timestamp: string;
+  providerMode: "mock/dry_run";
+  idempotencyKey: string;
+};
+
+export type CommunicationApproval = {
+  id: string;
+  draftId: string;
+  dryRunReceiptId: string;
+  ownerApprovalRecorded: boolean;
+  approvalStatus: string;
+  approvalNotes: string;
+  approvedBy: string;
+  draftHashAtApproval: string;
+};
+
+export type CommunicationSendAttempt = {
+  id: string;
+  draftId: string;
+  dryRunReceiptId: string | null;
+  recipient: string;
+  channel: string;
+  providerMode: "mock/dry_run";
+  attemptStatus: "blocked" | "mock_sent" | "sent";
+  blockedReasons: string[];
+  idempotencyKey: string;
+  providerCalled: boolean;
+  mockSent: boolean;
+  liveSendRequested: boolean;
+  bulkSendDetected: boolean;
+};
+
 export const divisions: Division[] = [
   {
     id: "market-intelligence",
@@ -603,6 +674,32 @@ export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
   { id: "assignment-ready-004", contractControlId: "contract-002", dealId: "deal-003", buyerId: "buyer-001", buyerMatchId: null, buyerInterestId: "interest-003", readinessStatus: "blocked", assignmentReady: false, blockedReasons: ["buyer_match_missing", "contract_control_not_ready", "owner_approval_not_recorded"], assignmentAllowedConfirmed: true, buyerPofStatus: "verified", complianceReviewPassed: true, ownerApprovalRecorded: false, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false }
 ];
 
+export const communicationDrafts: CommunicationDraft[] = [
+  { id: "comm-draft-001", draftType: "seller_follow_up", channel: "sms", recipientType: "seller", recipientEmailPlaceholder: "", recipientPhonePlaceholder: "seller-phone-placeholder-lead-001", sourceRecordType: "seller_interaction", sourceRecordId: "seller-interaction-001", subject: "", draftBody: "Hi Angela, this is a draft follow-up for owner review. We can talk through the as-is offer basis when it is convenient. Reply STOP to opt out.", status: "dry_run_ready", safetyChecked: true, safetyPassed: true, ownerApprovalRecorded: false, communicationLiveFlagEnabled: false, providerReadiness: false, lastDryRunReceiptId: "dryrun-001", approvedDryRunReceiptId: null, riskStatus: "clear", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
+  { id: "comm-draft-002", draftType: "buyer_interest_response", channel: "email", recipientType: "buyer", recipientEmailPlaceholder: "jules@example.test", recipientPhonePlaceholder: "", sourceRecordType: "buyer_interest", sourceRecordId: "interest-001", subject: "Draft response on Dallas deal interest", draftBody: "Thanks for the draft interest. The owner will review proof of funds and deal-room details before any next step. This is not a contract or commitment.", status: "owner_approved_waiting_live_flags", safetyChecked: true, safetyPassed: true, ownerApprovalRecorded: true, communicationLiveFlagEnabled: false, providerReadiness: true, lastDryRunReceiptId: "dryrun-002", approvedDryRunReceiptId: "dryrun-002", riskStatus: "clear", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
+  { id: "comm-draft-003", draftType: "title_handoff_email", channel: "email", recipientType: "title_company", recipientEmailPlaceholder: "title-company-placeholder@example.test", recipientPhonePlaceholder: "", sourceRecordType: "title_handoff_packet", sourceRecordId: "title-001", subject: "Draft title handoff packet for owner review", draftBody: "Draft only: attached packet placeholders need owner and attorney/title review before any title-company submission or external message.", status: "safety_needed", safetyChecked: false, safetyPassed: false, ownerApprovalRecorded: false, communicationLiveFlagEnabled: false, providerReadiness: false, lastDryRunReceiptId: null, approvedDryRunReceiptId: null, riskStatus: "unchecked", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
+  { id: "comm-draft-004", draftType: "internal_owner_note", channel: "internal", recipientType: "owner", recipientEmailPlaceholder: "owner", recipientPhonePlaceholder: "", sourceRecordType: "contract_control", sourceRecordId: "contract-001", subject: "Owner note: communication gate review", draftBody: "Review dry-run receipts, safety results, recipient source tie, and live flags before authorizing any one-off communication.", status: "draft", safetyChecked: true, safetyPassed: true, ownerApprovalRecorded: false, communicationLiveFlagEnabled: false, providerReadiness: true, lastDryRunReceiptId: null, approvedDryRunReceiptId: null, riskStatus: "clear", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
+  { id: "comm-draft-005", draftType: "seller_follow_up", channel: "sms", recipientType: "seller", recipientEmailPlaceholder: "", recipientPhonePlaceholder: "seller-phone-placeholder-lead-007", sourceRecordType: "seller_interaction", sourceRecordId: "seller-interaction-005", subject: "", draftBody: "You must sign now. This is your last chance and we already have a buyer.", status: "blocked_safety", safetyChecked: true, safetyPassed: false, ownerApprovalRecorded: false, communicationLiveFlagEnabled: false, providerReadiness: false, lastDryRunReceiptId: "dryrun-003", approvedDryRunReceiptId: null, riskStatus: "blocked", blockedReasons: ["pressure_language", "fake_buyer_claim", "missing_sms_opt_out"], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false },
+  { id: "comm-draft-006", draftType: "buyer_interest_response", channel: "email", recipientType: "buyer", recipientEmailPlaceholder: "priya@example.test", recipientPhonePlaceholder: "", sourceRecordType: "buyer_interest", sourceRecordId: "interest-002", subject: "Updated buyer response after dry-run", draftBody: "The owner updated this draft after the dry-run, so it must be dry-run again before any approval can be used.", status: "changed_after_dry_run", safetyChecked: true, safetyPassed: true, ownerApprovalRecorded: true, communicationLiveFlagEnabled: true, providerReadiness: true, lastDryRunReceiptId: "dryrun-004", approvedDryRunReceiptId: "dryrun-004", riskStatus: "clear", blockedReasons: [], liveSendCount: 0, draftOnly: true, bulkSendAllowed: false, campaignAllowed: false, autoFollowupAllowed: false, buyerBlastAllowed: false, titleSubmissionAllowed: false }
+];
+
+export const communicationDryRunReceipts: CommunicationDryRunReceipt[] = [
+  { id: "dryrun-001", draftId: "comm-draft-001", recipient: "seller-phone-placeholder-lead-001", subjectBodyHash: "hash-sms-safe", sourceRecordType: "seller_interaction", sourceRecordId: "seller-interaction-001", riskStatus: "clear", safetyResult: { allowed: true, riskFlags: [], reason: "Communication draft passed safety checks." }, timestamp: "2026-05-04T15:15:00Z", providerMode: "mock/dry_run", idempotencyKey: "idem-dryrun-001" },
+  { id: "dryrun-002", draftId: "comm-draft-002", recipient: "jules@example.test", subjectBodyHash: "hash-buyer-safe", sourceRecordType: "buyer_interest", sourceRecordId: "interest-001", riskStatus: "clear", safetyResult: { allowed: true, riskFlags: [], reason: "Communication draft passed safety checks." }, timestamp: "2026-05-04T15:20:00Z", providerMode: "mock/dry_run", idempotencyKey: "idem-dryrun-002" },
+  { id: "dryrun-003", draftId: "comm-draft-005", recipient: "seller-phone-placeholder-lead-007", subjectBodyHash: "hash-sms-blocked", sourceRecordType: "seller_interaction", sourceRecordId: "seller-interaction-005", riskStatus: "blocked", safetyResult: { allowed: false, riskFlags: ["fake_buyer_claim", "missing_sms_opt_out", "pressure_language"], reason: "Communication draft blocked by safety checks." }, timestamp: "2026-05-04T15:25:00Z", providerMode: "mock/dry_run", idempotencyKey: "idem-dryrun-003" },
+  { id: "dryrun-004", draftId: "comm-draft-006", recipient: "priya@example.test", subjectBodyHash: "outdated-dry-run-hash", sourceRecordType: "buyer_interest", sourceRecordId: "interest-002", riskStatus: "stale", safetyResult: { allowed: true, riskFlags: [], reason: "Communication draft passed safety checks." }, timestamp: "2026-05-04T15:30:00Z", providerMode: "mock/dry_run", idempotencyKey: "idem-dryrun-004" }
+];
+
+export const communicationApprovals: CommunicationApproval[] = [
+  { id: "comm-approval-001", draftId: "comm-draft-002", dryRunReceiptId: "dryrun-002", ownerApprovalRecorded: true, approvalStatus: "approved", approvalNotes: "Owner approved one-off mock-send eligibility; global live flag remains disabled.", approvedBy: "Owner", draftHashAtApproval: "hash-buyer-safe" },
+  { id: "comm-approval-002", draftId: "comm-draft-006", dryRunReceiptId: "dryrun-004", ownerApprovalRecorded: true, approvalStatus: "stale_after_draft_change", approvalNotes: "Approval is stale because the draft changed after dry-run.", approvedBy: "Owner", draftHashAtApproval: "outdated-dry-run-hash" }
+];
+
+export const communicationSendAttempts: CommunicationSendAttempt[] = [
+  { id: "comm-attempt-001", draftId: "comm-draft-002", dryRunReceiptId: "dryrun-002", recipient: "jules@example.test", channel: "email", providerMode: "mock/dry_run", attemptStatus: "blocked", blockedReasons: ["global_live_flag_disabled", "communication_live_flag_disabled"], idempotencyKey: "idem-dryrun-002", providerCalled: false, mockSent: false, liveSendRequested: true, bulkSendDetected: false },
+  { id: "comm-attempt-002", draftId: "comm-draft-005", dryRunReceiptId: "dryrun-003", recipient: "seller-phone-placeholder-lead-007", channel: "sms", providerMode: "mock/dry_run", attemptStatus: "blocked", blockedReasons: ["safety_not_passed"], idempotencyKey: "idem-dryrun-003", providerCalled: false, mockSent: false, liveSendRequested: true, bulkSendDetected: false }
+];
+
 export const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -663,6 +760,18 @@ export function getTitleHandoffPacket(packetId: string) {
 
 export function getAssignmentReadinessRecord(recordId: string) {
   return assignmentReadinessRecords.find((record) => record.id === recordId);
+}
+
+export function getCommunicationDraft(draftId: string) {
+  return communicationDrafts.find((draft) => draft.id === draftId);
+}
+
+export function getCommunicationDryRun(receiptId: string) {
+  return communicationDryRunReceipts.find((receipt) => receipt.id === receiptId);
+}
+
+export function getCommunicationApproval(approvalId: string) {
+  return communicationApprovals.find((approval) => approval.id === approvalId);
 }
 
 export function sellerDrafts(lead: Lead, interaction?: SellerInteraction) {
@@ -766,4 +875,23 @@ export const blockedAssignmentReadiness = assignmentReadinessRecords.filter(
 );
 export const buyerPofGaps = assignmentReadinessRecords.filter(
   (record) => record.buyerPofStatus !== "verified"
+);
+export const communicationDraftsNeedingSafety = communicationDrafts.filter(
+  (draft) => !draft.safetyChecked
+);
+export const communicationDryRunsNeedingApproval = communicationDryRunReceipts.filter(
+  (receipt) =>
+    receipt.safetyResult.allowed &&
+    !communicationApprovals.some(
+      (approval) => approval.dryRunReceiptId === receipt.id && approval.ownerApprovalRecorded
+    )
+);
+export const blockedCommunicationAttempts = communicationSendAttempts.filter(
+  (attempt) => attempt.attemptStatus === "blocked"
+);
+export const sentOrMockSentCommunicationAttempts = communicationSendAttempts.filter(
+  (attempt) => ["sent", "mock_sent"].includes(attempt.attemptStatus)
+);
+export const communicationRiskQueue = communicationDrafts.filter(
+  (draft) => draft.riskStatus === "blocked" || draft.blockedReasons.length > 0
 );

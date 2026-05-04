@@ -13,6 +13,16 @@ from app.domain.buyer_portal import (
     update_publication_gate,
 )
 from app.domain.command_center import build_command_center
+from app.domain.communications import (
+    approval_gate,
+    communication_dashboard,
+    communication_hash,
+    generate_dry_run_receipt,
+    latest_approval_for,
+    send_with_gate,
+    update_draft_safety,
+    validate_communication_safety,
+)
 from app.domain.compliance import compliance_checklists
 from app.domain.contract_control import (
     assignment_readiness_gate,
@@ -41,6 +51,10 @@ from app.models import (
     BuyerInterest,
     BuyerMatch,
     ComplianceRecord,
+    CommunicationApproval,
+    CommunicationDraft,
+    CommunicationDryRunReceipt,
+    CommunicationSendAttempt,
     ContractControl,
     Deal,
     Division,
@@ -74,6 +88,12 @@ class SellerLanguageRequest(BaseModel):
 
 class ContractLanguageRequest(BaseModel):
     content: str
+
+
+class CommunicationSendRequest(BaseModel):
+    dry_run_receipt_id: str | None = None
+    approval_id: str | None = None
+    recipients: list[str] | None = None
 
 
 def all_records(session: Session, model) -> list[dict]:
@@ -516,6 +536,155 @@ def assignment_readiness(session: Session = Depends(get_session)) -> list[dict[s
         )
     session.commit()
     return response
+
+
+@router.get("/communications")
+def communications_dashboard(session: Session = Depends(get_session)) -> dict[str, object]:
+    return communication_dashboard(session)
+
+
+@router.get("/communications/dry-runs")
+def communication_dry_runs(session: Session = Depends(get_session)) -> list[dict]:
+    return all_records(session, CommunicationDryRunReceipt)
+
+
+@router.get("/communications/attempts")
+def communication_attempts(session: Session = Depends(get_session)) -> list[dict]:
+    return all_records(session, CommunicationSendAttempt)
+
+
+@router.get("/communications/approvals")
+def communication_approvals(session: Session = Depends(get_session)) -> list[dict]:
+    return all_records(session, CommunicationApproval)
+
+
+@router.get("/communications/{draft_id}")
+def communication_draft_detail(
+    draft_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    draft = session.get(CommunicationDraft, draft_id)
+    if draft is None:
+        raise HTTPException(status_code=404, detail="Communication draft not found")
+    receipt = (
+        session.get(CommunicationDryRunReceipt, draft.last_dry_run_receipt_id)
+        if draft.last_dry_run_receipt_id
+        else None
+    )
+    approval = latest_approval_for(session, draft, receipt)
+    return {
+        **model_to_dict(draft),
+        "safety_preview": validate_communication_safety(draft),
+        "latest_dry_run": model_to_dict(receipt) if receipt else None,
+        "latest_gate": approval_gate(session, draft, receipt, approval),
+        "bulk_send_allowed": False,
+        "campaign_allowed": False,
+        "auto_followup_allowed": False,
+        "buyer_blast_allowed": False,
+        "title_submission_allowed": False,
+    }
+
+
+@router.post("/communications/{draft_id}/safety-check")
+def communication_safety_check(
+    draft_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    draft = session.get(CommunicationDraft, draft_id)
+    if draft is None:
+        raise HTTPException(status_code=404, detail="Communication draft not found")
+    result = update_draft_safety(draft)
+    session.commit()
+    return {**model_to_dict(draft), "safety_result": result}
+
+
+@router.post("/communications/{draft_id}/dry-run")
+def communication_dry_run(
+    draft_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    draft = session.get(CommunicationDraft, draft_id)
+    if draft is None:
+        raise HTTPException(status_code=404, detail="Communication draft not found")
+    receipt = generate_dry_run_receipt(session, draft)
+    session.commit()
+    session.refresh(receipt)
+    return {
+        **model_to_dict(receipt),
+        "provider_call_made": False,
+        "provider_mode": receipt.provider_mode,
+        "draft_hash": communication_hash(draft.subject, draft.draft_body),
+    }
+
+
+@router.post("/communications/{draft_id}/approvals")
+def communication_owner_approval(
+    draft_id: str,
+    dry_run_receipt_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    draft = session.get(CommunicationDraft, draft_id)
+    receipt = session.get(CommunicationDryRunReceipt, dry_run_receipt_id)
+    if draft is None or receipt is None or receipt.draft_id != draft.id:
+        raise HTTPException(status_code=404, detail="Draft or dry-run receipt not found")
+    if receipt.safety_result.get("allowed") is not True:
+        raise HTTPException(
+            status_code=400,
+            detail={"allowed": False, "reason": "Safety must pass before owner approval."},
+        )
+    if communication_hash(draft.subject, draft.draft_body) != receipt.subject_body_hash:
+        raise HTTPException(
+            status_code=400,
+            detail={"allowed": False, "reason": "Draft changed after dry-run."},
+        )
+    count = session.query(CommunicationApproval).count() + 1
+    approval = CommunicationApproval(
+        id=f"comm-approval-{count:03d}",
+        draft_id=draft.id,
+        dry_run_receipt_id=receipt.id,
+        owner_approval_recorded=True,
+        approval_status="approved",
+        approval_notes="Owner approval recorded for one draft, one recipient, and one source record.",
+        approved_by="Owner",
+        draft_hash_at_approval=receipt.subject_body_hash,
+    )
+    draft.owner_approval_recorded = True
+    draft.approved_dry_run_receipt_id = receipt.id
+    session.add(approval)
+    session.commit()
+    session.refresh(approval)
+    return model_to_dict(approval)
+
+
+@router.post("/communications/{draft_id}/send")
+def communication_send(
+    draft_id: str,
+    payload: CommunicationSendRequest | None = None,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    draft = session.get(CommunicationDraft, draft_id)
+    if draft is None:
+        raise HTTPException(status_code=404, detail="Communication draft not found")
+    payload = payload or CommunicationSendRequest()
+    receipt_id = payload.dry_run_receipt_id or draft.last_dry_run_receipt_id
+    receipt = session.get(CommunicationDryRunReceipt, receipt_id) if receipt_id else None
+    approval = (
+        session.get(CommunicationApproval, payload.approval_id)
+        if payload.approval_id
+        else latest_approval_for(session, draft, receipt)
+    )
+    recipient_count = len(payload.recipients) if payload.recipients is not None else 1
+    attempt, gate = send_with_gate(session, draft, receipt, approval, recipient_count)
+    session.commit()
+    body = {
+        **model_to_dict(attempt),
+        "gate": gate,
+        "provider_called": attempt.provider_called,
+        "mock_sent": attempt.mock_sent,
+    }
+    if not gate["can_send"]:
+        raise HTTPException(status_code=400, detail=body)
+    return body
 
 
 @router.get("/buyers")

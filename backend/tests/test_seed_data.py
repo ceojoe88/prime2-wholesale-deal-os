@@ -19,6 +19,10 @@ def test_seed_payload_counts_and_hot_deals():
     assert len(payload["contract_controls"]) == 5
     assert len(payload["title_handoff_packets"]) == 3
     assert len(payload["assignment_readiness_records"]) == 4
+    assert len(payload["communication_drafts"]) == 6
+    assert len(payload["communication_dry_run_receipts"]) == 4
+    assert len(payload["communication_approvals"]) == 2
+    assert len(payload["communication_send_attempts"]) == 2
 
 
 def test_seeded_agents_are_analysis_only():

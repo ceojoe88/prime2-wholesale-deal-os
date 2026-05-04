@@ -18,6 +18,7 @@ export const dashboardRoutes = [
   { href: "/dashboard/contract-control", label: "Contract Control", icon: "FileCheck2" },
   { href: "/dashboard/title-handoff", label: "Title Handoff", icon: "ClipboardList" },
   { href: "/dashboard/assignment-readiness", label: "Assignment Readiness", icon: "ShieldCheck" },
+  { href: "/dashboard/communications", label: "Communications", icon: "Command" },
   { href: "/dashboard/buyers", label: "Cash Buyers", icon: "UsersRound" },
   { href: "/dashboard/buyer-matches", label: "Buyer Matches", icon: "Handshake" },
   { href: "/dashboard/compliance", label: "Compliance", icon: "ShieldCheck" },

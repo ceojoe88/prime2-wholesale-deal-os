@@ -12,6 +12,11 @@ import {
   complianceRecords,
   assignmentReadyRecords,
   buyerPofGaps,
+  blockedCommunicationAttempts,
+  communicationDrafts,
+  communicationDraftsNeedingSafety,
+  communicationDryRunsNeedingApproval,
+  communicationRiskQueue,
   contractControls,
   contractPrepBlocked,
   contractPrepReady,
@@ -26,6 +31,7 @@ import {
   projectedAssignmentTotal,
   sellerInteractions,
   staleSellerFollowUps,
+  sentOrMockSentCommunicationAttempts,
   titleHandoffPackets,
   underContractDeals
 } from "@/lib/demo-data";
@@ -109,6 +115,19 @@ export default function DashboardPage() {
           <RecordCard title="Blocked contract prep" meta={`${contractPrepBlocked.length} records have gate reasons`} right={<Pill tone="red">blocked</Pill>} />
           <RecordCard title="Prep-ready controls" meta={`${contractPrepReady.length} records can be drafted`} right={<Pill tone="green">draft only</Pill>} />
           <RecordCard title="Buyer POF gaps" meta={`${buyerPofGaps.length} readiness records need POF review`} right={<Pill tone="gold">review</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V5 Communication Gate">
+        <div className="grid-three">
+          <RecordCard title="Drafts needing safety" meta={`${communicationDraftsNeedingSafety.length}/${communicationDrafts.length} drafts need safety review`} right={<Pill tone="gold">check</Pill>} />
+          <RecordCard title="Dry-runs needing approval" meta={`${communicationDryRunsNeedingApproval.length} receipts waiting for owner`} right={<Pill tone="gold">owner</Pill>} />
+          <RecordCard title="Blocked attempts" meta={`${blockedCommunicationAttempts.length} audited with no provider call`} right={<Pill tone="red">blocked</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Mock-sent attempts" meta={`${sentOrMockSentCommunicationAttempts.length} placeholder sends`} right={<Pill tone="green">mock</Pill>} />
+          <RecordCard title="Communication risk queue" meta={`${communicationRiskQueue.length} risky drafts`} right={<Pill tone="red">risk</Pill>} />
+          <RecordCard title="Global live flag" meta="Default off; no bulk campaigns or buyer blasts." right={<Pill tone="red">off</Pill>} />
         </div>
       </Section>
     </div>

@@ -11,6 +11,7 @@ from app.core.database import Base, SessionLocal, engine
 from app.models import (
     AssignmentReadinessRecord,
     BuyerDealPublication,
+    CommunicationDraft,
     ContractControl,
     Division,
     OfferPacket,
@@ -33,6 +34,7 @@ async def lifespan(app: FastAPI):
                 or session.query(ContractControl).count() == 0
                 or session.query(TitleHandoffPacket).count() == 0
                 or session.query(AssignmentReadinessRecord).count() == 0
+                or session.query(CommunicationDraft).count() == 0
             ):
                 seed_database(session)
     yield

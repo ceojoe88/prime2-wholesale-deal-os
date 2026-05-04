@@ -12,6 +12,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - V2 invite-gated buyer deal room with sanitized deal projections, internal publishing gates, and draft-only buyer interest records.
 - V3 seller acquisition command center with seller interaction records, draft-only follow-up engine, and offer packet prep gate.
 - V4 contract control and title handoff prep with contract-control records, title packet placeholders, assignment readiness gates, and no legal execution or title submission.
+- V5 controlled live communication gate with draft records, safety checks, dry-run receipts, owner approvals, mock provider adapters, idempotency, and blocked-attempt audit records.
 
 ## Safety Boundaries
 
@@ -24,6 +25,8 @@ V2 adds a controlled buyer portal, but the private operator system remains the s
 V3 adds seller acquisition control without live outreach. Seller scripts, SMS, email, objection responses, offer explanations, and follow-up sequences are draft-only. Offer packet prep is blocked until underwriting, buyer margin, target assignment fee, compliance guard, and owner approval are all recorded.
 
 V4 moves offer-ready opportunities into contract-control preparation only. Contract prep is blocked unless the offer packet is approved, seller accepted terms are recorded, ARV and repairs exist, buyer margin is protected, assignment spread is calculated, compliance passed, and owner approval is recorded. Title handoff packets are placeholders/checklists only; title-company submission, executable contract generation, live sending, legal advice, false assignment claims, hidden disclosure language, misrepresentation, and automatic contract status changes are blocked.
+
+V5 allows only narrow communication preparation and gated one-off attempts. Live communication is disabled by default by a global flag and per-draft live flag. A draft must pass safety checks, produce a dry-run receipt, remain unchanged after dry-run, have owner approval, have provider readiness, tie its recipient to the source record, and satisfy idempotency before any mock-send can occur. Bulk sends, campaigns, auto follow-up sequences, buyer blasts, title-company submission, legal advice, pressure, fake urgency, fake buyer claims, guaranteed close claims, unsupported claims, and hidden/deceptive assignment language are blocked.
 
 ## Backend
 
@@ -58,6 +61,15 @@ Useful endpoints:
 - `GET /api/title-handoff/{packet_id}`
 - `POST /api/title-handoff/{packet_id}/submit` returns a blocked response in V4
 - `GET /api/assignment-readiness`
+- `GET /api/communications`
+- `GET /api/communications/{draft_id}`
+- `POST /api/communications/{draft_id}/safety-check`
+- `POST /api/communications/{draft_id}/dry-run`
+- `POST /api/communications/{draft_id}/approvals`
+- `POST /api/communications/{draft_id}/send`
+- `GET /api/communications/dry-runs`
+- `GET /api/communications/attempts`
+- `GET /api/communications/approvals`
 - `GET /api/buyer-portal/rules`
 - `GET /api/buyer-portal/deals` with `X-Buyer-Invite: demo-buyer-invite`
 - `GET /api/buyer-portal/deals/{deal_id}` with `X-Buyer-Invite: demo-buyer-invite`
@@ -103,6 +115,13 @@ Contract/title V4 routes:
 - [http://localhost:3000/dashboard/contract-control](http://localhost:3000/dashboard/contract-control)
 - [http://localhost:3000/dashboard/title-handoff](http://localhost:3000/dashboard/title-handoff)
 - [http://localhost:3000/dashboard/assignment-readiness](http://localhost:3000/dashboard/assignment-readiness)
+
+Communication V5 routes:
+
+- [http://localhost:3000/dashboard/communications](http://localhost:3000/dashboard/communications)
+- [http://localhost:3000/dashboard/communications/dry-runs](http://localhost:3000/dashboard/communications/dry-runs)
+- [http://localhost:3000/dashboard/communications/attempts](http://localhost:3000/dashboard/communications/attempts)
+- [http://localhost:3000/dashboard/communications/approvals](http://localhost:3000/dashboard/communications/approvals)
 
 ## Validation
 
