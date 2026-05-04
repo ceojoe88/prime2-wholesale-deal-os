@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
-import { leads } from "@/lib/demo-data";
+import { getSellerInteraction, leads } from "@/lib/demo-data";
 
 export default function SellerFollowupsPage() {
   const followupLeads = leads.filter((lead) => ["follow_up", "offer_sent", "negotiating", "contacted"].includes(lead.stage));
@@ -18,13 +18,16 @@ export default function SellerFollowupsPage() {
             key={lead.id}
             title={lead.sellerName}
             meta={`${lead.stage} / ${lead.sourceCategory} / ${lead.zipCode}`}
-            right={<Pill tone={lead.opportunityScore >= 75 ? "green" : "gold"}>{lead.opportunityScore}</Pill>}
+            right={<Pill tone={(getSellerInteraction(lead.id)?.sellerTemperatureScore ?? lead.opportunityScore) >= 80 ? "red" : "gold"}>{getSellerInteraction(lead.id)?.sellerTemperatureScore ?? lead.opportunityScore}</Pill>}
           >
             <div className="pill-row">
+              <Pill>{getSellerInteraction(lead.id)?.followUpUrgency ?? "normal"}</Pill>
+              <Pill>{getSellerInteraction(lead.id)?.objectionStatus ?? "objection unknown"}</Pill>
               <Pill>follow-up plan</Pill>
               <Pill>offer explanation</Pill>
               <Pill tone="red">no live outreach</Pill>
             </div>
+            <span className="record-meta">{getSellerInteraction(lead.id)?.nextBestSellerAction ?? lead.nextBestAction}</span>
           </RecordCard>
         ))}
       </div>

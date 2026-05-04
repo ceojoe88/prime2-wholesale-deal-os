@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
-from app.models import BuyerDealPublication, Division
+from app.models import BuyerDealPublication, Division, OfferPacket, SellerInteraction
 from app.seed_data import seed_database
 
 
@@ -17,7 +17,12 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     if settings.auto_seed:
         with SessionLocal() as session:
-            if session.query(Division).count() == 0 or session.query(BuyerDealPublication).count() == 0:
+            if (
+                session.query(Division).count() == 0
+                or session.query(BuyerDealPublication).count() == 0
+                or session.query(SellerInteraction).count() == 0
+                or session.query(OfferPacket).count() == 0
+            ):
                 seed_database(session)
     yield
 

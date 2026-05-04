@@ -9,13 +9,16 @@ import {
   Clock3,
   Command,
   Crown,
+  FileCheck2,
   Handshake,
   LayoutDashboard,
   ListChecks,
   LockKeyhole,
   MapPinned,
   Network,
+  PhoneCall,
   ShieldCheck,
+  TimerReset,
   UsersRound
 } from "lucide-react";
 import Link from "next/link";
@@ -32,13 +35,16 @@ const icons = {
   Clock3,
   Command,
   Crown,
+  FileCheck2,
   Handshake,
   LayoutDashboard,
   ListChecks,
   LockKeyhole,
   MapPinned,
   Network,
+  PhoneCall,
   ShieldCheck,
+  TimerReset,
   UsersRound
 };
 

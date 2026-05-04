@@ -8,6 +8,8 @@ Wholesale Prime is the executive overseer. It can recommend, route, summarize, e
 
 V2 adds a controlled buyer portal. The private operator system remains the source of truth, and the buyer portal is only an invite-gated, sanitized deal-room projection. There is still no public signup, no seller portal, no live buyer blasts, no payments, no legal advice, and no contract execution.
 
+V3 adds seller acquisition and follow-up control. It turns leads into controlled seller opportunities with interaction records and draft preparation only. It still does not send SMS, email, calls, or offers, and it cannot execute contracts.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -15,6 +17,7 @@ V2 adds a controlled buyer portal. The private operator system remains the sourc
 - `app/domain/profit_control.py`: MAO, max buyer purchase price, max seller offer, offer options, assignment spread, reasonableness scoring, and buyer margin flags.
 - `app/domain/buyer_matching.py`: draft-only buyer match scoring by area, price, property type, reliability, closing speed, and proof of funds.
 - `app/domain/buyer_portal.py`: buyer visibility publishing gate, sanitized deal-room projection, forbidden-field leak guard, and V2 portal policy.
+- `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/rules.py`: private-mode rules and v1 action validation.
 - `app/domain/compliance.py`: purchase, assignment, title, seller disclosure, buyer disclosure, and state-review checklists.
 - `app/domain/imports.py`: CSV-ready lead import preview with accepted source categories.
@@ -44,6 +47,8 @@ erDiagram
   DEAL ||--o| BUYER_DEAL_PUBLICATION : projects
   DEAL ||--o{ BUYER_INTEREST : receives
   BUYER ||--o{ BUYER_INTEREST : records
+  LEAD ||--o{ SELLER_INTERACTION : captures
+  DEAL ||--o{ OFFER_PACKET : gates
 ```
 
 ## V2 Buyer Portal
@@ -74,6 +79,45 @@ A deal can be buyer-visible only when all of these are true:
 - Buyer margin is not weak
 
 The internal dashboard shows buyer-visible deals, buyer interest queue, proof-of-funds needs, owner-review offer intents, and deals blocked from buyer portal with reasons.
+
+## V3 Seller Acquisition
+
+Internal routes:
+
+- `/dashboard/seller-acquisition`
+- `/dashboard/seller-acquisition/[leadId]`
+- `/dashboard/follow-up-control`
+- `/dashboard/offer-packets`
+- `/dashboard/offer-packets/[packetId]`
+
+Seller interaction records capture call notes, motivation answers, asking price, timeline, property condition, pain points, objections, next follow-up date, seller temperature score, objection status, follow-up urgency, and next best seller action.
+
+The follow-up engine prepares only drafts:
+
+- Call script draft
+- SMS draft
+- Email draft
+- Objection response draft
+- Offer explanation draft
+- Follow-up sequence draft
+
+## Offer Packet Prep Gate
+
+Offer packet prep is allowed only when all of these are true:
+
+- ARV exists
+- Repair estimate exists
+- Max seller offer is calculated
+- Buyer margin is protected
+- Target assignment fee is checked
+- Compliance guard passed
+- Owner approval is recorded
+
+The gate returns blocked reasons for missing underwriting, weak buyer margin, target assignment fee failure, missing compliance, or missing owner approval. Even when allowed, the packet remains draft-only and no real-world action is taken.
+
+## Seller Safety Boundary
+
+Blocked seller acquisition language and actions include pressure language, fake buyer claims, fake urgency, guaranteed closing claims, legal advice, misleading assignment language, live SMS, live email, and live calls.
 
 ## Frontend Routes
 
@@ -115,6 +159,8 @@ Blocked in v1:
 - Public signup and all portals
 
 V2 exception: the controlled buyer portal is allowed only as an invite-gated sanitized deal room. Seller and client portals remain blocked.
+
+V3 exception: seller acquisition drafting is allowed only inside the private command center. Live seller outreach remains blocked.
 
 Allowed:
 

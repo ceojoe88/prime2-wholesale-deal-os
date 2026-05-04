@@ -149,6 +149,42 @@ export type BuyerInterest = {
   contractExecutionAllowed: false;
 };
 
+export type SellerInteraction = {
+  id: string;
+  leadId: string;
+  callNotes: string;
+  motivationAnswers: Record<string, string>;
+  askingPrice: number | null;
+  timeline: string;
+  propertyCondition: string;
+  painPoints: string[];
+  objections: string[];
+  nextFollowUpDate: string;
+  sellerTemperatureScore: number;
+  objectionStatus: string;
+  followUpUrgency: "hot" | "high" | "normal";
+  nextBestSellerAction: string;
+  draftOnly: true;
+  liveOutreachAllowed: false;
+};
+
+export type OfferPacket = {
+  id: string;
+  dealId: string;
+  packetStatus: string;
+  ownerApprovalRecorded: boolean;
+  complianceGuardPassed: boolean;
+  buyerMarginProtected: boolean;
+  targetAssignmentFeeChecked: boolean;
+  underwritingComplete: boolean;
+  packetPrepAllowed: boolean;
+  blockedReasons: string[];
+  approvalStatus: string;
+  draftSummary: string;
+  draftOnly: true;
+  realWorldActionTaken: false;
+};
+
 export const divisions: Division[] = [
   {
     id: "market-intelligence",
@@ -451,6 +487,23 @@ export const buyerInterests: BuyerInterest[] = [
   { id: "interest-003", buyerId: "buyer-003", dealId: "deal-003", interestStatus: "proof_of_funds_needed", intendedOfferAmount: 193000, proofOfFundsStatus: "needs_refresh", notes: "POF refresh required; buyer interest is non-binding.", timestamp: "2026-05-04T14:11:00Z", draftOnly: true, contractExecutionAllowed: false }
 ];
 
+export const sellerInteractions: SellerInteraction[] = [
+  { id: "seller-interaction-001", leadId: "lead-001", callNotes: "Seller wants a clean as-is option and asked how repairs affect price.", motivationAnswers: { whySell: "Vacant property is hard to maintain", timeline: "Would like clarity this week", decisionMaker: "Seller is primary decision maker" }, askingPrice: 146000, timeline: "7-14 days", propertyCondition: "Deferred exterior maintenance, dated kitchen, HVAC age unknown.", painPoints: ["vacancy", "maintenance", "uncertain repairs"], objections: ["wants to understand offer math"], nextFollowUpDate: "2026-05-03", sellerTemperatureScore: 91, objectionStatus: "pricing_needs_explanation", followUpUrgency: "hot", nextBestSellerAction: "Prepare draft offer explanation after owner review.", draftOnly: true, liveOutreachAllowed: false },
+  { id: "seller-interaction-002", leadId: "lead-002", callNotes: "Seller is open to assignment process after role is explained clearly.", motivationAnswers: { whySell: "Tax pressure and property fatigue", timeline: "Fast but wants clear next steps", decisionMaker: "Seller plus spouse" }, askingPrice: 118000, timeline: "under 10 days", propertyCondition: "Moderate repairs, roof age needs confirmation.", painPoints: ["tax pressure", "time", "repair uncertainty"], objections: ["needs role disclosure in plain language"], nextFollowUpDate: "2026-05-04", sellerTemperatureScore: 94, objectionStatus: "role_disclosure_needed", followUpUrgency: "hot", nextBestSellerAction: "Draft assignment role explanation for compliance review.", draftOnly: true, liveOutreachAllowed: false },
+  { id: "seller-interaction-003", leadId: "lead-003", callNotes: "Seller has a higher price expectation but will review repair-backed logic.", motivationAnswers: { whySell: "Absentee ownership burden", timeline: "30 days", decisionMaker: "Seller only" }, askingPrice: 188000, timeline: "30 days", propertyCondition: "Cosmetic updates plus possible plumbing work.", painPoints: ["distance", "tenant turnover", "pricing uncertainty"], objections: ["price expectation"], nextFollowUpDate: "2026-05-02", sellerTemperatureScore: 79, objectionStatus: "price_gap", followUpUrgency: "high", nextBestSellerAction: "Draft objection response with no pressure.", draftOnly: true, liveOutreachAllowed: false },
+  { id: "seller-interaction-004", leadId: "lead-005", callNotes: "Inherited property seller needs authority and title path clarified before offer.", motivationAnswers: { whySell: "Family wants to settle property decision", timeline: "2-4 weeks", decisionMaker: "Multiple heirs possible" }, askingPrice: 231000, timeline: "2-4 weeks", propertyCondition: "Large repair scope, occupancy status needs confirmation.", painPoints: ["inheritance complexity", "repair scope", "family coordination"], objections: ["authority questions"], nextFollowUpDate: "2026-05-06", sellerTemperatureScore: 82, objectionStatus: "authority_review", followUpUrgency: "high", nextBestSellerAction: "Escalate to compliance before offer packet.", draftOnly: true, liveOutreachAllowed: false },
+  { id: "seller-interaction-005", leadId: "lead-007", callNotes: "Seller is stressed by timeline and needs a calm follow-up.", motivationAnswers: { whySell: "Payment pressure", timeline: "urgent", decisionMaker: "Seller only" }, askingPrice: 99000, timeline: "urgent but unverified", propertyCondition: "Small house, repairs likely moderate.", painPoints: ["payment pressure", "uncertainty", "time"], objections: ["needs closing confidence"], nextFollowUpDate: "2026-05-01", sellerTemperatureScore: 88, objectionStatus: "closing_confidence", followUpUrgency: "hot", nextBestSellerAction: "Draft calm follow-up; avoid urgency or guarantees.", draftOnly: true, liveOutreachAllowed: false },
+  { id: "seller-interaction-006", leadId: "lead-008", callNotes: "Probate path and disclosure review must be clarified before assignment prep.", motivationAnswers: { whySell: "Estate administration", timeline: "depends on title", decisionMaker: "Representative authority needs confirmation" }, askingPrice: 171000, timeline: "title-dependent", propertyCondition: "Repairs likely heavy but ARV supports continued review.", painPoints: ["probate", "title", "repair scope"], objections: ["authority and paperwork"], nextFollowUpDate: "2026-05-05", sellerTemperatureScore: 76, objectionStatus: "compliance_review", followUpUrgency: "normal", nextBestSellerAction: "Hold until compliance review is complete.", draftOnly: true, liveOutreachAllowed: false }
+];
+
+export const offerPackets: OfferPacket[] = [
+  { id: "packet-001", dealId: "deal-001", packetStatus: "draft_ready", ownerApprovalRecorded: true, complianceGuardPassed: true, buyerMarginProtected: true, targetAssignmentFeeChecked: true, underwritingComplete: true, packetPrepAllowed: true, blockedReasons: [], approvalStatus: "owner_approved_draft_ready", draftSummary: "Draft offer packet may be prepared for owner review only.", draftOnly: true, realWorldActionTaken: false },
+  { id: "packet-002", dealId: "deal-003", packetStatus: "blocked", ownerApprovalRecorded: false, complianceGuardPassed: true, buyerMarginProtected: true, targetAssignmentFeeChecked: true, underwritingComplete: true, packetPrepAllowed: false, blockedReasons: ["owner_approval_not_recorded"], approvalStatus: "owner_review_required", draftSummary: "Owner approval needed before offer packet prep.", draftOnly: true, realWorldActionTaken: false },
+  { id: "packet-003", dealId: "deal-005", packetStatus: "blocked", ownerApprovalRecorded: true, complianceGuardPassed: false, buyerMarginProtected: true, targetAssignmentFeeChecked: true, underwritingComplete: true, packetPrepAllowed: false, blockedReasons: ["compliance_guard_not_passed"], approvalStatus: "blocked", draftSummary: "Inherited-property authority review blocks offer packet prep.", draftOnly: true, realWorldActionTaken: false },
+  { id: "packet-004", dealId: "deal-006", packetStatus: "blocked", ownerApprovalRecorded: true, complianceGuardPassed: true, buyerMarginProtected: false, targetAssignmentFeeChecked: false, underwritingComplete: true, packetPrepAllowed: false, blockedReasons: ["buyer_margin_not_protected", "target_assignment_fee_not_checked"], approvalStatus: "blocked", draftSummary: "Buyer margin and target assignment fee fail the gate.", draftOnly: true, realWorldActionTaken: false },
+  { id: "packet-005", dealId: "deal-007", packetStatus: "blocked", ownerApprovalRecorded: true, complianceGuardPassed: true, buyerMarginProtected: true, targetAssignmentFeeChecked: false, underwritingComplete: true, packetPrepAllowed: false, blockedReasons: ["target_assignment_fee_not_checked"], approvalStatus: "blocked", draftSummary: "Projected assignment fee is below target.", draftOnly: true, realWorldActionTaken: false }
+];
+
 export const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -483,6 +536,31 @@ export function getAgent(id: string) {
 
 export function getBuyerPublication(dealId: string) {
   return buyerPublications.find((publication) => publication.dealId === dealId);
+}
+
+export function getSellerInteraction(leadId: string) {
+  return sellerInteractions.find((interaction) => interaction.leadId === leadId);
+}
+
+export function getOfferPacket(packetId: string) {
+  return offerPackets.find((packet) => packet.id === packetId);
+}
+
+export function getOfferPacketByDeal(dealId: string) {
+  return offerPackets.find((packet) => packet.dealId === dealId);
+}
+
+export function sellerDrafts(lead: Lead, interaction?: SellerInteraction) {
+  return {
+    callScriptDraft: `Confirm the ${lead.city}, ${lead.state} property details, ask what changed for the seller, listen for timeline and condition, then explain that any offer needs owner review.`,
+    smsDraft: `Hi ${lead.sellerName}, this is a draft note for owner review. I wanted to follow up on the property and see if it still makes sense to discuss a possible as-is offer.`,
+    emailDraft: `Subject: Property follow-up\n\nThis is a draft for owner review. Before any offer is discussed, we would verify condition, timeline, and repair assumptions.`,
+    objectionResponseDraft: "Acknowledge the concern, avoid pressure, and explain that price depends on verified ARV, repairs, costs, and buyer margin.",
+    offerExplanationDraft: `Current asking reference is ${formatCurrency(interaction?.askingPrice ?? lead.askingPrice)}. Any offer packet must pass underwriting, compliance, and owner approval gates.`,
+    followUpSequenceDraft: ["Owner reviews notes", "Draft check-in on condition and timeline", "Draft offer-basis explanation", "Draft close-the-loop note"],
+    draftOnly: true,
+    liveOutreachAllowed: false
+  };
 }
 
 export function buyerPortalBlockReasons(publication: BuyerPublication) {
@@ -550,3 +628,16 @@ export const buyerPortalBlockedDeals = buyerPublications
     dealId: publication.dealId,
     blockedReasons: buyerPortalBlockReasons(publication)
   }));
+export const hotSellerLeads = leads.filter((lead) => {
+  const interaction = getSellerInteraction(lead.id);
+  return lead.opportunityScore >= 80 || (interaction?.sellerTemperatureScore ?? 0) >= 80;
+});
+export const staleSellerFollowUps = sellerInteractions.filter(
+  (interaction) => interaction.nextFollowUpDate < "2026-05-04"
+);
+export const offerNeededLeads = leads.filter((lead) => lead.stage === "offer_needed");
+export const negotiationStageLeads = leads.filter((lead) => lead.stage === "negotiating");
+export const underContractCandidates = leads.filter(
+  (lead) => ["offer_sent", "negotiating"].includes(lead.stage) && lead.opportunityScore >= 72
+);
+export const offerReadyPackets = offerPackets.filter((packet) => packet.packetPrepAllowed);

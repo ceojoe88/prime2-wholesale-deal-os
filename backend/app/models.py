@@ -80,6 +80,7 @@ class Lead(TimestampMixin, Base):
     next_best_action: Mapped[str] = mapped_column(Text, default="")
 
     deals: Mapped[list["Deal"]] = relationship(back_populates="lead")
+    seller_interactions: Mapped[list["SellerInteraction"]] = relationship(back_populates="lead")
 
 
 class Deal(TimestampMixin, Base):
@@ -122,6 +123,7 @@ class Deal(TimestampMixin, Base):
         back_populates="deal", uselist=False
     )
     buyer_interests: Mapped[list["BuyerInterest"]] = relationship(back_populates="deal")
+    offer_packets: Mapped[list["OfferPacket"]] = relationship(back_populates="deal")
 
 
 class Buyer(TimestampMixin, Base):
@@ -222,3 +224,47 @@ class BuyerInterest(TimestampMixin, Base):
 
     buyer: Mapped[Buyer] = relationship(back_populates="interests")
     deal: Mapped[Deal] = relationship(back_populates="buyer_interests")
+
+
+class SellerInteraction(TimestampMixin, Base):
+    __tablename__ = "seller_interactions"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("leads.id"), nullable=False)
+    call_notes: Mapped[str] = mapped_column(Text, default="")
+    motivation_answers: Mapped[dict[str, str]] = mapped_column(JSON, default=dict)
+    asking_price: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    timeline: Mapped[str] = mapped_column(String(120), default="")
+    property_condition: Mapped[str] = mapped_column(Text, default="")
+    pain_points: Mapped[list[str]] = mapped_column(JSON, default=list)
+    objections: Mapped[list[str]] = mapped_column(JSON, default=list)
+    next_follow_up_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    seller_temperature_score: Mapped[float] = mapped_column(Float, default=0)
+    objection_status: Mapped[str] = mapped_column(String(80), default="unknown")
+    follow_up_urgency: Mapped[str] = mapped_column(String(60), default="normal")
+    next_best_seller_action: Mapped[str] = mapped_column(Text, default="")
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    lead: Mapped[Lead] = relationship(back_populates="seller_interactions")
+
+
+class OfferPacket(TimestampMixin, Base):
+    __tablename__ = "offer_packets"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    packet_status: Mapped[str] = mapped_column(String(80), default="draft")
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    compliance_guard_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_margin_protected: Mapped[bool] = mapped_column(Boolean, default=False)
+    target_assignment_fee_checked: Mapped[bool] = mapped_column(Boolean, default=False)
+    underwriting_complete: Mapped[bool] = mapped_column(Boolean, default=False)
+    packet_prep_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    approval_status: Mapped[str] = mapped_column(String(80), default="owner_review_required")
+    draft_summary: Mapped[str] = mapped_column(Text, default="")
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    real_world_action_taken: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    deal: Mapped[Deal] = relationship(back_populates="offer_packets")

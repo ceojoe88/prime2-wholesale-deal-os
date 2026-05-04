@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from sqlalchemy.orm import Session
 
 from app.domain.buyer_matching import score_buyer_match
@@ -8,6 +10,7 @@ from app.domain.compliance import REQUIRED_CONFIRMATIONS
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import ANALYSIS_ONLY_ACTIONS, BLOCKED_ACTIONS
 from app.domain.scoring import calculate_lead_opportunity, deal_speed_score
+from app.domain.seller_acquisition import update_offer_packet_gate
 from app.models import (
     Agent,
     Buyer,
@@ -18,6 +21,8 @@ from app.models import (
     Deal,
     Division,
     Lead,
+    OfferPacket,
+    SellerInteraction,
 )
 
 
@@ -676,6 +681,228 @@ def build_interest_records() -> list[dict[str, object]]:
     ]
 
 
+def build_seller_interaction_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "seller-interaction-001",
+            "lead_id": "lead-001",
+            "call_notes": "Seller wants a clean as-is option and asked how repairs affect price.",
+            "motivation_answers": {
+                "why_sell": "Vacant property is becoming hard to maintain",
+                "timeline": "Would like clarity this week",
+                "decision_maker": "Seller is primary decision maker",
+            },
+            "asking_price": 146000,
+            "timeline": "7-14 days",
+            "property_condition": "Deferred exterior maintenance, kitchen dated, HVAC age unknown.",
+            "pain_points": ["vacancy", "maintenance", "uncertain repairs"],
+            "objections": ["wants to understand offer math"],
+            "next_follow_up_date": datetime(2026, 5, 3, tzinfo=UTC),
+            "seller_temperature_score": 91,
+            "objection_status": "pricing_needs_explanation",
+            "follow_up_urgency": "hot",
+            "next_best_seller_action": "Prepare draft offer explanation after owner review.",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "seller-interaction-002",
+            "lead_id": "lead-002",
+            "call_notes": "Seller is open to assignment process after role is explained clearly.",
+            "motivation_answers": {
+                "why_sell": "Tax pressure and property fatigue",
+                "timeline": "Fast but wants clear next steps",
+                "decision_maker": "Seller plus spouse",
+            },
+            "asking_price": 118000,
+            "timeline": "under 10 days",
+            "property_condition": "Moderate repairs, roof age needs confirmation.",
+            "pain_points": ["tax pressure", "time", "repair uncertainty"],
+            "objections": ["needs role disclosure in plain language"],
+            "next_follow_up_date": datetime(2026, 5, 4, tzinfo=UTC),
+            "seller_temperature_score": 94,
+            "objection_status": "role_disclosure_needed",
+            "follow_up_urgency": "hot",
+            "next_best_seller_action": "Compliance-safe assignment role explanation draft.",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "seller-interaction-003",
+            "lead_id": "lead-003",
+            "call_notes": "Seller has a higher price expectation but will review repair-backed logic.",
+            "motivation_answers": {
+                "why_sell": "Absentee ownership burden",
+                "timeline": "30 days",
+                "decision_maker": "Seller only",
+            },
+            "asking_price": 188000,
+            "timeline": "30 days",
+            "property_condition": "Cosmetic updates plus possible plumbing work.",
+            "pain_points": ["distance", "tenant turnover", "pricing uncertainty"],
+            "objections": ["price expectation"],
+            "next_follow_up_date": datetime(2026, 5, 2, tzinfo=UTC),
+            "seller_temperature_score": 79,
+            "objection_status": "price_gap",
+            "follow_up_urgency": "high",
+            "next_best_seller_action": "Draft objection response with no pressure.",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "seller-interaction-004",
+            "lead_id": "lead-005",
+            "call_notes": "Inherited property seller needs authority and title path clarified before offer.",
+            "motivation_answers": {
+                "why_sell": "Family wants to settle property decision",
+                "timeline": "2-4 weeks",
+                "decision_maker": "Multiple heirs possible",
+            },
+            "asking_price": 231000,
+            "timeline": "2-4 weeks",
+            "property_condition": "Large repair scope, occupancy status needs confirmation.",
+            "pain_points": ["inheritance complexity", "repair scope", "family coordination"],
+            "objections": ["authority questions"],
+            "next_follow_up_date": datetime(2026, 5, 6, tzinfo=UTC),
+            "seller_temperature_score": 82,
+            "objection_status": "authority_review",
+            "follow_up_urgency": "high",
+            "next_best_seller_action": "Escalate to compliance before offer packet.",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "seller-interaction-005",
+            "lead_id": "lead-007",
+            "call_notes": "Seller is stressed by timeline and needs a calm follow-up.",
+            "motivation_answers": {
+                "why_sell": "Payment pressure",
+                "timeline": "urgent",
+                "decision_maker": "Seller only",
+            },
+            "asking_price": 99000,
+            "timeline": "urgent but unverified",
+            "property_condition": "Small house, repairs likely moderate.",
+            "pain_points": ["payment pressure", "uncertainty", "time"],
+            "objections": ["needs confidence buyer can close"],
+            "next_follow_up_date": datetime(2026, 5, 1, tzinfo=UTC),
+            "seller_temperature_score": 88,
+            "objection_status": "closing_confidence",
+            "follow_up_urgency": "hot",
+            "next_best_seller_action": "Draft calm follow-up; avoid urgency or guarantees.",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "seller-interaction-006",
+            "lead_id": "lead-008",
+            "call_notes": "Probate path and disclosure review must be clarified before assignment prep.",
+            "motivation_answers": {
+                "why_sell": "Estate administration",
+                "timeline": "depends on title",
+                "decision_maker": "Representative authority needs confirmation",
+            },
+            "asking_price": 171000,
+            "timeline": "title-dependent",
+            "property_condition": "Repairs likely heavy but ARV supports continued review.",
+            "pain_points": ["probate", "title", "repair scope"],
+            "objections": ["authority and paperwork"],
+            "next_follow_up_date": datetime(2026, 5, 5, tzinfo=UTC),
+            "seller_temperature_score": 76,
+            "objection_status": "compliance_review",
+            "follow_up_urgency": "normal",
+            "next_best_seller_action": "Hold until compliance review is complete.",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+    ]
+
+
+def build_offer_packet_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "packet-001",
+            "deal_id": "deal-001",
+            "packet_status": "draft_ready",
+            "owner_approval_recorded": True,
+            "compliance_guard_passed": True,
+            "buyer_margin_protected": True,
+            "target_assignment_fee_checked": True,
+            "underwriting_complete": True,
+            "packet_prep_allowed": True,
+            "blocked_reasons": [],
+            "approval_status": "owner_approved_draft_ready",
+            "draft_summary": "Draft offer packet may be prepared for owner review only.",
+            "draft_only": True,
+            "real_world_action_taken": False,
+        },
+        {
+            "id": "packet-002",
+            "deal_id": "deal-003",
+            "packet_status": "blocked",
+            "owner_approval_recorded": False,
+            "compliance_guard_passed": True,
+            "buyer_margin_protected": True,
+            "target_assignment_fee_checked": True,
+            "underwriting_complete": True,
+            "packet_prep_allowed": False,
+            "blocked_reasons": ["owner_approval_not_recorded"],
+            "approval_status": "owner_review_required",
+            "draft_summary": "Owner approval needed before offer packet prep.",
+            "draft_only": True,
+            "real_world_action_taken": False,
+        },
+        {
+            "id": "packet-003",
+            "deal_id": "deal-005",
+            "packet_status": "blocked",
+            "owner_approval_recorded": True,
+            "compliance_guard_passed": False,
+            "buyer_margin_protected": True,
+            "target_assignment_fee_checked": True,
+            "underwriting_complete": True,
+            "packet_prep_allowed": False,
+            "blocked_reasons": ["compliance_guard_not_passed"],
+            "approval_status": "blocked",
+            "draft_summary": "Inherited-property authority review blocks offer packet prep.",
+            "draft_only": True,
+            "real_world_action_taken": False,
+        },
+        {
+            "id": "packet-004",
+            "deal_id": "deal-006",
+            "packet_status": "blocked",
+            "owner_approval_recorded": True,
+            "compliance_guard_passed": True,
+            "buyer_margin_protected": False,
+            "target_assignment_fee_checked": False,
+            "underwriting_complete": True,
+            "packet_prep_allowed": False,
+            "blocked_reasons": ["buyer_margin_not_protected", "target_assignment_fee_not_checked"],
+            "approval_status": "blocked",
+            "draft_summary": "Buyer margin and target assignment fee fail the gate.",
+            "draft_only": True,
+            "real_world_action_taken": False,
+        },
+        {
+            "id": "packet-005",
+            "deal_id": "deal-007",
+            "packet_status": "blocked",
+            "owner_approval_recorded": True,
+            "compliance_guard_passed": True,
+            "buyer_margin_protected": True,
+            "target_assignment_fee_checked": False,
+            "underwriting_complete": True,
+            "packet_prep_allowed": False,
+            "blocked_reasons": ["target_assignment_fee_not_checked"],
+            "approval_status": "blocked",
+            "draft_summary": "Projected assignment fee is below target.",
+            "draft_only": True,
+            "real_world_action_taken": False,
+        },
+    ]
+
+
 LEAD_LOOKUP = {lead["id"]: lead for lead in build_lead_records()}
 
 
@@ -695,12 +922,16 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "buyer_matches": build_match_records(deals_by_id, buyers_by_id),
         "buyer_deal_publications": build_publication_records(deals_by_id),
         "buyer_interests": build_interest_records(),
+        "seller_interactions": build_seller_interaction_records(),
+        "offer_packets": build_offer_packet_records(),
         "compliance_records": build_compliance_records(),
     }
 
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        OfferPacket,
+        SellerInteraction,
         BuyerInterest,
         BuyerDealPublication,
         BuyerMatch,
@@ -722,9 +953,13 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(BuyerMatch(**row) for row in payload["buyer_matches"])
     session.add_all(BuyerDealPublication(**row) for row in payload["buyer_deal_publications"])
     session.add_all(BuyerInterest(**row) for row in payload["buyer_interests"])
+    session.add_all(SellerInteraction(**row) for row in payload["seller_interactions"])
+    session.add_all(OfferPacket(**row) for row in payload["offer_packets"])
     session.add_all(ComplianceRecord(**row) for row in payload["compliance_records"])
     session.flush()
     for publication in session.query(BuyerDealPublication).all():
         update_publication_gate(publication, publication.deal)
+    for packet in session.query(OfferPacket).all():
+        update_offer_packet_gate(packet, packet.deal)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

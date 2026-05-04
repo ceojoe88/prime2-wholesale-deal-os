@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
-import { complianceRecords, deals, formatCurrency, hotDeals, leads } from "@/lib/demo-data";
+import { complianceRecords, deals, formatCurrency, hotDeals, hotSellerLeads, leads, offerPackets, sellerInteractions, staleSellerFollowUps } from "@/lib/demo-data";
 import { buyerInterests, buyerPortalBlockedDeals, buyerVisibleDeals } from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
@@ -23,6 +23,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Stale follow-ups" value={String(staleFollowUps.length)} detail="Draft-only touchpoint planning" />
         <MetricCard label="Risk blocks" value={String(complianceRecords.length)} detail="Owner plus compliance review" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Hot sellers" value={String(hotSellerLeads.length)} detail="Seller temp and motivation" />
+        <MetricCard label="Seller follow-ups" value={String(staleSellerFollowUps.length)} detail="Owner-reviewed drafts" />
+        <MetricCard label="Objections tracked" value={String(sellerInteractions.length)} detail="Discovery records" />
+        <MetricCard label="Offer packet blocks" value={String(offerPackets.filter((packet) => !packet.packetPrepAllowed).length)} detail="Approval status visible" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -34,6 +40,7 @@ export default function CommandCenterPage() {
               ["critical", "Review buyer portal intent queue", `${buyerInterests.length} buyer intents need owner handling`],
               ["high", "Route inherited-property review", "Deal-005 needs authority and title review"],
               ["high", "Fix buyer margin exception", "Deal-006 is blocked by spread and margin risk"],
+              ["high", "Review seller acquisition queue", `${hotSellerLeads.length} hot sellers need draft-only next steps`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

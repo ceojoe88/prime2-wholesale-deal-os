@@ -14,8 +14,13 @@ import {
   divisions,
   formatCurrency,
   hotDeals,
+  hotSellerLeads,
   leads,
+  offerReadyPackets,
+  offerPackets,
   projectedAssignmentTotal,
+  sellerInteractions,
+  staleSellerFollowUps,
   underContractDeals
 } from "@/lib/demo-data";
 
@@ -72,6 +77,19 @@ export default function DashboardPage() {
           <RecordCard title="Buyer-visible deals" meta={`${buyerVisibleDeals.length} sanitized deal rooms`} right={<Pill tone="green">visible</Pill>} />
           <RecordCard title="Buyer interest queue" meta={`${buyerInterests.length} draft intent records`} right={<Pill tone="gold">owner review</Pill>} />
           <RecordCard title="Blocked from portal" meta={`${buyerPortalBlockedDeals.length} deals have gate reasons`} right={<Pill tone="red">blocked</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V3 Seller Acquisition Gate">
+        <div className="grid-three">
+          <RecordCard title="Seller temperature" meta={`${hotSellerLeads.length} hot sellers`} right={<Pill tone="red">hot</Pill>} />
+          <RecordCard title="Follow-up urgency" meta={`${staleSellerFollowUps.length} stale or urgent follow-ups`} right={<Pill tone="gold">review</Pill>} />
+          <RecordCard title="Offer readiness" meta={`${offerReadyPackets.length}/${offerPackets.length} packets ready`} right={<Pill tone="green">gated</Pill>} />
+        </div>
+        <div className="record-list">
+          {sellerInteractions.slice(0, 3).map((interaction) => (
+            <RecordCard key={interaction.id} title={interaction.nextBestSellerAction} meta={`${interaction.objectionStatus} / ${interaction.followUpUrgency}`} right={<Pill>{interaction.sellerTemperatureScore}</Pill>} />
+          ))}
         </div>
       </Section>
     </div>

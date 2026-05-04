@@ -17,6 +17,13 @@ from app.domain.compliance import compliance_checklists
 from app.domain.imports import preview_lead_csv
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import system_rules, validate_action
+from app.domain.seller_acquisition import (
+    offer_packet_gate,
+    seller_draft_engine,
+    seller_pipeline_command_center,
+    update_offer_packet_gate,
+    validate_seller_language,
+)
 from app.models import (
     Agent,
     Buyer,
@@ -27,6 +34,8 @@ from app.models import (
     Deal,
     Division,
     Lead,
+    OfferPacket,
+    SellerInteraction,
 )
 from app.serializers import model_to_dict
 
@@ -45,6 +54,10 @@ class BuyerInterestRequest(BaseModel):
     buyer_id: str
     intended_offer_amount: int | None = None
     notes: str = ""
+
+
+class SellerLanguageRequest(BaseModel):
+    content: str
 
 
 def all_records(session: Session, model) -> list[dict]:
@@ -255,6 +268,114 @@ def seller_followups(session: Session = Depends(get_session)) -> list[dict[str, 
         }
         for lead in leads
     ]
+
+
+@router.get("/seller-acquisition")
+def seller_acquisition_center(session: Session = Depends(get_session)) -> dict[str, object]:
+    return seller_pipeline_command_center(session)
+
+
+@router.get("/seller-acquisition/{lead_id}")
+def seller_acquisition_detail(lead_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    lead = session.get(Lead, lead_id)
+    if lead is None:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    interaction = (
+        session.query(SellerInteraction)
+        .filter(SellerInteraction.lead_id == lead_id)
+        .order_by(SellerInteraction.created_at.desc())
+        .first()
+    )
+    drafts = seller_draft_engine(lead, interaction)
+    return {
+        "lead": model_to_dict(lead),
+        "seller_interaction": model_to_dict(interaction) if interaction else None,
+        "draft_follow_up_engine": drafts,
+        "next_best_seller_action": (
+            interaction.next_best_seller_action
+            if interaction
+            else "Capture seller interaction details before offer prep."
+        ),
+    }
+
+
+@router.post("/seller-acquisition/safety/validate")
+def seller_safety_validate(payload: SellerLanguageRequest) -> dict[str, object]:
+    return validate_seller_language(payload.content)
+
+
+@router.get("/follow-up-control")
+def follow_up_control(session: Session = Depends(get_session)) -> dict[str, object]:
+    interactions = session.query(SellerInteraction).all()
+    return {
+        "draft_only": True,
+        "live_outreach_allowed": False,
+        "stale_followups": [
+            model_to_dict(interaction)
+            for interaction in interactions
+            if interaction.follow_up_urgency in {"hot", "high"}
+        ],
+        "follow_up_sequences": [
+            {
+                "lead_id": interaction.lead_id,
+                "seller_temperature_score": interaction.seller_temperature_score,
+                "follow_up_urgency": interaction.follow_up_urgency,
+                "next_follow_up_date": interaction.next_follow_up_date.isoformat()
+                if interaction.next_follow_up_date
+                else None,
+                "sequence": seller_draft_engine(interaction.lead, interaction)["follow_up_sequence_draft"],
+                "draft_only": True,
+                "live_outreach_allowed": False,
+            }
+            for interaction in interactions
+        ],
+    }
+
+
+@router.get("/offer-packets")
+def offer_packets(session: Session = Depends(get_session)) -> list[dict[str, object]]:
+    packets = session.query(OfferPacket).all()
+    response = []
+    for packet in packets:
+        update_offer_packet_gate(packet, packet.deal)
+        response.append({**model_to_dict(packet), "gate": offer_packet_gate(packet.deal, packet)})
+    return response
+
+
+@router.get("/offer-packets/{packet_id}")
+def offer_packet_detail(packet_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    packet = session.get(OfferPacket, packet_id)
+    if packet is None:
+        raise HTTPException(status_code=404, detail="Offer packet not found")
+    update_offer_packet_gate(packet, packet.deal)
+    return {
+        **model_to_dict(packet),
+        "deal": model_to_dict(packet.deal),
+        "lead": model_to_dict(packet.deal.lead),
+        "gate": offer_packet_gate(packet.deal, packet),
+        "draft_only": True,
+        "real_world_action_taken": False,
+    }
+
+
+@router.post("/offer-packets/{packet_id}/prepare")
+def prepare_offer_packet(packet_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    packet = session.get(OfferPacket, packet_id)
+    if packet is None:
+        raise HTTPException(status_code=404, detail="Offer packet not found")
+    update_offer_packet_gate(packet, packet.deal)
+    gate = offer_packet_gate(packet.deal, packet)
+    if not gate["can_prepare"]:
+        raise HTTPException(status_code=400, detail=gate)
+    return {
+        "packet_id": packet.id,
+        "packet_status": packet.packet_status,
+        "draft_only": True,
+        "live_outreach_allowed": False,
+        "contract_execution_allowed": False,
+        "real_world_action_taken": False,
+        "gate": gate,
+    }
 
 
 @router.get("/buyers")

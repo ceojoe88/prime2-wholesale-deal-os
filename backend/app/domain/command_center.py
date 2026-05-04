@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.domain.buyer_portal import portal_publish_gate, update_publication_gate
+from app.domain.seller_acquisition import seller_pipeline_command_center
 from app.models import (
     BuyerDealPublication,
     BuyerInterest,
@@ -115,4 +116,5 @@ def build_command_center(session: Session) -> dict[str, object]:
             ),
             "deals_blocked_from_buyer_portal": blocked_buyer_deals,
         },
+        "seller_acquisition": seller_pipeline_command_center(session),
     }

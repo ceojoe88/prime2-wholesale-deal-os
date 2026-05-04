@@ -10,6 +10,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - Seed data for 9 divisions, 9 managers, 51 agents, 30 leads, 10 buyers, 8 deals, 5 hot 10K+ opportunities, 2 under-contract examples, 3 compliance-risk examples, and 3 buyer matches.
 - Tests for private mode, blocked live actions, legal-language guardrails, agent execution limits, owner approval gates, formulas, buyer matching, seed coverage, API routes, and dashboard route coverage.
 - V2 invite-gated buyer deal room with sanitized deal projections, internal publishing gates, and draft-only buyer interest records.
+- V3 seller acquisition command center with seller interaction records, draft-only follow-up engine, and offer packet prep gate.
 
 ## Safety Boundaries
 
@@ -18,6 +19,8 @@ The system only analyzes, scores, drafts, recommends, escalates, flags risk, and
 All real-world action requires owner approval. Assignment packet preparation also requires compliance review.
 
 V2 adds a controlled buyer portal, but the private operator system remains the source of truth. The portal is invite-gated, has no public signup, shows sanitized deal-room data only, records buyer interest as non-binding draft intent, and still blocks blasts, payments, legal advice, and contract execution.
+
+V3 adds seller acquisition control without live outreach. Seller scripts, SMS, email, objection responses, offer explanations, and follow-up sequences are draft-only. Offer packet prep is blocked until underwriting, buyer margin, target assignment fee, compliance guard, and owner approval are all recorded.
 
 ## Backend
 
@@ -37,6 +40,13 @@ Useful endpoints:
 - `GET /api/leads`
 - `GET /api/deals`
 - `GET /api/profit-control`
+- `GET /api/seller-acquisition`
+- `GET /api/seller-acquisition/{lead_id}`
+- `POST /api/seller-acquisition/safety/validate`
+- `GET /api/follow-up-control`
+- `GET /api/offer-packets`
+- `GET /api/offer-packets/{packet_id}`
+- `POST /api/offer-packets/{packet_id}/prepare`
 - `GET /api/buyer-portal/rules`
 - `GET /api/buyer-portal/deals` with `X-Buyer-Invite: demo-buyer-invite`
 - `GET /api/buyer-portal/deals/{deal_id}` with `X-Buyer-Invite: demo-buyer-invite`
@@ -70,6 +80,12 @@ Buyer portal demo:
 - [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - [http://localhost:3000/buyer-portal/deals](http://localhost:3000/buyer-portal/deals)
 - [http://localhost:3000/buyer-portal/profile](http://localhost:3000/buyer-portal/profile)
+
+Seller acquisition V3 routes:
+
+- [http://localhost:3000/dashboard/seller-acquisition](http://localhost:3000/dashboard/seller-acquisition)
+- [http://localhost:3000/dashboard/follow-up-control](http://localhost:3000/dashboard/follow-up-control)
+- [http://localhost:3000/dashboard/offer-packets](http://localhost:3000/dashboard/offer-packets)
 
 ## Validation
 
