@@ -1,6 +1,7 @@
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
+import { Prime2IdentityPanel } from "@/components/Prime2IdentityPanel";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import { complianceRecords, formatCurrency, hotDeals, projectedAssignmentTotal } from "@/lib/demo-data";
@@ -10,9 +11,10 @@ export default function OverseerPage() {
     <div className="page">
       <PageHeader
         eyebrow="Executive Overseer"
-        title="Wholesale Prime"
-        description="Reviews opportunities, routes division work, prioritizes hot deals, flags compliance risk, and blocks unsafe actions."
+        title="Prime 2"
+        description="Oversees seller acquisition, buyer disposition, 10K+ opportunity ranking, margin protection, offer reasonableness, approval escalation, compliance boundaries, and gated live actions."
       />
+      <Prime2IdentityPanel />
       <div className="metric-grid">
         <MetricCard label="Hot opportunities" value={String(hotDeals.length)} detail="10K+ spread target" />
         <MetricCard label="Assignment total" value={formatCurrency(projectedAssignmentTotal)} detail="Projected demo pipeline" />
@@ -20,7 +22,7 @@ export default function OverseerPage() {
         <MetricCard label="Authority" value="0" detail="No live execution power" />
       </div>
       <div className="grid-two">
-        <Section title="Prime Recommendations">
+        <Section title="Prime 2 Recommendations">
           <div className="record-list">
             {[
               "Review deal-002 and deal-008 under-contract gates before any buyer packet.",

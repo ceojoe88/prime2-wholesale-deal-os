@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
+import { Prime2IdentityPanel } from "@/components/Prime2IdentityPanel";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import { divisions } from "@/lib/demo-data";
@@ -10,7 +11,7 @@ export default function CommandHierarchyPage() {
       <PageHeader
         eyebrow="Governance"
         title="Owner, overseer, divisions"
-        description="The owner controls every real-world action. Wholesale Prime recommends, routes, escalates, and blocks unsafe execution."
+        description="The owner controls every real-world action. Prime 2 recommends, routes, escalates, and blocks unsafe execution."
       />
       <div className="hierarchy">
         <div className="hierarchy-node compact">
@@ -20,7 +21,7 @@ export default function CommandHierarchyPage() {
         </div>
         <div className="hierarchy-node compact">
           <span className="eyebrow">Overseer</span>
-          <h3>Wholesale Prime</h3>
+          <h3>Prime 2</h3>
           <Pill tone="gold">Recommend only</Pill>
         </div>
         <div className="hierarchy-node compact">
@@ -29,6 +30,7 @@ export default function CommandHierarchyPage() {
           <Pill tone="red">Execution blocked</Pill>
         </div>
       </div>
+      <Prime2IdentityPanel />
       <Section title="Division Managers">
         <div className="grid-three">
           {divisions.map((division) => (

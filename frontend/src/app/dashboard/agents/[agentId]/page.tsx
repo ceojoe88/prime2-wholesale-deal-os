@@ -18,7 +18,7 @@ export default function AgentDetailPage({ params }: { params: { agentId: string 
       <PageHeader eyebrow={division?.name ?? "Agent"} title={agent.name} description={agent.currentFocus} />
       <div className="metric-grid">
         <div className="metric-card"><span>Mode</span><strong>Draft</strong><small>No live execution</small></div>
-        <div className="metric-card"><span>Escalation</span><strong>Prime</strong><small>Wholesale Prime review</small></div>
+        <div className="metric-card"><span>Escalation</span><strong>Prime 2</strong><small>Executive overseer review</small></div>
         <div className="metric-card"><span>Approval</span><strong>Owner</strong><small>Required for real action</small></div>
         <div className="metric-card"><span>Risk</span><strong>{agent.riskFlags.length}</strong><small>Current flags</small></div>
       </div>

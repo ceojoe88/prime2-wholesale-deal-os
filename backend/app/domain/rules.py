@@ -195,12 +195,12 @@ def validate_action(
             risk_flags=matched_patterns,
         )
 
-    if actor.lower() == "wholesale prime" and normalized_action not in ANALYSIS_ONLY_ACTIONS:
+    if actor.lower() in {"prime 2", "prime2"} and normalized_action not in ANALYSIS_ONLY_ACTIONS:
         return ValidationResult(
             allowed=False,
             action=normalized_action,
             actor=actor,
-            reason="Wholesale Prime may only recommend, escalate, summarize, score, draft, or flag risk.",
+            reason="Prime 2 may only recommend, escalate, summarize, score, draft, or flag risk.",
             risk_flags=["overseer_execution_attempt"],
         )
 

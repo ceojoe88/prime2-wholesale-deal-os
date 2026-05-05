@@ -1,6 +1,7 @@
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
+import { Prime2IdentityPanel } from "@/components/Prime2IdentityPanel";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import { complianceRecords, formatCurrency, hotDeals, leads, projectedAssignmentTotal, underContractDeals } from "@/lib/demo-data";
@@ -10,7 +11,7 @@ export default function DailyBriefingPage() {
     <div className="page">
       <PageHeader
         eyebrow="Daily Briefing"
-        title="Wholesale Prime daily strategy"
+        title="Prime 2 daily strategy"
         description="Prioritize hot spreads, protect buyer margins, and clear compliance gates before any owner-approved real-world step."
       />
       <div className="metric-grid">
@@ -19,8 +20,9 @@ export default function DailyBriefingPage() {
         <MetricCard label="Under contract" value={String(underContractDeals.length)} detail="Assignment review needed" />
         <MetricCard label="Projected fees" value={formatCurrency(projectedAssignmentTotal)} detail="Demo pipeline" />
       </div>
+      <Prime2IdentityPanel />
       <div className="grid-two">
-        <Section title="Prime Readout">
+        <Section title="Prime 2 Readout">
           <div className="record-list">
             <RecordCard title="Move first on clean hot deals" meta="Deal-001 and deal-002 have strong spreads and buyer demand." right={<Pill tone="green">today</Pill>} />
             <RecordCard title="Repair the margin exception" meta="Deal-006 should not advance until the spread and buyer margin are corrected." right={<Pill tone="red">block</Pill>} />

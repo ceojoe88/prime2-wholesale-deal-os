@@ -11,7 +11,7 @@ class Settings:
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./wholesale_os.db")
     private_operator_only: bool = True
     owner_role: str = "Owner"
-    overseer_name: str = "Wholesale Prime"
+    overseer_name: str = "Prime 2"
     target_assignment_fee: int = 10_000
     auto_seed: bool = os.getenv("AUTO_SEED", "true").lower() == "true"
     communication_global_live_enabled: bool = (

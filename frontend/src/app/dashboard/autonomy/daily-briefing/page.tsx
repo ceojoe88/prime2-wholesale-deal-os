@@ -1,6 +1,7 @@
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
+import { Prime2IdentityPanel } from "@/components/Prime2IdentityPanel";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
@@ -18,7 +19,7 @@ export default function AutonomyDailyBriefingPage() {
     <div className="page">
       <PageHeader
         eyebrow="V12 Daily Command Briefing"
-        title="Wholesale Prime briefing"
+        title="Prime 2 briefing"
         description="Autonomous daily briefings summarize hot deals, owner queues, blockers, and safe next actions as recommendations only."
       />
 
@@ -28,6 +29,8 @@ export default function AutonomyDailyBriefingPage() {
         <MetricCard label="Hot fee exposure" value={formatCurrency(hotFeeTotal)} detail="Projected, not guaranteed" />
         <MetricCard label="Execution" value="0" detail="No live actions" />
       </div>
+
+      <Prime2IdentityPanel />
 
       {briefing && (
         <>

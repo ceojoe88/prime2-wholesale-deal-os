@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
+import { Prime2IdentityPanel } from "@/components/Prime2IdentityPanel";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
@@ -23,9 +24,9 @@ export default function AutonomyPage() {
   return (
     <div className="page">
       <PageHeader
-        eyebrow="V12 Wholesale Prime Autonomy"
+        eyebrow="V12 Prime 2 Autonomy"
         title="Near-autonomous execution panel"
-        description="Wholesale Prime can prepare, score, schedule, route, escalate, and brief internally while real-world actions stay owner-gated."
+        description="Prime 2 can prepare, score, schedule, route, escalate, and brief internally while real-world actions stay owner-gated."
       />
 
       <div className="metric-grid">
@@ -35,7 +36,9 @@ export default function AutonomyPage() {
         <MetricCard label="Level 5" value="disabled" detail="Unavailable in V12" />
       </div>
 
-      <Section title="Wholesale Prime Autonomy Panel">
+      <Prime2IdentityPanel />
+
+      <Section title="Prime 2 Autonomy Panel">
         <div className="grid-three">
           <RecordCard title="Default Level 2" meta="Autonomous internal prep: scoring, queues, blockers, evidence, readiness checks." right={<Pill tone="green">on</Pill>} />
           <RecordCard title="Default Level 3" meta="Draft creation and reminder scheduling with audit ledgers." right={<Pill tone="green">on</Pill>} />
@@ -63,7 +66,7 @@ export default function AutonomyPage() {
           <div className="record-list">
             <RecordCard title="Draft tasks" meta={`${autonomyDraftTasks.length} drafts, queues, or briefings prepared for owner review`} right={<Pill tone="gold">draft</Pill>} />
             <RecordCard title="Blocked attempts" meta={`${blockedAutomationAttempts.length} attempts audited without provider calls or execution`} right={<Pill tone="red">blocked</Pill>} />
-            <RecordCard title="Daily briefing" meta={`${dailyCommandBriefings.length} Wholesale Prime briefing generated for ${latestAutonomyDailyBriefing?.briefingDate ?? "today"}`} right={<Pill>brief</Pill>} />
+            <RecordCard title="Daily briefing" meta={`${dailyCommandBriefings.length} Prime 2 briefing generated for ${latestAutonomyDailyBriefing?.briefingDate ?? "today"}`} right={<Pill>brief</Pill>} />
           </div>
         </Section>
       </div>

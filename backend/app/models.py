@@ -654,7 +654,7 @@ class DailyCommandBriefing(TimestampMixin, Base):
     id: Mapped[str] = mapped_column(String(80), primary_key=True)
     run_id: Mapped[str | None] = mapped_column(ForeignKey("scheduler_runs.id"), nullable=True)
     briefing_date: Mapped[str] = mapped_column(String(40), nullable=False)
-    generated_by: Mapped[str] = mapped_column(String(120), default="Wholesale Prime")
+    generated_by: Mapped[str] = mapped_column(String(120), default="Prime 2")
     hot_deals: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
     priority_actions: Mapped[list[str]] = mapped_column(JSON, default=list)
     manager_queue: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
@@ -991,7 +991,7 @@ class ScoringWeightChange(TimestampMixin, Base):
     new_weight: Mapped[float] = mapped_column(Float, default=0)
     reason: Mapped[str] = mapped_column(Text, default="")
     explanation: Mapped[str] = mapped_column(Text, default="")
-    logged_by: Mapped[str] = mapped_column(String(120), default="Wholesale Prime")
+    logged_by: Mapped[str] = mapped_column(String(120), default="Prime 2")
     owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
 
 
@@ -1147,7 +1147,7 @@ class AutonomousDailyOperatingReport(TimestampMixin, Base):
 
     id: Mapped[str] = mapped_column(String(80), primary_key=True)
     report_date: Mapped[str] = mapped_column(String(40), default="")
-    generated_by: Mapped[str] = mapped_column(String(120), default="Wholesale Prime")
+    generated_by: Mapped[str] = mapped_column(String(120), default="Prime 2")
     what_system_did: Mapped[list[str]] = mapped_column(JSON, default=list)
     what_prepared: Mapped[list[str]] = mapped_column(JSON, default=list)
     what_blocked: Mapped[list[str]] = mapped_column(JSON, default=list)

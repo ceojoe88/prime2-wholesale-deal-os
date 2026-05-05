@@ -154,7 +154,7 @@ test("buyer portal route files avoid internal seller and profit logic labels", (
     "assignment fee",
     "projected assignment",
     "max seller offer",
-    "wholesale prime",
+    "prime 2",
     "compliance risk"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
@@ -173,7 +173,7 @@ test("seller portal route files avoid buyer data and internal profit logic label
     "mao",
     "motivation score",
     "seller temperature",
-    "wholesale prime",
+    "prime 2",
     "compliance risk",
     "manager queue",
     "agent queue"

@@ -4,7 +4,11 @@
 
 The app is a private, single-owner command center. It intentionally has no public signup, no team accounts, no public portals, no client portal, and no live outreach execution. The owner is the only final approver for real-world action.
 
-Wholesale Prime is the executive overseer. It can recommend, route, summarize, escalate, and block unsafe action. It cannot send messages, contact buyers or sellers, execute contracts, provide legal advice, or make guaranteed profit claims.
+Prime 2 is the executive overseer. It can recommend, route, summarize, escalate, and block unsafe action. It cannot send messages, contact buyers or sellers, execute contracts, provide legal advice, or make guaranteed profit claims.
+
+Prime 2 is the brother system to Vylarion Prime, purpose-built for the private Virtual Wholesale Real Estate Deal OS. Prime 2 is the private wholesale real estate overseer built to identify, control, and accelerate assignment-fee opportunities while preserving owner approval, compliance boundaries, and deal evidence.
+
+Prime 2 is responsible for seller acquisition oversight, buyer disposition oversight, 10K+ opportunity ranking, buyer margin protection, seller offer reasonableness, manager and expert-agent coordination, owner approval escalation, daily operating reports, compliance boundaries, and gated high-risk live actions.
 
 V2 adds a controlled buyer portal. The private operator system remains the source of truth, and the buyer portal is only an invite-gated, sanitized deal-room projection. There is still no public signup, no seller portal, no live buyer blasts, no payments, no legal advice, and no contract execution.
 
@@ -26,7 +30,7 @@ V10 adds controlled offer-to-contract conversion. It structures offer positionin
 
 V11 adds title company/attorney review coordination. It prepares draft-only review records and review packets for V10 contract-ready deals, tracks missing documents and owner approval, and blocks legal advice, contract execution, document submission, title-company email sending, attorney-client relationship claims, and closing guarantees.
 
-V12 adds near-autonomous internal execution. Wholesale Prime and its divisions can continuously analyze, prepare, prioritize, route, schedule, escalate, and brief the operator. The default autonomy model is Level 2 for autonomous internal prep, Level 3 for autonomous draft creation and scheduling, Level 4 for controlled live-action review with owner approval only, and Level 5 disabled/unavailable. Real-world actions remain blocked unless a prior controlled gate explicitly allows owner-reviewed next steps.
+V12 adds near-autonomous internal execution. Prime 2 and its divisions can continuously analyze, prepare, prioritize, route, schedule, escalate, and brief the operator. The default autonomy model is Level 2 for autonomous internal prep, Level 3 for autonomous draft creation and scheduling, Level 4 for controlled live-action review with owner approval only, and Level 5 disabled/unavailable. Real-world actions remain blocked unless a prior controlled gate explicitly allows owner-reviewed next steps.
 
 V13 adds a controlled auto-execution gate for very narrow approved repeatable actions. It does not loosen V5 or V12; it requires approved rules, approved templates, safety, dry-run receipts, owner approval where needed, live flags, provider readiness, one recipient, idempotency, and audit records before a low-risk single-message path can even mock-send.
 
@@ -152,7 +156,7 @@ Buyer-facing routes:
 
 The buyer portal shows only property city/state/zip, property type, beds/baths/sqft, ARV range, repair estimate range, asking price, estimated buyer margin, photo placeholders, access instructions placeholder, proof-of-funds status, deal availability status, and a draft-only offer-interest control.
 
-The buyer portal never exposes seller identity, seller contact details, lead source, motivation score, seller temperature, seller contract price except as intentionally published asking price, assignment fee logic, projected assignment spread, max seller offer, internal notes, compliance internals, Wholesale Prime recommendations, agent queues, or manager queues.
+The buyer portal never exposes seller identity, seller contact details, lead source, motivation score, seller temperature, seller contract price except as intentionally published asking price, assignment fee logic, projected assignment spread, max seller offer, internal notes, compliance internals, Prime 2 recommendations, agent queues, or manager queues.
 
 ## Publishing Gate
 
@@ -310,7 +314,7 @@ The seller portal shows only approved external-facing offer information:
 - Owner/operator contact placeholder
 - Seller question/note intake action
 
-The seller portal never exposes buyer lists, buyer data, buyer purchase price, assignment fee, internal spread strategy, MAO logic, motivation score, seller temperature, lead source, internal notes, Wholesale Prime recommendations, compliance-risk internals, agent queues, or manager queues.
+The seller portal never exposes buyer lists, buyer data, buyer purchase price, assignment fee, internal spread strategy, MAO logic, motivation score, seller temperature, lead source, internal notes, Prime 2 recommendations, compliance-risk internals, agent queues, or manager queues.
 
 Seller visibility is allowed only when all of these are true:
 
@@ -393,7 +397,7 @@ The 10K+ verified flag is true only when:
 - The evidence packet is approved
 - Required source records are present
 
-V8 blocks fake profit claims, unsupported ROI claims, invented buyer/seller numbers, client-facing proof without approval, legal guarantees, and closing guarantees. Evidence summaries are sanitized to avoid call notes, motivation answers, pain points, objections, seller temperature, Wholesale Prime recommendations, and other internal notes.
+V8 blocks fake profit claims, unsupported ROI claims, invented buyer/seller numbers, client-facing proof without approval, legal guarantees, and closing guarantees. Evidence summaries are sanitized to avoid call notes, motivation answers, pain points, objections, seller temperature, Prime 2 recommendations, and other internal notes.
 
 ## V9 Buyer Demand And Distribution Prep
 
@@ -413,7 +417,7 @@ Distribution prep records are draft-only and one-recipient scoped. They store bu
 
 The buyer deal sheet sanitizer exposes only property summary, asking price, ARV range, repair estimate range, buyer margin estimate, access instructions placeholder, availability status, and proof/inspection placeholder notes.
 
-The sanitizer hides seller name/contact, seller contract price unless intentionally represented as asking price, assignment fee logic, lead source, motivation score, internal spread logic, agent recommendations, compliance internals, Wholesale Prime recommendations, and manager queues.
+The sanitizer hides seller name/contact, seller contract price unless intentionally represented as asking price, assignment fee logic, lead source, motivation score, internal spread logic, agent recommendations, compliance internals, Prime 2 recommendations, and manager queues.
 
 The V9 safety guard blocks live buyer blasts, bulk sends, misleading scarcity, fake offers, fake buyer competition, seller/private data exposure, assignment fee exposure without approval, legal guarantees, and closing guarantees.
 
@@ -524,7 +528,7 @@ Autonomous agent tasks route work to divisions and agents for lead scoring, prio
 
 Event triggers capture source events such as lead import, hot deal score, buyer demand refresh, gate pass, and daily schedule. Triggers can create runs but cannot publish portals, submit title packets, execute contracts, send messages, contact buyers/sellers, change terms, collect payments, or make commitments.
 
-Daily command briefings are generated by Wholesale Prime and contain hot deals, priority actions, manager queues, escalations, owner review items, and safety summary. They are internal recommendations only.
+Daily command briefings are generated by Prime 2 and contain hot deals, priority actions, manager queues, escalations, owner review items, and safety summary. They are internal recommendations only.
 
 Escalations flag urgent owner-review items such as hot 10K+ opportunities, compliance blockers, POF gaps, missing approvals, title blockers, and communication risk. Escalation records never perform the action they recommend.
 

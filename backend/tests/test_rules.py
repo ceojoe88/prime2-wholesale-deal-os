@@ -37,10 +37,10 @@ def test_legal_advice_and_guarantee_language_is_blocked():
 
 def test_agents_and_wholesale_prime_cannot_execute_real_world_actions():
     agent_result = validate_action("MAO Agent", "execute_contract")
-    prime_result = validate_action("Wholesale Prime", "prepare_offer_packet", owner_approved=True)
+    prime_result = validate_action("Prime 2", "prepare_offer_packet", owner_approved=True)
     assert agent_result.allowed is False
     assert prime_result.allowed is False
-    assert "Wholesale Prime" in prime_result.reason
+    assert "Prime 2" in prime_result.reason
 
 
 def test_owner_approval_and_compliance_review_are_required_for_packet_prep():

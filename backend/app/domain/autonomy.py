@@ -69,7 +69,7 @@ WORKFLOWS = {
         "agent": "Daily Briefing Agent",
         "division": "Operations Command Division",
         "task_type": "daily_briefing",
-        "recommendation": "Generate Wholesale Prime briefing with hot deals, blockers, owner approvals, and safe next actions.",
+        "recommendation": "Generate Prime 2 briefing with hot deals, blockers, owner approvals, and safe next actions.",
         "priority": "normal",
         "level": 3,
     },
@@ -207,7 +207,7 @@ def create_daily_command_briefing(
         id=briefing_id or _new_id("daily-briefing"),
         run_id=run_id,
         briefing_date=today,
-        generated_by="Wholesale Prime",
+        generated_by="Prime 2",
         hot_deals=[
             {
                 "deal_id": deal.id,
@@ -422,7 +422,7 @@ def automation_rule_summary(rule: AutomationRule) -> dict[str, object]:
 def daily_briefing_summary(briefing: DailyCommandBriefing) -> dict[str, object]:
     return {
         **model_to_dict(briefing),
-        "generated_by": "Wholesale Prime",
+        "generated_by": "Prime 2",
         "recommendations_only": True,
         "legal_advice_allowed": False,
         "live_outreach_allowed": False,

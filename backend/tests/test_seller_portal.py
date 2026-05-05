@@ -37,7 +37,7 @@ def test_seller_portal_only_shows_sanitized_offer_data():
         "max seller offer",
         "motivation score",
         "seller temperature",
-        "wholesale prime",
+        "prime 2",
         "compliance risk",
     ]:
         assert forbidden not in serialized

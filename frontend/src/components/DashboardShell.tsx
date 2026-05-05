@@ -55,7 +55,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <h1>Wholesale Prime</h1>
+          <h1>Prime 2</h1>
           <span>Private Deal OS</span>
         </div>
         <nav className="nav" aria-label="Dashboard navigation">

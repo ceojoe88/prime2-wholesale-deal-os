@@ -114,7 +114,7 @@ def test_daily_briefing_generates_recommendations_only():
     assert run.json()["daily_briefing_created"] is True
     assert response.status_code == 200
     latest = response.json()["latest"]
-    assert latest["generated_by"] == "Wholesale Prime"
+    assert latest["generated_by"] == "Prime 2"
     assert latest["recommendations_only"] is True
     assert latest["live_outreach_allowed"] is False
     assert latest["contract_execution_allowed"] is False

@@ -77,7 +77,7 @@ def build_command_center(session: Session) -> dict[str, object]:
     ]
 
     return {
-        "overseer": "Wholesale Prime",
+        "overseer": "Prime 2",
         "daily_strategy": [
             "Prioritize under-contract deals with verified buyer demand.",
             "Protect buyer margin before recommending any seller offer.",

@@ -16,7 +16,7 @@ export default function OptimizationAgentPerformancePage() {
       <PageHeader
         eyebrow="Agent Performance"
         title="Division scoring"
-        description="Track Lead Intelligence quality, Seller Acquisition conversion, Underwriting accuracy, Buyer Disposition effectiveness, Compliance block rate, Follow-Up performance, and Wholesale Prime recommendation accuracy."
+        description="Track Lead Intelligence quality, Seller Acquisition conversion, Underwriting accuracy, Buyer Disposition effectiveness, Compliance block rate, Follow-Up performance, and Prime 2 recommendation accuracy."
       />
 
       <div className="metric-grid">

@@ -1601,7 +1601,7 @@ def autonomy_daily_briefing(session: Session = Depends(get_session)) -> dict[str
         return {
             "daily_command_briefings": [],
             "latest": None,
-            "generated_by": "Wholesale Prime",
+            "generated_by": "Prime 2",
             "recommendations_only": True,
         }
     return {
@@ -1609,7 +1609,7 @@ def autonomy_daily_briefing(session: Session = Depends(get_session)) -> dict[str
             daily_briefing_summary(briefing) for briefing in briefings
         ],
         "latest": daily_briefing_summary(briefings[0]),
-        "generated_by": "Wholesale Prime",
+        "generated_by": "Prime 2",
         "recommendations_only": True,
         "live_outreach_allowed": False,
     }

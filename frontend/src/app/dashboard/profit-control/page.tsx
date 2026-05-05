@@ -15,7 +15,7 @@ export default function ProfitControlPage() {
         description="Max buyer purchase price equals ARV minus repairs, buyer costs, and buyer desired profit. Max seller offer subtracts the target assignment fee."
       />
       <div className="metric-grid">
-        <MetricCard label="10K+ opportunities" value={String(hotDeals.length)} detail="Prioritized by Wholesale Prime" />
+        <MetricCard label="10K+ opportunities" value={String(hotDeals.length)} detail="Prioritized by Prime 2" />
         <MetricCard label="Below target" value={String(belowTarget.length)} detail="Blocked or review-required" />
         <MetricCard label="Target fee" value={formatCurrency(10000)} detail="Owner-controlled v1 policy" />
         <MetricCard label="Buyer margin flags" value={String(deals.filter((deal) => deal.riskFlags.includes("buyer_margin_below_desired_profit")).length)} detail="Must be repaired" />

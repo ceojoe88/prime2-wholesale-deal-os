@@ -271,7 +271,7 @@ DIVISION_DEFINITIONS = [
         "responsibilities": [
             "Coordinate daily briefings and KPI readouts",
             "Route deals to the right division",
-            "Escalate risk to Wholesale Prime and Owner",
+            "Escalate risk to Prime 2 and Owner",
         ],
         "priority_queue": ["Daily briefing", "Attention queue", "KPI review"],
         "workload": 6,
@@ -2228,7 +2228,7 @@ def build_automation_rule_records() -> list[dict[str, object]]:
             "contract_execution_allowed": False,
             "title_submission_allowed": False,
             "payment_collection_allowed": False,
-            "notes": "Creates internal Wholesale Prime briefings and owner queues.",
+            "notes": "Creates internal Prime 2 briefings and owner queues.",
         },
         {
             "id": "rule-controlled-live-review",
@@ -2680,7 +2680,7 @@ def build_daily_command_briefing_records() -> list[dict[str, object]]:
             "id": "daily-briefing-001",
             "run_id": "run-daily-briefing-001",
             "briefing_date": "2026-05-04",
-            "generated_by": "Wholesale Prime",
+            "generated_by": "Prime 2",
             "hot_deals": [
                 {
                     "deal_id": "deal-001",
@@ -3689,7 +3689,7 @@ def build_scoring_weight_change_records() -> list[dict[str, object]]:
             "new_weight": 0.21,
             "reason": "Evidence-backed 10K+ conversion in high-demand 75216 segment.",
             "explanation": "Increase is deterministic and tied to learning-001 evidence, not a black-box model.",
-            "logged_by": "Wholesale Prime",
+            "logged_by": "Prime 2",
             "owner_review_status": "pending_review",
         },
         {
@@ -3700,7 +3700,7 @@ def build_scoring_weight_change_records() -> list[dict[str, object]]:
             "new_weight": 0.22,
             "reason": "POF gaps show repeated stalls before contract-ready.",
             "explanation": "Buyer ranking should prioritize proof-of-funds strength before access routing.",
-            "logged_by": "Wholesale Prime",
+            "logged_by": "Prime 2",
             "owner_review_status": "pending_review",
         },
         {
@@ -3711,7 +3711,7 @@ def build_scoring_weight_change_records() -> list[dict[str, object]]:
             "new_weight": 0.17,
             "reason": "Stale follow-up pattern correlates with lost seller price alignment.",
             "explanation": "Follow-up priority should escalate stale high-fit leads sooner.",
-            "logged_by": "Wholesale Prime",
+            "logged_by": "Prime 2",
             "owner_review_status": "pending_review",
         },
     ]
@@ -4172,7 +4172,7 @@ def build_autonomous_daily_operating_report_records() -> list[dict[str, object]]
         {
             "id": "operator-report-001",
             "report_date": "2026-05-04",
-            "generated_by": "Wholesale Prime",
+            "generated_by": "Prime 2",
             "what_system_did": [
                 "Scanned hot deals, buyer velocity, forecast risk, and approval queues.",
                 "Updated internal readiness, optimization, and forecast summaries.",
@@ -4315,7 +4315,7 @@ def build_audit_export_packet_records() -> list[dict[str, object]]:
                 "seller_phone": "214-555-0101",
                 "lead_source": "driving for dollars",
                 "seller_contract_price": 151000,
-                "assignment_fee_logic": "internal spread protected by Wholesale Prime",
+                "assignment_fee_logic": "internal spread protected by Prime 2",
                 "evidence_ids": ["evidence-001", "fee-001"],
                 "compliance_summary": "Owner review required before external use.",
             },

@@ -123,7 +123,7 @@ export default function DashboardPage() {
   return (
     <div className="page">
       <PageHeader
-        eyebrow="Wholesale Prime"
+        eyebrow="Prime 2"
         title="Daily acquisition command"
         description="Hot opportunities, spread protection, buyer demand, and compliance risk are ranked for owner approval."
       />
@@ -136,7 +136,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="command-band">
-        <strong>Wholesale Prime briefing</strong>
+        <strong>Prime 2 briefing</strong>
         <div className="pill-row">
           <Pill tone="green">{underContractDeals.length} under contract</Pill>
           <Pill tone="gold">{buyerMatches.length} draft buyer matches</Pill>
@@ -306,7 +306,7 @@ export default function DashboardPage() {
         <div className="grid-three">
           <RecordCard title="Automation rules" meta={`${automationRules.length} rules govern Level 2-4 internal prep`} right={<Pill tone="green">guarded</Pill>} />
           <RecordCard title="Agent task queue" meta={`${autonomyOpenTasks.length}/${autonomousAgentTasks.length} tasks await internal review`} right={<Pill tone="gold">queue</Pill>} />
-          <RecordCard title="Daily briefings" meta={`${dailyCommandBriefings.length} Wholesale Prime briefing record`} right={<Pill>brief</Pill>} />
+          <RecordCard title="Daily briefings" meta={`${dailyCommandBriefings.length} Prime 2 briefing record`} right={<Pill>brief</Pill>} />
         </div>
         <div className="grid-three">
           <RecordCard title="Escalation queue" meta={`${autonomyEscalationQueue.length} urgent recommendations require owner attention`} right={<Pill tone="red">owner</Pill>} />

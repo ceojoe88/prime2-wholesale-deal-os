@@ -16,7 +16,7 @@ export default function AutonomyTasksPage() {
       <PageHeader
         eyebrow="V12 Autonomous Agent Task Queue"
         title="Internal prep task routing"
-        description="Wholesale Prime can queue analysis, draft, reminder, blocker, and readiness tasks for division agents without live execution."
+        description="Prime 2 can queue analysis, draft, reminder, blocker, and readiness tasks for division agents without live execution."
       />
 
       <div className="metric-grid">

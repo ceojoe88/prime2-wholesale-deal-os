@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
+import { Prime2IdentityPanel } from "@/components/Prime2IdentityPanel";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
@@ -20,7 +21,7 @@ export default function OperatorModePage() {
       <PageHeader
         eyebrow="V17 Semi-Autonomous Operator Mode"
         title="Operator mode command loop"
-        description="Wholesale Prime scans, scores, routes, prepares, checks gates, escalates, briefs, waits for approvals, logs outcomes, and optimizes while real-world high-risk actions remain owner-approved."
+        description="Prime 2 scans, scores, routes, prepares, checks gates, escalates, briefs, waits for approvals, logs outcomes, and optimizes while real-world high-risk actions remain owner-approved."
       />
 
       <div className="metric-grid">
@@ -29,6 +30,8 @@ export default function OperatorModePage() {
         <MetricCard label="Open exceptions" value={String(operatorExceptionsOpen.length)} detail="Only high-value or risk exceptions escalate" />
         <MetricCard label="Trust score" value={String(currentSystemTrustScore.overallTrustScore)} detail={currentSystemTrustScore.trustStatus} />
       </div>
+
+      <Prime2IdentityPanel />
 
       <Section title="Hard Boundaries">
         <div className="grid-three">
