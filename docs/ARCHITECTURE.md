@@ -52,6 +52,8 @@ V21 adds the background worker runtime. It introduces queued internal jobs, sche
 
 V22 adds provider sandbox and credential readiness. It introduces provider registry records, mock/sandbox/live separation, env-only credential presence checks, masked provider API responses, provider attempt audits, and webhook receiver records. Provider attempts are readiness/audit events only in V22; they do not perform network calls. Webhooks create review tasks only and cannot mutate deals automatically.
 
+V23 adds call intelligence. It accepts manual call notes or pasted transcripts, extracts seller signals and objections, updates deterministic score deltas, detects DNC requests, routes legal/title questions to compliance reminders, and creates draft-only follow-up recommendations. It does not add audio processing, live calling, automatic responses, offer-term changes, or any communication bypass.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, backups, lead imports, lead QA, call outcomes, field feedback, and scoring adjustment suggestions.
@@ -68,6 +70,7 @@ V22 adds provider sandbox and credential readiness. It introduces provider regis
 - `app/domains/ai_gateway/*`: V20 controlled AI Gateway with request type allowlist, versioned templates, safety scanner, token/cost ledger, request audit trail, and deterministic mock/template responses.
 - `app/domains/worker_runtime/*`: V21 background worker runtime with queueing, scheduler, runner, retry manager, idempotency, ledgers, heartbeat health, and hard blocks against live action.
 - `app/domains/provider_readiness/*`: V22 provider readiness registry, credential posture checks, provider attempt audits, webhook review skeleton, response sanitizers, and hard blocks against secret storage or uncontrolled provider calls.
+- `app/domains/call_intelligence/*`: V23 text-only call intelligence extraction, DNC/legal risk detection, objection drafting, score-delta explanations, follow-up recommendations, AI Gateway allowlist integration, and worker-safe analysis jobs.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -178,6 +181,12 @@ erDiagram
   WORKER_HEARTBEAT ||--o{ WORKER_JOB : monitors
   PROVIDER_REGISTRY ||--o{ PROVIDER_ATTEMPT_AUDIT : audits
   PROVIDER_REGISTRY ||--o{ PROVIDER_WEBHOOK_EVENT : reviews
+  LEAD ||--o{ CALL_INTELLIGENCE_SESSION : analyzes
+  FIELD_CALL_OUTCOME ||--o{ CALL_INTELLIGENCE_SESSION : links
+  CALL_INTELLIGENCE_SESSION ||--o{ CALL_TRANSCRIPT_INPUT : sources
+  CALL_INTELLIGENCE_SESSION ||--o{ SELLER_SIGNAL_EXTRACTION : extracts
+  CALL_INTELLIGENCE_SESSION ||--o{ CALL_OBJECTION_RECORD : objects
+  CALL_INTELLIGENCE_SESSION ||--o{ CALL_FOLLOW_UP_RECOMMENDATION : recommends
 ```
 
 ## V20 AI Gateway
@@ -235,6 +244,28 @@ Frontend routes:
 - `/dashboard/provider-readiness/credentials`
 
 Provider readiness records support OpenAI, email, SMS, CRM, skip-trace, storage, and webhook categories. Every non-mock mode requires an environment credential reference and passing readiness checks. API responses expose masked reference names only. Attempt records store metadata hashes, readiness results, blocked reasons, and idempotency keys; provider calls remain disabled. Webhook events are review-only and cannot update deal state automatically.
+
+## V23 Call Intelligence
+
+Backend routes:
+
+- `/api/v1/call-intelligence`
+- `/api/v1/call-intelligence/analyze`
+- `/api/v1/call-intelligence/{sessionId}`
+- `/api/v1/call-intelligence/objections`
+- `/api/v1/call-intelligence/follow-ups`
+- `/api/v1/call-intelligence/quality`
+
+Frontend routes:
+
+- `/dashboard/call-intelligence`
+- `/dashboard/call-intelligence/[sessionId]`
+- `/dashboard/call-intelligence/new`
+- `/dashboard/call-intelligence/objections`
+- `/dashboard/call-intelligence/follow-ups`
+- `/dashboard/call-intelligence/quality`
+
+Call intelligence uses a deterministic extractor by default and can optionally request AI assistance through the allowlisted `call_intelligence_extraction` request type. AI assistance must use transcript/source basis and cannot invent numbers. DNC phrases create an outreach eligibility block through the V19 call-outcome path. Legal/title/contract questions create compliance escalation records and reminders for outside qualified review. Worker jobs may queue `call_analysis` but the worker still cannot call sellers, send follow-ups, change terms, publish portals, or execute contracts.
 
 ## V2 Buyer Portal
 

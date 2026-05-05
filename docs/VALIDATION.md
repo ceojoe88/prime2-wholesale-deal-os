@@ -43,6 +43,7 @@ Expected coverage includes:
 - V20 AI Gateway request allowlist, unsafe response blocking, template enforcement, token/cost tracking, audit logs, and no number overrides
 - V21 worker job creation, scheduler execution, retries, idempotency, failed-job logging, heartbeat health, and no live action paths
 - V22 provider registry default mock mode, env-only credential checks, masked responses, blocked live readiness, attempt audit records, idempotency, webhook review-only behavior, and unsigned live-like webhook rejection
+- V23 call intelligence transcript/manual-note analysis, DNC outreach blocking, compliance escalation, objection extraction, draft-only responses, explainable score deltas, AI Gateway allowlist, deterministic fallback, and worker no-live-action behavior
 
 ## Frontend
 
@@ -64,6 +65,7 @@ Expected coverage includes:
 - V19 dashboard routes render and do not expose unsafe live-action buttons
 - V20/V21 dashboard routes render and expose no live execution controls
 - V22 provider readiness dashboard routes render and expose no unsafe live-provider controls
+- V23 call intelligence dashboard routes render and expose no live call or send controls
 
 ## Source Sweeps
 
@@ -124,6 +126,11 @@ Smoke check:
 - `/dashboard/provider-readiness/attempts`
 - `/dashboard/provider-readiness/webhooks`
 - `/dashboard/provider-readiness/credentials`
+- `/dashboard/call-intelligence`
+- `/dashboard/call-intelligence/new`
+- `/dashboard/call-intelligence/objections`
+- `/dashboard/call-intelligence/follow-ups`
+- `/dashboard/call-intelligence/quality`
 - `/dashboard/production-readiness`
 - `/dashboard/backups`
 - `/buyer-portal`
@@ -163,6 +170,10 @@ Smoke check:
 - `/api/v1/provider-readiness/attempts`
 - `/api/v1/provider-readiness/webhooks`
 - `/api/v1/provider-readiness/credentials`
+- `/api/v1/call-intelligence`
+- `/api/v1/call-intelligence/objections`
+- `/api/v1/call-intelligence/follow-ups`
+- `/api/v1/call-intelligence/quality`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -188,6 +199,7 @@ Before any hosted deployment:
 - Provider sandbox checks must pass before any provider action.
 - V22 provider readiness must keep credential values outside the database and expose masked env reference names only.
 - Webhook receiver records must create review tasks only and never mutate deals automatically.
+- Call intelligence must remain text-only and analysis-only; no audio recording, live calling, automatic seller response, or term changes.
 - Audit exports must be sanitized.
 - Backup/export records must be metadata-safe unless a future encrypted storage design is added.
 - Legal/title review remains external.

@@ -37,6 +37,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Controlled AI drafting, summarization, negotiation support, and briefing through a safety/cost/audit gateway
 - Background worker runtime for scheduled internal prep jobs, retries, idempotency, ledgers, and heartbeat monitoring
 - Provider sandbox and credential readiness checks for future integrations without storing secrets or making uncontrolled provider calls
+- Seller call intelligence from manual notes or pasted transcripts, including DNC detection, objections, quality scoring, and draft-only follow-up recommendations
 
 ## Command Hierarchy
 
@@ -128,7 +129,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V22
+## Phase Map V1-V23
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -195,6 +196,9 @@ Added a production-grade internal worker layer with queued jobs, scheduler caden
 
 V22 Provider Sandbox Readiness Gate:
 Added provider registry records for OpenAI, email, SMS, CRM, skip-trace, storage, and webhook categories; mock/sandbox/live mode separation; env-only credential reference checks; masked provider responses; provider attempt audits; and webhook review records. No secret values are stored, no real provider calls are made by default, live readiness remains owner-gated, and webhook events cannot mutate deals automatically.
+
+V23 Call Intelligence Layer:
+Added text-only call intelligence sessions for manual notes and pasted transcripts, seller signal extraction, objection records, motivation/contactability/readiness deltas, call quality scoring, follow-up recommendations, DNC detection tied to outreach eligibility blocks, and compliance escalation for title/contract questions. It can draft and recommend only; it does not place calls, record audio, send responses, change offer terms, or bypass V5/V13 communication gates.
 
 ## Local Run Commands
 

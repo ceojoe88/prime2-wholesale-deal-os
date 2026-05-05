@@ -1526,6 +1526,109 @@ class FieldCallOutcome(TimestampMixin, Base):
     )
 
 
+class CallIntelligenceSession(TimestampMixin, Base):
+    __tablename__ = "call_intelligence_sessions"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("leads.id"), nullable=False)
+    call_outcome_id: Mapped[str | None] = mapped_column(
+        ForeignKey("field_call_outcomes.id"), nullable=True
+    )
+    input_type: Mapped[str] = mapped_column(String(80), default="manual_call_notes")
+    analysis_status: Mapped[str] = mapped_column(String(80), default="analyzed")
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    seller_motivation_reason: Mapped[str] = mapped_column(Text, default="")
+    urgency_timeline: Mapped[str] = mapped_column(String(160), default="")
+    asking_price: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    property_condition: Mapped[str] = mapped_column(Text, default="")
+    repair_clues: Mapped[list[str]] = mapped_column(JSON, default=list)
+    occupancy_status: Mapped[str] = mapped_column(String(120), default="")
+    decision_maker_status: Mapped[str] = mapped_column(String(120), default="")
+    trust_level: Mapped[float] = mapped_column(Float, default=0)
+    price_flexibility: Mapped[float] = mapped_column(Float, default=0)
+    follow_up_preference: Mapped[str] = mapped_column(String(160), default="")
+    do_not_contact_detected: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_compliance_red_flags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    next_best_action: Mapped[str] = mapped_column(Text, default="")
+    call_quality_score: Mapped[float] = mapped_column(Float, default=0)
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    motivation_score_delta: Mapped[float] = mapped_column(Float, default=0)
+    contactability_score_delta: Mapped[float] = mapped_column(Float, default=0)
+    seller_temperature_update: Mapped[float] = mapped_column(Float, default=0)
+    contract_readiness_influence: Mapped[float] = mapped_column(Float, default=0)
+    risk_score_influence: Mapped[float] = mapped_column(Float, default=0)
+    score_update_explanation: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    transcript_basis: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    ai_request_id: Mapped[str | None] = mapped_column(
+        ForeignKey("ai_request_logs.id"), nullable=True
+    )
+    deterministic_fallback_used: Mapped[bool] = mapped_column(Boolean, default=True)
+    compliance_escalation_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    prime2_escalation_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    follow_up_task_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    draft_offer_explanation_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_response_generated: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class CallTranscriptInput(TimestampMixin, Base):
+    __tablename__ = "call_transcript_inputs"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    session_id: Mapped[str] = mapped_column(
+        ForeignKey("call_intelligence_sessions.id"), nullable=False
+    )
+    input_type: Mapped[str] = mapped_column(String(80), default="manual_call_notes")
+    transcript_text: Mapped[str] = mapped_column(Text, default="")
+    sanitized_text: Mapped[str] = mapped_column(Text, default="")
+    source_metadata: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    raw_audio_processed: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_call_recording: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class SellerSignalExtraction(TimestampMixin, Base):
+    __tablename__ = "seller_signal_extractions"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    session_id: Mapped[str] = mapped_column(
+        ForeignKey("call_intelligence_sessions.id"), nullable=False
+    )
+    signal_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    signal_value: Mapped[str] = mapped_column(Text, default="")
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    transcript_basis: Mapped[str] = mapped_column(Text, default="")
+
+
+class CallObjectionRecord(TimestampMixin, Base):
+    __tablename__ = "call_objection_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    session_id: Mapped[str] = mapped_column(
+        ForeignKey("call_intelligence_sessions.id"), nullable=False
+    )
+    objection_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    safe_response_draft: Mapped[str] = mapped_column(Text, default="")
+    risk_level: Mapped[str] = mapped_column(String(80), default="medium")
+    required_data: Mapped[list[str]] = mapped_column(JSON, default=list)
+    next_action: Mapped[str] = mapped_column(Text, default="")
+    owner_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_response_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class CallFollowUpRecommendation(TimestampMixin, Base):
+    __tablename__ = "call_follow_up_recommendations"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    session_id: Mapped[str] = mapped_column(
+        ForeignKey("call_intelligence_sessions.id"), nullable=False
+    )
+    follow_up_type: Mapped[str] = mapped_column(String(120), default="owner_review")
+    recommended_timing: Mapped[str] = mapped_column(String(160), default="")
+    draft_message_summary: Mapped[str] = mapped_column(Text, default="")
+    owner_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
 class PredictionFeedbackRecord(TimestampMixin, Base):
     __tablename__ = "prediction_feedback_records"
 

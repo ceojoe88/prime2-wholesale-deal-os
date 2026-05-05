@@ -19,6 +19,7 @@ from app.models import (
     AutomationRule,
     BuyerAccelerationRecord,
     AutonomousDailyOperatingReport,
+    CallIntelligenceSession,
     BuyerDealPublication,
     BuyerDemandProfile,
     CommunicationDraft,
@@ -94,6 +95,7 @@ async def lifespan(app: FastAPI):
                 or session.query(WorkerJob).count() == 0
                 or session.query(WorkerHeartbeat).count() == 0
                 or session.query(ScoringAdjustmentSuggestion).count() == 0
+                or session.query(CallIntelligenceSession).count() == 0
             ):
                 seed_database(session)
     yield

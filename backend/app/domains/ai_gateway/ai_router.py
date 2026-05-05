@@ -84,6 +84,7 @@ def handle_ai_request(
             "daily_briefing",
             "negotiation_assist",
             "field_testing_summary",
+            "call_intelligence_extraction",
         }
         else {}
     )
@@ -162,4 +163,3 @@ def handle_ai_request(
         "provider_call_made": False,
         "openai_api_key_loaded_from_env": bool(settings.openai_api_key),
     }
-

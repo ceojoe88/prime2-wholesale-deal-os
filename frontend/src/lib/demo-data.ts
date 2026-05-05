@@ -3356,6 +3356,73 @@ export type FieldCallOutcome = {
   liveOutreachAllowed: false;
 };
 
+export type CallIntelligenceSession = {
+  id: string;
+  leadId: string;
+  callOutcomeId: string | null;
+  inputType: string;
+  analysisStatus: string;
+  ownerReviewStatus: string;
+  sellerMotivationReason: string;
+  urgencyTimeline: string;
+  askingPrice: number | null;
+  propertyCondition: string;
+  repairClues: string[];
+  occupancyStatus: string;
+  decisionMakerStatus: string;
+  trustLevel: number;
+  priceFlexibility: number;
+  followUpPreference: string;
+  doNotContactDetected: boolean;
+  legalComplianceRedFlags: string[];
+  nextBestAction: string;
+  callQualityScore: number;
+  confidenceScore: number;
+  motivationScoreDelta: number;
+  contactabilityScoreDelta: number;
+  sellerTemperatureUpdate: number;
+  contractReadinessInfluence: number;
+  riskScoreInfluence: number;
+  complianceEscalationCreated: boolean;
+  prime2EscalationCreated: boolean;
+  followUpTaskCreated: boolean;
+  draftOfferExplanationCreated: boolean;
+  deterministicFallbackUsed: true;
+  liveResponseGenerated: false;
+};
+
+export type SellerSignalExtraction = {
+  id: string;
+  sessionId: string;
+  signalType: string;
+  signalValue: string;
+  confidenceScore: number;
+  transcriptBasis: string;
+};
+
+export type CallObjectionRecord = {
+  id: string;
+  sessionId: string;
+  objectionType: string;
+  safeResponseDraft: string;
+  riskLevel: "low" | "medium" | "high";
+  requiredData: string[];
+  nextAction: string;
+  ownerReviewRequired: true;
+  draftOnly: true;
+  liveResponseAllowed: false;
+};
+
+export type CallFollowUpRecommendation = {
+  id: string;
+  sessionId: string;
+  followUpType: string;
+  recommendedTiming: string;
+  draftMessageSummary: string;
+  ownerReviewRequired: true;
+  liveSendAllowed: false;
+};
+
 export type PredictionFeedbackRecord = {
   id: string;
   leadId: string | null;
@@ -3647,6 +3714,29 @@ export const fieldCallOutcomes: FieldCallOutcome[] = [
   }
 ];
 
+export const callIntelligenceSessions: CallIntelligenceSession[] = [
+  { id: "call-intel-001", leadId: "lead-001", callOutcomeId: "call-outcome-001", inputType: "manual_call_notes", analysisStatus: "analyzed", ownerReviewStatus: "pending_review", sellerMotivationReason: "repair fatigue and as-is interest", urgencyTimeline: "this week", askingPrice: 158000, propertyCondition: "roof, interior updates", repairClues: ["roof", "interior updates"], occupancyStatus: "occupied", decisionMakerStatus: "owner_decision_maker", trustLevel: 78, priceFlexibility: 66, followUpPreference: "owner_review", doNotContactDetected: false, legalComplianceRedFlags: [], nextBestAction: "escalate motivated seller for seller acquisition review", callQualityScore: 88, confidenceScore: 82, motivationScoreDelta: 18, contactabilityScoreDelta: 12, sellerTemperatureUpdate: 84, contractReadinessInfluence: 40, riskScoreInfluence: 5, complianceEscalationCreated: false, prime2EscalationCreated: true, followUpTaskCreated: true, draftOfferExplanationCreated: true, deterministicFallbackUsed: true, liveResponseGenerated: false },
+  { id: "call-intel-002", leadId: "lead-008", callOutcomeId: "call-outcome-003", inputType: "pasted_transcript", analysisStatus: "analyzed", ownerReviewStatus: "pending_review", sellerMotivationReason: "seller requested no future contact", urgencyTimeline: "none", askingPrice: null, propertyCondition: "condition not discussed", repairClues: [], occupancyStatus: "unknown", decisionMakerStatus: "unknown", trustLevel: 20, priceFlexibility: 0, followUpPreference: "do_not_contact", doNotContactDetected: true, legalComplianceRedFlags: [], nextBestAction: "do not contact; retain record for owner and compliance review", callQualityScore: 42, confidenceScore: 90, motivationScoreDelta: 0, contactabilityScoreDelta: -60, sellerTemperatureUpdate: 0, contractReadinessInfluence: 0, riskScoreInfluence: 20, complianceEscalationCreated: false, prime2EscalationCreated: false, followUpTaskCreated: false, draftOfferExplanationCreated: false, deterministicFallbackUsed: true, liveResponseGenerated: false },
+  { id: "call-intel-003", leadId: "lead-003", callOutcomeId: null, inputType: "manual_call_notes", analysisStatus: "analyzed", ownerReviewStatus: "pending_review", sellerMotivationReason: "seller asked for title/contract meaning", urgencyTimeline: "30 days", askingPrice: 170000, propertyCondition: "repairs", repairClues: ["repairs"], occupancyStatus: "unknown", decisionMakerStatus: "needs family input", trustLevel: 58, priceFlexibility: 45, followUpPreference: "owner_review", doNotContactDetected: false, legalComplianceRedFlags: ["attorney", "title"], nextBestAction: "route title questions to compliance review reminder", callQualityScore: 76, confidenceScore: 78, motivationScoreDelta: 6, contactabilityScoreDelta: 8, sellerTemperatureUpdate: 62, contractReadinessInfluence: 10, riskScoreInfluence: 30, complianceEscalationCreated: true, prime2EscalationCreated: false, followUpTaskCreated: false, draftOfferExplanationCreated: true, deterministicFallbackUsed: true, liveResponseGenerated: false }
+];
+
+export const sellerSignalExtractions: SellerSignalExtraction[] = [
+  { id: "seller-signal-001", sessionId: "call-intel-001", signalType: "motivation", signalValue: "repair fatigue", confidenceScore: 82, transcriptBasis: "roof age and interior updates" },
+  { id: "seller-signal-002", sessionId: "call-intel-001", signalType: "timeline", signalValue: "this week", confidenceScore: 80, transcriptBasis: "written option this week" },
+  { id: "seller-signal-003", sessionId: "call-intel-002", signalType: "do_not_contact", signalValue: "true", confidenceScore: 95, transcriptBasis: "do not contact me again" },
+  { id: "seller-signal-004", sessionId: "call-intel-003", signalType: "title_question", signalValue: "qualified review needed", confidenceScore: 88, transcriptBasis: "title and contract terms require an attorney" }
+];
+
+export const callObjectionRecords: CallObjectionRecord[] = [
+  { id: "call-objection-001", sessionId: "call-intel-001", objectionType: "wants_repairs_considered", safeResponseDraft: "Draft only: acknowledge repair concerns and let the owner review documented repair evidence before deciding next steps.", riskLevel: "medium", requiredData: ["repair estimate", "condition notes"], nextAction: "review repair basis", ownerReviewRequired: true, draftOnly: true, liveResponseAllowed: false },
+  { id: "call-objection-002", sessionId: "call-intel-003", objectionType: "wants_title_explanation", safeResponseDraft: "Draft only: route title questions to qualified review before any answer is relied upon.", riskLevel: "high", requiredData: ["attorney/title review reminder"], nextAction: "compliance escalation", ownerReviewRequired: true, draftOnly: true, liveResponseAllowed: false }
+];
+
+export const callFollowUpRecommendations: CallFollowUpRecommendation[] = [
+  { id: "call-follow-up-001", sessionId: "call-intel-001", followUpType: "offer_explanation_review", recommendedTiming: "owner review today", draftMessageSummary: "Prepare draft-only as-is offer explanation from existing underwriting.", ownerReviewRequired: true, liveSendAllowed: false },
+  { id: "call-follow-up-002", sessionId: "call-intel-003", followUpType: "compliance_review", recommendedTiming: "before any seller response", draftMessageSummary: "Route title/attorney question to review reminder; do not answer with legal guidance.", ownerReviewRequired: true, liveSendAllowed: false }
+];
+
 export const predictionFeedbackRecords: PredictionFeedbackRecord[] = [
   {
     id: "feedback-001",
@@ -3727,6 +3817,22 @@ export function getCallOutcome(outcomeId: string) {
   return fieldCallOutcomes.find((outcome) => outcome.id === outcomeId);
 }
 
+export function getCallIntelligenceSession(sessionId: string) {
+  return callIntelligenceSessions.find((session) => session.id === sessionId);
+}
+
+export function getCallSignals(sessionId: string) {
+  return sellerSignalExtractions.filter((signal) => signal.sessionId === sessionId);
+}
+
+export function getCallObjections(sessionId: string) {
+  return callObjectionRecords.filter((objection) => objection.sessionId === sessionId);
+}
+
+export function getCallFollowUps(sessionId: string) {
+  return callFollowUpRecommendations.filter((followUp) => followUp.sessionId === sessionId);
+}
+
 export function getPredictionFeedback(feedbackId: string) {
   return predictionFeedbackRecords.find((record) => record.id === feedbackId);
 }
@@ -3740,6 +3846,17 @@ export const motivatedFieldOutcomes = fieldCallOutcomes.filter((outcome) =>
   ["motivated", "offer_requested", "appointment_set"].includes(outcome.contactResult)
 );
 export const doNotContactOutcomes = fieldCallOutcomes.filter((outcome) => outcome.doNotContact);
+export const highMotivationCallSessions = callIntelligenceSessions.filter(
+  (session) => session.motivationScoreDelta >= 15 || session.sellerTemperatureUpdate >= 75
+);
+export const dncCallSessions = callIntelligenceSessions.filter((session) => session.doNotContactDetected);
+export const complianceCallEscalations = callIntelligenceSessions.filter(
+  (session) => session.complianceEscalationCreated || session.legalComplianceRedFlags.length > 0
+);
+export const callQualityAverage = Math.round(
+  callIntelligenceSessions.reduce((total, session) => total + session.callQualityScore, 0) /
+    callIntelligenceSessions.length
+);
 export const predictionMisses = predictionFeedbackRecords.filter((record) => record.accuracyScore < 70);
 export const pendingScoringAdjustments = scoringAdjustmentSuggestions.filter((suggestion) => suggestion.ownerReviewStatus === "pending_review");
 export const fieldTestingAccuracy = Math.round(
@@ -3872,6 +3989,16 @@ export const aiTemplates: AITemplateRecord[] = [
     safetyStatus: "approved",
     usesSystemDataOnly: true,
     canInventNumbers: false
+  },
+  {
+    id: "ai-template-call-intelligence-v23",
+    requestType: "call_intelligence_extraction",
+    templateName: "Call intelligence extraction",
+    templateVersion: "v23.1",
+    templateSections: ["seller signals", "objections", "risk flags", "next action"],
+    safetyStatus: "approved",
+    usesSystemDataOnly: true,
+    canInventNumbers: false
   }
 ];
 
@@ -3984,6 +4111,23 @@ export const workerJobs: WorkerJobRecord[] = [
     portalPublishAllowed: false,
     paymentHandlingAllowed: false,
     bulkSendAllowed: false
+  },
+  {
+    id: "worker-job-seed-003",
+    jobId: "job-003",
+    jobType: "call_analysis",
+    sourceRecord: "call-intel-001",
+    status: "completed",
+    attempts: 1,
+    idempotencyKey: "seed:call-analysis:call-intel-001",
+    errorMessage: "",
+    priority: "high",
+    liveActionAllowed: false,
+    contractExecutionAllowed: false,
+    titleSubmissionAllowed: false,
+    portalPublishAllowed: false,
+    paymentHandlingAllowed: false,
+    bulkSendAllowed: false
   }
 ];
 
@@ -4005,6 +4149,16 @@ export const workerJobLogs: WorkerJobLogRecord[] = [
     eventType: "job_enqueued",
     status: "pending",
     message: "Automation rule check queued with no live action path.",
+    providerCalled: false,
+    realWorldActionTaken: false
+  },
+  {
+    id: "worker-log-003",
+    jobId: "job-003",
+    jobType: "call_analysis",
+    eventType: "job_completed",
+    status: "completed",
+    message: "Call intelligence analysis completed as internal prep.",
     providerCalled: false,
     realWorldActionTaken: false
   }

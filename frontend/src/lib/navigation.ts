@@ -15,6 +15,7 @@ export const dashboardRoutes = [
   { href: "/dashboard/lead-imports", label: "Lead Imports", icon: "FileCheck2" },
   { href: "/dashboard/lead-qa", label: "Lead QA", icon: "ShieldCheck" },
   { href: "/dashboard/call-outcomes", label: "Call Outcomes", icon: "PhoneCall" },
+  { href: "/dashboard/call-intelligence", label: "Call Intelligence", icon: "PhoneCall" },
   { href: "/dashboard/field-testing", label: "Field Testing", icon: "ClipboardList" },
   { href: "/dashboard/deals", label: "Deals", icon: "BadgeDollarSign" },
   { href: "/dashboard/underwriting", label: "Underwriting", icon: "Calculator" },

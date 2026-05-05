@@ -11,6 +11,7 @@ ALLOWED_AI_REQUEST_TYPES = {
     "daily_briefing",
     "negotiation_assist",
     "field_testing_summary",
+    "call_intelligence_extraction",
 }
 
 BLOCKED_AI_REQUEST_TYPES = {

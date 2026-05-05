@@ -53,6 +53,12 @@ TEMPLATE_LIBRARY: dict[str, dict[str, object]] = {
         "template_sections": ["import_quality", "call_outcomes", "prediction_misses", "adjustments"],
         "template_body": "Summarize real lead QA and feedback loop results.",
     },
+    "call_intelligence_extraction": {
+        "template_name": "Call intelligence extraction",
+        "template_version": "v23.1",
+        "template_sections": ["seller_signals", "objections", "risk_flags", "next_action"],
+        "template_body": "Extract seller conversation signals from provided transcript basis only. Do not invent prices, repairs, motivation, or commitments.",
+    },
 }
 
 
@@ -99,6 +105,9 @@ def build_template_response(request_type: str, source_data: dict[str, Any]) -> s
             "Field-testing summary draft: imported lead QA, call outcomes, do-not-contact records, and prediction misses "
             f"should be reviewed before scoring changes. Recommended next action: {next_action}."
         ),
+        "call_intelligence_extraction": (
+            "Call intelligence extraction draft: review transcript-based seller signals, objections, DNC status, "
+            f"risk flags, and draft-only next action. Recommended next action: {next_action}."
+        ),
     }
     return responses[request_type]
-

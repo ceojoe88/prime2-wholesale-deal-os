@@ -103,6 +103,10 @@ from app.models import (
     BuyerResponseRoute,
     BuyerSequencePrep,
     BuyerVelocityProfile,
+    CallFollowUpRecommendation,
+    CallIntelligenceSession,
+    CallObjectionRecord,
+    CallTranscriptInput,
     ClosingCoordinationChecklist,
     ComplianceRecord,
     CommunicationApproval,
@@ -144,6 +148,7 @@ from app.models import (
     ReviewPacketPrep,
     RevenueForecastRecord,
     SellerInteraction,
+    SellerSignalExtraction,
     SellerOfferPublication,
     SellerPortalResponse,
     SchedulerRun,
@@ -6341,6 +6346,230 @@ def build_field_call_outcome_records() -> list[dict[str, object]]:
     ]
 
 
+def build_call_intelligence_session_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "call-intel-001",
+            "lead_id": "lead-001",
+            "call_outcome_id": "call-outcome-001",
+            "input_type": "manual_call_notes",
+            "analysis_status": "analyzed",
+            "owner_review_status": "pending_review",
+            "seller_motivation_reason": "repair fatigue and as-is interest",
+            "urgency_timeline": "this week",
+            "asking_price": 158000,
+            "property_condition": "roof, interior updates",
+            "repair_clues": ["roof", "interior updates"],
+            "occupancy_status": "occupied",
+            "decision_maker_status": "owner_decision_maker",
+            "trust_level": 78,
+            "price_flexibility": 66,
+            "follow_up_preference": "owner_review",
+            "do_not_contact_detected": False,
+            "legal_compliance_red_flags": [],
+            "next_best_action": "escalate motivated seller for seller acquisition review",
+            "call_quality_score": 88,
+            "confidence_score": 82,
+            "motivation_score_delta": 18,
+            "contactability_score_delta": 12,
+            "seller_temperature_update": 84,
+            "contract_readiness_influence": 40,
+            "risk_score_influence": 5,
+            "score_update_explanation": {
+                "deterministic": True,
+                "basis": "price, condition, timeline, and seller as-is interest were captured.",
+            },
+            "transcript_basis": {
+                "timeline": "clear written option this week",
+                "condition": "roof age and interior updates",
+            },
+            "ai_request_id": None,
+            "deterministic_fallback_used": True,
+            "compliance_escalation_created": False,
+            "prime2_escalation_created": True,
+            "follow_up_task_created": True,
+            "draft_offer_explanation_created": True,
+            "live_response_generated": False,
+        },
+        {
+            "id": "call-intel-002",
+            "lead_id": "lead-008",
+            "call_outcome_id": "call-outcome-003",
+            "input_type": "pasted_transcript",
+            "analysis_status": "analyzed",
+            "owner_review_status": "pending_review",
+            "seller_motivation_reason": "seller requested no future contact",
+            "urgency_timeline": "none",
+            "asking_price": None,
+            "property_condition": "condition not discussed",
+            "repair_clues": [],
+            "occupancy_status": "unknown",
+            "decision_maker_status": "unknown",
+            "trust_level": 20,
+            "price_flexibility": 0,
+            "follow_up_preference": "do_not_contact",
+            "do_not_contact_detected": True,
+            "legal_compliance_red_flags": [],
+            "next_best_action": "do not contact; retain record for owner and compliance review",
+            "call_quality_score": 42,
+            "confidence_score": 90,
+            "motivation_score_delta": 0,
+            "contactability_score_delta": -60,
+            "seller_temperature_update": 0,
+            "contract_readiness_influence": 0,
+            "risk_score_influence": 20,
+            "score_update_explanation": {
+                "deterministic": True,
+                "basis": "DNC phrase was explicitly captured.",
+            },
+            "transcript_basis": {"dnc": "do not contact"},
+            "ai_request_id": None,
+            "deterministic_fallback_used": True,
+            "compliance_escalation_created": False,
+            "prime2_escalation_created": False,
+            "follow_up_task_created": False,
+            "draft_offer_explanation_created": False,
+            "live_response_generated": False,
+        },
+        {
+            "id": "call-intel-003",
+            "lead_id": "lead-003",
+            "call_outcome_id": None,
+            "input_type": "manual_call_notes",
+            "analysis_status": "analyzed",
+            "owner_review_status": "pending_review",
+            "seller_motivation_reason": "seller asked for title/contract meaning",
+            "urgency_timeline": "30 days",
+            "asking_price": 170000,
+            "property_condition": "repairs",
+            "repair_clues": ["repairs"],
+            "occupancy_status": "unknown",
+            "decision_maker_status": "needs family input",
+            "trust_level": 58,
+            "price_flexibility": 45,
+            "follow_up_preference": "owner_review",
+            "do_not_contact_detected": False,
+            "legal_compliance_red_flags": ["attorney", "title"],
+            "next_best_action": "route legal/title questions to compliance review reminder",
+            "call_quality_score": 76,
+            "confidence_score": 78,
+            "motivation_score_delta": 6,
+            "contactability_score_delta": 8,
+            "seller_temperature_update": 62,
+            "contract_readiness_influence": 10,
+            "risk_score_influence": 30,
+            "score_update_explanation": {
+                "deterministic": True,
+                "basis": "Legal/title terms created compliance risk.",
+            },
+            "transcript_basis": {"legal_flags": ["attorney", "title"]},
+            "ai_request_id": None,
+            "deterministic_fallback_used": True,
+            "compliance_escalation_created": True,
+            "prime2_escalation_created": False,
+            "follow_up_task_created": False,
+            "draft_offer_explanation_created": True,
+            "live_response_generated": False,
+        },
+    ]
+
+
+def build_call_transcript_input_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "call-input-001",
+            "session_id": "call-intel-001",
+            "input_type": "manual_call_notes",
+            "transcript_text": "Seller asked for an as-is explanation, mentioned roof age and interior updates, and wants a written option this week around $158,000.",
+            "sanitized_text": "Seller asked for an as-is explanation, mentioned roof age and interior updates, and wants a written option this week around $158,000.",
+            "source_metadata": {"source": "manual_notes"},
+            "raw_audio_processed": False,
+            "live_call_recording": False,
+        },
+        {
+            "id": "call-input-002",
+            "session_id": "call-intel-002",
+            "input_type": "pasted_transcript",
+            "transcript_text": "Please do not contact me again.",
+            "sanitized_text": "Please do not contact me again.",
+            "source_metadata": {"source": "transcript_paste"},
+            "raw_audio_processed": False,
+            "live_call_recording": False,
+        },
+        {
+            "id": "call-input-003",
+            "session_id": "call-intel-003",
+            "input_type": "manual_call_notes",
+            "transcript_text": "Seller asked whether title and contract terms require an attorney, wants family input, and mentioned repairs with a $170,000 ask.",
+            "sanitized_text": "Seller asked whether title and contract terms require an attorney, wants family input, and mentioned repairs with a $170,000 ask.",
+            "source_metadata": {"source": "manual_notes"},
+            "raw_audio_processed": False,
+            "live_call_recording": False,
+        },
+    ]
+
+
+def build_seller_signal_extraction_records() -> list[dict[str, object]]:
+    return [
+        {"id": "seller-signal-001", "session_id": "call-intel-001", "signal_type": "motivation", "signal_value": "repair fatigue", "confidence_score": 82, "transcript_basis": "roof age and interior updates"},
+        {"id": "seller-signal-002", "session_id": "call-intel-001", "signal_type": "timeline", "signal_value": "this week", "confidence_score": 80, "transcript_basis": "written option this week"},
+        {"id": "seller-signal-003", "session_id": "call-intel-002", "signal_type": "do_not_contact", "signal_value": "true", "confidence_score": 95, "transcript_basis": "do not contact me again"},
+        {"id": "seller-signal-004", "session_id": "call-intel-003", "signal_type": "legal_title_question", "signal_value": "attorney/title review needed", "confidence_score": 88, "transcript_basis": "title and contract terms require an attorney"},
+    ]
+
+
+def build_call_objection_record_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "call-objection-001",
+            "session_id": "call-intel-001",
+            "objection_type": "wants_repairs_considered",
+            "safe_response_draft": "Draft only: acknowledge repair concerns and let the owner review documented repair evidence before deciding next steps.",
+            "risk_level": "medium",
+            "required_data": ["repair estimate", "condition notes"],
+            "next_action": "review repair basis",
+            "owner_review_required": True,
+            "draft_only": True,
+            "live_response_allowed": False,
+        },
+        {
+            "id": "call-objection-002",
+            "session_id": "call-intel-003",
+            "objection_type": "wants_legal_title_explanation",
+            "safe_response_draft": "Draft only: route legal/title questions to qualified review before any answer is relied upon.",
+            "risk_level": "high",
+            "required_data": ["attorney/title review reminder"],
+            "next_action": "compliance escalation",
+            "owner_review_required": True,
+            "draft_only": True,
+            "live_response_allowed": False,
+        },
+    ]
+
+
+def build_call_follow_up_recommendation_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "call-follow-up-001",
+            "session_id": "call-intel-001",
+            "follow_up_type": "offer_explanation_review",
+            "recommended_timing": "owner review today",
+            "draft_message_summary": "Prepare draft-only as-is offer explanation from existing underwriting.",
+            "owner_review_required": True,
+            "live_send_allowed": False,
+        },
+        {
+            "id": "call-follow-up-002",
+            "session_id": "call-intel-003",
+            "follow_up_type": "compliance_review",
+            "recommended_timing": "before any seller response",
+            "draft_message_summary": "Route title/attorney question to review reminder; do not answer with legal guidance.",
+            "owner_review_required": True,
+            "live_send_allowed": False,
+        },
+    ]
+
+
 def build_prediction_feedback_records() -> list[dict[str, object]]:
     return [
         {
@@ -6455,6 +6684,21 @@ def build_ai_template_records() -> list[dict[str, object]]:
             "template_version": "v20.1",
             "template_sections": ["hot_deals", "approval_queue", "blockers", "safe_next_actions"],
             "template_body": "Generate Prime 2 internal briefing with recommendations only.",
+            "active": True,
+            "safety_status": "approved",
+            "risk_flags": [],
+            "uses_system_data_only": True,
+            "can_invent_numbers": False,
+            "legal_advice_allowed": False,
+            "contract_generation_allowed": False,
+        },
+        {
+            "id": "ai-template-call-intelligence-v23",
+            "request_type": "call_intelligence_extraction",
+            "template_name": "Call intelligence extraction",
+            "template_version": "v23.1",
+            "template_sections": ["seller_signals", "objections", "risk_flags", "next_action"],
+            "template_body": "Extract call notes into structured seller signals using transcript basis only; do not invent numbers or commitments.",
             "active": True,
             "safety_status": "approved",
             "risk_flags": [],
@@ -6642,6 +6886,28 @@ def build_worker_job_records() -> list[dict[str, object]]:
             "payment_handling_allowed": False,
             "bulk_send_allowed": False,
         },
+        {
+            "id": "worker-job-seed-003",
+            "job_id": "job-003",
+            "job_type": "call_analysis",
+            "source_record": "call-intel-001",
+            "status": "completed",
+            "attempts": 1,
+            "last_run": datetime(2026, 5, 4, 13, 10, tzinfo=UTC),
+            "next_run": None,
+            "idempotency_key": "seed:call-analysis:call-intel-001",
+            "error_message": "",
+            "priority": "high",
+            "max_attempts": 3,
+            "locked_until": None,
+            "owner_approval_required": False,
+            "live_action_allowed": False,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "portal_publish_allowed": False,
+            "payment_handling_allowed": False,
+            "bulk_send_allowed": False,
+        },
     ]
 
 
@@ -6670,6 +6936,19 @@ def build_worker_job_log_records() -> list[dict[str, object]]:
             "attempt_number": 0,
             "idempotency_key": "seed:automation:202605041305",
             "safety_result": worker_safety_guard("automation_rule_evaluation"),
+            "provider_called": False,
+            "real_world_action_taken": False,
+        },
+        {
+            "id": "worker-log-003",
+            "job_id": "job-003",
+            "job_type": "call_analysis",
+            "event_type": "job_completed",
+            "status": "completed",
+            "message": "Call intelligence analysis completed as internal prep.",
+            "attempt_number": 1,
+            "idempotency_key": "seed:call-analysis:call-intel-001",
+            "safety_result": worker_safety_guard("call_analysis"),
             "provider_called": False,
             "real_world_action_taken": False,
         },
@@ -6769,6 +7048,11 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "lead_import_rows": build_lead_import_row_records(),
         "lead_quality_reviews": build_lead_quality_review_records(),
         "field_call_outcomes": build_field_call_outcome_records(),
+        "call_intelligence_sessions": build_call_intelligence_session_records(),
+        "call_transcript_inputs": build_call_transcript_input_records(),
+        "seller_signal_extractions": build_seller_signal_extraction_records(),
+        "call_objection_records": build_call_objection_record_records(),
+        "call_follow_up_recommendations": build_call_follow_up_recommendation_records(),
         "prediction_feedback_records": build_prediction_feedback_records(),
         "scoring_adjustment_suggestions": build_scoring_adjustment_suggestion_records(),
         "ai_templates": build_ai_template_records(),
@@ -6808,6 +7092,11 @@ def seed_database(session: Session) -> dict[str, int]:
         ProviderWebhookEvent,
         ProviderAttemptAudit,
         ProviderRegistry,
+        CallFollowUpRecommendation,
+        CallObjectionRecord,
+        SellerSignalExtraction,
+        CallTranscriptInput,
+        CallIntelligenceSession,
         AICostLedger,
         AIAuditRecord,
         AIRequestLog,
@@ -7012,6 +7301,22 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(LeadImportRow(**row) for row in payload["lead_import_rows"])
     session.add_all(LeadQualityReview(**row) for row in payload["lead_quality_reviews"])
     session.add_all(FieldCallOutcome(**row) for row in payload["field_call_outcomes"])
+    session.add_all(
+        CallIntelligenceSession(**row) for row in payload["call_intelligence_sessions"]
+    )
+    session.add_all(
+        CallTranscriptInput(**row) for row in payload["call_transcript_inputs"]
+    )
+    session.add_all(
+        SellerSignalExtraction(**row) for row in payload["seller_signal_extractions"]
+    )
+    session.add_all(
+        CallObjectionRecord(**row) for row in payload["call_objection_records"]
+    )
+    session.add_all(
+        CallFollowUpRecommendation(**row)
+        for row in payload["call_follow_up_recommendations"]
+    )
     session.add_all(
         PredictionFeedbackRecord(**row)
         for row in payload["prediction_feedback_records"]

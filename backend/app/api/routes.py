@@ -10,6 +10,12 @@ from app.core.config import settings
 from app.core.database import get_session
 from app.domains.ai_gateway.ai_gateway import ai_cost_dashboard, ai_gateway_dashboard
 from app.domains.ai_gateway.ai_router import handle_ai_request
+from app.domains.call_intelligence.schemas import CallIntelligenceAnalyzeRequest
+from app.domains.call_intelligence.service import (
+    analyze_call_session,
+    call_intelligence_dashboard,
+    call_intelligence_detail,
+)
 from app.domains.provider_readiness.service import provider_registry_dashboard
 from app.domains.worker_runtime.heartbeat import worker_health
 from app.domains.worker_runtime.job_queue import enqueue_job
@@ -189,6 +195,10 @@ from app.models import (
     BuyerResponseRoute,
     BuyerSequencePrep,
     BuyerVelocityProfile,
+    CallFollowUpRecommendation,
+    CallIntelligenceSession,
+    CallObjectionRecord,
+    CallTranscriptInput,
     ClosingCoordinationChecklist,
     ComplianceRecord,
     CommunicationApproval,
@@ -232,6 +242,7 @@ from app.models import (
     RevenueForecastRecord,
     ReviewPacketPrep,
     SellerInteraction,
+    SellerSignalExtraction,
     SellerOfferPublication,
     SellerPortalResponse,
     SchedulerRun,
@@ -955,6 +966,73 @@ def worker_logs(session: Session = Depends(get_session)) -> dict[str, object]:
 @router.get("/v1/worker")
 def worker_runtime(session: Session = Depends(get_session)) -> dict[str, object]:
     return worker_dashboard(session)
+
+
+@router.get("/v1/call-intelligence")
+def call_intelligence(session: Session = Depends(get_session)) -> dict[str, object]:
+    return call_intelligence_dashboard(session)
+
+
+@router.post("/v1/call-intelligence/analyze")
+def call_intelligence_analyze(
+    payload: CallIntelligenceAnalyzeRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return analyze_call_session(session, **payload.model_dump())
+    except ValueError as exc:
+        message = str(exc)
+        status_code = 404 if message == "lead_not_found" else 400
+        raise HTTPException(status_code=status_code, detail=message) from exc
+
+
+@router.get("/v1/call-intelligence/objections")
+def call_intelligence_objections(
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return {
+        "objections": all_records(session, CallObjectionRecord),
+        "draft_only": True,
+        "live_response_allowed": False,
+    }
+
+
+@router.get("/v1/call-intelligence/follow-ups")
+def call_intelligence_follow_ups(
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return {
+        "follow_ups": all_records(session, CallFollowUpRecommendation),
+        "draft_only": True,
+        "live_send_allowed": False,
+    }
+
+
+@router.get("/v1/call-intelligence/quality")
+def call_intelligence_quality(
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    sessions = session.query(CallIntelligenceSession).all()
+    average = round(
+        sum(record.call_quality_score for record in sessions) / max(len(sessions), 1),
+        1,
+    )
+    return {
+        "quality_average": average,
+        "quality_records": all_records(session, CallIntelligenceSession),
+        "live_call_recording_enabled": False,
+    }
+
+
+@router.get("/v1/call-intelligence/{session_id}")
+def call_intelligence_session_detail(
+    session_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return call_intelligence_detail(session, session_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/command-center")

@@ -12,6 +12,7 @@ ALLOWED_WORKER_JOB_TYPES = {
     "automation_rule_evaluation",
     "field_testing_summary",
     "forecast_refresh",
+    "call_analysis",
 }
 
 JOB_ACTION_MAP = {
@@ -23,6 +24,7 @@ JOB_ACTION_MAP = {
     "automation_rule_evaluation": "update_priority_queues",
     "field_testing_summary": "create_next_best_action",
     "forecast_refresh": "create_next_best_action",
+    "call_analysis": "create_next_best_action",
 }
 
 WORKER_BLOCKED_ACTIONS = {
@@ -62,4 +64,3 @@ def worker_safety_guard(job_type: str, autonomy_level: int = 3) -> dict[str, obj
         "payment_handling_allowed": False,
         "bulk_send_allowed": False,
     }
-

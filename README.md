@@ -50,6 +50,7 @@ Implemented phases:
 - V20 AI Gateway controlled intelligence layer
 - V21 background worker runtime
 - V22 provider sandbox and credential readiness gate
+- V23 call intelligence layer
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -99,6 +100,12 @@ V22 adds a provider registry and credential readiness gate for future OpenAI, em
 
 Webhook handling is a skeleton for mock or sandbox events only. Events create review queue records and never mutate deals automatically. Unsigned live-like webhook payloads are rejected and recorded safely.
 
+## V23 Call Intelligence
+
+V23 converts manual seller call notes and pasted text transcripts into structured intelligence: motivation reason, urgency, asking price, condition clues, objections, decision-maker status, trust, price flexibility, follow-up preference, DNC detection, risk flags, quality score, and next best action. It is text-only; no audio processing, live calling, or automatic response execution is added.
+
+Do-not-contact detection creates a V19 call outcome and blocks future outreach eligibility. Legal/title/contract questions create compliance escalations and attorney/title review reminders. Objections produce safe draft-only responses that remain owner-reviewed and cannot send without the existing V5/V13 gates.
+
 ## Safety Boundaries
 
 Allowed:
@@ -126,6 +133,7 @@ Blocked:
 - AI legal/contract/profit-promise output
 - Worker live outreach, title, contract, portal publishing, payment, or bulk-send execution
 - Provider secret storage or uncontrolled provider calls
+- Live call recording, live calling, or automatic seller response from call intelligence
 
 Controlled provider actions require all relevant gates:
 
@@ -186,6 +194,7 @@ Open:
 - AI Gateway: [http://localhost:3000/dashboard/ai](http://localhost:3000/dashboard/ai)
 - Worker runtime: [http://localhost:3000/dashboard/worker](http://localhost:3000/dashboard/worker)
 - Provider readiness: [http://localhost:3000/dashboard/provider-readiness](http://localhost:3000/dashboard/provider-readiness)
+- Call intelligence: [http://localhost:3000/dashboard/call-intelligence](http://localhost:3000/dashboard/call-intelligence)
 - Production readiness: [http://localhost:3000/dashboard/production-readiness](http://localhost:3000/dashboard/production-readiness)
 - Buyer portal demo: [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - Seller portal demo: [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)

@@ -45,6 +45,12 @@ const requiredRouteFiles = [
   "src/app/dashboard/lead-qa/[leadId]/page.tsx",
   "src/app/dashboard/call-outcomes/page.tsx",
   "src/app/dashboard/call-outcomes/[outcomeId]/page.tsx",
+  "src/app/dashboard/call-intelligence/page.tsx",
+  "src/app/dashboard/call-intelligence/[sessionId]/page.tsx",
+  "src/app/dashboard/call-intelligence/new/page.tsx",
+  "src/app/dashboard/call-intelligence/objections/page.tsx",
+  "src/app/dashboard/call-intelligence/follow-ups/page.tsx",
+  "src/app/dashboard/call-intelligence/quality/page.tsx",
   "src/app/dashboard/field-testing/page.tsx",
   "src/app/dashboard/feedback-loop/page.tsx",
   "src/app/dashboard/feedback-loop/[feedbackId]/page.tsx",
@@ -332,6 +338,31 @@ test("V22 provider readiness pages expose no unsafe live-provider controls", () 
     "submit to title",
     "publish automatically",
     "raw values are stored"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V23 call intelligence pages expose no live call or send controls", () => {
+  const files = [
+    "src/app/dashboard/call-intelligence/page.tsx",
+    "src/app/dashboard/call-intelligence/[sessionId]/page.tsx",
+    "src/app/dashboard/call-intelligence/new/page.tsx",
+    "src/app/dashboard/call-intelligence/objections/page.tsx",
+    "src/app/dashboard/call-intelligence/follow-ups/page.tsx",
+    "src/app/dashboard/call-intelligence/quality/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "bulk blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "live calling enabled",
+    "live response generated"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }
