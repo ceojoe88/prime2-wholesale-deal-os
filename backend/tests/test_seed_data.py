@@ -40,6 +40,10 @@ def test_seed_payload_counts_and_hot_deals():
     assert len(payload["buyer_sequence_preps"]) == 3
     assert len(payload["buyer_response_routes"]) == 4
     assert len(payload["buyer_velocity_profiles"]) == 4
+    assert len(payload["outcome_learning_records"]) == 6
+    assert len(payload["optimization_recommendations"]) == 4
+    assert len(payload["agent_performance_scores"]) == 5
+    assert len(payload["scoring_weight_changes"]) == 3
     assert len(payload["contract_controls"]) == 5
     assert len(payload["seller_offer_publications"]) == 5
     assert len(payload["seller_portal_responses"]) == 4

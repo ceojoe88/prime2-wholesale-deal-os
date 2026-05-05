@@ -654,6 +654,72 @@ export type BuyerVelocityProfile = {
   draftOnly: true;
 };
 
+export type OutcomeLearningRecord = {
+  id: string;
+  dealId: string | null;
+  leadSource: string;
+  market: string;
+  sellerType: string;
+  buyerType: string;
+  offerStrategy: string;
+  followUpType: string;
+  conversionResult: string;
+  projectedAssignmentFee: number;
+  verifiedAssignmentFee: number;
+  timeToContractReadyDays: number | null;
+  blockers: string[];
+  lostReason: string;
+  confidenceScore: number;
+  sourceEvidenceIds: string[];
+  sourceRecordsPresent: boolean;
+  evidenceStatus: string;
+  unsupportedRevenueClaim: boolean;
+  unsupportedRoiClaim: boolean;
+};
+
+export type OptimizationRecommendation = {
+  id: string;
+  recommendationType: string;
+  target: string;
+  recommendation: string;
+  explanation: string;
+  sourceRecordIds: string[];
+  confidenceScore: number;
+  impactScore: number;
+  status: string;
+  ownerReviewStatus: string;
+  guaranteedRevenueClaimAllowed: false;
+  unsupportedRoiClaimAllowed: false;
+};
+
+export type AgentPerformanceScore = {
+  id: string;
+  divisionName: string;
+  agentGroup: string;
+  qualityScore: number;
+  conversionScore: number;
+  accuracyScore: number;
+  effectivenessScore: number;
+  complianceBlockRate: number;
+  followUpScore: number;
+  recommendationAccuracy: number;
+  overallScore: number;
+  explanation: string;
+  sourceRecordIds: string[];
+};
+
+export type ScoringWeightChange = {
+  id: string;
+  sourceRecordId: string;
+  weightGroup: string;
+  previousWeight: number;
+  newWeight: number;
+  reason: string;
+  explanation: string;
+  loggedBy: string;
+  ownerReviewStatus: string;
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1623,6 +1689,36 @@ export const buyerVelocityProfiles: BuyerVelocityProfile[] = [
   { id: "buyer-velocity-004", buyerId: "buyer-007", responseSpeed: 72, pofStrength: 30, closeHistory: 70, priceFit: 66, marketFit: 72, reliability: 74, previousIntentQuality: 66, velocityScore: 65, recommendedUse: "pof_or_fit_review", draftOnly: true }
 ];
 
+export const outcomeLearningRecords: OutcomeLearningRecord[] = [
+  { id: "learning-001", dealId: "deal-001", leadSource: "absentee owner", market: "75216", sellerType: "tired_landlord", buyerType: "fast_close_verified_pof", offerStrategy: "cash-fast", followUpType: "seller_call_then_offer_explanation", conversionResult: "contract_ready", projectedAssignmentFee: 24000, verifiedAssignmentFee: 24000, timeToContractReadyDays: 5, blockers: [], lostReason: "", confidenceScore: 93, sourceEvidenceIds: ["evidence-001", "fee-001", "buyer-accel-001"], sourceRecordsPresent: true, evidenceStatus: "supported", unsupportedRevenueClaim: false, unsupportedRoiClaim: false },
+  { id: "learning-002", dealId: "deal-003", leadSource: "high equity", market: "75224", sellerType: "timeline_driven", buyerType: "verified_pof_value_add", offerStrategy: "flexible-close", followUpType: "pof_request_then_detail_follow_up", conversionResult: "contract_ready", projectedAssignmentFee: 18000, verifiedAssignmentFee: 0, timeToContractReadyDays: 7, blockers: ["buyer_pof_gap"], lostReason: "", confidenceScore: 82, sourceEvidenceIds: ["evidence-002", "buyer-accel-002"], sourceRecordsPresent: true, evidenceStatus: "supported", unsupportedRevenueClaim: false, unsupportedRoiClaim: false },
+  { id: "learning-003", dealId: "deal-005", leadSource: "probate", market: "75216", sellerType: "inherited_property", buyerType: "duplex_buyer", offerStrategy: "as-is", followUpType: "slow_document_follow_up", conversionResult: "blocked", projectedAssignmentFee: 15000, verifiedAssignmentFee: 0, timeToContractReadyDays: null, blockers: ["seller_document_missing", "compliance_review_missing"], lostReason: "", confidenceScore: 64, sourceEvidenceIds: ["evidence-003", "buyer-accel-003"], sourceRecordsPresent: true, evidenceStatus: "supported", unsupportedRevenueClaim: false, unsupportedRoiClaim: false },
+  { id: "learning-004", dealId: "deal-006", leadSource: "driving for dollars", market: "75211", sellerType: "price_focused", buyerType: "repair_heavy_single_family", offerStrategy: "investor-grade", followUpType: "stale_follow_up", conversionResult: "lost", projectedAssignmentFee: 7000, verifiedAssignmentFee: 0, timeToContractReadyDays: null, blockers: ["stale_follow_up", "weak_buyer_margin"], lostReason: "seller_price_misalignment", confidenceScore: 58, sourceEvidenceIds: ["negotiation-004"], sourceRecordsPresent: true, evidenceStatus: "supported", unsupportedRevenueClaim: false, unsupportedRoiClaim: false },
+  { id: "learning-005", dealId: "deal-002", leadSource: "tax delinquent", market: "76104", sellerType: "urgent_timeline", buyerType: "fast_small_deal_buyer", offerStrategy: "cash-fast", followUpType: "hot_lead_call_script", conversionResult: "assigned", projectedAssignmentFee: 13000, verifiedAssignmentFee: 13000, timeToContractReadyDays: 4, blockers: [], lostReason: "", confidenceScore: 89, sourceEvidenceIds: ["fee-002", "contract-ready-002"], sourceRecordsPresent: true, evidenceStatus: "supported", unsupportedRevenueClaim: false, unsupportedRoiClaim: false },
+  { id: "learning-006", dealId: "deal-007", leadSource: "vacant", market: "75217", sellerType: "low_contactability", buyerType: "unverified_pof", offerStrategy: "aggressive_offer", followUpType: "generic_sms_draft", conversionResult: "stalled", projectedAssignmentFee: 11000, verifiedAssignmentFee: 0, timeToContractReadyDays: null, blockers: ["buyer_pof_gap", "low_contactability"], lostReason: "contact_consistency_missing", confidenceScore: 46, sourceEvidenceIds: [], sourceRecordsPresent: false, evidenceStatus: "blocked", unsupportedRevenueClaim: false, unsupportedRoiClaim: false }
+];
+
+export const optimizationRecommendations: OptimizationRecommendation[] = [
+  { id: "optimization-rec-001", recommendationType: "focus_market", target: "75216 absentee/high-equity leads", recommendation: "Prioritize 75216 absentee-owner and high-equity leads before expanding colder lists.", explanation: "learning-001 and learning-003 show 75216 produces strong source-backed 10K+ opportunities with visible blockers.", sourceRecordIds: ["learning-001", "learning-003"], confidenceScore: 87, impactScore: 91, status: "draft_recommendation", ownerReviewStatus: "pending_review", guaranteedRevenueClaimAllowed: false, unsupportedRoiClaimAllowed: false },
+  { id: "optimization-rec-002", recommendationType: "buyer_segment_to_target", target: "fast_close_verified_pof", recommendation: "Route controlled distribution prep first to verified POF buyers with strong response speed.", explanation: "Buyer acceleration and learning records show fast-close verified POF buyers remove POF blockers and shorten readiness time.", sourceRecordIds: ["learning-001", "learning-002", "buyer-velocity-001"], confidenceScore: 85, impactScore: 88, status: "draft_recommendation", ownerReviewStatus: "pending_review", guaranteedRevenueClaimAllowed: false, unsupportedRoiClaimAllowed: false },
+  { id: "optimization-rec-003", recommendationType: "script_improvement", target: "generic_sms_draft", recommendation: "Replace generic SMS-style follow-up with property-specific owner-reviewed call notes and offer-basis explanation.", explanation: "learning-004 and learning-006 show stale or generic follow-up correlates with low contact consistency and lost/stalled outcomes.", sourceRecordIds: ["learning-004", "learning-006"], confidenceScore: 78, impactScore: 76, status: "draft_recommendation", ownerReviewStatus: "pending_review", guaranteedRevenueClaimAllowed: false, unsupportedRoiClaimAllowed: false },
+  { id: "optimization-rec-004", recommendationType: "deal_type_to_avoid", target: "weak-margin aggressive offers", recommendation: "Avoid aggressive offers when buyer margin strength is below threshold and seller price alignment is weak.", explanation: "Weak margin and missing POF stalled before contract-ready; aggressive positioning should be downweighted.", sourceRecordIds: ["learning-004", "learning-006"], confidenceScore: 74, impactScore: 72, status: "draft_recommendation", ownerReviewStatus: "pending_review", guaranteedRevenueClaimAllowed: false, unsupportedRoiClaimAllowed: false }
+];
+
+export const agentPerformanceScores: AgentPerformanceScore[] = [
+  { id: "agent-performance-001", divisionName: "Lead Intelligence Division", agentGroup: "List Stacking + Contactability Agents", qualityScore: 88, conversionScore: 82, accuracyScore: 86, effectivenessScore: 84, complianceBlockRate: 12, followUpScore: 80, recommendationAccuracy: 84, overallScore: 84, explanation: "Strong source quality when contactability and stacking evidence are present.", sourceRecordIds: ["learning-001", "learning-002", "learning-005"] },
+  { id: "agent-performance-002", divisionName: "Seller Acquisition Division", agentGroup: "Motivation Discovery + Offer Explanation Agents", qualityScore: 84, conversionScore: 78, accuracyScore: 82, effectivenessScore: 80, complianceBlockRate: 10, followUpScore: 76, recommendationAccuracy: 81, overallScore: 81, explanation: "Offer explanation performs well; stale follow-up needs tighter priority.", sourceRecordIds: ["learning-001", "learning-004", "learning-006"] },
+  { id: "agent-performance-003", divisionName: "Deal Underwriting Division", agentGroup: "ARV + Repair + MAO Agents", qualityScore: 91, conversionScore: 84, accuracyScore: 90, effectivenessScore: 86, complianceBlockRate: 8, followUpScore: 75, recommendationAccuracy: 88, overallScore: 87, explanation: "Underwriting accuracy is strongest when evidence packets are complete.", sourceRecordIds: ["learning-001", "learning-002", "learning-005"] },
+  { id: "agent-performance-004", divisionName: "Buyer Disposition Division", agentGroup: "Buyer Demand + Buyer Reliability Agents", qualityScore: 89, conversionScore: 86, accuracyScore: 86, effectivenessScore: 88, complianceBlockRate: 9, followUpScore: 82, recommendationAccuracy: 87, overallScore: 87, explanation: "Verified POF routing and buyer velocity improve disposition speed.", sourceRecordIds: ["learning-001", "learning-002", "buyer-velocity-001"] },
+  { id: "agent-performance-005", divisionName: "Contract & Compliance Division", agentGroup: "Disclosure Guard + State Risk Agents", qualityScore: 86, conversionScore: 72, accuracyScore: 88, effectivenessScore: 78, complianceBlockRate: 18, followUpScore: 74, recommendationAccuracy: 84, overallScore: 80, explanation: "Blocks are appropriate but inherited-property documentation gaps slow conversion.", sourceRecordIds: ["learning-003", "learning-004"] }
+];
+
+export const scoringWeightChanges: ScoringWeightChange[] = [
+  { id: "weight-change-001", sourceRecordId: "learning-001", weightGroup: "opportunity_score.market_demand", previousWeight: 0.18, newWeight: 0.21, reason: "Evidence-backed 10K+ conversion in high-demand 75216 segment.", explanation: "Increase is deterministic and tied to learning-001 evidence.", loggedBy: "Wholesale Prime", ownerReviewStatus: "pending_review" },
+  { id: "weight-change-002", sourceRecordId: "learning-006", weightGroup: "buyer_ranking.pof_strength", previousWeight: 0.18, newWeight: 0.22, reason: "POF gaps show repeated stalls before contract-ready.", explanation: "Buyer ranking should prioritize proof-of-funds strength before access routing.", loggedBy: "Wholesale Prime", ownerReviewStatus: "pending_review" },
+  { id: "weight-change-003", sourceRecordId: "learning-004", weightGroup: "follow_up_priority.staleness_penalty", previousWeight: 0.12, newWeight: 0.17, reason: "Stale follow-up pattern correlates with lost seller price alignment.", explanation: "Follow-up priority should escalate stale high-fit leads sooner.", loggedBy: "Wholesale Prime", ownerReviewStatus: "pending_review" }
+];
+
 export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
   { id: "assignment-ready-001", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-001", buyerMatchId: "match-001", buyerInterestId: "interest-001", readinessStatus: "assignment_ready", assignmentReady: true, blockedReasons: [], assignmentAllowedConfirmed: true, buyerPofStatus: "verified", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
   { id: "assignment-ready-002", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-003", buyerMatchId: "match-001", buyerInterestId: "interest-004", readinessStatus: "blocked", assignmentReady: false, blockedReasons: ["buyer_pof_not_verified"], assignmentAllowedConfirmed: true, buyerPofStatus: "needs_refresh", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
@@ -2539,4 +2635,63 @@ export const buyerAccelerationSafetyCards = [
   { label: "Controlled sends", value: String(buyerAccelerationReadyDeals.length), detail: "Require V5/V13 gates and owner approval" },
   { label: "POF gaps", value: String(buyerAccelerationPofGaps.length), detail: "Routed before access or offer intent follow-up" },
   { label: "Blocked records", value: String(buyerAccelerationBlockedRecords.length), detail: "Sanitizer, margin, or compliance gaps" }
+];
+
+function summarizeLearningBy(key: keyof OutcomeLearningRecord) {
+  const grouped = outcomeLearningRecords.reduce<Record<string, OutcomeLearningRecord[]>>((acc, record) => {
+    const value = String(record[key] ?? "unknown");
+    acc[value] = [...(acc[value] ?? []), record];
+    return acc;
+  }, {});
+  return Object.entries(grouped)
+    .map(([value, records]) => {
+      const successes = records.filter((record) =>
+        ["contract_ready", "assigned", "closed_verified"].includes(record.conversionResult)
+      );
+      return {
+        value,
+        recordCount: records.length,
+        successCount: successes.length,
+        successRate: Math.round((successes.length / records.length) * 100),
+        projectedAssignmentFee: records.reduce((total, record) => total + record.projectedAssignmentFee, 0),
+        verifiedAssignmentFee: records.reduce((total, record) => total + record.verifiedAssignmentFee, 0),
+        sourceRecordIds: records.map((record) => record.id)
+      };
+    })
+    .sort((first, second) => second.successRate - first.successRate || second.verifiedAssignmentFee - first.verifiedAssignmentFee);
+}
+
+export const bestLearningLeadTypes = summarizeLearningBy("leadSource");
+export const bestLearningZipCodes = summarizeLearningBy("market");
+export const bestLearningBuyerProfiles = summarizeLearningBy("buyerType");
+export const bestLearningOfferStrategies = summarizeLearningBy("offerStrategy");
+export const lostOptimizationDeals = outcomeLearningRecords.filter((record) =>
+  ["lost", "stalled", "blocked"].includes(record.conversionResult)
+);
+export const staleFollowUpPatterns = outcomeLearningRecords.filter((record) =>
+  record.blockers.includes("stale_follow_up")
+);
+export const buyerPofBottleneckCount = outcomeLearningRecords.filter((record) =>
+  record.blockers.includes("buyer_pof_gap")
+).length;
+export const strong10kLearningProbability = outcomeLearningRecords.filter(
+  (record) =>
+    record.projectedAssignmentFee >= 10000 &&
+    record.sourceRecordsPresent &&
+    record.confidenceScore >= 75
+);
+export const missingLearningEvidence = outcomeLearningRecords.filter(
+  (record) => !record.sourceRecordsPresent || record.sourceEvidenceIds.length === 0
+);
+export const optimizationRecommendationsByImpact = [...optimizationRecommendations].sort(
+  (first, second) => second.impactScore - first.impactScore || second.confidenceScore - first.confidenceScore
+);
+export const agentPerformanceByScore = [...agentPerformanceScores].sort(
+  (first, second) => second.overallScore - first.overallScore
+);
+export const optimizationSafetyCards = [
+  { label: "Source evidence", value: String(outcomeLearningRecords.length - missingLearningEvidence.length), detail: "Learning records supported by source IDs" },
+  { label: "Missing evidence", value: String(missingLearningEvidence.length), detail: "Blocked from influencing confidence claims" },
+  { label: "Recommendations", value: String(optimizationRecommendations.length), detail: "Explainable and owner-reviewed" },
+  { label: "Scoring changes", value: String(scoringWeightChanges.length), detail: "Deterministic changes logged" }
 ];

@@ -258,6 +258,15 @@ Buyer acceleration V14 routes:
 - [http://localhost:3000/dashboard/buyer-response-router](http://localhost:3000/dashboard/buyer-response-router)
 - [http://localhost:3000/dashboard/buyer-velocity](http://localhost:3000/dashboard/buyer-velocity)
 
+Optimization learning V15 routes:
+
+- [http://localhost:3000/dashboard/optimization](http://localhost:3000/dashboard/optimization)
+- [http://localhost:3000/dashboard/optimization/patterns](http://localhost:3000/dashboard/optimization/patterns)
+- [http://localhost:3000/dashboard/optimization/recommendations](http://localhost:3000/dashboard/optimization/recommendations)
+- [http://localhost:3000/dashboard/optimization/agent-performance](http://localhost:3000/dashboard/optimization/agent-performance)
+- [http://localhost:3000/dashboard/optimization/lost-deals](http://localhost:3000/dashboard/optimization/lost-deals)
+- [http://localhost:3000/dashboard/optimization/source-quality](http://localhost:3000/dashboard/optimization/source-quality)
+
 ## Validation
 
 ```powershell

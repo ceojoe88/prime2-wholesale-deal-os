@@ -61,6 +61,7 @@ import {
   hotSellerLeads,
   highReadinessNegotiations,
   highestDemandZipCodes,
+  agentPerformanceByScore,
   leads,
   offerReadyPackets,
   offerPackets,
@@ -70,6 +71,8 @@ import {
   projectedAssignmentFeesAtRisk,
   projectedEvidenceAssignmentFees,
   projectedAssignmentTotal,
+  optimizationRecommendationsByImpact,
+  outcomeLearningRecords,
   reviewPacketBlocks,
   reviewPacketPrepReady,
   reviewPacketPreps,
@@ -89,6 +92,9 @@ import {
   tenKDealsWithStrongBuyerDemand,
   fastCloseBuyerList,
   fastestBuyerVelocity,
+  missingLearningEvidence,
+  scoringWeightChanges,
+  strong10kLearningProbability,
   underContractDeals,
   verified10kAssignmentFeeOpportunities,
   verifiedAssignmentFees
@@ -318,6 +324,24 @@ export default function DashboardPage() {
           <RecordCard title="Blocked sequences" meta={`${buyerSequencesBlocked.length} draft sequences flagged by sanitizer`} right={<Pill tone="red">review</Pill>} />
           <RecordCard title="Controlled sends" meta="Require buyer-visible deal, sanitized sheet, V5/V13 gates, owner approval, and one recipient." right={<Pill tone="gold">gated</Pill>} />
           <RecordCard title="Bulk buyer blast" meta="Blocked; no campaigns, fake scarcity, seller data, or internal profit logic exposure." right={<Pill tone="red">off</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V15 Deal Flow Optimization Learning">
+        <div className="grid-three">
+          <RecordCard title="Outcome learning records" meta={`${outcomeLearningRecords.length} closed, lost, blocked, and contract-ready outcomes`} right={<Pill>evidence</Pill>} />
+          <RecordCard title="Strong 10K+ probability" meta={`${strong10kLearningProbability.length} source-backed high-confidence records`} right={<Pill tone="green">10K+</Pill>} />
+          <RecordCard title="Optimization recommendations" meta={`${optimizationRecommendationsByImpact.length} explainable owner-review recommendations`} right={<Pill tone="gold">review</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Agent performance" meta={`${agentPerformanceByScore.length} division groups scored deterministically`} right={<Pill tone="green">{agentPerformanceByScore[0]?.overallScore ?? 0}</Pill>} />
+          <RecordCard title="Missing learning evidence" meta={`${missingLearningEvidence.length} records blocked from confidence claims`} right={<Pill tone={missingLearningEvidence.length ? "red" : "green"}>{missingLearningEvidence.length}</Pill>} />
+          <RecordCard title="Scoring changes logged" meta={`${scoringWeightChanges.length} source-tied feedback-loop changes`} right={<Pill tone="gold">logged</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Guaranteed revenue" meta="Blocked; recommendations are estimates and source-backed patterns only." right={<Pill tone="red">off</Pill>} />
+          <RecordCard title="Unsupported ROI" meta="Blocked; no fake revenue or ROI claims." right={<Pill tone="red">off</Pill>} />
+          <RecordCard title="Black-box ML" meta="Disabled; scoring is deterministic and explainable." right={<Pill tone="green">explainable</Pill>} />
         </div>
       </Section>
     </div>

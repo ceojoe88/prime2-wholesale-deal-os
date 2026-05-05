@@ -556,6 +556,12 @@ Internal routes:
 - `/dashboard/buyer-sequences`
 - `/dashboard/buyer-response-router`
 - `/dashboard/buyer-velocity`
+- `/dashboard/optimization`
+- `/dashboard/optimization/patterns`
+- `/dashboard/optimization/recommendations`
+- `/dashboard/optimization/agent-performance`
+- `/dashboard/optimization/lost-deals`
+- `/dashboard/optimization/source-quality`
 
 Auto-execution rule records store rule name, action type, source type, allowed recipient type, trigger, required conditions, approved template, autonomy level, live flag requirements, risk score, owner approval status, status, and blocked reasons.
 
@@ -710,6 +716,8 @@ V12 exception: near-autonomous execution is allowed only for internal scoring, r
 V13 exception: controlled auto-execution can complete internal reminders and task creation, prepare approved drafts, and mock-send a low-risk single message only when an approved rule, approved template, V5 safety, V5 dry-run receipt, V5 approval, live flags, provider readiness, single-recipient limit, idempotency, and audit creation all pass. It cannot send bulk campaigns, buyer blasts, cold SMS automation, legal/contract messages, pressure language, fake urgency, fake buyer claims, or any unapproved rule/template action.
 
 V14 exception: buyer distribution acceleration is allowed only as internal buyer ranking, sequence drafting, response routing, and velocity scoring. It can identify fastest buyers, POF gaps, controlled-distribution readiness, and draft follow-up sequences, but it cannot send buyer blasts, run bulk sends, expose seller/private data, expose internal spread or assignment-fee strategy, claim fake scarcity or competition, guarantee closing, or bypass the V5/V13 owner-approved one-recipient gate stack.
+
+V15 exception: deal-flow optimization is allowed only as deterministic, explainable, source-backed learning. It can detect patterns, recommend focus markets, tune follow-up priority, score agent performance, and log scoring-weight changes, but it cannot make guaranteed revenue claims, unsupported ROI claims, fake profit claims, or black-box scoring changes without source evidence.
 
 Allowed:
 

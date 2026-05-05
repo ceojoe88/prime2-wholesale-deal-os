@@ -12,6 +12,7 @@ from app.domain.communications import communication_dashboard
 from app.domain.contract_control import contract_title_dashboard
 from app.domain.deal_evidence import evidence_dashboard
 from app.domain.offer_conversion import offer_conversion_dashboard
+from app.domain.optimization import optimization_dashboard
 from app.domain.seller_acquisition import seller_pipeline_command_center
 from app.domain.seller_portal import seller_portal_dashboard
 from app.domain.title_review import title_review_dashboard
@@ -139,4 +140,5 @@ def build_command_center(session: Session) -> dict[str, object]:
         "near_autonomous_execution": autonomy_dashboard(session),
         "controlled_auto_execution": auto_execution_dashboard(session),
         "buyer_distribution_acceleration": buyer_acceleration_dashboard(session),
+        "deal_flow_optimization": optimization_dashboard(session),
     }

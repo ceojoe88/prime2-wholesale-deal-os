@@ -30,6 +30,10 @@ from app.domain.compliance import REQUIRED_CONFIRMATIONS
 from app.domain.contract_control import update_assignment_readiness, update_contract_prep_gate
 from app.domain.deal_evidence import sync_assignment_fee_attribution, sync_evidence_packet
 from app.domain.offer_conversion import sync_contract_ready_state, sync_negotiation_record
+from app.domain.optimization import (
+    agent_performance_overall,
+    validate_learning_record,
+)
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import ANALYSIS_ONLY_ACTIONS, BLOCKED_ACTIONS
 from app.domain.scoring import calculate_lead_opportunity, deal_speed_score
@@ -44,6 +48,7 @@ from app.domain.title_review import (
 )
 from app.models import (
     Agent,
+    AgentPerformanceScore,
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     AutomationAttempt,
@@ -84,11 +89,14 @@ from app.models import (
     NegotiationRecord,
     OfferPacket,
     OfferPositioningRecord,
+    OptimizationRecommendation,
+    OutcomeLearningRecord,
     ReviewPacketPrep,
     SellerInteraction,
     SellerOfferPublication,
     SellerPortalResponse,
     SchedulerRun,
+    ScoringWeightChange,
     TitleHandoffPacket,
     TitleReviewCoordination,
     UnifiedDealRoom,
@@ -3363,6 +3371,322 @@ def build_buyer_velocity_profile_records() -> list[dict[str, object]]:
     ]
 
 
+def build_outcome_learning_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "learning-001",
+            "deal_id": "deal-001",
+            "lead_source": "absentee owner",
+            "market": "75216",
+            "seller_type": "tired_landlord",
+            "buyer_type": "fast_close_verified_pof",
+            "offer_strategy": "cash-fast",
+            "follow_up_type": "seller_call_then_offer_explanation",
+            "conversion_result": "contract_ready",
+            "projected_assignment_fee": 24000,
+            "verified_assignment_fee": 24000,
+            "time_to_contract_ready_days": 5,
+            "blockers": [],
+            "lost_reason": "",
+            "confidence_score": 93,
+            "source_evidence_ids": ["evidence-001", "fee-001", "buyer-accel-001"],
+            "source_records_present": True,
+            "evidence_status": "supported",
+            "unsupported_revenue_claim": False,
+            "unsupported_roi_claim": False,
+        },
+        {
+            "id": "learning-002",
+            "deal_id": "deal-003",
+            "lead_source": "high equity",
+            "market": "75224",
+            "seller_type": "timeline_driven",
+            "buyer_type": "verified_pof_value_add",
+            "offer_strategy": "flexible-close",
+            "follow_up_type": "pof_request_then_detail_follow_up",
+            "conversion_result": "contract_ready",
+            "projected_assignment_fee": 18000,
+            "verified_assignment_fee": 0,
+            "time_to_contract_ready_days": 7,
+            "blockers": ["buyer_pof_gap"],
+            "lost_reason": "",
+            "confidence_score": 82,
+            "source_evidence_ids": ["evidence-002", "buyer-accel-002"],
+            "source_records_present": True,
+            "evidence_status": "supported",
+            "unsupported_revenue_claim": False,
+            "unsupported_roi_claim": False,
+        },
+        {
+            "id": "learning-003",
+            "deal_id": "deal-005",
+            "lead_source": "probate",
+            "market": "75216",
+            "seller_type": "inherited_property",
+            "buyer_type": "duplex_buyer",
+            "offer_strategy": "as-is",
+            "follow_up_type": "slow_document_follow_up",
+            "conversion_result": "blocked",
+            "projected_assignment_fee": 15000,
+            "verified_assignment_fee": 0,
+            "time_to_contract_ready_days": None,
+            "blockers": ["seller_document_missing", "compliance_review_missing"],
+            "lost_reason": "",
+            "confidence_score": 64,
+            "source_evidence_ids": ["evidence-003", "buyer-accel-003"],
+            "source_records_present": True,
+            "evidence_status": "supported",
+            "unsupported_revenue_claim": False,
+            "unsupported_roi_claim": False,
+        },
+        {
+            "id": "learning-004",
+            "deal_id": "deal-006",
+            "lead_source": "driving for dollars",
+            "market": "75211",
+            "seller_type": "price_focused",
+            "buyer_type": "repair_heavy_single_family",
+            "offer_strategy": "investor-grade",
+            "follow_up_type": "stale_follow_up",
+            "conversion_result": "lost",
+            "projected_assignment_fee": 7000,
+            "verified_assignment_fee": 0,
+            "time_to_contract_ready_days": None,
+            "blockers": ["stale_follow_up", "weak_buyer_margin"],
+            "lost_reason": "seller_price_misalignment",
+            "confidence_score": 58,
+            "source_evidence_ids": ["negotiation-004"],
+            "source_records_present": True,
+            "evidence_status": "supported",
+            "unsupported_revenue_claim": False,
+            "unsupported_roi_claim": False,
+        },
+        {
+            "id": "learning-005",
+            "deal_id": "deal-002",
+            "lead_source": "tax delinquent",
+            "market": "76104",
+            "seller_type": "urgent_timeline",
+            "buyer_type": "fast_small_deal_buyer",
+            "offer_strategy": "cash-fast",
+            "follow_up_type": "hot_lead_call_script",
+            "conversion_result": "assigned",
+            "projected_assignment_fee": 13000,
+            "verified_assignment_fee": 13000,
+            "time_to_contract_ready_days": 4,
+            "blockers": [],
+            "lost_reason": "",
+            "confidence_score": 89,
+            "source_evidence_ids": ["fee-002", "contract-ready-002"],
+            "source_records_present": True,
+            "evidence_status": "supported",
+            "unsupported_revenue_claim": False,
+            "unsupported_roi_claim": False,
+        },
+        {
+            "id": "learning-006",
+            "deal_id": "deal-007",
+            "lead_source": "vacant",
+            "market": "75217",
+            "seller_type": "low_contactability",
+            "buyer_type": "unverified_pof",
+            "offer_strategy": "aggressive_offer",
+            "follow_up_type": "generic_sms_draft",
+            "conversion_result": "stalled",
+            "projected_assignment_fee": 11000,
+            "verified_assignment_fee": 0,
+            "time_to_contract_ready_days": None,
+            "blockers": ["buyer_pof_gap", "low_contactability"],
+            "lost_reason": "contact_consistency_missing",
+            "confidence_score": 46,
+            "source_evidence_ids": [],
+            "source_records_present": False,
+            "evidence_status": "blocked",
+            "unsupported_revenue_claim": False,
+            "unsupported_roi_claim": False,
+        },
+    ]
+
+
+def build_optimization_recommendation_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "optimization-rec-001",
+            "recommendation_type": "focus_market",
+            "target": "75216 absentee/high-equity leads",
+            "recommendation": "Prioritize 75216 absentee-owner and high-equity leads before expanding colder lists.",
+            "explanation": "Learning records learning-001 and learning-003 show 75216 produces the strongest evidence-backed 10K+ opportunities, with compliance blockers clearly identified.",
+            "source_record_ids": ["learning-001", "learning-003"],
+            "confidence_score": 87,
+            "impact_score": 91,
+            "status": "draft_recommendation",
+            "owner_review_status": "pending_review",
+            "guaranteed_revenue_claim_allowed": False,
+            "unsupported_roi_claim_allowed": False,
+        },
+        {
+            "id": "optimization-rec-002",
+            "recommendation_type": "buyer_segment_to_target",
+            "target": "fast_close_verified_pof",
+            "recommendation": "Route controlled distribution prep first to verified POF buyers with strong response speed.",
+            "explanation": "Buyer acceleration and learning records show fast-close verified POF buyers remove POF blockers and shorten contract-ready time.",
+            "source_record_ids": ["learning-001", "learning-002", "buyer-velocity-001"],
+            "confidence_score": 85,
+            "impact_score": 88,
+            "status": "draft_recommendation",
+            "owner_review_status": "pending_review",
+            "guaranteed_revenue_claim_allowed": False,
+            "unsupported_roi_claim_allowed": False,
+        },
+        {
+            "id": "optimization-rec-003",
+            "recommendation_type": "script_improvement",
+            "target": "generic_sms_draft",
+            "recommendation": "Replace generic SMS-style follow-up with property-specific owner-reviewed call notes and offer-basis explanation.",
+            "explanation": "Learning records learning-004 and learning-006 show stale or generic follow-up correlates with low contact consistency and lost/stalled outcomes.",
+            "source_record_ids": ["learning-004", "learning-006"],
+            "confidence_score": 78,
+            "impact_score": 76,
+            "status": "draft_recommendation",
+            "owner_review_status": "pending_review",
+            "guaranteed_revenue_claim_allowed": False,
+            "unsupported_roi_claim_allowed": False,
+        },
+        {
+            "id": "optimization-rec-004",
+            "recommendation_type": "deal_type_to_avoid",
+            "target": "weak-margin aggressive offers",
+            "recommendation": "Avoid aggressive offers when buyer margin strength is below threshold and seller price alignment is weak.",
+            "explanation": "Learning records with weak buyer margin or missing POF stalled before contract-ready and should downweight aggressive positioning.",
+            "source_record_ids": ["learning-004", "learning-006"],
+            "confidence_score": 74,
+            "impact_score": 72,
+            "status": "draft_recommendation",
+            "owner_review_status": "pending_review",
+            "guaranteed_revenue_claim_allowed": False,
+            "unsupported_roi_claim_allowed": False,
+        },
+    ]
+
+
+def build_agent_performance_score_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "agent-performance-001",
+            "division_name": "Lead Intelligence Division",
+            "agent_group": "List Stacking + Contactability Agents",
+            "quality_score": 88,
+            "conversion_score": 82,
+            "accuracy_score": 86,
+            "effectiveness_score": 84,
+            "compliance_block_rate": 12,
+            "follow_up_score": 80,
+            "recommendation_accuracy": 84,
+            "overall_score": 84,
+            "explanation": "Strong source quality when contactability and stacking evidence are both present.",
+            "source_record_ids": ["learning-001", "learning-002", "learning-005"],
+        },
+        {
+            "id": "agent-performance-002",
+            "division_name": "Seller Acquisition Division",
+            "agent_group": "Motivation Discovery + Offer Explanation Agents",
+            "quality_score": 84,
+            "conversion_score": 78,
+            "accuracy_score": 82,
+            "effectiveness_score": 80,
+            "compliance_block_rate": 10,
+            "follow_up_score": 76,
+            "recommendation_accuracy": 81,
+            "overall_score": 81,
+            "explanation": "Offer explanation performs well; stale follow-up patterns need tighter priority.",
+            "source_record_ids": ["learning-001", "learning-004", "learning-006"],
+        },
+        {
+            "id": "agent-performance-003",
+            "division_name": "Deal Underwriting Division",
+            "agent_group": "ARV + Repair + MAO Agents",
+            "quality_score": 91,
+            "conversion_score": 84,
+            "accuracy_score": 90,
+            "effectiveness_score": 86,
+            "compliance_block_rate": 8,
+            "follow_up_score": 75,
+            "recommendation_accuracy": 88,
+            "overall_score": 87,
+            "explanation": "Underwriting accuracy is strongest when evidence packets are complete.",
+            "source_record_ids": ["learning-001", "learning-002", "learning-005"],
+        },
+        {
+            "id": "agent-performance-004",
+            "division_name": "Buyer Disposition Division",
+            "agent_group": "Buyer Demand + Buyer Reliability Agents",
+            "quality_score": 89,
+            "conversion_score": 86,
+            "accuracy_score": 86,
+            "effectiveness_score": 88,
+            "compliance_block_rate": 9,
+            "follow_up_score": 82,
+            "recommendation_accuracy": 87,
+            "overall_score": 87,
+            "explanation": "Verified POF routing and buyer velocity improve disposition speed.",
+            "source_record_ids": ["learning-001", "learning-002", "buyer-velocity-001"],
+        },
+        {
+            "id": "agent-performance-005",
+            "division_name": "Contract & Compliance Division",
+            "agent_group": "Disclosure Guard + State Risk Agents",
+            "quality_score": 86,
+            "conversion_score": 72,
+            "accuracy_score": 88,
+            "effectiveness_score": 78,
+            "compliance_block_rate": 18,
+            "follow_up_score": 74,
+            "recommendation_accuracy": 84,
+            "overall_score": 80,
+            "explanation": "Blocks are appropriate but inherited-property documentation gaps slow conversion.",
+            "source_record_ids": ["learning-003", "learning-004"],
+        },
+    ]
+
+
+def build_scoring_weight_change_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "weight-change-001",
+            "source_record_id": "learning-001",
+            "weight_group": "opportunity_score.market_demand",
+            "previous_weight": 0.18,
+            "new_weight": 0.21,
+            "reason": "Evidence-backed 10K+ conversion in high-demand 75216 segment.",
+            "explanation": "Increase is deterministic and tied to learning-001 evidence, not a black-box model.",
+            "logged_by": "Wholesale Prime",
+            "owner_review_status": "pending_review",
+        },
+        {
+            "id": "weight-change-002",
+            "source_record_id": "learning-006",
+            "weight_group": "buyer_ranking.pof_strength",
+            "previous_weight": 0.18,
+            "new_weight": 0.22,
+            "reason": "POF gaps show repeated stalls before contract-ready.",
+            "explanation": "Buyer ranking should prioritize proof-of-funds strength before access routing.",
+            "logged_by": "Wholesale Prime",
+            "owner_review_status": "pending_review",
+        },
+        {
+            "id": "weight-change-003",
+            "source_record_id": "learning-004",
+            "weight_group": "follow_up_priority.staleness_penalty",
+            "previous_weight": 0.12,
+            "new_weight": 0.17,
+            "reason": "Stale follow-up pattern correlates with lost seller price alignment.",
+            "explanation": "Follow-up priority should escalate stale high-fit leads sooner.",
+            "logged_by": "Wholesale Prime",
+            "owner_review_status": "pending_review",
+        },
+    ]
+
+
 def build_assignment_readiness_records() -> list[dict[str, object]]:
     return [
         {
@@ -4512,6 +4836,10 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "buyer_sequence_preps": build_buyer_sequence_prep_records(),
         "buyer_response_routes": build_buyer_response_route_records(),
         "buyer_velocity_profiles": build_buyer_velocity_profile_records(),
+        "outcome_learning_records": build_outcome_learning_records(),
+        "optimization_recommendations": build_optimization_recommendation_records(),
+        "agent_performance_scores": build_agent_performance_score_records(),
+        "scoring_weight_changes": build_scoring_weight_change_records(),
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
@@ -4536,6 +4864,10 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        ScoringWeightChange,
+        AgentPerformanceScore,
+        OptimizationRecommendation,
+        OutcomeLearningRecord,
         BuyerVelocityProfile,
         BuyerResponseRoute,
         BuyerSequencePrep,
@@ -4643,6 +4975,19 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         BuyerVelocityProfile(**row) for row in payload["buyer_velocity_profiles"]
     )
+    session.add_all(
+        OutcomeLearningRecord(**row) for row in payload["outcome_learning_records"]
+    )
+    session.add_all(
+        OptimizationRecommendation(**row)
+        for row in payload["optimization_recommendations"]
+    )
+    session.add_all(
+        AgentPerformanceScore(**row) for row in payload["agent_performance_scores"]
+    )
+    session.add_all(
+        ScoringWeightChange(**row) for row in payload["scoring_weight_changes"]
+    )
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
     session.add_all(
         SellerOfferPublication(**row)
@@ -4732,5 +5077,9 @@ def seed_database(session: Session) -> dict[str, int]:
         sync_buyer_sequence(sequence)
     for profile in session.query(BuyerVelocityProfile).all():
         buyer_velocity_score(profile)
+    for learning_record in session.query(OutcomeLearningRecord).all():
+        validate_learning_record(learning_record)
+    for performance in session.query(AgentPerformanceScore).all():
+        agent_performance_overall(performance)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

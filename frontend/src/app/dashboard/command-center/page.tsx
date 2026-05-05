@@ -80,7 +80,13 @@ import {
   buyerAccelerationPofGaps,
   buyerAccelerationReadyDeals,
   buyerResponsesNeedingOwnerAction,
-  buyerSequencesBlocked
+  buyerSequencesBlocked,
+  agentPerformanceByScore,
+  missingLearningEvidence,
+  optimizationRecommendationsByImpact,
+  outcomeLearningRecords,
+  scoringWeightChanges,
+  strong10kLearningProbability
 } from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
@@ -171,6 +177,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Buyer POF response gaps" value={String(buyerAccelerationPofGaps.length)} detail="Routed before access or offer intent" />
         <MetricCard label="Top buyer velocity" value={String(fastestBuyerVelocity[0]?.velocityScore ?? 0)} detail="Fast-close ranking score" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Learning records" value={String(outcomeLearningRecords.length)} detail="Source-backed outcome history" />
+        <MetricCard label="10K+ probability" value={String(strong10kLearningProbability.length)} detail="High-confidence learning records" />
+        <MetricCard label="Optimization recs" value={String(optimizationRecommendationsByImpact.length)} detail="Explainable owner-review queue" />
+        <MetricCard label="Learning evidence gaps" value={String(missingLearningEvidence.length)} detail="Blocked from confidence claims" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -229,6 +241,11 @@ export default function CommandCenterPage() {
               ["high", "Route buyer POF gaps", `${buyerAccelerationPofGaps.length} buyer responses require proof-of-funds handling`],
               ["normal", "Inspect buyer sequence safety", `${buyerSequencesBlocked.length} buyer sequence drafts need sanitizer review`],
               ["normal", "Review buyer response owner queue", `${buyerResponsesNeedingOwnerAction.length} buyer responses need owner action`],
+              ["critical", "Review optimization recommendations", `${optimizationRecommendationsByImpact.length} V15 recommendations are explainable and owner-reviewable`],
+              ["high", "Clear learning evidence gaps", `${missingLearningEvidence.length} outcome learning records cannot support confidence claims yet`],
+              ["high", "Inspect 10K+ learning patterns", `${strong10kLearningProbability.length} source-backed records show strong 10K+ probability`],
+              ["normal", "Review agent performance scoring", `${agentPerformanceByScore.length} division groups scored; top score ${agentPerformanceByScore[0]?.overallScore ?? 0}`],
+              ["normal", "Approve scoring weight changes", `${scoringWeightChanges.length} deterministic feedback-loop changes are logged`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

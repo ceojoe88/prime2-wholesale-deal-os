@@ -921,6 +921,80 @@ class BuyerVelocityProfile(TimestampMixin, Base):
     draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
+class OutcomeLearningRecord(TimestampMixin, Base):
+    __tablename__ = "outcome_learning_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str | None] = mapped_column(ForeignKey("deals.id"), nullable=True)
+    lead_source: Mapped[str] = mapped_column(String(120), default="")
+    market: Mapped[str] = mapped_column(String(120), default="")
+    seller_type: Mapped[str] = mapped_column(String(120), default="")
+    buyer_type: Mapped[str] = mapped_column(String(120), default="")
+    offer_strategy: Mapped[str] = mapped_column(String(120), default="")
+    follow_up_type: Mapped[str] = mapped_column(String(120), default="")
+    conversion_result: Mapped[str] = mapped_column(String(120), default="")
+    projected_assignment_fee: Mapped[int] = mapped_column(Integer, default=0)
+    verified_assignment_fee: Mapped[int] = mapped_column(Integer, default=0)
+    time_to_contract_ready_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    blockers: Mapped[list[str]] = mapped_column(JSON, default=list)
+    lost_reason: Mapped[str] = mapped_column(Text, default="")
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    source_evidence_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    source_records_present: Mapped[bool] = mapped_column(Boolean, default=False)
+    evidence_status: Mapped[str] = mapped_column(String(80), default="missing_source_evidence")
+    unsupported_revenue_claim: Mapped[bool] = mapped_column(Boolean, default=False)
+    unsupported_roi_claim: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class OptimizationRecommendation(TimestampMixin, Base):
+    __tablename__ = "optimization_recommendations"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    recommendation_type: Mapped[str] = mapped_column(String(120), default="")
+    target: Mapped[str] = mapped_column(String(160), default="")
+    recommendation: Mapped[str] = mapped_column(Text, default="")
+    explanation: Mapped[str] = mapped_column(Text, default="")
+    source_record_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    impact_score: Mapped[float] = mapped_column(Float, default=0)
+    status: Mapped[str] = mapped_column(String(80), default="draft_recommendation")
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    guaranteed_revenue_claim_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    unsupported_roi_claim_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class AgentPerformanceScore(TimestampMixin, Base):
+    __tablename__ = "agent_performance_scores"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    division_name: Mapped[str] = mapped_column(String(160), default="")
+    agent_group: Mapped[str] = mapped_column(String(160), default="")
+    quality_score: Mapped[float] = mapped_column(Float, default=0)
+    conversion_score: Mapped[float] = mapped_column(Float, default=0)
+    accuracy_score: Mapped[float] = mapped_column(Float, default=0)
+    effectiveness_score: Mapped[float] = mapped_column(Float, default=0)
+    compliance_block_rate: Mapped[float] = mapped_column(Float, default=0)
+    follow_up_score: Mapped[float] = mapped_column(Float, default=0)
+    recommendation_accuracy: Mapped[float] = mapped_column(Float, default=0)
+    overall_score: Mapped[float] = mapped_column(Float, default=0)
+    explanation: Mapped[str] = mapped_column(Text, default="")
+    source_record_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class ScoringWeightChange(TimestampMixin, Base):
+    __tablename__ = "scoring_weight_changes"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    weight_group: Mapped[str] = mapped_column(String(120), default="")
+    previous_weight: Mapped[float] = mapped_column(Float, default=0)
+    new_weight: Mapped[float] = mapped_column(Float, default=0)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    explanation: Mapped[str] = mapped_column(Text, default="")
+    logged_by: Mapped[str] = mapped_column(String(120), default="Wholesale Prime")
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+
+
 class ComplianceRecord(TimestampMixin, Base):
     __tablename__ = "compliance_records"
 

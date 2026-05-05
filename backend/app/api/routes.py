@@ -79,6 +79,12 @@ from app.domain.offer_conversion import (
     offer_positioning_summary,
     validate_conversion_language,
 )
+from app.domain.optimization import (
+    agent_performance_overall,
+    optimization_dashboard,
+    validate_learning_record,
+    validate_optimization_claim,
+)
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.rules import system_rules, validate_action
 from app.domain.seller_acquisition import (
@@ -144,13 +150,17 @@ from app.models import (
     Division,
     Lead,
     NegotiationRecord,
+    AgentPerformanceScore,
     OfferPacket,
     OfferPositioningRecord,
+    OptimizationRecommendation,
+    OutcomeLearningRecord,
     ReviewPacketPrep,
     SellerInteraction,
     SellerOfferPublication,
     SellerPortalResponse,
     SchedulerRun,
+    ScoringWeightChange,
     TitleReviewCoordination,
     TitleHandoffPacket,
     UnifiedDealRoom,
@@ -184,6 +194,10 @@ class DistributionSafetyRequest(BaseModel):
 
 
 class BuyerSequenceSafetyRequest(BaseModel):
+    content: str
+
+
+class OptimizationClaimRequest(BaseModel):
     content: str
 
 
@@ -1029,6 +1043,85 @@ def buyer_velocity(session: Session = Depends(get_session)) -> dict[str, object]
         "live_contact_allowed": False,
         "buyer_blast_allowed": False,
     }
+
+
+@router.get("/optimization")
+def optimization(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = optimization_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/optimization/patterns")
+def optimization_patterns(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = optimization_dashboard(session)
+    session.commit()
+    return dashboard["patterns"]
+
+
+@router.get("/optimization/recommendations")
+def optimization_recommendations(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = optimization_dashboard(session)
+    session.commit()
+    return {
+        "optimization_recommendations": dashboard["optimization_recommendations"],
+        "explainable_recommendations_only": True,
+        "guaranteed_revenue_allowed": False,
+        "unsupported_roi_allowed": False,
+    }
+
+
+@router.get("/optimization/agent-performance")
+def optimization_agent_performance(session: Session = Depends(get_session)) -> dict[str, object]:
+    scores = session.query(AgentPerformanceScore).all()
+    for score in scores:
+        agent_performance_overall(score)
+    session.commit()
+    return {
+        "agent_performance_scores": [model_to_dict(score) for score in scores],
+        "deterministic_scoring": True,
+    }
+
+
+@router.get("/optimization/lost-deals")
+def optimization_lost_deals(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = optimization_dashboard(session)
+    session.commit()
+    return {
+        "lost_deals": dashboard["lost_deals"],
+        "deals_dying_before_contract_ready": dashboard["patterns"][
+            "deals_dying_before_contract_ready"
+        ],
+    }
+
+
+@router.get("/optimization/source-quality")
+def optimization_source_quality(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = optimization_dashboard(session)
+    session.commit()
+    return {
+        "source_quality": dashboard["source_quality"],
+        "scoring_weight_changes": dashboard["scoring_weight_changes"],
+        "changes_logged": len(dashboard["scoring_weight_changes"]),
+    }
+
+
+@router.post("/optimization/safety/validate")
+def optimization_safety(payload: OptimizationClaimRequest) -> dict[str, object]:
+    return validate_optimization_claim(payload.content)
+
+
+@router.get("/optimization/records/{record_id}/gate")
+def optimization_record_gate(
+    record_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    record = session.get(OutcomeLearningRecord, record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Learning record not found")
+    gate = validate_learning_record(record)
+    session.commit()
+    return {**model_to_dict(record), "gate": gate}
 
 
 @router.get("/offer-conversion")
