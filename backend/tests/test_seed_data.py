@@ -48,6 +48,12 @@ def test_seed_payload_counts_and_hot_deals():
     assert len(payload["deal_probability_records"]) == 4
     assert len(payload["market_scaling_scores"]) == 3
     assert len(payload["lead_spend_plans"]) == 2
+    assert len(payload["operator_mode_settings"]) == 2
+    assert len(payload["semi_autonomous_command_loop_runs"]) == 1
+    assert len(payload["owner_approval_items"]) == 9
+    assert len(payload["operator_exception_records"]) == 4
+    assert len(payload["autonomous_daily_operating_reports"]) == 1
+    assert len(payload["system_trust_scores"]) == 1
     assert len(payload["contract_controls"]) == 5
     assert len(payload["seller_offer_publications"]) == 5
     assert len(payload["seller_portal_responses"]) == 4

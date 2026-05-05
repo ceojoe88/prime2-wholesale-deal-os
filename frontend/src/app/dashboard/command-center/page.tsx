@@ -91,7 +91,11 @@ import {
   pipelineRevenueAtRisk,
   likely10kDealProbabilities,
   marketRanking,
-  leadSpendRecommendations
+  leadSpendRecommendations,
+  activeOperatorMode,
+  pendingOwnerApprovals,
+  operatorExceptionsOpen,
+  currentSystemTrustScore
 } from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
@@ -194,6 +198,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Likely 10K+ deals" value={String(likely10kDealProbabilities.length)} detail="High-probability source records" />
         <MetricCard label="Top market" value={marketRanking[0]?.marketZip ?? "n/a"} detail={marketRanking[0]?.recommendedSpendLevel ?? "market scaling"} />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Operator mode" value={activeOperatorMode.currentMode} detail="V17 controlled mode" />
+        <MetricCard label="Owner approvals" value={String(pendingOwnerApprovals.length)} detail="High-risk actions wait here" />
+        <MetricCard label="Exceptions" value={String(operatorExceptionsOpen.length)} detail="Money/risk exception queue" />
+        <MetricCard label="Trust score" value={String(currentSystemTrustScore.overallTrustScore)} detail={currentSystemTrustScore.trustStatus} />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -262,6 +272,9 @@ export default function CommandCenterPage() {
               ["high", "Review market scaling", `${marketRanking[0]?.marketZip ?? "n/a"} leads current source-backed scaling rank`],
               ["normal", "Approve lead spend plan", `${leadSpendRecommendations.length} evidence-backed spend recommendations require owner review`],
               ["normal", "Inspect likely 10K+ forecast deals", `${likely10kDealProbabilities.length} probability records are above the 10K+ threshold`],
+              ["critical", "Work owner approval console", `${pendingOwnerApprovals.length} V17 approval items are queued before real-world action`],
+              ["critical", "Review operator exceptions", `${operatorExceptionsOpen.length} exceptions require strategic or risk review`],
+              ["normal", "Check system trust score", `Trust score ${currentSystemTrustScore.overallTrustScore} with status ${currentSystemTrustScore.trustStatus}`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

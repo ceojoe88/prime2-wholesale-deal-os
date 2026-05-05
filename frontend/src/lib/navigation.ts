@@ -33,6 +33,7 @@ export const dashboardRoutes = [
   { href: "/dashboard/revenue-forecast", label: "Revenue Forecast", icon: "CircleDollarSign" },
   { href: "/dashboard/market-scaling", label: "Market Scaling", icon: "MapPinned" },
   { href: "/dashboard/lead-spend-planner", label: "Lead Spend", icon: "Calculator" },
+  { href: "/dashboard/operator-mode", label: "Operator Mode", icon: "Command" },
   { href: "/dashboard/offer-conversion", label: "Offer Conversion", icon: "FileCheck2" },
   { href: "/dashboard/negotiations", label: "Negotiations", icon: "ListChecks" },
   { href: "/dashboard/contract-ready", label: "Contract Ready", icon: "ShieldCheck" },

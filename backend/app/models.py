@@ -1070,6 +1070,113 @@ class LeadSpendPlan(TimestampMixin, Base):
     owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
 
 
+class OperatorModeSetting(TimestampMixin, Base):
+    __tablename__ = "operator_mode_settings"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    current_mode: Mapped[str] = mapped_column(String(80), default="near_autonomous")
+    default_mode: Mapped[str] = mapped_column(String(80), default="near_autonomous")
+    semi_autonomous_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    owner_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    max_autonomy_level: Mapped[int] = mapped_column(Integer, default=4)
+    level_5_disabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    high_risk_requires_approval: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_actions_require_gates: Mapped[bool] = mapped_column(Boolean, default=True)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_campaigns_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    payment_handling_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class SemiAutonomousCommandLoopRun(TimestampMixin, Base):
+    __tablename__ = "semi_autonomous_command_loop_runs"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    mode_setting_id: Mapped[str] = mapped_column(ForeignKey("operator_mode_settings.id"), nullable=False)
+    cycle_status: Mapped[str] = mapped_column(String(80), default="prepared_waiting_approvals")
+    scan_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    score_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    route_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    prepared_items: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    gate_checks: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    escalations: Mapped[list[str]] = mapped_column(JSON, default=list)
+    approvals_waiting: Mapped[list[str]] = mapped_column(JSON, default=list)
+    outcomes_logged: Mapped[list[str]] = mapped_column(JSON, default=list)
+    optimized_records: Mapped[list[str]] = mapped_column(JSON, default=list)
+    high_risk_actions_executed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contracts_executed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submitted: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_campaigns_sent: Mapped[bool] = mapped_column(Boolean, default=False)
+    portal_publish_without_approval: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class OwnerApprovalItem(TimestampMixin, Base):
+    __tablename__ = "owner_approval_items"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    approval_type: Mapped[str] = mapped_column(String(120), default="")
+    source_record_type: Mapped[str] = mapped_column(String(120), default="")
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    title: Mapped[str] = mapped_column(String(180), default="")
+    risk_level: Mapped[str] = mapped_column(String(80), default="medium")
+    approval_status: Mapped[str] = mapped_column(String(80), default="pending_owner")
+    owner_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    ready_for_approval: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    action_summary: Mapped[str] = mapped_column(Text, default="")
+    high_risk_action: Mapped[bool] = mapped_column(Boolean, default=False)
+    executed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class OperatorExceptionRecord(TimestampMixin, Base):
+    __tablename__ = "operator_exception_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    exception_type: Mapped[str] = mapped_column(String(120), default="")
+    severity: Mapped[str] = mapped_column(String(80), default="medium")
+    source_record_type: Mapped[str] = mapped_column(String(120), default="")
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    reason: Mapped[str] = mapped_column(Text, default="")
+    recommended_action: Mapped[str] = mapped_column(Text, default="")
+    owner_action_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    status: Mapped[str] = mapped_column(String(80), default="open")
+
+
+class AutonomousDailyOperatingReport(TimestampMixin, Base):
+    __tablename__ = "autonomous_daily_operating_reports"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    report_date: Mapped[str] = mapped_column(String(40), default="")
+    generated_by: Mapped[str] = mapped_column(String(120), default="Wholesale Prime")
+    what_system_did: Mapped[list[str]] = mapped_column(JSON, default=list)
+    what_prepared: Mapped[list[str]] = mapped_column(JSON, default=list)
+    what_blocked: Mapped[list[str]] = mapped_column(JSON, default=list)
+    needs_owner_approval: Mapped[list[str]] = mapped_column(JSON, default=list)
+    top_money_actions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    top_risk_actions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    projected_assignment_fee_movement: Mapped[int] = mapped_column(Integer, default=0)
+    recommended_focus_today: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    high_risk_actions_executed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class SystemTrustScore(TimestampMixin, Base):
+    __tablename__ = "system_trust_scores"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    automation_success_rate: Mapped[float] = mapped_column(Float, default=0)
+    blocked_unsafe_actions: Mapped[int] = mapped_column(Integer, default=0)
+    approval_queue_age_hours: Mapped[float] = mapped_column(Float, default=0)
+    stale_tasks: Mapped[int] = mapped_column(Integer, default=0)
+    scoring_confidence: Mapped[float] = mapped_column(Float, default=0)
+    forecast_confidence: Mapped[float] = mapped_column(Float, default=0)
+    buyer_response_velocity: Mapped[float] = mapped_column(Float, default=0)
+    seller_conversion_velocity: Mapped[float] = mapped_column(Float, default=0)
+    overall_trust_score: Mapped[float] = mapped_column(Float, default=0)
+    trust_status: Mapped[str] = mapped_column(String(80), default="review")
+    source_record_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
 class ComplianceRecord(TimestampMixin, Base):
     __tablename__ = "compliance_records"
 

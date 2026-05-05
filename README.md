@@ -274,6 +274,15 @@ Revenue forecast/scaling V16 routes:
 - [http://localhost:3000/dashboard/lead-spend-planner](http://localhost:3000/dashboard/lead-spend-planner)
 - [http://localhost:3000/dashboard/pipeline-value](http://localhost:3000/dashboard/pipeline-value)
 
+Semi-autonomous operator mode V17 routes:
+
+- [http://localhost:3000/dashboard/operator-mode](http://localhost:3000/dashboard/operator-mode)
+- [http://localhost:3000/dashboard/operator-mode/approvals](http://localhost:3000/dashboard/operator-mode/approvals)
+- [http://localhost:3000/dashboard/operator-mode/exceptions](http://localhost:3000/dashboard/operator-mode/exceptions)
+- [http://localhost:3000/dashboard/operator-mode/daily-report](http://localhost:3000/dashboard/operator-mode/daily-report)
+- [http://localhost:3000/dashboard/operator-mode/system-trust](http://localhost:3000/dashboard/operator-mode/system-trust)
+- [http://localhost:3000/dashboard/operator-mode/settings](http://localhost:3000/dashboard/operator-mode/settings)
+
 ## Validation
 
 ```powershell

@@ -567,6 +567,12 @@ Internal routes:
 - `/dashboard/market-scaling`
 - `/dashboard/lead-spend-planner`
 - `/dashboard/pipeline-value`
+- `/dashboard/operator-mode`
+- `/dashboard/operator-mode/approvals`
+- `/dashboard/operator-mode/exceptions`
+- `/dashboard/operator-mode/daily-report`
+- `/dashboard/operator-mode/system-trust`
+- `/dashboard/operator-mode/settings`
 
 Auto-execution rule records store rule name, action type, source type, allowed recipient type, trigger, required conditions, approved template, autonomy level, live flag requirements, risk score, owner approval status, status, and blocked reasons.
 
@@ -725,6 +731,8 @@ V14 exception: buyer distribution acceleration is allowed only as internal buyer
 V15 exception: deal-flow optimization is allowed only as deterministic, explainable, source-backed learning. It can detect patterns, recommend focus markets, tune follow-up priority, score agent performance, and log scoring-weight changes, but it cannot make guaranteed revenue claims, unsupported ROI claims, fake profit claims, or black-box scoring changes without source evidence.
 
 V16 exception: revenue forecasting and market scaling are allowed only as estimate-labeled, source-backed planning tools. They can calculate probability-adjusted pipeline value, conservative/base/aggressive forecast scenarios, market scaling scores, and lead-spend recommendations, but they cannot guarantee revenue or profit, invent close probabilities, recommend unsupported spend, or present ROI without evidence and owner review.
+
+V17 exception: semi-autonomous operator mode can run the internal scan-score-route-prepare-check-escalate-brief-log-optimize loop and queue owner approvals, but it cannot bypass approvals, execute contracts, submit title packets, send bulk campaigns, change seller/buyer terms, publish portals without approval, handle payments, provide legal advice, guarantee closing/profit, or enable Level 5 autonomy.
 
 Allowed:
 

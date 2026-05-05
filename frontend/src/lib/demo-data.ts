@@ -787,6 +787,101 @@ export type LeadSpendPlan = {
   ownerReviewStatus: string;
 };
 
+export type OperatorModeSetting = {
+  id: string;
+  currentMode: "manual" | "assisted" | "near_autonomous" | "semi_autonomous";
+  defaultMode: "manual" | "assisted" | "near_autonomous" | "semi_autonomous";
+  semiAutonomousEnabled: boolean;
+  ownerEnabled: boolean;
+  maxAutonomyLevel: number;
+  level5Disabled: true;
+  highRiskRequiresApproval: true;
+  liveActionsRequireGates: true;
+  contractExecutionAllowed: false;
+  titleSubmissionAllowed: false;
+  bulkCampaignsAllowed: false;
+  paymentHandlingAllowed: false;
+};
+
+export type SemiAutonomousCommandLoopRun = {
+  id: string;
+  modeSettingId: string;
+  cycleStatus: string;
+  scanSummary: Record<string, string | number | boolean>;
+  scoreSummary: Record<string, string | number | boolean>;
+  routeSummary: Record<string, string | number | boolean>;
+  preparedItems: { type: string; source: string }[];
+  gateChecks: { gate: string; passed: boolean }[];
+  escalations: string[];
+  approvalsWaiting: string[];
+  outcomesLogged: string[];
+  optimizedRecords: string[];
+  highRiskActionsExecuted: false;
+  contractsExecuted: false;
+  titleSubmitted: false;
+  bulkCampaignsSent: false;
+  portalPublishWithoutApproval: false;
+};
+
+export type OwnerApprovalItem = {
+  id: string;
+  approvalType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  title: string;
+  riskLevel: string;
+  approvalStatus: string;
+  ownerRequired: true;
+  readyForApproval: boolean;
+  blockedReasons: string[];
+  actionSummary: string;
+  highRiskAction: boolean;
+  executed: false;
+};
+
+export type OperatorExceptionRecord = {
+  id: string;
+  exceptionType: string;
+  severity: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  reason: string;
+  recommendedAction: string;
+  ownerActionRequired: true;
+  status: string;
+};
+
+export type AutonomousDailyOperatingReport = {
+  id: string;
+  reportDate: string;
+  generatedBy: string;
+  whatSystemDid: string[];
+  whatPrepared: string[];
+  whatBlocked: string[];
+  needsOwnerApproval: string[];
+  topMoneyActions: string[];
+  topRiskActions: string[];
+  projectedAssignmentFeeMovement: number;
+  recommendedFocusToday: string[];
+  draftOnly: true;
+  highRiskActionsExecuted: false;
+};
+
+export type SystemTrustScore = {
+  id: string;
+  automationSuccessRate: number;
+  blockedUnsafeActions: number;
+  approvalQueueAgeHours: number;
+  staleTasks: number;
+  scoringConfidence: number;
+  forecastConfidence: number;
+  buyerResponseVelocity: number;
+  sellerConversionVelocity: number;
+  overallTrustScore: number;
+  trustStatus: string;
+  sourceRecordIds: string[];
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1809,6 +1904,42 @@ export const leadSpendPlans: LeadSpendPlan[] = [
   { id: "lead-spend-002", targetZipCodes: ["75217"], leadTypes: ["vacant"], maxMonthlySpend: 0, expectedDealCount: 0.2, expectedAssignmentFeeLow: 0, expectedAssignmentFeeHigh: 11000, breakEvenAssignmentTarget: 10000, evidenceBasis: ["market-scale-003", "learning-006"], recommendationStatus: "avoid_or_research", unsupportedSpendRecommended: false, estimateOnly: true, ownerReviewStatus: "pending_review" }
 ];
 
+export const operatorModeSettings: OperatorModeSetting[] = [
+  { id: "operator-mode-default", currentMode: "near_autonomous", defaultMode: "near_autonomous", semiAutonomousEnabled: false, ownerEnabled: false, maxAutonomyLevel: 4, level5Disabled: true, highRiskRequiresApproval: true, liveActionsRequireGates: true, contractExecutionAllowed: false, titleSubmissionAllowed: false, bulkCampaignsAllowed: false, paymentHandlingAllowed: false },
+  { id: "operator-mode-ready", currentMode: "semi_autonomous", defaultMode: "near_autonomous", semiAutonomousEnabled: true, ownerEnabled: true, maxAutonomyLevel: 4, level5Disabled: true, highRiskRequiresApproval: true, liveActionsRequireGates: true, contractExecutionAllowed: false, titleSubmissionAllowed: false, bulkCampaignsAllowed: false, paymentHandlingAllowed: false }
+];
+
+export const semiAutonomousCommandLoopRuns: SemiAutonomousCommandLoopRun[] = [
+  { id: "operator-loop-001", modeSettingId: "operator-mode-ready", cycleStatus: "prepared_waiting_approvals", scanSummary: { hotDeals: 5, buyerResponses: 4, forecastRisk: 26200 }, scoreSummary: { topDeal: "deal-001", topProbability: 89, trustScore: 82 }, routeSummary: { approvals: 9, exceptions: 4, dailyReport: "operator-report-001" }, preparedItems: [{ type: "buyer_distribution", source: "buyer-accel-001" }, { type: "title_review_packet", source: "title-review-001" }, { type: "forecast_spend_recommendation", source: "lead-spend-001" }], gateChecks: [{ gate: "owner_approval_required", passed: true }, { gate: "level_5_disabled", passed: true }, { gate: "contract_execution_blocked", passed: true }, { gate: "title_submission_blocked", passed: true }], escalations: ["operator-exception-001", "operator-exception-002"], approvalsWaiting: ["approval-001", "approval-002", "approval-006"], outcomesLogged: ["learning-001", "forecast-2026-05"], optimizedRecords: ["optimization-rec-001", "weight-change-001"], highRiskActionsExecuted: false, contractsExecuted: false, titleSubmitted: false, bulkCampaignsSent: false, portalPublishWithoutApproval: false }
+];
+
+export const ownerApprovalItems: OwnerApprovalItem[] = [
+  { id: "approval-001", approvalType: "seller_follow_up_live_send", sourceRecordType: "communication_draft", sourceRecordId: "comm-draft-001", title: "Approve seller follow-up live send", riskLevel: "medium", approvalStatus: "pending_owner", ownerRequired: true, readyForApproval: true, blockedReasons: [], actionSummary: "One seller follow-up draft passed safety and dry-run; approval still required.", highRiskAction: true, executed: false },
+  { id: "approval-002", approvalType: "buyer_response_live_send", sourceRecordType: "auto_execution_attempt", sourceRecordId: "auto-attempt-002", title: "Approve buyer response mock/live gate", riskLevel: "medium", approvalStatus: "pending_owner", ownerRequired: true, readyForApproval: true, blockedReasons: [], actionSummary: "Single buyer response remains one-recipient and V5/V13 gated.", highRiskAction: true, executed: false },
+  { id: "approval-003", approvalType: "offer_packet_prep", sourceRecordType: "offer_packet", sourceRecordId: "packet-001", title: "Approve offer packet prep", riskLevel: "medium", approvalStatus: "pending_owner", ownerRequired: true, readyForApproval: true, blockedReasons: [], actionSummary: "Underwriting and compliance gates are clear for draft packet prep.", highRiskAction: false, executed: false },
+  { id: "approval-004", approvalType: "contract_ready_status", sourceRecordType: "contract_ready_state", sourceRecordId: "contract-ready-001", title: "Approve contract-ready state", riskLevel: "high", approvalStatus: "pending_owner", ownerRequired: true, readyForApproval: true, blockedReasons: [], actionSummary: "Marks external drafting readiness only; no contract is generated.", highRiskAction: true, executed: false },
+  { id: "approval-005", approvalType: "title_review_packet", sourceRecordType: "review_packet", sourceRecordId: "review-packet-001", title: "Approve title review packet prep", riskLevel: "high", approvalStatus: "pending_owner", ownerRequired: true, readyForApproval: true, blockedReasons: [], actionSummary: "Draft review packet only; no title submission or email send.", highRiskAction: true, executed: false },
+  { id: "approval-006", approvalType: "buyer_distribution", sourceRecordType: "buyer_acceleration", sourceRecordId: "buyer-accel-001", title: "Approve controlled buyer distribution", riskLevel: "medium", approvalStatus: "pending_owner", ownerRequired: true, readyForApproval: true, blockedReasons: [], actionSummary: "One buyer, sanitized sheet, no blast, V5/V13 gates present.", highRiskAction: true, executed: false },
+  { id: "approval-007", approvalType: "portal_visibility", sourceRecordType: "buyer_deal_publication", sourceRecordId: "publication-001", title: "Approve portal visibility", riskLevel: "medium", approvalStatus: "pending_owner", ownerRequired: true, readyForApproval: false, blockedReasons: ["final_owner_visibility_review_missing"], actionSummary: "Portal publish remains blocked until explicit owner visibility approval.", highRiskAction: true, executed: false },
+  { id: "approval-008", approvalType: "forecast_spend_recommendation", sourceRecordType: "lead_spend_plan", sourceRecordId: "lead-spend-001", title: "Approve lead spend estimate", riskLevel: "medium", approvalStatus: "pending_owner", ownerRequired: true, readyForApproval: true, blockedReasons: [], actionSummary: "Spend plan is evidence-backed and estimate-labeled.", highRiskAction: false, executed: false },
+  { id: "approval-009", approvalType: "automation_rule_activation", sourceRecordType: "auto_execution_rule", sourceRecordId: "auto-rule-buyer-response-send", title: "Approve automation rule activation", riskLevel: "high", approvalStatus: "pending_owner", ownerRequired: true, readyForApproval: true, blockedReasons: [], actionSummary: "Level 4 remains owner-approved and one-recipient only.", highRiskAction: true, executed: false }
+];
+
+export const operatorExceptionRecords: OperatorExceptionRecord[] = [
+  { id: "operator-exception-001", exceptionType: "high_profit_potential", severity: "critical", sourceRecordType: "deal", sourceRecordId: "deal-001", reason: "High probability 10K+ spread with buyer demand and title readiness.", recommendedAction: "Review approvals for buyer distribution and title review packet.", ownerActionRequired: true, status: "open" },
+  { id: "operator-exception-002", exceptionType: "high_compliance_risk", severity: "critical", sourceRecordType: "deal", sourceRecordId: "deal-005", reason: "Inherited-property documentation and compliance blockers remain unresolved.", recommendedAction: "Resolve compliance blocker before any portal or assignment readiness action.", ownerActionRequired: true, status: "open" },
+  { id: "operator-exception-003", exceptionType: "buyer_ready_to_offer", severity: "high", sourceRecordType: "buyer_response_route", sourceRecordId: "buyer-route-001", reason: "Buyer interest is recorded and POF is verified.", recommendedAction: "Review buyer intent and access coordination queue.", ownerActionRequired: true, status: "open" },
+  { id: "operator-exception-004", exceptionType: "forecast_risk", severity: "medium", sourceRecordType: "revenue_forecast", sourceRecordId: "forecast-2026-05", reason: "Revenue at risk remains tied to blocked deals and lower probability records.", recommendedAction: "Clear POF and compliance blockers before increasing spend.", ownerActionRequired: true, status: "open" }
+];
+
+export const autonomousDailyOperatingReports: AutonomousDailyOperatingReport[] = [
+  { id: "operator-report-001", reportDate: "2026-05-04", generatedBy: "Wholesale Prime", whatSystemDid: ["Scanned hot deals, buyer velocity, forecast risk, and approval queues.", "Updated internal readiness, optimization, and forecast summaries."], whatPrepared: ["Buyer distribution approval queue", "Title review packet approval queue", "Lead spend estimate review"], whatBlocked: ["Portal publishing without owner approval", "Contract execution", "Title submission", "Bulk buyer campaign"], needsOwnerApproval: ["approval-001", "approval-004", "approval-006", "approval-008"], topMoneyActions: ["Review deal-001 controlled buyer distribution", "Resolve deal-003 POF gap", "Approve 75216 lead spend estimate", "Review verified 10K+ evidence records", "Clear title review packet for deal-001"], topRiskActions: ["Resolve deal-005 inherited-property compliance blocker", "Review portal visibility approvals", "Inspect automation rule activation", "Clear title/review missing items", "Keep Level 5 disabled"], projectedAssignmentFeeMovement: 12500, recommendedFocusToday: ["Protect deal-001 spread and buyer margin", "Clear approval queue items with no blocked reasons", "Do not increase spend until forecast blockers are reviewed"], draftOnly: true, highRiskActionsExecuted: false }
+];
+
+export const systemTrustScores: SystemTrustScore[] = [
+  { id: "trust-001", automationSuccessRate: 86, blockedUnsafeActions: 9, approvalQueueAgeHours: 6, staleTasks: 2, scoringConfidence: 84, forecastConfidence: 78, buyerResponseVelocity: 88, sellerConversionVelocity: 76, overallTrustScore: 82, trustStatus: "strong_guarded", sourceRecordIds: ["operator-loop-001", "auto-audit-003", "forecast-2026-05"] }
+];
+
 export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
   { id: "assignment-ready-001", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-001", buyerMatchId: "match-001", buyerInterestId: "interest-001", readinessStatus: "assignment_ready", assignmentReady: true, blockedReasons: [], assignmentAllowedConfirmed: true, buyerPofStatus: "verified", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
   { id: "assignment-ready-002", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-003", buyerMatchId: "match-001", buyerInterestId: "interest-004", readinessStatus: "blocked", assignmentReady: false, blockedReasons: ["buyer_pof_not_verified"], assignmentAllowedConfirmed: true, buyerPofStatus: "needs_refresh", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
@@ -2821,3 +2952,37 @@ export const forecastSafetyCards = [
   { label: "Revenue at risk", value: formatCurrency(pipelineRevenueAtRisk), detail: "Projected fees behind probability/risk gaps" },
   { label: "Spend plans", value: String(leadSpendRecommendations.length), detail: "Evidence-backed and owner-reviewed" }
 ];
+
+export const activeOperatorMode = operatorModeSettings.find(
+  (setting) => setting.currentMode === "semi_autonomous"
+) ?? operatorModeSettings[0];
+export const pendingOwnerApprovals = ownerApprovalItems.filter(
+  (item) => item.approvalStatus === "pending_owner"
+);
+export const readyOwnerApprovals = ownerApprovalItems.filter((item) => item.readyForApproval);
+export const blockedOwnerApprovals = ownerApprovalItems.filter(
+  (item) => item.blockedReasons.length > 0
+);
+export const operatorExceptionsOpen = operatorExceptionRecords.filter(
+  (exception) => exception.status === "open"
+);
+export const criticalOperatorExceptions = operatorExceptionsOpen.filter(
+  (exception) => exception.severity === "critical"
+);
+export const latestOperatorDailyReport = autonomousDailyOperatingReports[0];
+export const currentSystemTrustScore = systemTrustScores[0];
+export const operatorHardBoundaryCards = [
+  { label: "Contracts", value: "off", detail: "No execution or executable contract generation" },
+  { label: "Title submission", value: "off", detail: "No automatic title-company submission" },
+  { label: "Bulk campaigns", value: "off", detail: "No buyer blasts or bulk sends" },
+  { label: "Level 5", value: "disabled", detail: "Unavailable even in semi-autonomous mode" },
+  { label: "Payments", value: "off", detail: "No payment handling" },
+  { label: "Portal publishing", value: "approval", detail: "Explicit owner approval required" }
+];
+export const operatorApprovalAggregates = ownerApprovalItems.reduce<Record<string, number>>(
+  (acc, item) => {
+    acc[item.approvalType] = (acc[item.approvalType] ?? 0) + 1;
+    return acc;
+  },
+  {}
+);

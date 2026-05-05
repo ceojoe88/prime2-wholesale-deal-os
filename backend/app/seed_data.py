@@ -34,6 +34,7 @@ from app.domain.optimization import (
     agent_performance_overall,
     validate_learning_record,
 )
+from app.domain.operator_mode import calculate_system_trust, operator_mode_gate
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.revenue_forecast import (
     calculate_deal_probability,
@@ -65,6 +66,7 @@ from app.models import (
     AutoExecutionAuditRecord,
     AutoExecutionDryRun,
     AutoExecutionRule,
+    AutonomousDailyOperatingReport,
     AutonomousAgentTask,
     AutonomyEscalation,
     Buyer,
@@ -96,10 +98,13 @@ from app.models import (
     Lead,
     MarketScalingScore,
     NegotiationRecord,
+    OperatorExceptionRecord,
+    OperatorModeSetting,
     OfferPacket,
     OfferPositioningRecord,
     OptimizationRecommendation,
     OutcomeLearningRecord,
+    OwnerApprovalItem,
     ReviewPacketPrep,
     RevenueForecastRecord,
     SellerInteraction,
@@ -107,8 +112,10 @@ from app.models import (
     SellerPortalResponse,
     SchedulerRun,
     ScoringWeightChange,
+    SemiAutonomousCommandLoopRun,
     TitleHandoffPacket,
     TitleReviewCoordination,
+    SystemTrustScore,
     UnifiedDealRoom,
 )
 
@@ -3890,6 +3897,330 @@ def build_lead_spend_plan_records() -> list[dict[str, object]]:
     ]
 
 
+def build_operator_mode_setting_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "operator-mode-default",
+            "current_mode": "near_autonomous",
+            "default_mode": "near_autonomous",
+            "semi_autonomous_enabled": False,
+            "owner_enabled": False,
+            "max_autonomy_level": 4,
+            "level_5_disabled": True,
+            "high_risk_requires_approval": True,
+            "live_actions_require_gates": True,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "bulk_campaigns_allowed": False,
+            "payment_handling_allowed": False,
+        },
+        {
+            "id": "operator-mode-ready",
+            "current_mode": "semi_autonomous",
+            "default_mode": "near_autonomous",
+            "semi_autonomous_enabled": True,
+            "owner_enabled": True,
+            "max_autonomy_level": 4,
+            "level_5_disabled": True,
+            "high_risk_requires_approval": True,
+            "live_actions_require_gates": True,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "bulk_campaigns_allowed": False,
+            "payment_handling_allowed": False,
+        },
+    ]
+
+
+def build_semi_autonomous_command_loop_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "operator-loop-001",
+            "mode_setting_id": "operator-mode-ready",
+            "cycle_status": "prepared_waiting_approvals",
+            "scan_summary": {"hot_deals": 5, "buyer_responses": 4, "forecast_risk": 26200},
+            "score_summary": {"top_deal": "deal-001", "top_probability": 89, "trust_score": 82},
+            "route_summary": {"approvals": 9, "exceptions": 6, "daily_report": "operator-report-001"},
+            "prepared_items": [
+                {"type": "buyer_distribution", "source": "buyer-accel-001"},
+                {"type": "title_review_packet", "source": "title-review-001"},
+                {"type": "forecast_spend_recommendation", "source": "lead-spend-001"},
+            ],
+            "gate_checks": [
+                {"gate": "owner_approval_required", "passed": True},
+                {"gate": "level_5_disabled", "passed": True},
+                {"gate": "contract_execution_blocked", "passed": True},
+                {"gate": "title_submission_blocked", "passed": True},
+            ],
+            "escalations": ["operator-exception-001", "operator-exception-002"],
+            "approvals_waiting": ["approval-001", "approval-002", "approval-006"],
+            "outcomes_logged": ["learning-001", "forecast-2026-05"],
+            "optimized_records": ["optimization-rec-001", "weight-change-001"],
+            "high_risk_actions_executed": False,
+            "contracts_executed": False,
+            "title_submitted": False,
+            "bulk_campaigns_sent": False,
+            "portal_publish_without_approval": False,
+        },
+    ]
+
+
+def build_owner_approval_item_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "approval-001",
+            "approval_type": "seller_follow_up_live_send",
+            "source_record_type": "communication_draft",
+            "source_record_id": "comm-draft-001",
+            "title": "Approve seller follow-up live send",
+            "risk_level": "medium",
+            "approval_status": "pending_owner",
+            "owner_required": True,
+            "ready_for_approval": True,
+            "blocked_reasons": [],
+            "action_summary": "One seller follow-up draft passed safety and dry-run; approval still required.",
+            "high_risk_action": True,
+            "executed": False,
+        },
+        {
+            "id": "approval-002",
+            "approval_type": "buyer_response_live_send",
+            "source_record_type": "auto_execution_attempt",
+            "source_record_id": "auto-attempt-002",
+            "title": "Approve buyer response mock/live gate",
+            "risk_level": "medium",
+            "approval_status": "pending_owner",
+            "owner_required": True,
+            "ready_for_approval": True,
+            "blocked_reasons": [],
+            "action_summary": "Single buyer response remains one-recipient and V5/V13 gated.",
+            "high_risk_action": True,
+            "executed": False,
+        },
+        {
+            "id": "approval-003",
+            "approval_type": "offer_packet_prep",
+            "source_record_type": "offer_packet",
+            "source_record_id": "packet-001",
+            "title": "Approve offer packet prep",
+            "risk_level": "medium",
+            "approval_status": "pending_owner",
+            "owner_required": True,
+            "ready_for_approval": True,
+            "blocked_reasons": [],
+            "action_summary": "Underwriting and compliance gates are clear for draft packet prep.",
+            "high_risk_action": False,
+            "executed": False,
+        },
+        {
+            "id": "approval-004",
+            "approval_type": "contract_ready_status",
+            "source_record_type": "contract_ready_state",
+            "source_record_id": "contract-ready-001",
+            "title": "Approve contract-ready state",
+            "risk_level": "high",
+            "approval_status": "pending_owner",
+            "owner_required": True,
+            "ready_for_approval": True,
+            "blocked_reasons": [],
+            "action_summary": "Marks external drafting readiness only; no contract is generated.",
+            "high_risk_action": True,
+            "executed": False,
+        },
+        {
+            "id": "approval-005",
+            "approval_type": "title_review_packet",
+            "source_record_type": "review_packet",
+            "source_record_id": "review-packet-001",
+            "title": "Approve title review packet prep",
+            "risk_level": "high",
+            "approval_status": "pending_owner",
+            "owner_required": True,
+            "ready_for_approval": True,
+            "blocked_reasons": [],
+            "action_summary": "Draft review packet only; no title submission or email send.",
+            "high_risk_action": True,
+            "executed": False,
+        },
+        {
+            "id": "approval-006",
+            "approval_type": "buyer_distribution",
+            "source_record_type": "buyer_acceleration",
+            "source_record_id": "buyer-accel-001",
+            "title": "Approve controlled buyer distribution",
+            "risk_level": "medium",
+            "approval_status": "pending_owner",
+            "owner_required": True,
+            "ready_for_approval": True,
+            "blocked_reasons": [],
+            "action_summary": "One buyer, sanitized sheet, no blast, V5/V13 gates present.",
+            "high_risk_action": True,
+            "executed": False,
+        },
+        {
+            "id": "approval-007",
+            "approval_type": "portal_visibility",
+            "source_record_type": "buyer_deal_publication",
+            "source_record_id": "publication-001",
+            "title": "Approve portal visibility",
+            "risk_level": "medium",
+            "approval_status": "pending_owner",
+            "owner_required": True,
+            "ready_for_approval": False,
+            "blocked_reasons": ["final_owner_visibility_review_missing"],
+            "action_summary": "Portal publish remains blocked until explicit owner visibility approval.",
+            "high_risk_action": True,
+            "executed": False,
+        },
+        {
+            "id": "approval-008",
+            "approval_type": "forecast_spend_recommendation",
+            "source_record_type": "lead_spend_plan",
+            "source_record_id": "lead-spend-001",
+            "title": "Approve lead spend estimate",
+            "risk_level": "medium",
+            "approval_status": "pending_owner",
+            "owner_required": True,
+            "ready_for_approval": True,
+            "blocked_reasons": [],
+            "action_summary": "Spend plan is evidence-backed and estimate-labeled.",
+            "high_risk_action": False,
+            "executed": False,
+        },
+        {
+            "id": "approval-009",
+            "approval_type": "automation_rule_activation",
+            "source_record_type": "auto_execution_rule",
+            "source_record_id": "auto-rule-buyer-response-send",
+            "title": "Approve automation rule activation",
+            "risk_level": "high",
+            "approval_status": "pending_owner",
+            "owner_required": True,
+            "ready_for_approval": True,
+            "blocked_reasons": [],
+            "action_summary": "Level 4 remains owner-approved and one-recipient only.",
+            "high_risk_action": True,
+            "executed": False,
+        },
+    ]
+
+
+def build_operator_exception_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "operator-exception-001",
+            "exception_type": "high_profit_potential",
+            "severity": "critical",
+            "source_record_type": "deal",
+            "source_record_id": "deal-001",
+            "reason": "High probability 10K+ spread with buyer demand and title readiness.",
+            "recommended_action": "Review approvals for buyer distribution and title review packet.",
+            "owner_action_required": True,
+            "status": "open",
+        },
+        {
+            "id": "operator-exception-002",
+            "exception_type": "high_compliance_risk",
+            "severity": "critical",
+            "source_record_type": "deal",
+            "source_record_id": "deal-005",
+            "reason": "Inherited-property documentation and compliance blockers remain unresolved.",
+            "recommended_action": "Resolve compliance blocker before any portal or assignment readiness action.",
+            "owner_action_required": True,
+            "status": "open",
+        },
+        {
+            "id": "operator-exception-003",
+            "exception_type": "buyer_ready_to_offer",
+            "severity": "high",
+            "source_record_type": "buyer_response_route",
+            "source_record_id": "buyer-route-001",
+            "reason": "Buyer interest is recorded and POF is verified.",
+            "recommended_action": "Review buyer intent and access coordination queue.",
+            "owner_action_required": True,
+            "status": "open",
+        },
+        {
+            "id": "operator-exception-004",
+            "exception_type": "forecast_risk",
+            "severity": "medium",
+            "source_record_type": "revenue_forecast",
+            "source_record_id": "forecast-2026-05",
+            "reason": "Revenue at risk remains tied to blocked deals and lower probability records.",
+            "recommended_action": "Clear POF and compliance blockers before increasing spend.",
+            "owner_action_required": True,
+            "status": "open",
+        },
+    ]
+
+
+def build_autonomous_daily_operating_report_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "operator-report-001",
+            "report_date": "2026-05-04",
+            "generated_by": "Wholesale Prime",
+            "what_system_did": [
+                "Scanned hot deals, buyer velocity, forecast risk, and approval queues.",
+                "Updated internal readiness, optimization, and forecast summaries.",
+            ],
+            "what_prepared": [
+                "Buyer distribution approval queue",
+                "Title review packet approval queue",
+                "Lead spend estimate review",
+            ],
+            "what_blocked": [
+                "Portal publishing without owner approval",
+                "Contract execution",
+                "Title submission",
+                "Bulk buyer campaign",
+            ],
+            "needs_owner_approval": ["approval-001", "approval-004", "approval-006", "approval-008"],
+            "top_money_actions": [
+                "Review deal-001 controlled buyer distribution",
+                "Resolve deal-003 POF gap",
+                "Approve 75216 lead spend estimate",
+                "Review verified 10K+ evidence records",
+                "Clear title review packet for deal-001",
+            ],
+            "top_risk_actions": [
+                "Resolve deal-005 inherited-property compliance blocker",
+                "Review portal visibility approvals",
+                "Inspect automation rule activation",
+                "Clear title/review missing items",
+                "Keep Level 5 disabled",
+            ],
+            "projected_assignment_fee_movement": 12500,
+            "recommended_focus_today": [
+                "Protect deal-001 spread and buyer margin",
+                "Clear approval queue items with no blocked reasons",
+                "Do not increase spend until forecast blockers are reviewed",
+            ],
+            "draft_only": True,
+            "high_risk_actions_executed": False,
+        },
+    ]
+
+
+def build_system_trust_score_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "trust-001",
+            "automation_success_rate": 86,
+            "blocked_unsafe_actions": 9,
+            "approval_queue_age_hours": 6,
+            "stale_tasks": 2,
+            "scoring_confidence": 84,
+            "forecast_confidence": 78,
+            "buyer_response_velocity": 88,
+            "seller_conversion_velocity": 76,
+            "overall_trust_score": 82,
+            "trust_status": "strong_guarded",
+            "source_record_ids": ["operator-loop-001", "auto-audit-003", "forecast-2026-05"],
+        },
+    ]
+
+
 def build_assignment_readiness_records() -> list[dict[str, object]]:
     return [
         {
@@ -5047,6 +5378,12 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "deal_probability_records": build_deal_probability_records(),
         "market_scaling_scores": build_market_scaling_score_records(),
         "lead_spend_plans": build_lead_spend_plan_records(),
+        "operator_mode_settings": build_operator_mode_setting_records(),
+        "semi_autonomous_command_loop_runs": build_semi_autonomous_command_loop_records(),
+        "owner_approval_items": build_owner_approval_item_records(),
+        "operator_exception_records": build_operator_exception_records(),
+        "autonomous_daily_operating_reports": build_autonomous_daily_operating_report_records(),
+        "system_trust_scores": build_system_trust_score_records(),
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
@@ -5071,6 +5408,12 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        SystemTrustScore,
+        AutonomousDailyOperatingReport,
+        OperatorExceptionRecord,
+        OwnerApprovalItem,
+        SemiAutonomousCommandLoopRun,
+        OperatorModeSetting,
         LeadSpendPlan,
         MarketScalingScore,
         DealProbabilityRecord,
@@ -5209,6 +5552,25 @@ def seed_database(session: Session) -> dict[str, int]:
         MarketScalingScore(**row) for row in payload["market_scaling_scores"]
     )
     session.add_all(LeadSpendPlan(**row) for row in payload["lead_spend_plans"])
+    session.add_all(
+        OperatorModeSetting(**row) for row in payload["operator_mode_settings"]
+    )
+    session.add_all(
+        SemiAutonomousCommandLoopRun(**row)
+        for row in payload["semi_autonomous_command_loop_runs"]
+    )
+    session.add_all(
+        OwnerApprovalItem(**row) for row in payload["owner_approval_items"]
+    )
+    session.add_all(
+        OperatorExceptionRecord(**row)
+        for row in payload["operator_exception_records"]
+    )
+    session.add_all(
+        AutonomousDailyOperatingReport(**row)
+        for row in payload["autonomous_daily_operating_reports"]
+    )
+    session.add_all(SystemTrustScore(**row) for row in payload["system_trust_scores"])
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
     session.add_all(
         SellerOfferPublication(**row)
@@ -5310,5 +5672,9 @@ def seed_database(session: Session) -> dict[str, int]:
         calculate_market_scaling(market)
     for plan in session.query(LeadSpendPlan).all():
         validate_lead_spend_plan(plan)
+    for setting in session.query(OperatorModeSetting).all():
+        operator_mode_gate(setting)
+    for trust in session.query(SystemTrustScore).all():
+        calculate_system_trust(trust)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

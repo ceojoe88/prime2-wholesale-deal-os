@@ -85,6 +85,13 @@ from app.domain.optimization import (
     validate_learning_record,
     validate_optimization_claim,
 )
+from app.domain.operator_mode import (
+    approval_console_summary,
+    calculate_system_trust,
+    command_loop_safety,
+    operator_mode_dashboard,
+    operator_mode_gate,
+)
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.revenue_forecast import (
     calculate_deal_probability,
@@ -162,10 +169,14 @@ from app.models import (
     MarketScalingScore,
     NegotiationRecord,
     AgentPerformanceScore,
+    AutonomousDailyOperatingReport,
+    OperatorExceptionRecord,
+    OperatorModeSetting,
     OfferPacket,
     OfferPositioningRecord,
     OptimizationRecommendation,
     OutcomeLearningRecord,
+    OwnerApprovalItem,
     RevenueForecastRecord,
     ReviewPacketPrep,
     SellerInteraction,
@@ -173,6 +184,8 @@ from app.models import (
     SellerPortalResponse,
     SchedulerRun,
     ScoringWeightChange,
+    SemiAutonomousCommandLoopRun,
+    SystemTrustScore,
     TitleReviewCoordination,
     TitleHandoffPacket,
     UnifiedDealRoom,
@@ -1216,6 +1229,78 @@ def pipeline_value(session: Session = Depends(get_session)) -> dict[str, object]
         "market_ranking": dashboard["market_scaling_scores"],
         "lead_spend_recommendations": dashboard["lead_spend_plans"],
     }
+
+
+@router.get("/operator-mode")
+def operator_mode(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = operator_mode_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/operator-mode/approvals")
+def operator_mode_approvals(session: Session = Depends(get_session)) -> dict[str, object]:
+    items = session.query(OwnerApprovalItem).all()
+    return approval_console_summary(items)
+
+
+@router.get("/operator-mode/exceptions")
+def operator_mode_exceptions(session: Session = Depends(get_session)) -> dict[str, object]:
+    exceptions = session.query(OperatorExceptionRecord).all()
+    return {
+        "exceptions": [model_to_dict(exception) for exception in exceptions],
+        "owner_action_required": [
+            model_to_dict(exception)
+            for exception in exceptions
+            if exception.owner_action_required
+        ],
+    }
+
+
+@router.get("/operator-mode/daily-report")
+def operator_mode_daily_report(session: Session = Depends(get_session)) -> dict[str, object]:
+    reports = session.query(AutonomousDailyOperatingReport).all()
+    return {
+        "daily_reports": [model_to_dict(report) for report in reports],
+        "latest_report": model_to_dict(reports[0]) if reports else None,
+        "high_risk_actions_executed": False,
+    }
+
+
+@router.get("/operator-mode/system-trust")
+def operator_mode_system_trust(session: Session = Depends(get_session)) -> dict[str, object]:
+    scores = session.query(SystemTrustScore).all()
+    for score in scores:
+        calculate_system_trust(score)
+    session.commit()
+    return {
+        "system_trust_scores": [model_to_dict(score) for score in scores],
+        "hard_boundary_enforced": True,
+    }
+
+
+@router.get("/operator-mode/settings")
+def operator_mode_settings(session: Session = Depends(get_session)) -> dict[str, object]:
+    settings_records = session.query(OperatorModeSetting).all()
+    return {
+        "settings": [
+            {**model_to_dict(setting), "gate": operator_mode_gate(setting)}
+            for setting in settings_records
+        ],
+        "available_modes": ["manual", "assisted", "near_autonomous", "semi_autonomous"],
+        "level_5_disabled": True,
+    }
+
+
+@router.get("/operator-mode/runs/{run_id}/safety")
+def operator_mode_run_safety(
+    run_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    loop = session.get(SemiAutonomousCommandLoopRun, run_id)
+    if loop is None:
+        raise HTTPException(status_code=404, detail="Command loop run not found")
+    return {**model_to_dict(loop), "safety": command_loop_safety(loop)}
 
 
 @router.get("/offer-conversion")

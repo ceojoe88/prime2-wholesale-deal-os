@@ -14,6 +14,7 @@ from app.models import (
     AutoExecutionRule,
     AutomationRule,
     BuyerAccelerationRecord,
+    AutonomousDailyOperatingReport,
     BuyerDealPublication,
     BuyerDemandProfile,
     CommunicationDraft,
@@ -24,11 +25,13 @@ from app.models import (
     LeadSpendPlan,
     MarketScalingScore,
     OfferPacket,
+    OperatorModeSetting,
     OutcomeLearningRecord,
     RevenueForecastRecord,
     TitleReviewCoordination,
     SellerInteraction,
     SellerOfferPublication,
+    SystemTrustScore,
     TitleHandoffPacket,
     UnifiedDealRoom,
 )
@@ -57,6 +60,9 @@ async def lifespan(app: FastAPI):
                 or session.query(DealProbabilityRecord).count() == 0
                 or session.query(MarketScalingScore).count() == 0
                 or session.query(LeadSpendPlan).count() == 0
+                or session.query(OperatorModeSetting).count() == 0
+                or session.query(AutonomousDailyOperatingReport).count() == 0
+                or session.query(SystemTrustScore).count() == 0
                 or session.query(TitleHandoffPacket).count() == 0
                 or session.query(AssignmentReadinessRecord).count() == 0
                 or session.query(CommunicationDraft).count() == 0

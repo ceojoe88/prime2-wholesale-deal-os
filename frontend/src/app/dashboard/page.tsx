@@ -102,6 +102,12 @@ import {
   likely10kDealProbabilities,
   marketRanking,
   leadSpendRecommendations,
+  activeOperatorMode,
+  currentSystemTrustScore,
+  pendingOwnerApprovals,
+  operatorExceptionsOpen,
+  criticalOperatorExceptions,
+  operatorHardBoundaryCards,
   underContractDeals,
   verified10kAssignmentFeeOpportunities,
   verifiedAssignmentFees
@@ -366,6 +372,24 @@ export default function DashboardPage() {
         <div className="grid-three">
           {forecastSafetyCards.slice(0, 3).map((card) => (
             <RecordCard key={card.label} title={card.label} meta={card.detail} right={<Pill tone={card.label === "Revenue at risk" ? "gold" : "green"}>{card.value}</Pill>} />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="V17 Semi-Autonomous Operator Mode">
+        <div className="grid-three">
+          <RecordCard title="Operator mode" meta={`Current ${activeOperatorMode.currentMode}; default ${activeOperatorMode.defaultMode}`} right={<Pill tone="gold">owner</Pill>} />
+          <RecordCard title="Approval console" meta={`${pendingOwnerApprovals.length} owner approvals queued`} right={<Pill tone="gold">pending</Pill>} />
+          <RecordCard title="System trust" meta={currentSystemTrustScore.trustStatus} right={<Pill tone="green">{currentSystemTrustScore.overallTrustScore}</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Open exceptions" meta={`${operatorExceptionsOpen.length} exceptions require attention`} right={<Pill tone="gold">queue</Pill>} />
+          <RecordCard title="Critical exceptions" meta={`${criticalOperatorExceptions.length} high money/risk items`} right={<Pill tone="red">critical</Pill>} />
+          <RecordCard title="Semi-autonomous bypass" meta="Blocked; high-risk actions remain owner-approved." right={<Pill tone="red">off</Pill>} />
+        </div>
+        <div className="grid-three">
+          {operatorHardBoundaryCards.slice(0, 3).map((card) => (
+            <RecordCard key={card.label} title={card.label} meta={card.detail} right={<Pill tone="red">{card.value}</Pill>} />
           ))}
         </div>
       </Section>
