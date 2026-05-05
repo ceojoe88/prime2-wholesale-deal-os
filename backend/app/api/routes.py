@@ -86,6 +86,14 @@ from app.domain.optimization import (
     validate_optimization_claim,
 )
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
+from app.domain.revenue_forecast import (
+    calculate_deal_probability,
+    calculate_market_scaling,
+    revenue_forecast_dashboard,
+    sync_revenue_forecast,
+    validate_forecast_language,
+    validate_lead_spend_plan,
+)
 from app.domain.rules import system_rules, validate_action
 from app.domain.seller_acquisition import (
     offer_packet_gate,
@@ -146,15 +154,19 @@ from app.models import (
     Deal,
     DealDistributionPrep,
     DealEvidencePacket,
+    DealProbabilityRecord,
     DealRoomBlocker,
     Division,
+    LeadSpendPlan,
     Lead,
+    MarketScalingScore,
     NegotiationRecord,
     AgentPerformanceScore,
     OfferPacket,
     OfferPositioningRecord,
     OptimizationRecommendation,
     OutcomeLearningRecord,
+    RevenueForecastRecord,
     ReviewPacketPrep,
     SellerInteraction,
     SellerOfferPublication,
@@ -198,6 +210,10 @@ class BuyerSequenceSafetyRequest(BaseModel):
 
 
 class OptimizationClaimRequest(BaseModel):
+    content: str
+
+
+class ForecastSafetyRequest(BaseModel):
     content: str
 
 
@@ -1122,6 +1138,84 @@ def optimization_record_gate(
     gate = validate_learning_record(record)
     session.commit()
     return {**model_to_dict(record), "gate": gate}
+
+
+@router.get("/revenue-forecast")
+def revenue_forecast(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = revenue_forecast_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.post("/revenue-forecast/safety/validate")
+def revenue_forecast_safety(payload: ForecastSafetyRequest) -> dict[str, object]:
+    return validate_forecast_language(payload.content)
+
+
+@router.get("/revenue-forecast/{forecast_id}")
+def revenue_forecast_detail(
+    forecast_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    forecast = session.get(RevenueForecastRecord, forecast_id)
+    if forecast is None:
+        raise HTTPException(status_code=404, detail="Revenue forecast not found")
+    sync_revenue_forecast(forecast)
+    probabilities = session.query(DealProbabilityRecord).all()
+    for probability in probabilities:
+        calculate_deal_probability(probability)
+    session.commit()
+    return {
+        **model_to_dict(forecast),
+        "deal_probabilities": [model_to_dict(probability) for probability in probabilities],
+        "forecasts_are_estimates": True,
+        "guaranteed_revenue_allowed": False,
+    }
+
+
+@router.get("/market-scaling")
+def market_scaling(session: Session = Depends(get_session)) -> dict[str, object]:
+    markets = session.query(MarketScalingScore).all()
+    for market in markets:
+        calculate_market_scaling(market)
+    session.commit()
+    return {
+        "market_scaling_scores": [model_to_dict(market) for market in markets],
+        "market_ranking": sorted(
+            [model_to_dict(market) for market in markets],
+            key=lambda item: item["scaling_score"],
+            reverse=True,
+        ),
+        "forecasts_are_estimates": True,
+    }
+
+
+@router.get("/lead-spend-planner")
+def lead_spend_planner(session: Session = Depends(get_session)) -> dict[str, object]:
+    plans = session.query(LeadSpendPlan).all()
+    return {
+        "lead_spend_plans": [
+            {**model_to_dict(plan), "gate": validate_lead_spend_plan(plan)}
+            for plan in plans
+        ],
+        "unsupported_spend_recommended": any(
+            plan.unsupported_spend_recommended for plan in plans
+        ),
+        "owner_review_required": True,
+        "forecasts_are_estimates": True,
+    }
+
+
+@router.get("/pipeline-value")
+def pipeline_value(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = revenue_forecast_dashboard(session)
+    session.commit()
+    return {
+        **dashboard["pipeline_value"],
+        "ten_k_likely_deals": dashboard["ten_k_likely_deals"],
+        "market_ranking": dashboard["market_scaling_scores"],
+        "lead_spend_recommendations": dashboard["lead_spend_plans"],
+    }
 
 
 @router.get("/offer-conversion")

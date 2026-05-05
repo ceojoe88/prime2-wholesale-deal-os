@@ -19,9 +19,13 @@ from app.models import (
     CommunicationDraft,
     ContractControl,
     ContractReadyState,
+    DealProbabilityRecord,
     Division,
+    LeadSpendPlan,
+    MarketScalingScore,
     OfferPacket,
     OutcomeLearningRecord,
+    RevenueForecastRecord,
     TitleReviewCoordination,
     SellerInteraction,
     SellerOfferPublication,
@@ -49,6 +53,10 @@ async def lifespan(app: FastAPI):
                 or session.query(AutoExecutionRule).count() == 0
                 or session.query(BuyerAccelerationRecord).count() == 0
                 or session.query(OutcomeLearningRecord).count() == 0
+                or session.query(RevenueForecastRecord).count() == 0
+                or session.query(DealProbabilityRecord).count() == 0
+                or session.query(MarketScalingScore).count() == 0
+                or session.query(LeadSpendPlan).count() == 0
                 or session.query(TitleHandoffPacket).count() == 0
                 or session.query(AssignmentReadinessRecord).count() == 0
                 or session.query(CommunicationDraft).count() == 0

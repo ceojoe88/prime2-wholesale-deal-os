@@ -267,6 +267,13 @@ Optimization learning V15 routes:
 - [http://localhost:3000/dashboard/optimization/lost-deals](http://localhost:3000/dashboard/optimization/lost-deals)
 - [http://localhost:3000/dashboard/optimization/source-quality](http://localhost:3000/dashboard/optimization/source-quality)
 
+Revenue forecast/scaling V16 routes:
+
+- [http://localhost:3000/dashboard/revenue-forecast](http://localhost:3000/dashboard/revenue-forecast)
+- [http://localhost:3000/dashboard/market-scaling](http://localhost:3000/dashboard/market-scaling)
+- [http://localhost:3000/dashboard/lead-spend-planner](http://localhost:3000/dashboard/lead-spend-planner)
+- [http://localhost:3000/dashboard/pipeline-value](http://localhost:3000/dashboard/pipeline-value)
+
 ## Validation
 
 ```powershell

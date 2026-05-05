@@ -720,6 +720,73 @@ export type ScoringWeightChange = {
   ownerReviewStatus: string;
 };
 
+export type RevenueForecastRecord = {
+  id: string;
+  forecastPeriod: string;
+  projectedAssignmentFees: number;
+  verifiedAssignmentFees: number;
+  probabilityAdjustedRevenue: number;
+  conservativeForecast: number;
+  baseForecast: number;
+  aggressiveForecast: number;
+  dealsAtRisk: string[];
+  expectedCloseWindow: string;
+  confidenceLevel: string;
+  sourceBasis: string[];
+  estimateLabel: string;
+  guaranteedRevenueClaimAllowed: false;
+  unsupportedRoiClaimAllowed: false;
+};
+
+export type DealProbabilityRecord = {
+  id: string;
+  dealId: string;
+  sellerReadiness: number;
+  buyerDemand: number;
+  underwritingConfidence: number;
+  complianceStatusScore: number;
+  titleReviewReadiness: number;
+  blockerSeverity: number;
+  buyerPofStrength: number;
+  communicationMomentum: number;
+  probabilityScore: number;
+  probabilityBand: string;
+  sourceRecordIds: string[];
+  estimateOnly: true;
+};
+
+export type MarketScalingScore = {
+  id: string;
+  marketZip: string;
+  leadVolume: number;
+  hotLeadPercentage: number;
+  buyerDemand: number;
+  averageSpread: number;
+  conversionRate: number;
+  titleComplianceFriction: number;
+  competitionRisk: number;
+  recommendedSpendLevel: string;
+  scalingScore: number;
+  sourceRecordIds: string[];
+  estimateOnly: true;
+};
+
+export type LeadSpendPlan = {
+  id: string;
+  targetZipCodes: string[];
+  leadTypes: string[];
+  maxMonthlySpend: number;
+  expectedDealCount: number;
+  expectedAssignmentFeeLow: number;
+  expectedAssignmentFeeHigh: number;
+  breakEvenAssignmentTarget: number;
+  evidenceBasis: string[];
+  recommendationStatus: string;
+  unsupportedSpendRecommended: boolean;
+  estimateOnly: true;
+  ownerReviewStatus: string;
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1719,6 +1786,29 @@ export const scoringWeightChanges: ScoringWeightChange[] = [
   { id: "weight-change-003", sourceRecordId: "learning-004", weightGroup: "follow_up_priority.staleness_penalty", previousWeight: 0.12, newWeight: 0.17, reason: "Stale follow-up pattern correlates with lost seller price alignment.", explanation: "Follow-up priority should escalate stale high-fit leads sooner.", loggedBy: "Wholesale Prime", ownerReviewStatus: "pending_review" }
 ];
 
+export const revenueForecastRecords: RevenueForecastRecord[] = [
+  { id: "forecast-2026-05", forecastPeriod: "May 2026", projectedAssignmentFees: 81000, verifiedAssignmentFees: 37000, probabilityAdjustedRevenue: 54800, conservativeForecast: 41100, baseForecast: 54800, aggressiveForecast: 64664, dealsAtRisk: ["deal-005", "deal-006", "deal-007"], expectedCloseWindow: "2026-05-10 to 2026-05-31", confidenceLevel: "medium_high", sourceBasis: ["fee-001", "fee-002", "learning-001", "learning-002", "probability-001"], estimateLabel: "Estimate only; not guaranteed revenue.", guaranteedRevenueClaimAllowed: false, unsupportedRoiClaimAllowed: false },
+  { id: "forecast-2026-06", forecastPeriod: "June 2026", projectedAssignmentFees: 62000, verifiedAssignmentFees: 0, probabilityAdjustedRevenue: 36500, conservativeForecast: 27375, baseForecast: 36500, aggressiveForecast: 43070, dealsAtRisk: ["deal-006", "deal-007"], expectedCloseWindow: "2026-06-01 to 2026-06-30", confidenceLevel: "medium", sourceBasis: ["learning-003", "learning-005", "market-scale-001"], estimateLabel: "Estimate only; not guaranteed revenue.", guaranteedRevenueClaimAllowed: false, unsupportedRoiClaimAllowed: false }
+];
+
+export const dealProbabilityRecords: DealProbabilityRecord[] = [
+  { id: "probability-001", dealId: "deal-001", sellerReadiness: 92, buyerDemand: 94, underwritingConfidence: 90, complianceStatusScore: 92, titleReviewReadiness: 86, blockerSeverity: 5, buyerPofStrength: 96, communicationMomentum: 88, probabilityScore: 89, probabilityBand: "high_estimate", sourceRecordIds: ["learning-001", "title-review-001", "buyer-accel-001"], estimateOnly: true },
+  { id: "probability-002", dealId: "deal-003", sellerReadiness: 84, buyerDemand: 87, underwritingConfidence: 84, complianceStatusScore: 82, titleReviewReadiness: 72, blockerSeverity: 18, buyerPofStrength: 78, communicationMomentum: 80, probabilityScore: 73, probabilityBand: "base_estimate", sourceRecordIds: ["learning-002", "buyer-accel-002"], estimateOnly: true },
+  { id: "probability-003", dealId: "deal-005", sellerReadiness: 72, buyerDemand: 84, underwritingConfidence: 78, complianceStatusScore: 48, titleReviewReadiness: 42, blockerSeverity: 44, buyerPofStrength: 88, communicationMomentum: 58, probabilityScore: 54, probabilityBand: "conservative_estimate", sourceRecordIds: ["learning-003", "title-review-003"], estimateOnly: true },
+  { id: "probability-004", dealId: "deal-006", sellerReadiness: 48, buyerDemand: 68, underwritingConfidence: 62, complianceStatusScore: 64, titleReviewReadiness: 38, blockerSeverity: 55, buyerPofStrength: 60, communicationMomentum: 42, probabilityScore: 42, probabilityBand: "conservative_estimate", sourceRecordIds: ["learning-004"], estimateOnly: true }
+];
+
+export const marketScalingScores: MarketScalingScore[] = [
+  { id: "market-scale-001", marketZip: "75216", leadVolume: 42, hotLeadPercentage: 38, buyerDemand: 94, averageSpread: 21000, conversionRate: 28, titleComplianceFriction: 18, competitionRisk: 42, recommendedSpendLevel: "increase_selectively", scalingScore: 70, sourceRecordIds: ["learning-001", "learning-003", "buyer-demand-001"], estimateOnly: true },
+  { id: "market-scale-002", marketZip: "75224", leadVolume: 24, hotLeadPercentage: 31, buyerDemand: 86, averageSpread: 18000, conversionRate: 22, titleComplianceFriction: 22, competitionRisk: 48, recommendedSpendLevel: "hold_or_test", scalingScore: 62, sourceRecordIds: ["learning-002", "buyer-accel-002"], estimateOnly: true },
+  { id: "market-scale-003", marketZip: "75217", leadVolume: 18, hotLeadPercentage: 14, buyerDemand: 70, averageSpread: 11000, conversionRate: 11, titleComplianceFriction: 35, competitionRisk: 54, recommendedSpendLevel: "avoid_or_research", scalingScore: 45, sourceRecordIds: ["learning-006"], estimateOnly: true }
+];
+
+export const leadSpendPlans: LeadSpendPlan[] = [
+  { id: "lead-spend-001", targetZipCodes: ["75216", "75224"], leadTypes: ["absentee owner", "high equity", "tax delinquent"], maxMonthlySpend: 1800, expectedDealCount: 1.4, expectedAssignmentFeeLow: 13000, expectedAssignmentFeeHigh: 24000, breakEvenAssignmentTarget: 10000, evidenceBasis: ["market-scale-001", "learning-001", "learning-002"], recommendationStatus: "owner_review_required", unsupportedSpendRecommended: false, estimateOnly: true, ownerReviewStatus: "pending_review" },
+  { id: "lead-spend-002", targetZipCodes: ["75217"], leadTypes: ["vacant"], maxMonthlySpend: 0, expectedDealCount: 0.2, expectedAssignmentFeeLow: 0, expectedAssignmentFeeHigh: 11000, breakEvenAssignmentTarget: 10000, evidenceBasis: ["market-scale-003", "learning-006"], recommendationStatus: "avoid_or_research", unsupportedSpendRecommended: false, estimateOnly: true, ownerReviewStatus: "pending_review" }
+];
+
 export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
   { id: "assignment-ready-001", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-001", buyerMatchId: "match-001", buyerInterestId: "interest-001", readinessStatus: "assignment_ready", assignmentReady: true, blockedReasons: [], assignmentAllowedConfirmed: true, buyerPofStatus: "verified", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
   { id: "assignment-ready-002", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-003", buyerMatchId: "match-001", buyerInterestId: "interest-004", readinessStatus: "blocked", assignmentReady: false, blockedReasons: ["buyer_pof_not_verified"], assignmentAllowedConfirmed: true, buyerPofStatus: "needs_refresh", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
@@ -2694,4 +2784,40 @@ export const optimizationSafetyCards = [
   { label: "Missing evidence", value: String(missingLearningEvidence.length), detail: "Blocked from influencing confidence claims" },
   { label: "Recommendations", value: String(optimizationRecommendations.length), detail: "Explainable and owner-reviewed" },
   { label: "Scoring changes", value: String(scoringWeightChanges.length), detail: "Deterministic changes logged" }
+];
+
+export function getRevenueForecast(forecastId: string) {
+  return revenueForecastRecords.find((forecast) => forecast.id === forecastId);
+}
+
+export const revenueForecastByPeriod = [...revenueForecastRecords];
+export const pipelineProjectedMonthlyRevenue = revenueForecastRecords.reduce(
+  (total, forecast) => total + forecast.projectedAssignmentFees,
+  0
+);
+export const pipelineProbabilityAdjustedRevenue = revenueForecastRecords.reduce(
+  (total, forecast) => total + forecast.probabilityAdjustedRevenue,
+  0
+);
+export const pipelineRevenueAtRisk = revenueForecastRecords.reduce(
+  (total, forecast) => total + forecast.projectedAssignmentFees - forecast.probabilityAdjustedRevenue,
+  0
+);
+export const likely10kDealProbabilities = dealProbabilityRecords.filter(
+  (record) => record.probabilityScore >= 70
+);
+export const marketRanking = [...marketScalingScores].sort(
+  (first, second) => second.scalingScore - first.scalingScore
+);
+export const leadSpendRecommendations = leadSpendPlans.filter(
+  (plan) => !plan.unsupportedSpendRecommended && plan.evidenceBasis.length > 0
+);
+export const unsupportedLeadSpendPlans = leadSpendPlans.filter(
+  (plan) => plan.unsupportedSpendRecommended || plan.evidenceBasis.length === 0
+);
+export const forecastSafetyCards = [
+  { label: "Forecast label", value: "estimate", detail: "No guaranteed profit or revenue" },
+  { label: "Adjusted pipeline", value: formatCurrency(pipelineProbabilityAdjustedRevenue), detail: "Probability-adjusted from source records" },
+  { label: "Revenue at risk", value: formatCurrency(pipelineRevenueAtRisk), detail: "Projected fees behind probability/risk gaps" },
+  { label: "Spend plans", value: String(leadSpendRecommendations.length), detail: "Evidence-backed and owner-reviewed" }
 ];

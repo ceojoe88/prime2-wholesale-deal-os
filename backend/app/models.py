@@ -995,6 +995,81 @@ class ScoringWeightChange(TimestampMixin, Base):
     owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
 
 
+class RevenueForecastRecord(TimestampMixin, Base):
+    __tablename__ = "revenue_forecast_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    forecast_period: Mapped[str] = mapped_column(String(120), default="")
+    projected_assignment_fees: Mapped[int] = mapped_column(Integer, default=0)
+    verified_assignment_fees: Mapped[int] = mapped_column(Integer, default=0)
+    probability_adjusted_revenue: Mapped[int] = mapped_column(Integer, default=0)
+    conservative_forecast: Mapped[int] = mapped_column(Integer, default=0)
+    base_forecast: Mapped[int] = mapped_column(Integer, default=0)
+    aggressive_forecast: Mapped[int] = mapped_column(Integer, default=0)
+    deals_at_risk: Mapped[list[str]] = mapped_column(JSON, default=list)
+    expected_close_window: Mapped[str] = mapped_column(String(120), default="")
+    confidence_level: Mapped[str] = mapped_column(String(80), default="medium")
+    source_basis: Mapped[list[str]] = mapped_column(JSON, default=list)
+    estimate_label: Mapped[str] = mapped_column(String(160), default="Estimate only")
+    guaranteed_revenue_claim_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    unsupported_roi_claim_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class DealProbabilityRecord(TimestampMixin, Base):
+    __tablename__ = "deal_probability_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    seller_readiness: Mapped[float] = mapped_column(Float, default=0)
+    buyer_demand: Mapped[float] = mapped_column(Float, default=0)
+    underwriting_confidence: Mapped[float] = mapped_column(Float, default=0)
+    compliance_status_score: Mapped[float] = mapped_column(Float, default=0)
+    title_review_readiness: Mapped[float] = mapped_column(Float, default=0)
+    blocker_severity: Mapped[float] = mapped_column(Float, default=0)
+    buyer_pof_strength: Mapped[float] = mapped_column(Float, default=0)
+    communication_momentum: Mapped[float] = mapped_column(Float, default=0)
+    probability_score: Mapped[float] = mapped_column(Float, default=0)
+    probability_band: Mapped[str] = mapped_column(String(80), default="medium")
+    source_record_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    estimate_only: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class MarketScalingScore(TimestampMixin, Base):
+    __tablename__ = "market_scaling_scores"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    market_zip: Mapped[str] = mapped_column(String(20), default="")
+    lead_volume: Mapped[int] = mapped_column(Integer, default=0)
+    hot_lead_percentage: Mapped[float] = mapped_column(Float, default=0)
+    buyer_demand: Mapped[float] = mapped_column(Float, default=0)
+    average_spread: Mapped[int] = mapped_column(Integer, default=0)
+    conversion_rate: Mapped[float] = mapped_column(Float, default=0)
+    title_compliance_friction: Mapped[float] = mapped_column(Float, default=0)
+    competition_risk: Mapped[float] = mapped_column(Float, default=0)
+    recommended_spend_level: Mapped[str] = mapped_column(String(80), default="hold")
+    scaling_score: Mapped[float] = mapped_column(Float, default=0)
+    source_record_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    estimate_only: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class LeadSpendPlan(TimestampMixin, Base):
+    __tablename__ = "lead_spend_plans"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    target_zip_codes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    lead_types: Mapped[list[str]] = mapped_column(JSON, default=list)
+    max_monthly_spend: Mapped[int] = mapped_column(Integer, default=0)
+    expected_deal_count: Mapped[float] = mapped_column(Float, default=0)
+    expected_assignment_fee_low: Mapped[int] = mapped_column(Integer, default=0)
+    expected_assignment_fee_high: Mapped[int] = mapped_column(Integer, default=0)
+    break_even_assignment_target: Mapped[int] = mapped_column(Integer, default=0)
+    evidence_basis: Mapped[list[str]] = mapped_column(JSON, default=list)
+    recommendation_status: Mapped[str] = mapped_column(String(80), default="draft_estimate")
+    unsupported_spend_recommended: Mapped[bool] = mapped_column(Boolean, default=False)
+    estimate_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+
+
 class ComplianceRecord(TimestampMixin, Base):
     __tablename__ = "compliance_records"
 

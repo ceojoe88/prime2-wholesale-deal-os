@@ -73,6 +73,7 @@ import {
   projectedAssignmentTotal,
   optimizationRecommendationsByImpact,
   outcomeLearningRecords,
+  forecastSafetyCards,
   reviewPacketBlocks,
   reviewPacketPrepReady,
   reviewPacketPreps,
@@ -95,6 +96,12 @@ import {
   missingLearningEvidence,
   scoringWeightChanges,
   strong10kLearningProbability,
+  pipelineProbabilityAdjustedRevenue,
+  pipelineProjectedMonthlyRevenue,
+  pipelineRevenueAtRisk,
+  likely10kDealProbabilities,
+  marketRanking,
+  leadSpendRecommendations,
   underContractDeals,
   verified10kAssignmentFeeOpportunities,
   verifiedAssignmentFees
@@ -342,6 +349,24 @@ export default function DashboardPage() {
           <RecordCard title="Guaranteed revenue" meta="Blocked; recommendations are estimates and source-backed patterns only." right={<Pill tone="red">off</Pill>} />
           <RecordCard title="Unsupported ROI" meta="Blocked; no fake revenue or ROI claims." right={<Pill tone="red">off</Pill>} />
           <RecordCard title="Black-box ML" meta="Disabled; scoring is deterministic and explainable." right={<Pill tone="green">explainable</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V16 Revenue Forecast and Market Scaling">
+        <div className="grid-three">
+          <RecordCard title="Projected pipeline" meta={formatCurrency(pipelineProjectedMonthlyRevenue)} right={<Pill tone="gold">estimate</Pill>} />
+          <RecordCard title="Probability-adjusted revenue" meta={formatCurrency(pipelineProbabilityAdjustedRevenue)} right={<Pill tone="green">adjusted</Pill>} />
+          <RecordCard title="Revenue at risk" meta={formatCurrency(pipelineRevenueAtRisk)} right={<Pill tone="red">risk</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Likely 10K+ deals" meta={`${likely10kDealProbabilities.length} probability records above threshold`} right={<Pill tone="green">10K+</Pill>} />
+          <RecordCard title="Top scaling market" meta={`${marketRanking[0]?.marketZip ?? "n/a"} / ${marketRanking[0]?.recommendedSpendLevel ?? "n/a"}`} right={<Pill>{marketRanking[0]?.scalingScore ?? 0}</Pill>} />
+          <RecordCard title="Lead spend plans" meta={`${leadSpendRecommendations.length} evidence-backed spend recommendations`} right={<Pill tone="gold">owner</Pill>} />
+        </div>
+        <div className="grid-three">
+          {forecastSafetyCards.slice(0, 3).map((card) => (
+            <RecordCard key={card.label} title={card.label} meta={card.detail} right={<Pill tone={card.label === "Revenue at risk" ? "gold" : "green"}>{card.value}</Pill>} />
+          ))}
         </div>
       </Section>
     </div>

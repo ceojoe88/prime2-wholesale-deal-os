@@ -86,7 +86,12 @@ import {
   optimizationRecommendationsByImpact,
   outcomeLearningRecords,
   scoringWeightChanges,
-  strong10kLearningProbability
+  strong10kLearningProbability,
+  pipelineProbabilityAdjustedRevenue,
+  pipelineRevenueAtRisk,
+  likely10kDealProbabilities,
+  marketRanking,
+  leadSpendRecommendations
 } from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
@@ -183,6 +188,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Optimization recs" value={String(optimizationRecommendationsByImpact.length)} detail="Explainable owner-review queue" />
         <MetricCard label="Learning evidence gaps" value={String(missingLearningEvidence.length)} detail="Blocked from confidence claims" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Adjusted pipeline" value={formatCurrency(pipelineProbabilityAdjustedRevenue)} detail="V16 probability-adjusted estimate" />
+        <MetricCard label="Revenue at risk" value={formatCurrency(pipelineRevenueAtRisk)} detail="Projected fees behind risk gaps" />
+        <MetricCard label="Likely 10K+ deals" value={String(likely10kDealProbabilities.length)} detail="High-probability source records" />
+        <MetricCard label="Top market" value={marketRanking[0]?.marketZip ?? "n/a"} detail={marketRanking[0]?.recommendedSpendLevel ?? "market scaling"} />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -246,6 +257,11 @@ export default function CommandCenterPage() {
               ["high", "Inspect 10K+ learning patterns", `${strong10kLearningProbability.length} source-backed records show strong 10K+ probability`],
               ["normal", "Review agent performance scoring", `${agentPerformanceByScore.length} division groups scored; top score ${agentPerformanceByScore[0]?.overallScore ?? 0}`],
               ["normal", "Approve scoring weight changes", `${scoringWeightChanges.length} deterministic feedback-loop changes are logged`],
+              ["critical", "Review revenue forecast", `${formatCurrency(pipelineProbabilityAdjustedRevenue)} probability-adjusted estimate; no guaranteed revenue`],
+              ["high", "Resolve forecast risk", `${formatCurrency(pipelineRevenueAtRisk)} projected revenue is at risk behind probability or blocker gaps`],
+              ["high", "Review market scaling", `${marketRanking[0]?.marketZip ?? "n/a"} leads current source-backed scaling rank`],
+              ["normal", "Approve lead spend plan", `${leadSpendRecommendations.length} evidence-backed spend recommendations require owner review`],
+              ["normal", "Inspect likely 10K+ forecast deals", `${likely10kDealProbabilities.length} probability records are above the 10K+ threshold`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

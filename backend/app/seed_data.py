@@ -35,6 +35,12 @@ from app.domain.optimization import (
     validate_learning_record,
 )
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
+from app.domain.revenue_forecast import (
+    calculate_deal_probability,
+    calculate_market_scaling,
+    sync_revenue_forecast,
+    validate_lead_spend_plan,
+)
 from app.domain.rules import ANALYSIS_ONLY_ACTIONS, BLOCKED_ACTIONS
 from app.domain.scoring import calculate_lead_opportunity, deal_speed_score
 from app.domain.seller_acquisition import update_offer_packet_gate
@@ -83,15 +89,19 @@ from app.models import (
     Deal,
     DealDistributionPrep,
     DealEvidencePacket,
+    DealProbabilityRecord,
     DealRoomBlocker,
     Division,
+    LeadSpendPlan,
     Lead,
+    MarketScalingScore,
     NegotiationRecord,
     OfferPacket,
     OfferPositioningRecord,
     OptimizationRecommendation,
     OutcomeLearningRecord,
     ReviewPacketPrep,
+    RevenueForecastRecord,
     SellerInteraction,
     SellerOfferPublication,
     SellerPortalResponse,
@@ -3687,6 +3697,199 @@ def build_scoring_weight_change_records() -> list[dict[str, object]]:
     ]
 
 
+def build_revenue_forecast_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "forecast-2026-05",
+            "forecast_period": "May 2026",
+            "projected_assignment_fees": 81000,
+            "verified_assignment_fees": 37000,
+            "probability_adjusted_revenue": 54800,
+            "conservative_forecast": 41100,
+            "base_forecast": 54800,
+            "aggressive_forecast": 64664,
+            "deals_at_risk": ["deal-005", "deal-006", "deal-007"],
+            "expected_close_window": "2026-05-10 to 2026-05-31",
+            "confidence_level": "medium_high",
+            "source_basis": ["fee-001", "fee-002", "learning-001", "learning-002", "probability-001"],
+            "estimate_label": "Estimate only; not guaranteed revenue.",
+            "guaranteed_revenue_claim_allowed": False,
+            "unsupported_roi_claim_allowed": False,
+        },
+        {
+            "id": "forecast-2026-06",
+            "forecast_period": "June 2026",
+            "projected_assignment_fees": 62000,
+            "verified_assignment_fees": 0,
+            "probability_adjusted_revenue": 36500,
+            "conservative_forecast": 27375,
+            "base_forecast": 36500,
+            "aggressive_forecast": 43070,
+            "deals_at_risk": ["deal-006", "deal-007"],
+            "expected_close_window": "2026-06-01 to 2026-06-30",
+            "confidence_level": "medium",
+            "source_basis": ["learning-003", "learning-005", "market-scale-001"],
+            "estimate_label": "Estimate only; not guaranteed revenue.",
+            "guaranteed_revenue_claim_allowed": False,
+            "unsupported_roi_claim_allowed": False,
+        },
+    ]
+
+
+def build_deal_probability_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "probability-001",
+            "deal_id": "deal-001",
+            "seller_readiness": 92,
+            "buyer_demand": 94,
+            "underwriting_confidence": 90,
+            "compliance_status_score": 92,
+            "title_review_readiness": 86,
+            "blocker_severity": 5,
+            "buyer_pof_strength": 96,
+            "communication_momentum": 88,
+            "probability_score": 89,
+            "probability_band": "high_estimate",
+            "source_record_ids": ["learning-001", "title-review-001", "buyer-accel-001"],
+            "estimate_only": True,
+        },
+        {
+            "id": "probability-002",
+            "deal_id": "deal-003",
+            "seller_readiness": 84,
+            "buyer_demand": 87,
+            "underwriting_confidence": 84,
+            "compliance_status_score": 82,
+            "title_review_readiness": 72,
+            "blocker_severity": 18,
+            "buyer_pof_strength": 78,
+            "communication_momentum": 80,
+            "probability_score": 73,
+            "probability_band": "base_estimate",
+            "source_record_ids": ["learning-002", "buyer-accel-002"],
+            "estimate_only": True,
+        },
+        {
+            "id": "probability-003",
+            "deal_id": "deal-005",
+            "seller_readiness": 72,
+            "buyer_demand": 84,
+            "underwriting_confidence": 78,
+            "compliance_status_score": 48,
+            "title_review_readiness": 42,
+            "blocker_severity": 44,
+            "buyer_pof_strength": 88,
+            "communication_momentum": 58,
+            "probability_score": 54,
+            "probability_band": "conservative_estimate",
+            "source_record_ids": ["learning-003", "title-review-003"],
+            "estimate_only": True,
+        },
+        {
+            "id": "probability-004",
+            "deal_id": "deal-006",
+            "seller_readiness": 48,
+            "buyer_demand": 68,
+            "underwriting_confidence": 62,
+            "compliance_status_score": 64,
+            "title_review_readiness": 38,
+            "blocker_severity": 55,
+            "buyer_pof_strength": 60,
+            "communication_momentum": 42,
+            "probability_score": 42,
+            "probability_band": "conservative_estimate",
+            "source_record_ids": ["learning-004"],
+            "estimate_only": True,
+        },
+    ]
+
+
+def build_market_scaling_score_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "market-scale-001",
+            "market_zip": "75216",
+            "lead_volume": 42,
+            "hot_lead_percentage": 38,
+            "buyer_demand": 94,
+            "average_spread": 21000,
+            "conversion_rate": 28,
+            "title_compliance_friction": 18,
+            "competition_risk": 42,
+            "recommended_spend_level": "increase_selectively",
+            "scaling_score": 83,
+            "source_record_ids": ["learning-001", "learning-003", "buyer-demand-001"],
+            "estimate_only": True,
+        },
+        {
+            "id": "market-scale-002",
+            "market_zip": "75224",
+            "lead_volume": 24,
+            "hot_lead_percentage": 31,
+            "buyer_demand": 86,
+            "average_spread": 18000,
+            "conversion_rate": 22,
+            "title_compliance_friction": 22,
+            "competition_risk": 48,
+            "recommended_spend_level": "hold_or_test",
+            "scaling_score": 72,
+            "source_record_ids": ["learning-002", "buyer-accel-002"],
+            "estimate_only": True,
+        },
+        {
+            "id": "market-scale-003",
+            "market_zip": "75217",
+            "lead_volume": 18,
+            "hot_lead_percentage": 14,
+            "buyer_demand": 70,
+            "average_spread": 11000,
+            "conversion_rate": 11,
+            "title_compliance_friction": 35,
+            "competition_risk": 54,
+            "recommended_spend_level": "avoid_or_research",
+            "scaling_score": 49,
+            "source_record_ids": ["learning-006"],
+            "estimate_only": True,
+        },
+    ]
+
+
+def build_lead_spend_plan_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "lead-spend-001",
+            "target_zip_codes": ["75216", "75224"],
+            "lead_types": ["absentee owner", "high equity", "tax delinquent"],
+            "max_monthly_spend": 1800,
+            "expected_deal_count": 1.4,
+            "expected_assignment_fee_low": 13000,
+            "expected_assignment_fee_high": 24000,
+            "break_even_assignment_target": 10000,
+            "evidence_basis": ["market-scale-001", "learning-001", "learning-002"],
+            "recommendation_status": "owner_review_required",
+            "unsupported_spend_recommended": False,
+            "estimate_only": True,
+            "owner_review_status": "pending_review",
+        },
+        {
+            "id": "lead-spend-002",
+            "target_zip_codes": ["75217"],
+            "lead_types": ["vacant"],
+            "max_monthly_spend": 0,
+            "expected_deal_count": 0.2,
+            "expected_assignment_fee_low": 0,
+            "expected_assignment_fee_high": 11000,
+            "break_even_assignment_target": 10000,
+            "evidence_basis": ["market-scale-003", "learning-006"],
+            "recommendation_status": "avoid_or_research",
+            "unsupported_spend_recommended": False,
+            "estimate_only": True,
+            "owner_review_status": "pending_review",
+        },
+    ]
+
+
 def build_assignment_readiness_records() -> list[dict[str, object]]:
     return [
         {
@@ -4840,6 +5043,10 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "optimization_recommendations": build_optimization_recommendation_records(),
         "agent_performance_scores": build_agent_performance_score_records(),
         "scoring_weight_changes": build_scoring_weight_change_records(),
+        "revenue_forecast_records": build_revenue_forecast_records(),
+        "deal_probability_records": build_deal_probability_records(),
+        "market_scaling_scores": build_market_scaling_score_records(),
+        "lead_spend_plans": build_lead_spend_plan_records(),
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
@@ -4864,6 +5071,10 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        LeadSpendPlan,
+        MarketScalingScore,
+        DealProbabilityRecord,
+        RevenueForecastRecord,
         ScoringWeightChange,
         AgentPerformanceScore,
         OptimizationRecommendation,
@@ -4988,6 +5199,16 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         ScoringWeightChange(**row) for row in payload["scoring_weight_changes"]
     )
+    session.add_all(
+        RevenueForecastRecord(**row) for row in payload["revenue_forecast_records"]
+    )
+    session.add_all(
+        DealProbabilityRecord(**row) for row in payload["deal_probability_records"]
+    )
+    session.add_all(
+        MarketScalingScore(**row) for row in payload["market_scaling_scores"]
+    )
+    session.add_all(LeadSpendPlan(**row) for row in payload["lead_spend_plans"])
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
     session.add_all(
         SellerOfferPublication(**row)
@@ -5081,5 +5302,13 @@ def seed_database(session: Session) -> dict[str, int]:
         validate_learning_record(learning_record)
     for performance in session.query(AgentPerformanceScore).all():
         agent_performance_overall(performance)
+    for forecast in session.query(RevenueForecastRecord).all():
+        sync_revenue_forecast(forecast)
+    for probability in session.query(DealProbabilityRecord).all():
+        calculate_deal_probability(probability)
+    for market in session.query(MarketScalingScore).all():
+        calculate_market_scaling(market)
+    for plan in session.query(LeadSpendPlan).all():
+        validate_lead_spend_plan(plan)
     session.commit()
     return {key: len(value) for key, value in payload.items()}
