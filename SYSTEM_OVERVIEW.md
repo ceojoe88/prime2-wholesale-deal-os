@@ -33,6 +33,7 @@ Wholesale Prime Deal OS supports the full internal acquisition-to-assignment wor
 - Forecasting, market scaling, and lead spend planning as estimates only
 - Near-autonomous and semi-autonomous internal operator workflows
 - Production readiness checks, safe audit exports, attachment metadata, and backup/export metadata
+- Real CSV lead import, lead QA, field-call outcome tracking, and prediction feedback
 
 ## Command Hierarchy
 
@@ -124,7 +125,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V17
+## Phase Map V1-V19
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -180,6 +181,9 @@ Added operator mode settings, semi-autonomous command loop, owner approval conso
 V18 Production Readiness Layer:
 Although outside the requested V1-V17 phase map, the current project also includes V18 production readiness, audit export packets, evidence attachment metadata, backup/export metadata, provider sandbox readiness checks, environment readiness checks, and deployment hardening docs.
 
+V19 Real Lead Import and Field Testing Loop:
+Added preview-first CSV lead import, import batch and row records, critical field validation, phone/email normalization, property-plus-phone dedupe, lead QA scoring, call outcome tracking, do-not-contact eligibility blocking, Prime 2 prediction-versus-reality feedback, deterministic scoring adjustment suggestions, and field-testing daily briefing. Imports remain private/operator-only and cannot trigger live outreach, bulk messages, portal publishing, contract execution, title submission, or payment handling.
+
 ## Local Run Commands
 
 Backend setup:
@@ -232,6 +236,13 @@ Recommended route smoke checks:
 - `/dashboard/overseer`
 - `/dashboard/autonomy`
 - `/dashboard/auto-execution`
+- `/dashboard/lead-imports`
+- `/dashboard/lead-qa`
+- `/dashboard/call-outcomes`
+- `/dashboard/field-testing`
+- `/dashboard/feedback-loop`
+- `/dashboard/scoring-adjustments`
+- `/dashboard/field-briefing`
 - `/dashboard/buyer-acceleration`
 - `/dashboard/optimization`
 - `/dashboard/revenue-forecast`

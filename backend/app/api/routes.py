@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi import APIRouter, Body, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -70,6 +72,21 @@ from app.domain.deal_evidence import (
     sync_assignment_fee_attribution,
     sync_evidence_packet,
     validate_profit_claims,
+)
+from app.domain.field_testing import (
+    CALL_RESULTS,
+    V19_CSV_FIELDS,
+    apply_call_outcome,
+    commit_approved_import_rows,
+    field_testing_briefing,
+    field_testing_dashboard,
+    outreach_eligibility_for_lead,
+    preview_real_lead_csv,
+    sanitize_field_testing_text,
+    scoring_adjustment_from_feedback,
+    sync_batch_counts,
+    sync_lead_quality_review,
+    sync_prediction_feedback,
 )
 from app.domain.imports import preview_lead_csv
 from app.domain.offer_conversion import (
@@ -178,6 +195,10 @@ from app.models import (
     Division,
     EnvironmentReadinessCheck,
     EvidenceAttachmentRecord,
+    FieldCallOutcome,
+    LeadImportBatch,
+    LeadImportRow,
+    LeadQualityReview,
     LeadSpendPlan,
     Lead,
     MarketScalingScore,
@@ -191,6 +212,7 @@ from app.models import (
     OptimizationRecommendation,
     OutcomeLearningRecord,
     OwnerApprovalItem,
+    PredictionFeedbackRecord,
     ProviderSandboxReadinessCheck,
     RevenueForecastRecord,
     ReviewPacketPrep,
@@ -198,6 +220,7 @@ from app.models import (
     SellerOfferPublication,
     SellerPortalResponse,
     SchedulerRun,
+    ScoringAdjustmentSuggestion,
     ScoringWeightChange,
     SemiAutonomousCommandLoopRun,
     SystemTrustScore,
@@ -302,6 +325,47 @@ class SellerPortalResponseRequest(BaseModel):
     document_upload_placeholder: str = ""
 
 
+class LeadImportBatchCreateRequest(BaseModel):
+    batch_name: str = "Manual field-testing batch"
+    source_filename: str = "manual-entry.csv"
+    imported_by: str = "Owner"
+
+
+class LeadImportRowStatusRequest(BaseModel):
+    row_status: str
+    approved_for_commit: bool | None = None
+    operator_notes: str = ""
+
+
+class FieldCallOutcomeRequest(BaseModel):
+    lead_id: str
+    call_datetime: datetime | None = None
+    contact_result: str = "no_answer"
+    motivation_notes: str = ""
+    asking_price: int | None = None
+    timeline: str = ""
+    property_condition_notes: str = ""
+    seller_objections: list[str] = []
+    seller_temperature: float = 0
+    next_follow_up_date: datetime | None = None
+    operator_notes: str = ""
+    prime2_next_recommendation: str = ""
+
+
+class PredictionFeedbackRequest(BaseModel):
+    lead_id: str | None = None
+    deal_id: str | None = None
+    call_outcome_id: str | None = None
+    source_prediction_type: str
+    source_prediction_value: str
+    actual_result: str
+    owner_reviewed: bool = False
+
+
+class FieldTestingSafetyRequest(BaseModel):
+    content: str
+
+
 def all_records(session: Session, model) -> list[dict]:
     return [model_to_dict(row) for row in session.query(model).all()]
 
@@ -349,6 +413,393 @@ def validate_system_action(payload: ActionRequest) -> dict[str, object]:
 @router.post("/data-import/leads/preview")
 def lead_import_preview(csv_text: str = Body(..., media_type="text/csv")) -> dict[str, object]:
     return preview_lead_csv(csv_text)
+
+
+@router.get("/lead-imports")
+def lead_import_batches(session: Session = Depends(get_session)) -> dict[str, object]:
+    batches = session.query(LeadImportBatch).all()
+    for batch in batches:
+        sync_batch_counts(batch)
+    session.commit()
+    return {
+        "lead_import_batches": [model_to_dict(batch) for batch in batches],
+        "csv_fields": V19_CSV_FIELDS,
+        "preview_before_commit_required": True,
+        "live_outreach_allowed": False,
+        "bulk_outreach_allowed": False,
+        "auto_portal_publish_allowed": False,
+    }
+
+
+@router.post("/lead-imports")
+def create_lead_import_batch(
+    payload: LeadImportBatchCreateRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    batch = LeadImportBatch(
+        id=f"lead-import-{session.query(LeadImportBatch).count() + 1:03d}",
+        batch_name=payload.batch_name,
+        source_filename=payload.source_filename,
+        imported_by=payload.imported_by,
+        status="created_waiting_preview",
+        safety_notes=[
+            "Import batch created only; no rows committed and no outreach triggered.",
+            "CSV preview and row approval are required before commit.",
+        ],
+    )
+    session.add(batch)
+    session.commit()
+    return {
+        **model_to_dict(batch),
+        "supported_fields": V19_CSV_FIELDS,
+        "live_outreach_allowed": False,
+        "bulk_outreach_allowed": False,
+    }
+
+
+@router.get("/lead-imports/preview")
+def lead_import_preview_template() -> dict[str, object]:
+    return {
+        "supported_fields": V19_CSV_FIELDS,
+        "critical_fields": [
+            "owner_name",
+            "property_address",
+            "property_city",
+            "property_state",
+            "property_zip",
+            "lead_source",
+        ],
+        "preview_before_commit_required": True,
+        "commit_approved_rows_only": True,
+        "live_outreach_allowed": False,
+    }
+
+
+@router.post("/lead-imports/preview")
+def lead_import_real_preview(
+    csv_text: str = Body(..., media_type="text/csv"),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    batch = preview_real_lead_csv(session, csv_text)
+    return {
+        **model_to_dict(batch),
+        "rows": [model_to_dict(row) for row in batch.rows],
+        "quality_reviews": [model_to_dict(review) for review in batch.quality_reviews],
+        "live_outreach_allowed": False,
+        "bulk_outreach_allowed": False,
+    }
+
+
+@router.patch("/lead-imports/rows/{row_id}")
+def update_import_row_status(
+    row_id: str,
+    payload: LeadImportRowStatusRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    row = session.get(LeadImportRow, row_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Lead import row not found")
+    if row.row_status == "committed":
+        raise HTTPException(
+            status_code=400,
+            detail={"allowed": False, "reason": "Committed rows cannot be changed."},
+        )
+    if payload.row_status not in {"approved", "blocked", "needs_review"}:
+        raise HTTPException(status_code=400, detail="Invalid row status")
+    row.row_status = payload.row_status
+    row.approved_for_commit = (
+        payload.approved_for_commit
+        if payload.approved_for_commit is not None
+        else payload.row_status == "approved"
+    )
+    if payload.operator_notes:
+        row.notes = f"{row.notes}\nOperator status note: {payload.operator_notes}".strip()
+    if payload.row_status == "blocked" and "operator_blocked" not in row.blocked_reasons:
+        row.blocked_reasons = [*row.blocked_reasons, "operator_blocked"]
+    review = session.get(LeadQualityReview, f"qa-{row.id}")
+    if review:
+        review.blocked_reasons = row.blocked_reasons
+        sync_lead_quality_review(review)
+    sync_batch_counts(row.batch)
+    session.commit()
+    return {
+        **model_to_dict(row),
+        "batch": model_to_dict(row.batch),
+        "live_outreach_allowed": False,
+    }
+
+
+@router.post("/lead-imports/{batch_id}/commit")
+def commit_lead_import_batch(
+    batch_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    batch = session.get(LeadImportBatch, batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Lead import batch not found")
+    return commit_approved_import_rows(session, batch)
+
+
+@router.get("/lead-imports/{batch_id}")
+def lead_import_batch_detail(
+    batch_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    batch = session.get(LeadImportBatch, batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Lead import batch not found")
+    sync_batch_counts(batch)
+    session.commit()
+    return {
+        **model_to_dict(batch),
+        "rows": [model_to_dict(row) for row in batch.rows],
+        "quality_reviews": [model_to_dict(review) for review in batch.quality_reviews],
+        "blocked_rows": [model_to_dict(row) for row in batch.rows if row.blocked_reasons],
+        "commit_approved_rows_only": True,
+        "live_outreach_allowed": False,
+        "bulk_outreach_allowed": False,
+    }
+
+
+@router.get("/lead-qa")
+def lead_quality_assurance(session: Session = Depends(get_session)) -> dict[str, object]:
+    reviews = session.query(LeadQualityReview).all()
+    for review in reviews:
+        sync_lead_quality_review(review)
+    session.commit()
+    return {
+        "lead_quality_reviews": [model_to_dict(review) for review in reviews],
+        "call_priority": [
+            model_to_dict(review)
+            for review in reviews
+            if review.recommended_next_action == "call_priority"
+        ],
+        "research_more": [
+            model_to_dict(review)
+            for review in reviews
+            if review.recommended_next_action == "research_more"
+        ],
+        "duplicate_review": [
+            model_to_dict(review)
+            for review in reviews
+            if review.recommended_next_action == "duplicate_review"
+        ],
+        "live_outreach_allowed": False,
+    }
+
+
+@router.get("/lead-qa/{lead_id}")
+def lead_quality_detail(lead_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    reviews = (
+        session.query(LeadQualityReview)
+        .filter(LeadQualityReview.lead_id == lead_id)
+        .all()
+    )
+    if not reviews:
+        import_row = session.get(LeadImportRow, lead_id)
+        if import_row is not None:
+            reviews = import_row.quality_reviews
+    if not reviews:
+        raise HTTPException(status_code=404, detail="Lead QA record not found")
+    for review in reviews:
+        sync_lead_quality_review(review)
+    session.commit()
+    return {
+        "lead_id": lead_id,
+        "quality_reviews": [model_to_dict(review) for review in reviews],
+        "blocked_reasons": sorted(
+            {reason for review in reviews for reason in review.blocked_reasons}
+        ),
+        "recommended_next_action": reviews[0].recommended_next_action,
+        "live_outreach_allowed": False,
+    }
+
+
+@router.get("/call-outcomes")
+def call_outcomes(session: Session = Depends(get_session)) -> dict[str, object]:
+    outcomes = session.query(FieldCallOutcome).all()
+    return {
+        "call_outcomes": [model_to_dict(outcome) for outcome in outcomes],
+        "allowed_contact_results": sorted(CALL_RESULTS),
+        "do_not_contact_records": [
+            model_to_dict(outcome) for outcome in outcomes if outcome.do_not_contact
+        ],
+        "live_calling_inside_system": False,
+    }
+
+
+@router.post("/call-outcomes")
+def create_call_outcome(
+    payload: FieldCallOutcomeRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    lead = session.get(Lead, payload.lead_id)
+    if lead is None:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    if payload.contact_result not in CALL_RESULTS:
+        raise HTTPException(status_code=400, detail="Invalid contact result")
+    safety = sanitize_field_testing_text(
+        " ".join(
+            [
+                payload.motivation_notes,
+                payload.timeline,
+                payload.property_condition_notes,
+                " ".join(payload.seller_objections),
+                payload.operator_notes,
+                payload.prime2_next_recommendation,
+            ]
+        )
+    )
+    if not safety["allowed"]:
+        raise HTTPException(status_code=400, detail=safety)
+    outcome = FieldCallOutcome(
+        id=f"call-outcome-{session.query(FieldCallOutcome).count() + 1:03d}",
+        lead_id=payload.lead_id,
+        call_datetime=payload.call_datetime or datetime.now(),
+        contact_result=payload.contact_result,
+        motivation_notes=payload.motivation_notes,
+        asking_price=payload.asking_price,
+        timeline=payload.timeline,
+        property_condition_notes=payload.property_condition_notes,
+        seller_objections=payload.seller_objections,
+        seller_temperature=payload.seller_temperature,
+        next_follow_up_date=payload.next_follow_up_date,
+        operator_notes=payload.operator_notes,
+        prime2_next_recommendation=payload.prime2_next_recommendation
+        or "Prime 2 recommends owner review before any field follow-up.",
+    )
+    session.add(outcome)
+    session.flush()
+    apply_call_outcome(session, outcome)
+    session.commit()
+    return {
+        **model_to_dict(outcome),
+        "lead": model_to_dict(lead),
+        "outreach_eligibility": outreach_eligibility_for_lead(session, lead.id),
+        "live_calling_inside_system": False,
+    }
+
+
+@router.get("/call-outcomes/{outcome_id}")
+def call_outcome_detail(
+    outcome_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    outcome = session.get(FieldCallOutcome, outcome_id)
+    if outcome is None:
+        raise HTTPException(status_code=404, detail="Call outcome not found")
+    return {
+        **model_to_dict(outcome),
+        "lead": model_to_dict(outcome.lead),
+        "outreach_eligibility": outreach_eligibility_for_lead(session, outcome.lead_id),
+        "live_calling_inside_system": False,
+    }
+
+
+@router.get("/field-testing")
+def field_testing(session: Session = Depends(get_session)) -> dict[str, object]:
+    return field_testing_dashboard(session)
+
+
+@router.post("/field-testing/safety/validate")
+def field_testing_safety(payload: FieldTestingSafetyRequest) -> dict[str, object]:
+    return sanitize_field_testing_text(payload.content)
+
+
+@router.get("/field-briefing")
+def field_briefing(session: Session = Depends(get_session)) -> dict[str, object]:
+    return field_testing_briefing(session)
+
+
+@router.get("/feedback-loop")
+def feedback_loop(session: Session = Depends(get_session)) -> dict[str, object]:
+    records = session.query(PredictionFeedbackRecord).all()
+    for record in records:
+        sync_prediction_feedback(record)
+    session.commit()
+    return {
+        "feedback_records": [model_to_dict(record) for record in records],
+        "prediction_misses": [
+            model_to_dict(record) for record in records if record.accuracy_score < 70
+        ],
+        "deterministic_explainable_scoring": True,
+    }
+
+
+@router.post("/feedback-loop")
+def create_feedback_record(
+    payload: PredictionFeedbackRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    if payload.lead_id and session.get(Lead, payload.lead_id) is None:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    if payload.call_outcome_id and session.get(FieldCallOutcome, payload.call_outcome_id) is None:
+        raise HTTPException(status_code=404, detail="Call outcome not found")
+    safety = sanitize_field_testing_text(
+        f"{payload.source_prediction_value} {payload.actual_result}"
+    )
+    if not safety["allowed"]:
+        raise HTTPException(status_code=400, detail=safety)
+    feedback = PredictionFeedbackRecord(
+        id=f"feedback-{session.query(PredictionFeedbackRecord).count() + 1:03d}",
+        lead_id=payload.lead_id,
+        deal_id=payload.deal_id,
+        call_outcome_id=payload.call_outcome_id,
+        source_prediction_type=payload.source_prediction_type,
+        source_prediction_value=payload.source_prediction_value,
+        actual_result=payload.actual_result,
+        owner_reviewed=payload.owner_reviewed,
+        source_record_ids=[
+            record_id
+            for record_id in [payload.lead_id, payload.deal_id, payload.call_outcome_id]
+            if record_id
+        ],
+    )
+    sync_prediction_feedback(feedback)
+    session.add(feedback)
+    session.flush()
+    suggestion = scoring_adjustment_from_feedback(feedback)
+    session.add(suggestion)
+    session.commit()
+    return {
+        **model_to_dict(feedback),
+        "scoring_adjustment": model_to_dict(suggestion),
+        "deterministic_explainable_scoring": True,
+    }
+
+
+@router.get("/feedback-loop/{feedback_id}")
+def feedback_detail(
+    feedback_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    feedback = session.get(PredictionFeedbackRecord, feedback_id)
+    if feedback is None:
+        raise HTTPException(status_code=404, detail="Feedback record not found")
+    sync_prediction_feedback(feedback)
+    session.commit()
+    return {
+        **model_to_dict(feedback),
+        "scoring_adjustments": [
+            model_to_dict(adjustment) for adjustment in feedback.scoring_adjustments
+        ],
+        "deterministic_explainable_scoring": True,
+    }
+
+
+@router.get("/scoring-adjustments")
+def scoring_adjustments(session: Session = Depends(get_session)) -> dict[str, object]:
+    suggestions = session.query(ScoringAdjustmentSuggestion).all()
+    return {
+        "scoring_adjustments": [model_to_dict(suggestion) for suggestion in suggestions],
+        "pending_owner_review": [
+            model_to_dict(suggestion)
+            for suggestion in suggestions
+            if suggestion.owner_review_status == "pending_review"
+        ],
+        "black_box_ml_used": False,
+        "deterministic_explainable_scoring": True,
+    }
 
 
 @router.get("/command-center")

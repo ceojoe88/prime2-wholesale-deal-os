@@ -85,6 +85,15 @@ class Lead(TimestampMixin, Base):
     seller_offer_publications: Mapped[list["SellerOfferPublication"]] = relationship(
         back_populates="lead"
     )
+    quality_reviews: Mapped[list["LeadQualityReview"]] = relationship(
+        back_populates="lead"
+    )
+    call_outcomes: Mapped[list["FieldCallOutcome"]] = relationship(
+        back_populates="lead"
+    )
+    prediction_feedback_records: Mapped[list["PredictionFeedbackRecord"]] = relationship(
+        back_populates="lead"
+    )
 
 
 class Deal(TimestampMixin, Base):
@@ -1316,6 +1325,192 @@ class DeploymentHardeningCheck(TimestampMixin, Base):
     remediation: Mapped[str] = mapped_column(Text, default="")
     owner_action_required: Mapped[bool] = mapped_column(Boolean, default=True)
     blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class LeadImportBatch(TimestampMixin, Base):
+    __tablename__ = "lead_import_batches"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    batch_name: Mapped[str] = mapped_column(String(160), default="")
+    source_filename: Mapped[str] = mapped_column(String(180), default="")
+    imported_by: Mapped[str] = mapped_column(String(120), default="Owner")
+    status: Mapped[str] = mapped_column(String(80), default="preview")
+    row_count: Mapped[int] = mapped_column(Integer, default=0)
+    approved_row_count: Mapped[int] = mapped_column(Integer, default=0)
+    blocked_row_count: Mapped[int] = mapped_column(Integer, default=0)
+    duplicate_row_count: Mapped[int] = mapped_column(Integer, default=0)
+    committed_row_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_leads_count: Mapped[int] = mapped_column(Integer, default=0)
+    commit_requested: Mapped[bool] = mapped_column(Boolean, default=False)
+    committed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    safety_notes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    live_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    auto_portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    rows: Mapped[list["LeadImportRow"]] = relationship(back_populates="batch")
+    quality_reviews: Mapped[list["LeadQualityReview"]] = relationship(
+        back_populates="batch"
+    )
+
+
+class LeadImportRow(TimestampMixin, Base):
+    __tablename__ = "lead_import_rows"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    batch_id: Mapped[str] = mapped_column(ForeignKey("lead_import_batches.id"), nullable=False)
+    row_number: Mapped[int] = mapped_column(Integer, default=0)
+    raw_payload: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    normalized_payload: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    owner_name: Mapped[str] = mapped_column(String(160), default="")
+    owner_phone: Mapped[str] = mapped_column(String(40), default="")
+    owner_email: Mapped[str] = mapped_column(String(180), default="")
+    property_address: Mapped[str] = mapped_column(String(200), default="")
+    property_city: Mapped[str] = mapped_column(String(100), default="")
+    property_state: Mapped[str] = mapped_column(String(40), default="")
+    property_zip: Mapped[str] = mapped_column(String(20), default="")
+    mailing_address: Mapped[str] = mapped_column(String(220), default="")
+    lead_source: Mapped[str] = mapped_column(String(100), default="")
+    lead_type: Mapped[str] = mapped_column(String(100), default="")
+    property_type: Mapped[str] = mapped_column(String(100), default="")
+    beds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    baths: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sqft: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    year_built: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    estimated_value: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    estimated_equity: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    mortgage_balance: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tax_delinquent_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    vacant_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    absentee_owner_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    probate_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    inherited_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    code_violation_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    pre_foreclosure_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    tired_landlord_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    row_status: Mapped[str] = mapped_column(String(80), default="approved")
+    approved_for_commit: Mapped[bool] = mapped_column(Boolean, default=True)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    low_confidence_flags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    duplicate_key: Mapped[str] = mapped_column(String(260), default="")
+    data_confidence: Mapped[float] = mapped_column(Float, default=0)
+    committed_lead_id: Mapped[str | None] = mapped_column(ForeignKey("leads.id"), nullable=True)
+    committed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    live_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    auto_portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    batch: Mapped[LeadImportBatch] = relationship(back_populates="rows")
+    committed_lead: Mapped[Lead | None] = relationship()
+    quality_reviews: Mapped[list["LeadQualityReview"]] = relationship(
+        back_populates="import_row"
+    )
+
+
+class LeadQualityReview(TimestampMixin, Base):
+    __tablename__ = "lead_quality_reviews"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    lead_id: Mapped[str | None] = mapped_column(ForeignKey("leads.id"), nullable=True)
+    import_row_id: Mapped[str | None] = mapped_column(ForeignKey("lead_import_rows.id"), nullable=True)
+    batch_id: Mapped[str | None] = mapped_column(ForeignKey("lead_import_batches.id"), nullable=True)
+    checks: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    data_quality_score: Mapped[float] = mapped_column(Float, default=0)
+    contactability_score: Mapped[float] = mapped_column(Float, default=0)
+    distress_signal_confidence: Mapped[float] = mapped_column(Float, default=0)
+    equity_confidence: Mapped[float] = mapped_column(Float, default=0)
+    import_confidence: Mapped[float] = mapped_column(Float, default=0)
+    recommended_next_action: Mapped[str] = mapped_column(String(80), default="research_more")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    reviewed_by: Mapped[str] = mapped_column(String(120), default="Prime 2")
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    lead: Mapped[Lead | None] = relationship(back_populates="quality_reviews")
+    import_row: Mapped[LeadImportRow | None] = relationship(back_populates="quality_reviews")
+    batch: Mapped[LeadImportBatch | None] = relationship(back_populates="quality_reviews")
+
+
+class FieldCallOutcome(TimestampMixin, Base):
+    __tablename__ = "field_call_outcomes"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("leads.id"), nullable=False)
+    call_datetime: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    contact_result: Mapped[str] = mapped_column(String(80), default="no_answer")
+    motivation_notes: Mapped[str] = mapped_column(Text, default="")
+    asking_price: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    timeline: Mapped[str] = mapped_column(String(160), default="")
+    property_condition_notes: Mapped[str] = mapped_column(Text, default="")
+    seller_objections: Mapped[list[str]] = mapped_column(JSON, default=list)
+    seller_temperature: Mapped[float] = mapped_column(Float, default=0)
+    next_follow_up_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    operator_notes: Mapped[str] = mapped_column(Text, default="")
+    prime2_next_recommendation: Mapped[str] = mapped_column(Text, default="")
+    contactability_adjustment: Mapped[float] = mapped_column(Float, default=0)
+    motivation_adjustment: Mapped[float] = mapped_column(Float, default=0)
+    do_not_contact: Mapped[bool] = mapped_column(Boolean, default=False)
+    outreach_eligibility_status: Mapped[str] = mapped_column(String(80), default="eligible")
+    escalation_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    internal_task_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_call_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    lead: Mapped[Lead] = relationship(back_populates="call_outcomes")
+    prediction_feedback_records: Mapped[list["PredictionFeedbackRecord"]] = relationship(
+        back_populates="call_outcome"
+    )
+
+
+class PredictionFeedbackRecord(TimestampMixin, Base):
+    __tablename__ = "prediction_feedback_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    lead_id: Mapped[str | None] = mapped_column(ForeignKey("leads.id"), nullable=True)
+    deal_id: Mapped[str | None] = mapped_column(ForeignKey("deals.id"), nullable=True)
+    call_outcome_id: Mapped[str | None] = mapped_column(ForeignKey("field_call_outcomes.id"), nullable=True)
+    source_prediction_type: Mapped[str] = mapped_column(String(120), default="")
+    source_prediction_value: Mapped[str] = mapped_column(String(160), default="")
+    actual_result: Mapped[str] = mapped_column(String(160), default="")
+    accuracy_score: Mapped[float] = mapped_column(Float, default=0)
+    variance_reason: Mapped[str] = mapped_column(Text, default="")
+    recommended_scoring_adjustment: Mapped[str] = mapped_column(Text, default="")
+    adjustment_explanation: Mapped[str] = mapped_column(Text, default="")
+    owner_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    source_record_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    deterministic_adjustment: Mapped[bool] = mapped_column(Boolean, default=True)
+    unsupported_profit_claim_blocked: Mapped[bool] = mapped_column(Boolean, default=True)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    lead: Mapped[Lead | None] = relationship(back_populates="prediction_feedback_records")
+    deal: Mapped[Deal | None] = relationship()
+    call_outcome: Mapped[FieldCallOutcome | None] = relationship(
+        back_populates="prediction_feedback_records"
+    )
+    scoring_adjustments: Mapped[list["ScoringAdjustmentSuggestion"]] = relationship(
+        back_populates="feedback"
+    )
+
+
+class ScoringAdjustmentSuggestion(TimestampMixin, Base):
+    __tablename__ = "scoring_adjustment_suggestions"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    feedback_id: Mapped[str] = mapped_column(ForeignKey("prediction_feedback_records.id"), nullable=False)
+    weight_group: Mapped[str] = mapped_column(String(120), default="")
+    current_weight: Mapped[float] = mapped_column(Float, default=0)
+    recommended_weight: Mapped[float] = mapped_column(Float, default=0)
+    adjustment_delta: Mapped[float] = mapped_column(Float, default=0)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    explanation: Mapped[str] = mapped_column(Text, default="")
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    applied: Mapped[bool] = mapped_column(Boolean, default=False)
+    deterministic: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    feedback: Mapped[PredictionFeedbackRecord] = relationship(
+        back_populates="scoring_adjustments"
+    )
 
 
 class ComplianceRecord(TimestampMixin, Base):

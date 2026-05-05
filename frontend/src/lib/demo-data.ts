@@ -3182,3 +3182,485 @@ export const failedHardeningChecks = deploymentHardeningChecks.filter(
 export const approvalUxReady = approvalUxReviews.filter(
   (review) => review.recommendedDecision === "review_ready"
 );
+
+export type LeadImportBatch = {
+  id: string;
+  batchName: string;
+  sourceFilename: string;
+  status: string;
+  rowCount: number;
+  approvedRowCount: number;
+  blockedRowCount: number;
+  duplicateRowCount: number;
+  committedRowCount: number;
+  createdLeadsCount: number;
+  safetyNotes: string[];
+  liveOutreachAllowed: false;
+  bulkOutreachAllowed: false;
+  autoPortalPublishAllowed: false;
+};
+
+export type LeadImportRow = {
+  id: string;
+  batchId: string;
+  rowNumber: number;
+  ownerName: string;
+  ownerPhone: string;
+  ownerEmail: string;
+  propertyAddress: string;
+  propertyCity: string;
+  propertyState: string;
+  propertyZip: string;
+  leadSource: string;
+  leadType: string;
+  estimatedValue: number | null;
+  estimatedEquity: number | null;
+  rowStatus: "approved" | "blocked" | "committed" | "needs_review";
+  approvedForCommit: boolean;
+  blockedReasons: string[];
+  lowConfidenceFlags: string[];
+  dataConfidence: number;
+  liveOutreachAllowed: false;
+  bulkOutreachAllowed: false;
+  autoPortalPublishAllowed: false;
+};
+
+export type LeadQualityReview = {
+  id: string;
+  leadId: string | null;
+  importRowId: string | null;
+  batchId: string | null;
+  checks: Record<string, boolean>;
+  dataQualityScore: number;
+  contactabilityScore: number;
+  distressSignalConfidence: number;
+  equityConfidence: number;
+  importConfidence: number;
+  recommendedNextAction: "research_more" | "underwrite_now" | "call_priority" | "skip_for_now" | "duplicate_review";
+  blockedReasons: string[];
+  reviewedBy: string;
+  draftOnly: true;
+  liveOutreachAllowed: false;
+};
+
+export type FieldCallOutcome = {
+  id: string;
+  leadId: string;
+  callDatetime: string;
+  contactResult: string;
+  motivationNotes: string;
+  askingPrice: number | null;
+  timeline: string;
+  propertyConditionNotes: string;
+  sellerObjections: string[];
+  sellerTemperature: number;
+  nextFollowUpDate: string | null;
+  operatorNotes: string;
+  prime2NextRecommendation: string;
+  doNotContact: boolean;
+  outreachEligibilityStatus: string;
+  escalationCreated: boolean;
+  internalTaskCreated: boolean;
+  liveCallRecorded: false;
+  liveOutreachAllowed: false;
+};
+
+export type PredictionFeedbackRecord = {
+  id: string;
+  leadId: string | null;
+  dealId: string | null;
+  callOutcomeId: string | null;
+  sourcePredictionType: string;
+  sourcePredictionValue: string;
+  actualResult: string;
+  accuracyScore: number;
+  varianceReason: string;
+  recommendedScoringAdjustment: string;
+  adjustmentExplanation: string;
+  ownerReviewed: boolean;
+  sourceRecordIds: string[];
+  deterministicAdjustment: true;
+  unsupportedProfitClaimBlocked: true;
+  legalAdviceAllowed: false;
+};
+
+export type ScoringAdjustmentSuggestion = {
+  id: string;
+  feedbackId: string;
+  weightGroup: string;
+  currentWeight: number;
+  recommendedWeight: number;
+  adjustmentDelta: number;
+  reason: string;
+  explanation: string;
+  ownerReviewStatus: string;
+  applied: boolean;
+  deterministic: true;
+};
+
+export const leadImportBatches: LeadImportBatch[] = [
+  {
+    id: "lead-import-001",
+    batchName: "Field test absentee-vacant upload",
+    sourceFilename: "field-test-absentee-vacant.csv",
+    status: "preview_ready",
+    rowCount: 4,
+    approvedRowCount: 2,
+    blockedRowCount: 2,
+    duplicateRowCount: 1,
+    committedRowCount: 0,
+    createdLeadsCount: 0,
+    safetyNotes: [
+      "Preview only; no imported row triggered live outreach.",
+      "Approved rows require explicit commit and remain operator-controlled."
+    ],
+    liveOutreachAllowed: false,
+    bulkOutreachAllowed: false,
+    autoPortalPublishAllowed: false
+  }
+];
+
+export const leadImportRows: LeadImportRow[] = [
+  {
+    id: "lead-import-001-row-001",
+    batchId: "lead-import-001",
+    rowNumber: 1,
+    ownerName: "Marcus Bell",
+    ownerPhone: "2145551198",
+    ownerEmail: "marcus.bell@example.test",
+    propertyAddress: "3811 Fernwood Ave",
+    propertyCity: "Dallas",
+    propertyState: "TX",
+    propertyZip: "75216",
+    leadSource: "absentee owner",
+    leadType: "vacant high equity",
+    estimatedValue: 241000,
+    estimatedEquity: 126000,
+    rowStatus: "approved",
+    approvedForCommit: true,
+    blockedReasons: [],
+    lowConfidenceFlags: [],
+    dataConfidence: 88,
+    liveOutreachAllowed: false,
+    bulkOutreachAllowed: false,
+    autoPortalPublishAllowed: false
+  },
+  {
+    id: "lead-import-001-row-002",
+    batchId: "lead-import-001",
+    rowNumber: 2,
+    ownerName: "Tanya Brooks",
+    ownerPhone: "",
+    ownerEmail: "tanya.brooks@example.test",
+    propertyAddress: "922 Carson St",
+    propertyCity: "Mesquite",
+    propertyState: "TX",
+    propertyZip: "75149",
+    leadSource: "tired landlord",
+    leadType: "rental fatigue",
+    estimatedValue: 205000,
+    estimatedEquity: 91000,
+    rowStatus: "approved",
+    approvedForCommit: true,
+    blockedReasons: [],
+    lowConfidenceFlags: ["missing_phone"],
+    dataConfidence: 78,
+    liveOutreachAllowed: false,
+    bulkOutreachAllowed: false,
+    autoPortalPublishAllowed: false
+  },
+  {
+    id: "lead-import-001-row-003",
+    batchId: "lead-import-001",
+    rowNumber: 3,
+    ownerName: "Address Missing",
+    ownerPhone: "9725552201",
+    ownerEmail: "",
+    propertyAddress: "",
+    propertyCity: "Dallas",
+    propertyState: "TX",
+    propertyZip: "75216",
+    leadSource: "vacant",
+    leadType: "vacant",
+    estimatedValue: null,
+    estimatedEquity: null,
+    rowStatus: "blocked",
+    approvedForCommit: false,
+    blockedReasons: ["missing_property_address"],
+    lowConfidenceFlags: ["missing_email", "missing_valuation_data"],
+    dataConfidence: 22,
+    liveOutreachAllowed: false,
+    bulkOutreachAllowed: false,
+    autoPortalPublishAllowed: false
+  },
+  {
+    id: "lead-import-001-row-004",
+    batchId: "lead-import-001",
+    rowNumber: 4,
+    ownerName: "Rosa Delgado",
+    ownerPhone: "2145551198",
+    ownerEmail: "rosa.delgado@example.test",
+    propertyAddress: "3811 Fernwood Ave",
+    propertyCity: "Dallas",
+    propertyState: "TX",
+    propertyZip: "75216",
+    leadSource: "absentee owner",
+    leadType: "duplicate",
+    estimatedValue: 241000,
+    estimatedEquity: 126000,
+    rowStatus: "blocked",
+    approvedForCommit: false,
+    blockedReasons: ["duplicate_property_owner_phone"],
+    lowConfidenceFlags: [],
+    dataConfidence: 55,
+    liveOutreachAllowed: false,
+    bulkOutreachAllowed: false,
+    autoPortalPublishAllowed: false
+  }
+];
+
+export const leadQualityReviews: LeadQualityReview[] = [
+  {
+    id: "qa-lead-import-001-row-001",
+    leadId: null,
+    importRowId: "lead-import-001-row-001",
+    batchId: "lead-import-001",
+    checks: { missingPhone: false, missingPropertyAddress: false, duplicateProperty: false },
+    dataQualityScore: 96,
+    contactabilityScore: 90,
+    distressSignalConfidence: 50,
+    equityConfidence: 80,
+    importConfidence: 82,
+    recommendedNextAction: "call_priority",
+    blockedReasons: [],
+    reviewedBy: "Prime 2",
+    draftOnly: true,
+    liveOutreachAllowed: false
+  },
+  {
+    id: "qa-lead-import-001-row-002",
+    leadId: null,
+    importRowId: "lead-import-001-row-002",
+    batchId: "lead-import-001",
+    checks: { missingPhone: true, missingPropertyAddress: false, duplicateProperty: false },
+    dataQualityScore: 86,
+    contactabilityScore: 40,
+    distressSignalConfidence: 50,
+    equityConfidence: 80,
+    importConfidence: 68,
+    recommendedNextAction: "research_more",
+    blockedReasons: [],
+    reviewedBy: "Prime 2",
+    draftOnly: true,
+    liveOutreachAllowed: false
+  },
+  {
+    id: "qa-lead-import-001-row-003",
+    leadId: null,
+    importRowId: "lead-import-001-row-003",
+    batchId: "lead-import-001",
+    checks: { missingPhone: false, missingPropertyAddress: true, duplicateProperty: false },
+    dataQualityScore: 42,
+    contactabilityScore: 75,
+    distressSignalConfidence: 40,
+    equityConfidence: 25,
+    importConfidence: 44,
+    recommendedNextAction: "skip_for_now",
+    blockedReasons: ["missing_property_address"],
+    reviewedBy: "Prime 2",
+    draftOnly: true,
+    liveOutreachAllowed: false
+  },
+  {
+    id: "qa-lead-import-001-row-004",
+    leadId: null,
+    importRowId: "lead-import-001-row-004",
+    batchId: "lead-import-001",
+    checks: { missingPhone: false, missingPropertyAddress: false, duplicateProperty: true },
+    dataQualityScore: 66,
+    contactabilityScore: 85,
+    distressSignalConfidence: 50,
+    equityConfidence: 80,
+    importConfidence: 66,
+    recommendedNextAction: "duplicate_review",
+    blockedReasons: ["duplicate_property_owner_phone"],
+    reviewedBy: "Prime 2",
+    draftOnly: true,
+    liveOutreachAllowed: false
+  }
+];
+
+export const fieldCallOutcomes: FieldCallOutcome[] = [
+  {
+    id: "call-outcome-001",
+    leadId: "lead-001",
+    callDatetime: "2026-05-04T18:30:00Z",
+    contactResult: "motivated",
+    motivationNotes: "Seller confirmed repair fatigue and asked for an as-is explanation.",
+    askingPrice: 158000,
+    timeline: "Would like a clear written option this week.",
+    propertyConditionNotes: "Roof age and interior updates need review.",
+    sellerObjections: ["wants repair basis", "needs timing clarity"],
+    sellerTemperature: 84,
+    nextFollowUpDate: "2026-05-05T15:00:00Z",
+    operatorNotes: "Field call outcome only; no system call was made.",
+    prime2NextRecommendation: "Escalate to seller acquisition for draft-only offer explanation.",
+    doNotContact: false,
+    outreachEligibilityStatus: "owner_review_required",
+    escalationCreated: true,
+    internalTaskCreated: true,
+    liveCallRecorded: false,
+    liveOutreachAllowed: false
+  },
+  {
+    id: "call-outcome-002",
+    leadId: "lead-006",
+    callDatetime: "2026-05-04T18:30:00Z",
+    contactResult: "wrong_number",
+    motivationNotes: "Number reached unrelated party.",
+    askingPrice: null,
+    timeline: "",
+    propertyConditionNotes: "",
+    sellerObjections: [],
+    sellerTemperature: 0,
+    nextFollowUpDate: null,
+    operatorNotes: "Research contact data before any additional owner-approved outreach.",
+    prime2NextRecommendation: "Lower contactability and route to lead QA research.",
+    doNotContact: false,
+    outreachEligibilityStatus: "research_contact_info",
+    escalationCreated: false,
+    internalTaskCreated: false,
+    liveCallRecorded: false,
+    liveOutreachAllowed: false
+  },
+  {
+    id: "call-outcome-003",
+    leadId: "lead-008",
+    callDatetime: "2026-05-04T18:30:00Z",
+    contactResult: "do_not_contact",
+    motivationNotes: "Seller requested no future contact.",
+    askingPrice: null,
+    timeline: "",
+    propertyConditionNotes: "",
+    sellerObjections: ["do not contact"],
+    sellerTemperature: 0,
+    nextFollowUpDate: null,
+    operatorNotes: "Do-not-contact boundary recorded.",
+    prime2NextRecommendation: "Block future live outreach eligibility for this lead.",
+    doNotContact: true,
+    outreachEligibilityStatus: "blocked_do_not_contact",
+    escalationCreated: false,
+    internalTaskCreated: false,
+    liveCallRecorded: false,
+    liveOutreachAllowed: false
+  }
+];
+
+export const predictionFeedbackRecords: PredictionFeedbackRecord[] = [
+  {
+    id: "feedback-001",
+    leadId: "lead-001",
+    dealId: "deal-001",
+    callOutcomeId: "call-outcome-001",
+    sourcePredictionType: "predicted_motivation",
+    sourcePredictionValue: "high motivation",
+    actualResult: "motivated",
+    accuracyScore: 92,
+    varianceReason: "prediction_matched",
+    recommendedScoringAdjustment: "maintain motivation weighting",
+    adjustmentExplanation: "High motivation prediction matched seller field outcome.",
+    ownerReviewed: false,
+    sourceRecordIds: ["lead-001", "deal-001", "call-outcome-001"],
+    deterministicAdjustment: true,
+    unsupportedProfitClaimBlocked: true,
+    legalAdviceAllowed: false
+  },
+  {
+    id: "feedback-002",
+    leadId: "lead-006",
+    dealId: null,
+    callOutcomeId: "call-outcome-002",
+    sourcePredictionType: "predicted_contactability",
+    sourcePredictionValue: "high contactability",
+    actualResult: "wrong_number",
+    accuracyScore: 40,
+    varianceReason: "contactability_overstated",
+    recommendedScoringAdjustment: "reduce phone confidence unless recent verification exists",
+    adjustmentExplanation: "Actual field outcome showed weaker contactability than the imported data predicted.",
+    ownerReviewed: false,
+    sourceRecordIds: ["lead-006", "call-outcome-002"],
+    deterministicAdjustment: true,
+    unsupportedProfitClaimBlocked: true,
+    legalAdviceAllowed: false
+  }
+];
+
+export const scoringAdjustmentSuggestions: ScoringAdjustmentSuggestion[] = [
+  {
+    id: "adjustment-feedback-001",
+    feedbackId: "feedback-001",
+    weightGroup: "motivation",
+    currentWeight: 0.18,
+    recommendedWeight: 0.18,
+    adjustmentDelta: 0,
+    reason: "prediction_matched",
+    explanation: "Maintain weight because the prediction matched real seller response.",
+    ownerReviewStatus: "pending_review",
+    applied: false,
+    deterministic: true
+  },
+  {
+    id: "adjustment-feedback-002",
+    feedbackId: "feedback-002",
+    weightGroup: "contactability",
+    currentWeight: 0.1,
+    recommendedWeight: 0.08,
+    adjustmentDelta: -0.02,
+    reason: "contactability_overstated",
+    explanation: "Reduce contactability confidence for unverified phone data until confirmed by field outcomes.",
+    ownerReviewStatus: "pending_review",
+    applied: false,
+    deterministic: true
+  }
+];
+
+export function getLeadImportBatch(batchId: string) {
+  return leadImportBatches.find((batch) => batch.id === batchId);
+}
+
+export function getLeadQaReview(leadId: string) {
+  return leadQualityReviews.find((review) => review.leadId === leadId || review.importRowId === leadId);
+}
+
+export function getCallOutcome(outcomeId: string) {
+  return fieldCallOutcomes.find((outcome) => outcome.id === outcomeId);
+}
+
+export function getPredictionFeedback(feedbackId: string) {
+  return predictionFeedbackRecords.find((record) => record.id === feedbackId);
+}
+
+export const blockedLeadImportRows = leadImportRows.filter((row) => row.blockedReasons.length > 0);
+export const approvedLeadImportRows = leadImportRows.filter((row) => row.rowStatus === "approved");
+export const lowConfidenceQaReviews = leadQualityReviews.filter((review) => review.importConfidence < 60 || review.blockedReasons.length > 0);
+export const callPriorityQaReviews = leadQualityReviews.filter((review) => review.recommendedNextAction === "call_priority");
+export const researchMoreQaReviews = leadQualityReviews.filter((review) => review.recommendedNextAction === "research_more");
+export const motivatedFieldOutcomes = fieldCallOutcomes.filter((outcome) =>
+  ["motivated", "offer_requested", "appointment_set"].includes(outcome.contactResult)
+);
+export const doNotContactOutcomes = fieldCallOutcomes.filter((outcome) => outcome.doNotContact);
+export const predictionMisses = predictionFeedbackRecords.filter((record) => record.accuracyScore < 70);
+export const pendingScoringAdjustments = scoringAdjustmentSuggestions.filter((suggestion) => suggestion.ownerReviewStatus === "pending_review");
+export const fieldTestingAccuracy = Math.round(
+  predictionFeedbackRecords.reduce((total, record) => total + record.accuracyScore, 0) /
+    predictionFeedbackRecords.length
+);
+export const firstDealCandidates = leadQualityReviews
+  .filter((review) => ["call_priority", "underwrite_now"].includes(review.recommendedNextAction))
+  .sort((first, second) => second.importConfidence - first.importConfidence);
+export const v19SafetyCards = [
+  { label: "Live outreach", value: "off", detail: "CSV imports cannot trigger SMS, email, or calls" },
+  { label: "Bulk actions", value: "off", detail: "No campaigns or mass follow-up from imported rows" },
+  { label: "Bad rows", value: String(blockedLeadImportRows.length), detail: "Visible with reasons before commit" },
+  { label: "DNC records", value: String(doNotContactOutcomes.length), detail: "Future live outreach eligibility blocked" }
+];

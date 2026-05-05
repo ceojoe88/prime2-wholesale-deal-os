@@ -31,6 +31,18 @@ const requiredRouteFiles = [
   "src/app/dashboard/agents/[agentId]/page.tsx",
   "src/app/dashboard/leads/page.tsx",
   "src/app/dashboard/leads/[leadId]/page.tsx",
+  "src/app/dashboard/lead-imports/page.tsx",
+  "src/app/dashboard/lead-imports/[batchId]/page.tsx",
+  "src/app/dashboard/lead-imports/preview/page.tsx",
+  "src/app/dashboard/lead-qa/page.tsx",
+  "src/app/dashboard/lead-qa/[leadId]/page.tsx",
+  "src/app/dashboard/call-outcomes/page.tsx",
+  "src/app/dashboard/call-outcomes/[outcomeId]/page.tsx",
+  "src/app/dashboard/field-testing/page.tsx",
+  "src/app/dashboard/feedback-loop/page.tsx",
+  "src/app/dashboard/feedback-loop/[feedbackId]/page.tsx",
+  "src/app/dashboard/scoring-adjustments/page.tsx",
+  "src/app/dashboard/field-briefing/page.tsx",
   "src/app/dashboard/deals/page.tsx",
   "src/app/dashboard/deals/[dealId]/page.tsx",
   "src/app/dashboard/underwriting/page.tsx",
@@ -234,4 +246,34 @@ test("seller portal route files avoid buyer data and internal profit logic label
   }
   assert.equal(joined.includes("contractexecutionallowed: true"), false);
   assert.equal(joined.includes("automaticnegotiationallowed: true"), false);
+});
+
+test("V19 field-testing pages expose no unsafe live-action buttons", () => {
+  const files = [
+    "src/app/dashboard/lead-imports/page.tsx",
+    "src/app/dashboard/lead-imports/[batchId]/page.tsx",
+    "src/app/dashboard/lead-imports/preview/page.tsx",
+    "src/app/dashboard/lead-qa/page.tsx",
+    "src/app/dashboard/lead-qa/[leadId]/page.tsx",
+    "src/app/dashboard/call-outcomes/page.tsx",
+    "src/app/dashboard/call-outcomes/[outcomeId]/page.tsx",
+    "src/app/dashboard/field-testing/page.tsx",
+    "src/app/dashboard/feedback-loop/page.tsx",
+    "src/app/dashboard/feedback-loop/[feedbackId]/page.tsx",
+    "src/app/dashboard/scoring-adjustments/page.tsx",
+    "src/app/dashboard/field-briefing/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "guarantee profit",
+    "legal advice",
+    "publish automatically"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
 });

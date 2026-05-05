@@ -4,9 +4,11 @@ from sqlalchemy.orm import Session
 
 from app.models import (
     AutonomousDailyOperatingReport,
+    LeadQualityReview,
     OperatorExceptionRecord,
     OperatorModeSetting,
     OwnerApprovalItem,
+    PredictionFeedbackRecord,
     SemiAutonomousCommandLoopRun,
     SystemTrustScore,
 )
@@ -145,6 +147,8 @@ def operator_mode_dashboard(session: Session) -> dict[str, object]:
     exceptions = session.query(OperatorExceptionRecord).all()
     reports = session.query(AutonomousDailyOperatingReport).all()
     trust_scores = session.query(SystemTrustScore).all()
+    lead_quality_reviews = session.query(LeadQualityReview).all()
+    prediction_feedback = session.query(PredictionFeedbackRecord).all()
     for trust in trust_scores:
         calculate_system_trust(trust)
     return {
@@ -156,6 +160,26 @@ def operator_mode_dashboard(session: Session) -> dict[str, object]:
         "exceptions": [model_to_dict(exception) for exception in exceptions],
         "daily_reports": [model_to_dict(report) for report in reports],
         "system_trust_scores": [model_to_dict(score) for score in trust_scores],
+        "field_testing_queue": [
+            model_to_dict(review)
+            for review in lead_quality_reviews
+            if review.recommended_next_action in {"call_priority", "underwrite_now"}
+        ],
+        "real_lead_qa_queue": [
+            model_to_dict(review)
+            for review in lead_quality_reviews
+            if review.import_confidence < 70 or review.blocked_reasons
+        ],
+        "first_deal_candidates": [
+            model_to_dict(review)
+            for review in lead_quality_reviews
+            if review.import_confidence >= 70 and review.lead_id
+        ],
+        "prediction_accuracy_warnings": [
+            model_to_dict(record)
+            for record in prediction_feedback
+            if record.accuracy_score < 70
+        ],
         "hard_boundary": HARD_BOUNDARY_FLAGS,
         "semi_autonomous_cannot_bypass_approvals": True,
         "level_5_disabled": True,

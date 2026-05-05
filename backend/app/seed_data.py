@@ -29,6 +29,14 @@ from app.domain.closing_coordination import sync_deal_room
 from app.domain.compliance import REQUIRED_CONFIRMATIONS
 from app.domain.contract_control import update_assignment_readiness, update_contract_prep_gate
 from app.domain.deal_evidence import sync_assignment_fee_attribution, sync_evidence_packet
+from app.domain.field_testing import (
+    apply_call_outcome,
+    preview_real_lead_csv,
+    scoring_adjustment_from_feedback,
+    sync_batch_counts,
+    sync_lead_quality_review,
+    sync_prediction_feedback,
+)
 from app.domain.offer_conversion import sync_contract_ready_state, sync_negotiation_record
 from app.domain.optimization import (
     agent_performance_overall,
@@ -106,6 +114,10 @@ from app.models import (
     Division,
     EnvironmentReadinessCheck,
     EvidenceAttachmentRecord,
+    FieldCallOutcome,
+    LeadImportBatch,
+    LeadImportRow,
+    LeadQualityReview,
     LeadSpendPlan,
     Lead,
     MarketScalingScore,
@@ -117,6 +129,7 @@ from app.models import (
     OptimizationRecommendation,
     OutcomeLearningRecord,
     OwnerApprovalItem,
+    PredictionFeedbackRecord,
     ProviderSandboxReadinessCheck,
     ReviewPacketPrep,
     RevenueForecastRecord,
@@ -124,6 +137,7 @@ from app.models import (
     SellerOfferPublication,
     SellerPortalResponse,
     SchedulerRun,
+    ScoringAdjustmentSuggestion,
     ScoringWeightChange,
     SemiAutonomousCommandLoopRun,
     TitleHandoffPacket,
@@ -5774,6 +5788,449 @@ def build_communication_attempt_records(
     ]
 
 
+def build_lead_import_batch_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "lead-import-001",
+            "batch_name": "Field test absentee-vacant upload",
+            "source_filename": "field-test-absentee-vacant.csv",
+            "imported_by": "Owner",
+            "status": "preview_ready",
+            "row_count": 4,
+            "approved_row_count": 2,
+            "blocked_row_count": 2,
+            "duplicate_row_count": 1,
+            "committed_row_count": 0,
+            "created_leads_count": 0,
+            "commit_requested": False,
+            "committed_at": None,
+            "safety_notes": [
+                "Preview only; no imported row triggered live outreach.",
+                "Approved rows require explicit commit and remain operator-controlled.",
+            ],
+            "live_outreach_allowed": False,
+            "bulk_outreach_allowed": False,
+            "auto_portal_publish_allowed": False,
+        }
+    ]
+
+
+def build_lead_import_row_records() -> list[dict[str, object]]:
+    base_rows = [
+        (
+            "lead-import-001-row-001",
+            1,
+            "Marcus Bell",
+            "2145551198",
+            "marcus.bell@example.test",
+            "3811 Fernwood Ave",
+            "Dallas",
+            "TX",
+            "75216",
+            "absentee owner",
+            "vacant high equity",
+            241000,
+            126000,
+            [],
+            [],
+            "approved",
+            88,
+        ),
+        (
+            "lead-import-001-row-002",
+            2,
+            "Tanya Brooks",
+            "",
+            "tanya.brooks@example.test",
+            "922 Carson St",
+            "Mesquite",
+            "TX",
+            "75149",
+            "tired landlord",
+            "rental fatigue",
+            205000,
+            91000,
+            ["missing_phone"],
+            [],
+            "approved",
+            78,
+        ),
+        (
+            "lead-import-001-row-003",
+            3,
+            "Address Missing",
+            "9725552201",
+            "",
+            "",
+            "Dallas",
+            "TX",
+            "75216",
+            "vacant",
+            "vacant",
+            None,
+            None,
+            ["missing_email", "missing_valuation_data"],
+            ["missing_property_address"],
+            "blocked",
+            22,
+        ),
+        (
+            "lead-import-001-row-004",
+            4,
+            "Rosa Delgado",
+            "2145551198",
+            "rosa.delgado@example.test",
+            "3811 Fernwood Ave",
+            "Dallas",
+            "TX",
+            "75216",
+            "absentee owner",
+            "duplicate",
+            241000,
+            126000,
+            [],
+            ["duplicate_property_owner_phone"],
+            "blocked",
+            55,
+        ),
+    ]
+    rows: list[dict[str, object]] = []
+    for (
+        row_id,
+        row_number,
+        owner_name,
+        phone,
+        email,
+        address,
+        city,
+        state,
+        zip_code,
+        lead_source,
+        lead_type,
+        value,
+        equity,
+        low_confidence,
+        blocked_reasons,
+        row_status,
+        data_confidence,
+    ) in base_rows:
+        normalized = {
+            "owner_name": owner_name,
+            "owner_phone": phone,
+            "owner_email": email,
+            "property_address": address,
+            "property_city": city,
+            "property_state": state,
+            "property_zip": zip_code,
+            "lead_source": lead_source,
+            "lead_type": lead_type,
+        }
+        rows.append(
+            {
+                "id": row_id,
+                "batch_id": "lead-import-001",
+                "row_number": row_number,
+                "raw_payload": normalized,
+                "normalized_payload": normalized,
+                "owner_name": owner_name,
+                "owner_phone": phone,
+                "owner_email": email,
+                "property_address": address,
+                "property_city": city,
+                "property_state": state,
+                "property_zip": zip_code,
+                "mailing_address": "owner mailing placeholder",
+                "lead_source": lead_source,
+                "lead_type": lead_type,
+                "property_type": "single_family",
+                "beds": 3.0 if address else None,
+                "baths": 2.0 if address else None,
+                "sqft": 1410 if address else None,
+                "year_built": 1964 if address else None,
+                "estimated_value": value,
+                "estimated_equity": equity,
+                "mortgage_balance": 83000 if equity else None,
+                "tax_delinquent_flag": False,
+                "vacant_flag": lead_source in {"vacant", "absentee owner"},
+                "absentee_owner_flag": lead_source == "absentee owner",
+                "probate_flag": False,
+                "inherited_flag": False,
+                "code_violation_flag": lead_source == "tired landlord",
+                "pre_foreclosure_flag": False,
+                "tired_landlord_flag": lead_source == "tired landlord",
+                "notes": "Field-test import row; no outreach triggered.",
+                "row_status": row_status,
+                "approved_for_commit": row_status == "approved",
+                "blocked_reasons": blocked_reasons,
+                "low_confidence_flags": low_confidence,
+                "duplicate_key": f"{address.lower()}|{city.lower()}|{state.lower()}|{zip_code}|{phone}",
+                "data_confidence": data_confidence,
+                "committed_lead_id": None,
+                "committed_at": None,
+                "live_outreach_allowed": False,
+                "bulk_outreach_allowed": False,
+                "auto_portal_publish_allowed": False,
+            }
+        )
+    return rows
+
+
+def build_lead_quality_review_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "qa-lead-import-001-row-001",
+            "lead_id": None,
+            "import_row_id": "lead-import-001-row-001",
+            "batch_id": "lead-import-001",
+            "checks": {
+                "missing_phone": False,
+                "missing_owner_name": False,
+                "missing_property_address": False,
+                "invalid_zip": False,
+                "low_equity": False,
+                "duplicate_property": False,
+                "missing_valuation_data": False,
+                "missing_contactability_data": False,
+            },
+            "data_quality_score": 96,
+            "contactability_score": 90,
+            "distress_signal_confidence": 50,
+            "equity_confidence": 80,
+            "import_confidence": 82,
+            "recommended_next_action": "call_priority",
+            "blocked_reasons": [],
+            "reviewed_by": "Prime 2",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "qa-lead-import-001-row-002",
+            "lead_id": None,
+            "import_row_id": "lead-import-001-row-002",
+            "batch_id": "lead-import-001",
+            "checks": {
+                "missing_phone": True,
+                "missing_owner_name": False,
+                "missing_property_address": False,
+                "invalid_zip": False,
+                "low_equity": False,
+                "duplicate_property": False,
+                "missing_valuation_data": False,
+                "missing_contactability_data": False,
+            },
+            "data_quality_score": 86,
+            "contactability_score": 40,
+            "distress_signal_confidence": 50,
+            "equity_confidence": 80,
+            "import_confidence": 68,
+            "recommended_next_action": "research_more",
+            "blocked_reasons": [],
+            "reviewed_by": "Prime 2",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "qa-lead-import-001-row-003",
+            "lead_id": None,
+            "import_row_id": "lead-import-001-row-003",
+            "batch_id": "lead-import-001",
+            "checks": {
+                "missing_phone": False,
+                "missing_owner_name": False,
+                "missing_property_address": True,
+                "invalid_zip": False,
+                "low_equity": True,
+                "duplicate_property": False,
+                "missing_valuation_data": True,
+                "missing_contactability_data": False,
+            },
+            "data_quality_score": 42,
+            "contactability_score": 75,
+            "distress_signal_confidence": 40,
+            "equity_confidence": 25,
+            "import_confidence": 44,
+            "recommended_next_action": "skip_for_now",
+            "blocked_reasons": ["missing_property_address"],
+            "reviewed_by": "Prime 2",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "qa-lead-import-001-row-004",
+            "lead_id": None,
+            "import_row_id": "lead-import-001-row-004",
+            "batch_id": "lead-import-001",
+            "checks": {
+                "missing_phone": False,
+                "missing_owner_name": False,
+                "missing_property_address": False,
+                "invalid_zip": False,
+                "low_equity": False,
+                "duplicate_property": True,
+                "missing_valuation_data": False,
+                "missing_contactability_data": False,
+            },
+            "data_quality_score": 66,
+            "contactability_score": 85,
+            "distress_signal_confidence": 50,
+            "equity_confidence": 80,
+            "import_confidence": 66,
+            "recommended_next_action": "duplicate_review",
+            "blocked_reasons": ["duplicate_property_owner_phone"],
+            "reviewed_by": "Prime 2",
+            "draft_only": True,
+            "live_outreach_allowed": False,
+        },
+    ]
+
+
+def build_field_call_outcome_records() -> list[dict[str, object]]:
+    base_time = datetime(2026, 5, 4, 18, 30, tzinfo=UTC)
+    return [
+        {
+            "id": "call-outcome-001",
+            "lead_id": "lead-001",
+            "call_datetime": base_time,
+            "contact_result": "motivated",
+            "motivation_notes": "Seller confirmed repair fatigue and asked for an as-is explanation.",
+            "asking_price": 158000,
+            "timeline": "Would like a clear written option this week.",
+            "property_condition_notes": "Roof age and interior updates need review.",
+            "seller_objections": ["wants repair basis", "needs timing clarity"],
+            "seller_temperature": 84,
+            "next_follow_up_date": datetime(2026, 5, 5, 15, 0, tzinfo=UTC),
+            "operator_notes": "Field call outcome only; no system call was made.",
+            "prime2_next_recommendation": "Escalate to seller acquisition for draft-only offer explanation.",
+            "contactability_adjustment": 88,
+            "motivation_adjustment": 86,
+            "do_not_contact": False,
+            "outreach_eligibility_status": "owner_review_required",
+            "escalation_created": True,
+            "internal_task_created": True,
+            "live_call_recorded": False,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "call-outcome-002",
+            "lead_id": "lead-006",
+            "call_datetime": base_time,
+            "contact_result": "wrong_number",
+            "motivation_notes": "Number reached unrelated party.",
+            "asking_price": None,
+            "timeline": "",
+            "property_condition_notes": "",
+            "seller_objections": [],
+            "seller_temperature": 0,
+            "next_follow_up_date": None,
+            "operator_notes": "Research contact data before any additional owner-approved outreach.",
+            "prime2_next_recommendation": "Lower contactability and route to lead QA research.",
+            "contactability_adjustment": 25,
+            "motivation_adjustment": 0,
+            "do_not_contact": False,
+            "outreach_eligibility_status": "research_contact_info",
+            "escalation_created": False,
+            "internal_task_created": False,
+            "live_call_recorded": False,
+            "live_outreach_allowed": False,
+        },
+        {
+            "id": "call-outcome-003",
+            "lead_id": "lead-008",
+            "call_datetime": base_time,
+            "contact_result": "do_not_contact",
+            "motivation_notes": "Seller requested no future contact.",
+            "asking_price": None,
+            "timeline": "",
+            "property_condition_notes": "",
+            "seller_objections": ["do not contact"],
+            "seller_temperature": 0,
+            "next_follow_up_date": None,
+            "operator_notes": "Do-not-contact boundary recorded.",
+            "prime2_next_recommendation": "Block future live outreach eligibility for this lead.",
+            "contactability_adjustment": 0,
+            "motivation_adjustment": 0,
+            "do_not_contact": True,
+            "outreach_eligibility_status": "blocked_do_not_contact",
+            "escalation_created": False,
+            "internal_task_created": False,
+            "live_call_recorded": False,
+            "live_outreach_allowed": False,
+        },
+    ]
+
+
+def build_prediction_feedback_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "feedback-001",
+            "lead_id": "lead-001",
+            "deal_id": "deal-001",
+            "call_outcome_id": "call-outcome-001",
+            "source_prediction_type": "predicted_motivation",
+            "source_prediction_value": "high motivation",
+            "actual_result": "motivated",
+            "accuracy_score": 92,
+            "variance_reason": "prediction_matched",
+            "recommended_scoring_adjustment": "maintain motivation weighting",
+            "adjustment_explanation": "High motivation prediction matched seller field outcome.",
+            "owner_reviewed": False,
+            "source_record_ids": ["lead-001", "deal-001", "call-outcome-001"],
+            "deterministic_adjustment": True,
+            "unsupported_profit_claim_blocked": True,
+            "legal_advice_allowed": False,
+        },
+        {
+            "id": "feedback-002",
+            "lead_id": "lead-006",
+            "deal_id": None,
+            "call_outcome_id": "call-outcome-002",
+            "source_prediction_type": "predicted_contactability",
+            "source_prediction_value": "high contactability",
+            "actual_result": "wrong_number",
+            "accuracy_score": 40,
+            "variance_reason": "contactability_overstated",
+            "recommended_scoring_adjustment": "reduce phone confidence unless recent verification exists",
+            "adjustment_explanation": "Actual field outcome showed weaker contactability than the imported data predicted.",
+            "owner_reviewed": False,
+            "source_record_ids": ["lead-006", "call-outcome-002"],
+            "deterministic_adjustment": True,
+            "unsupported_profit_claim_blocked": True,
+            "legal_advice_allowed": False,
+        },
+    ]
+
+
+def build_scoring_adjustment_suggestion_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "adjustment-feedback-001",
+            "feedback_id": "feedback-001",
+            "weight_group": "motivation",
+            "current_weight": 0.18,
+            "recommended_weight": 0.18,
+            "adjustment_delta": 0,
+            "reason": "prediction_matched",
+            "explanation": "Maintain weight because the prediction matched real seller response.",
+            "owner_review_status": "pending_review",
+            "applied": False,
+            "deterministic": True,
+        },
+        {
+            "id": "adjustment-feedback-002",
+            "feedback_id": "feedback-002",
+            "weight_group": "contactability",
+            "current_weight": 0.10,
+            "recommended_weight": 0.08,
+            "adjustment_delta": -0.02,
+            "reason": "contactability_overstated",
+            "explanation": "Reduce contactability confidence for unverified phone data until confirmed by field outcomes.",
+            "owner_review_status": "pending_review",
+            "applied": False,
+            "deterministic": True,
+        },
+    ]
+
+
 LEAD_LOOKUP = {lead["id"]: lead for lead in build_lead_records()}
 
 
@@ -5842,6 +6299,12 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "provider_sandbox_readiness_checks": build_provider_sandbox_readiness_check_records(),
         "environment_readiness_checks": build_environment_readiness_check_records(),
         "deployment_hardening_checks": build_deployment_hardening_check_records(),
+        "lead_import_batches": build_lead_import_batch_records(),
+        "lead_import_rows": build_lead_import_row_records(),
+        "lead_quality_reviews": build_lead_quality_review_records(),
+        "field_call_outcomes": build_field_call_outcome_records(),
+        "prediction_feedback_records": build_prediction_feedback_records(),
+        "scoring_adjustment_suggestions": build_scoring_adjustment_suggestion_records(),
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
@@ -5866,6 +6329,12 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        ScoringAdjustmentSuggestion,
+        PredictionFeedbackRecord,
+        FieldCallOutcome,
+        LeadQualityReview,
+        LeadImportRow,
+        LeadImportBatch,
         DeploymentHardeningCheck,
         EnvironmentReadinessCheck,
         ProviderSandboxReadinessCheck,
@@ -6049,6 +6518,18 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         DeploymentHardeningCheck(**row) for row in payload["deployment_hardening_checks"]
     )
+    session.add_all(LeadImportBatch(**row) for row in payload["lead_import_batches"])
+    session.add_all(LeadImportRow(**row) for row in payload["lead_import_rows"])
+    session.add_all(LeadQualityReview(**row) for row in payload["lead_quality_reviews"])
+    session.add_all(FieldCallOutcome(**row) for row in payload["field_call_outcomes"])
+    session.add_all(
+        PredictionFeedbackRecord(**row)
+        for row in payload["prediction_feedback_records"]
+    )
+    session.add_all(
+        ScoringAdjustmentSuggestion(**row)
+        for row in payload["scoring_adjustment_suggestions"]
+    )
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
     session.add_all(
         SellerOfferPublication(**row)
@@ -6165,5 +6646,13 @@ def seed_database(session: Session) -> dict[str, int]:
         backup_metadata(backup)
     for provider in session.query(ProviderSandboxReadinessCheck).all():
         provider_readiness_gate(provider)
+    for batch in session.query(LeadImportBatch).all():
+        sync_batch_counts(batch)
+    for review in session.query(LeadQualityReview).all():
+        sync_lead_quality_review(review)
+    for outcome in session.query(FieldCallOutcome).all():
+        apply_call_outcome(session, outcome)
+    for feedback in session.query(PredictionFeedbackRecord).all():
+        sync_prediction_feedback(feedback)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

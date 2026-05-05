@@ -55,6 +55,10 @@ def test_seed_relationships_reference_existing_source_records():
     scheduler_run_ids = {row["id"] for row in payload["scheduler_runs"]}
     auto_rule_ids = {row["id"] for row in payload["auto_execution_rules"]}
     auto_dry_run_ids = {row["id"] for row in payload["auto_execution_dry_runs"]}
+    lead_import_batch_ids = {row["id"] for row in payload["lead_import_batches"]}
+    lead_import_row_ids = {row["id"] for row in payload["lead_import_rows"]}
+    call_outcome_ids = {row["id"] for row in payload["field_call_outcomes"]}
+    feedback_ids = {row["id"] for row in payload["prediction_feedback_records"]}
 
     for deal in payload["deals"]:
         assert deal["lead_id"] in lead_ids
@@ -154,6 +158,28 @@ def test_seed_relationships_reference_existing_source_records():
         assert attempt["rule_id"] in auto_rule_ids
         if attempt.get("dry_run_id"):
             assert attempt["dry_run_id"] in auto_dry_run_ids
+    for row in payload["lead_import_rows"]:
+        assert row["batch_id"] in lead_import_batch_ids
+        if row.get("committed_lead_id"):
+            assert row["committed_lead_id"] in lead_ids
+    for review in payload["lead_quality_reviews"]:
+        assert review["batch_id"] in lead_import_batch_ids
+        assert review["import_row_id"] in lead_import_row_ids
+        if review.get("lead_id"):
+            assert review["lead_id"] in lead_ids
+    for outcome in payload["field_call_outcomes"]:
+        assert outcome["lead_id"] in lead_ids
+        assert outcome["live_outreach_allowed"] is False
+    for feedback in payload["prediction_feedback_records"]:
+        if feedback.get("lead_id"):
+            assert feedback["lead_id"] in lead_ids
+        if feedback.get("deal_id"):
+            assert feedback["deal_id"] in deal_ids
+        if feedback.get("call_outcome_id"):
+            assert feedback["call_outcome_id"] in call_outcome_ids
+    for suggestion in payload["scoring_adjustment_suggestions"]:
+        assert suggestion["feedback_id"] in feedback_ids
+        assert suggestion["deterministic"] is True
 
 
 def test_seeded_automation_and_provider_paths_remain_guarded():
@@ -201,6 +227,18 @@ def test_all_documented_core_get_routes_are_registered():
         "/api/agents/zip-code-demand-agent",
         "/api/leads",
         "/api/leads/lead-001",
+        "/api/lead-imports",
+        "/api/lead-imports/lead-import-001",
+        "/api/lead-imports/preview",
+        "/api/lead-qa",
+        "/api/lead-qa/lead-import-001-row-001",
+        "/api/call-outcomes",
+        "/api/call-outcomes/call-outcome-001",
+        "/api/field-testing",
+        "/api/field-briefing",
+        "/api/feedback-loop",
+        "/api/feedback-loop/feedback-001",
+        "/api/scoring-adjustments",
         "/api/deals",
         "/api/deals/deal-001",
         "/api/underwriting",

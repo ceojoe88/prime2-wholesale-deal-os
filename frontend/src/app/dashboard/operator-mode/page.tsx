@@ -8,9 +8,13 @@ import { Section } from "@/components/Section";
 import {
   activeOperatorMode,
   currentSystemTrustScore,
+  fieldTestingAccuracy,
+  firstDealCandidates,
   latestOperatorDailyReport,
+  lowConfidenceQaReviews,
   operatorExceptionsOpen,
   operatorHardBoundaryCards,
+  predictionMisses,
   pendingOwnerApprovals,
   semiAutonomousCommandLoopRuns
 } from "@/lib/demo-data";
@@ -30,6 +34,14 @@ export default function OperatorModePage() {
         <MetricCard label="Open exceptions" value={String(operatorExceptionsOpen.length)} detail="Only high-value or risk exceptions escalate" />
         <MetricCard label="Trust score" value={String(currentSystemTrustScore.overallTrustScore)} detail={currentSystemTrustScore.trustStatus} />
       </div>
+
+      <Section title="Field Testing Queue">
+        <div className="grid-three">
+          <RecordCard title="Real lead QA" meta={`${lowConfidenceQaReviews.length} low-confidence or blocked records need review`} right={<Pill tone="gold">review</Pill>} />
+          <RecordCard title="First-deal candidates" meta={`${firstDealCandidates.length} imported records are ready for owner-reviewed field work`} right={<Pill tone="green">queue</Pill>} />
+          <RecordCard title="Prediction accuracy" meta={`${predictionMisses.length} misses need scoring review`} right={<Pill tone={predictionMisses.length ? "gold" : "green"}>{fieldTestingAccuracy}%</Pill>} />
+        </div>
+      </Section>
 
       <Prime2IdentityPanel />
 

@@ -39,6 +39,7 @@ Expected coverage includes:
 - Autonomy and operator-mode hard boundaries
 - Evidence and forecast source requirements
 - Production readiness and audit export sanitizers
+- V19 CSV import preview, approved-row commit, dedupe, lead QA, call outcomes, do-not-contact blocking, field feedback, and scoring adjustment guardrails
 
 ## Frontend
 
@@ -57,6 +58,7 @@ Expected coverage includes:
 - Buyer and seller portal routes avoid internal/profit/seller/buyer data leaks
 - Prime 2 identity appears on internal operator routes
 - Old overseer naming remains limited to the product title
+- V19 dashboard routes render and do not expose unsafe live-action buttons
 
 ## Source Sweeps
 
@@ -73,7 +75,7 @@ Potential unsafe language and action references:
 
 ```powershell
 Get-ChildItem -Recurse -File -Include *.py,*.ts,*.tsx backend,frontend\src |
-  Select-String -Pattern "execute contract|submit to title|buyer blast|bulk send|guaranteed profit|guaranteed close|legal advice|must sign|last chance|buyers lined up|payment" -CaseSensitive:$false
+  Select-String -Pattern "Send All|Blast|Auto Call|Execute Contract|Submit to Title|Guarantee Profit|Legal Advice|Publish Automatically|execute contract|submit to title|buyer blast|bulk send|guaranteed profit|guaranteed close|legal advice|must sign|last chance|buyers lined up|payment" -CaseSensitive:$false
 ```
 
 Expected result: matches should be guardrail constants, blocked examples, false/disabled flags, test cases, or safety copy. They should not expose executable buttons, uncontrolled live action paths, or provider secrets.
@@ -99,6 +101,13 @@ Smoke check:
 - `/dashboard/optimization`
 - `/dashboard/revenue-forecast`
 - `/dashboard/operator-mode`
+- `/dashboard/field-testing`
+- `/dashboard/lead-imports`
+- `/dashboard/lead-qa`
+- `/dashboard/call-outcomes`
+- `/dashboard/feedback-loop`
+- `/dashboard/scoring-adjustments`
+- `/dashboard/field-briefing`
 - `/dashboard/production-readiness`
 - `/dashboard/backups`
 - `/buyer-portal`
@@ -119,7 +128,27 @@ Smoke check:
 - `/api/hierarchy`
 - `/api/autonomy`
 - `/api/operator-mode`
+- `/api/lead-imports`
+- `/api/lead-qa`
+- `/api/call-outcomes`
+- `/api/field-testing`
+- `/api/field-briefing`
+- `/api/feedback-loop`
+- `/api/scoring-adjustments`
 - `/api/production-readiness`
+
+## V19 Field Testing Checklist
+
+Before using real lead data:
+
+- Confirm CSV rows preview successfully before commit.
+- Confirm bad rows remain visible with `blocked_reasons`.
+- Confirm rows with no property address cannot commit.
+- Confirm duplicate property plus owner phone rows are blocked.
+- Confirm committed rows do not trigger SMS, email, calls, portal publishing, or automation sends.
+- Confirm do-not-contact call outcomes block future live outreach eligibility.
+- Confirm prediction feedback produces deterministic, explainable scoring suggestions.
+- Confirm owner review remains required before applying scoring adjustments or taking field action.
 
 ## Production Readiness Gates
 

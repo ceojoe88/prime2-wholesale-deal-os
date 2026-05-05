@@ -46,6 +46,7 @@ Implemented phases:
 - V16 revenue forecast and market scaling engine
 - V17 semi-autonomous operator mode
 - V18 production readiness and audit export layer
+- V19 real lead import and field testing loop
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -55,9 +56,9 @@ Backend:
 - FastAPI API with SQLAlchemy models
 - Alembic migrations
 - SQLite for local use and Postgres-ready `DATABASE_URL`
-- Seed/demo data for divisions, managers, agents, leads, buyers, deals, portals, evidence, forecasts, automation, audit exports, and production readiness
-- Deterministic domain modules for scoring, underwriting, profit control, portals, communication gates, automation, optimization, forecasting, and readiness checks
-- Tests for safety gates, formulas, route coverage, portal sanitizers, automation blocks, evidence attribution, production readiness, and seed integrity
+- Seed/demo data for divisions, managers, agents, leads, buyers, deals, portals, evidence, forecasts, automation, audit exports, production readiness, real lead imports, QA, call outcomes, and field feedback
+- Deterministic domain modules for scoring, underwriting, profit control, portals, communication gates, automation, optimization, forecasting, readiness checks, CSV import QA, field-call outcome tracking, and prediction feedback
+- Tests for safety gates, formulas, route coverage, portal sanitizers, automation blocks, evidence attribution, production readiness, seed integrity, real CSV import, lead QA, call outcomes, and field-testing guardrails
 
 Frontend:
 
@@ -68,6 +69,20 @@ Frontend:
 - Invite/gated seller portal routes under `/seller-portal`
 - Detail pages guard missing IDs with `notFound()`
 - Portal pages avoid seller/internal/profit logic leakage
+
+## V19 Field Testing Workflow
+
+V19 moves the project from demo-ready toward real operator testing:
+
+- Import CSV lead lists through a preview-first batch system.
+- Validate critical fields, normalize phone/email, dedupe by property address and owner phone, and show blocked rows with reasons.
+- Commit approved rows only once; blocked rows, duplicate rows, and invalid critical rows cannot become leads.
+- Run lead QA for data quality, contactability, distress confidence, equity confidence, and recommended next action.
+- Record real seller call outcomes manually, including do-not-contact, wrong number, motivated, offer requested, and appointment set.
+- Compare Prime 2 predictions against real field outcomes and queue deterministic, explainable scoring adjustment suggestions.
+- Generate a Prime 2 field briefing with call-priority leads, research gaps, first-deal candidates, prediction misses, and owner next actions.
+
+CSV imports never auto-contact sellers, create campaigns, publish portals, execute contracts, submit title packets, or change terms.
 
 ## Safety Boundaries
 
@@ -147,6 +162,9 @@ Open:
 - Prime 2 overseer: [http://localhost:3000/dashboard/overseer](http://localhost:3000/dashboard/overseer)
 - Autonomy: [http://localhost:3000/dashboard/autonomy](http://localhost:3000/dashboard/autonomy)
 - Operator mode: [http://localhost:3000/dashboard/operator-mode](http://localhost:3000/dashboard/operator-mode)
+- Field testing: [http://localhost:3000/dashboard/field-testing](http://localhost:3000/dashboard/field-testing)
+- Lead imports: [http://localhost:3000/dashboard/lead-imports](http://localhost:3000/dashboard/lead-imports)
+- Field briefing: [http://localhost:3000/dashboard/field-briefing](http://localhost:3000/dashboard/field-briefing)
 - Production readiness: [http://localhost:3000/dashboard/production-readiness](http://localhost:3000/dashboard/production-readiness)
 - Buyer portal demo: [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - Seller portal demo: [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)
@@ -179,7 +197,7 @@ Get-ChildItem -Recurse -File -Include *.py,*.ts,*.tsx,*.mjs,*.md backend,fronten
   Select-String -Pattern "Wholesale Prime" -CaseSensitive:$false
 
 Get-ChildItem -Recurse -File -Include *.py,*.ts,*.tsx backend,frontend\src |
-  Select-String -Pattern "execute contract|submit to title|buyer blast|bulk send|guaranteed profit|legal advice" -CaseSensitive:$false
+  Select-String -Pattern "Send All|Blast|Auto Call|Execute Contract|Submit to Title|Guarantee Profit|Legal Advice|Publish Automatically|execute contract|submit to title|buyer blast|bulk send|guaranteed profit|legal advice" -CaseSensitive:$false
 ```
 
 The only intended product/identity use of `Wholesale Prime` is the product title `Wholesale Prime Deal OS`; validation docs and tests may also contain the literal search term.

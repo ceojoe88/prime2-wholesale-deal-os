@@ -23,13 +23,18 @@ from app.models import (
     ContractReadyState,
     DealProbabilityRecord,
     Division,
+    FieldCallOutcome,
+    LeadImportBatch,
+    LeadQualityReview,
     ProviderSandboxReadinessCheck,
     LeadSpendPlan,
     MarketScalingScore,
     OfferPacket,
     OperatorModeSetting,
     OutcomeLearningRecord,
+    PredictionFeedbackRecord,
     RevenueForecastRecord,
+    ScoringAdjustmentSuggestion,
     TitleReviewCoordination,
     SellerInteraction,
     SellerOfferPublication,
@@ -73,6 +78,11 @@ async def lifespan(app: FastAPI):
                 or session.query(SellerOfferPublication).count() == 0
                 or session.query(UnifiedDealRoom).count() == 0
                 or session.query(AssignmentFeeAttribution).count() == 0
+                or session.query(LeadImportBatch).count() == 0
+                or session.query(LeadQualityReview).count() == 0
+                or session.query(FieldCallOutcome).count() == 0
+                or session.query(PredictionFeedbackRecord).count() == 0
+                or session.query(ScoringAdjustmentSuggestion).count() == 0
             ):
                 seed_database(session)
     yield

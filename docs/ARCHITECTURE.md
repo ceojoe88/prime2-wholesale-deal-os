@@ -44,9 +44,11 @@ V17 adds semi-autonomous operator mode. Prime 2 can run the internal scan-score-
 
 V18 adds production readiness, audit export, evidence attachment metadata, backup/export metadata, provider sandbox checks, environment checks, and deployment hardening checks. It keeps public exposure blocked unless auth, env, secrets, provider, audit, backup, and hardening gates pass.
 
+V19 adds real lead import and field testing. It creates preview-first CSV import batches, row-level validation and dedupe, lead QA scoring, manual seller call outcome tracking, do-not-contact eligibility blocks, Prime 2 prediction-versus-reality feedback, explainable scoring adjustment suggestions, and a field briefing. Imported leads cannot trigger live outreach, bulk messages, automatic portal publishing, contract execution, title submission, or payment handling.
+
 ## Backend Modules
 
-- `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, and backups.
+- `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, backups, lead imports, lead QA, call outcomes, field feedback, and scoring adjustment suggestions.
 - `app/domain/scoring.py`: lead opportunity scoring and deal speed score.
 - `app/domain/profit_control.py`: MAO, max buyer purchase price, max seller offer, offer options, assignment spread, reasonableness scoring, and buyer margin flags.
 - `app/domain/buyer_matching.py`: draft-only buyer match scoring by area, price, property type, reliability, closing speed, and proof of funds.
@@ -56,6 +58,7 @@ V18 adds production readiness, audit export, evidence attachment metadata, backu
 - `app/domain/title_review.py`: V11 title/attorney review coordination gates, draft review packet summaries, missing-item queues, safety validation, and no-submission boundaries.
 - `app/domain/autonomy.py`: V12 automation rule engine, scheduler runtime, run/attempt ledgers, idempotency guard, autonomous task queue, event trigger summaries, daily command briefing generation, escalation queue, and autonomy safety guard.
 - `app/domain/auto_execution.py`: V13 controlled auto-execution rules, approved template safety checks, conditional execution gate, dry-run receipts, idempotent single-attempt workflow, and audit trail aggregation.
+- `app/domain/field_testing.py`: V19 CSV import preview/commit workflow, normalization, critical field validation, dedupe checks, lead QA scoring, call outcome updates, do-not-contact guard, prediction feedback comparison, scoring adjustment suggestions, field dashboard, and daily field briefing.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -152,6 +155,13 @@ erDiagram
   AUTO_EXECUTION_RULE ||--o{ AUTO_EXECUTION_ATTEMPT : gates
   AUTO_EXECUTION_DRY_RUN ||--o{ AUTO_EXECUTION_ATTEMPT : supports
   AUTO_EXECUTION_ATTEMPT ||--o{ AUTO_EXECUTION_AUDIT_RECORD : audits
+  LEAD_IMPORT_BATCH ||--o{ LEAD_IMPORT_ROW : previews
+  LEAD_IMPORT_BATCH ||--o{ LEAD_QUALITY_REVIEW : scores
+  LEAD_IMPORT_ROW ||--o{ LEAD_QUALITY_REVIEW : checks
+  LEAD ||--o{ LEAD_QUALITY_REVIEW : links
+  LEAD ||--o{ FIELD_CALL_OUTCOME : records
+  FIELD_CALL_OUTCOME ||--o{ PREDICTION_FEEDBACK_RECORD : compares
+  PREDICTION_FEEDBACK_RECORD ||--o{ SCORING_ADJUSTMENT_SUGGESTION : suggests
 ```
 
 ## V2 Buyer Portal
@@ -671,6 +681,40 @@ The production readiness layer is still private/operator-only. It adds `Approval
 
 Audit packets are sanitized before review by stripping seller/buyer contact fields, secrets, lead-source details, internal spread strategy, assignment-fee logic, negotiation notes, and compliance internals. Backup/export records expose safe metadata only. Attachment records require source linkage to a source record and a deal or evidence packet, and raw local file paths are blocked. Provider readiness defaults to mock/blocked until sandbox readiness, external secret configuration, safety checks, dry-runs, owner approval, idempotency, and audit trails are present. Production readiness remains blocked when auth, environment variables, secrets, public-exposure hardening, or provider sandbox checks are missing.
 
+## V19 Real Lead Import And Field Testing
+
+V19 is the first real operator field-testing loop. The CSV import engine accepts the supported lead fields from the V19 spec, normalizes phone and email where possible, validates critical fields, dedupes by property address plus owner phone, marks low-confidence rows, creates `LeadImportBatch` and `LeadImportRow` records, and supports preview before commit. Commit only processes approved rows once. Rows missing a property address, rows with invalid critical data, duplicate rows, and operator-blocked rows stay visible with reasons and cannot become leads.
+
+Lead QA creates `LeadQualityReview` records with data quality, contactability, distress signal confidence, equity confidence, import confidence, blocked reasons, and recommended next action. Supported next actions are `research_more`, `underwrite_now`, `call_priority`, `skip_for_now`, and `duplicate_review`.
+
+Field call outcomes are manual operator records only. `FieldCallOutcome` can reduce contactability for wrong/disconnected numbers, block outreach eligibility for do-not-contact records, and escalate motivated/offer-requested/appointment outcomes into internal review tasks. It never places calls, sends messages, or schedules uncontrolled outreach.
+
+The feedback loop stores `PredictionFeedbackRecord` and `ScoringAdjustmentSuggestion` records. Prime 2 compares predicted motivation, contactability, 10K+ opportunity, buyer demand, and contract readiness against actual field outcomes using deterministic scoring explanations. Suggested scoring changes require owner review and are not automatically applied.
+
+V19 routes:
+
+- `/dashboard/lead-imports`
+- `/dashboard/lead-imports/[batchId]`
+- `/dashboard/lead-imports/preview`
+- `/dashboard/lead-qa`
+- `/dashboard/lead-qa/[leadId]`
+- `/dashboard/call-outcomes`
+- `/dashboard/call-outcomes/[outcomeId]`
+- `/dashboard/field-testing`
+- `/dashboard/feedback-loop`
+- `/dashboard/feedback-loop/[feedbackId]`
+- `/dashboard/scoring-adjustments`
+- `/dashboard/field-briefing`
+
+V19 safety boundary:
+
+- No live outreach from imported rows.
+- No bulk SMS, email, calls, or buyer blasts.
+- No automatic portal publishing.
+- No fake ARV, fake repairs, guaranteed profit, pressure language, legal advice, executable contracts, title submission, or payment handling.
+- Do-not-contact outcomes block future live outreach eligibility.
+- Owner remains final approver for real-world field actions.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -687,6 +731,14 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/agents/[agentId]`
 - `/dashboard/leads`
 - `/dashboard/leads/[leadId]`
+- `/dashboard/lead-imports`
+- `/dashboard/lead-imports/[batchId]`
+- `/dashboard/lead-imports/preview`
+- `/dashboard/lead-qa`
+- `/dashboard/lead-qa/[leadId]`
+- `/dashboard/call-outcomes`
+- `/dashboard/call-outcomes/[outcomeId]`
+- `/dashboard/field-testing`
 - `/dashboard/deals`
 - `/dashboard/deals/[dealId]`
 - `/dashboard/underwriting`
@@ -752,6 +804,10 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/optimization/agent-performance`
 - `/dashboard/optimization/lost-deals`
 - `/dashboard/optimization/source-quality`
+- `/dashboard/feedback-loop`
+- `/dashboard/feedback-loop/[feedbackId]`
+- `/dashboard/scoring-adjustments`
+- `/dashboard/field-briefing`
 - `/dashboard/revenue-forecast`
 - `/dashboard/revenue-forecast/[forecastId]`
 - `/dashboard/market-scaling`
@@ -837,6 +893,8 @@ V16 exception: revenue forecasting and market scaling are allowed only as estima
 V17 exception: semi-autonomous operator mode can run the internal scan-score-route-prepare-check-escalate-brief-log-optimize loop and queue owner approvals, but it cannot bypass approvals, execute contracts, submit title packets, send bulk campaigns, change seller/buyer terms, publish portals without approval, handle payments, provide legal advice, guarantee closing/profit, or enable Level 5 autonomy.
 
 V18 exception: production readiness records can prepare approval UX summaries, sanitized audit export packets, evidence attachment metadata, backup/export metadata, provider sandbox checks, environment checks, and deployment hardening checklists. They cannot make real provider calls unless sandbox-ready and explicitly gated, expose the system publicly without an auth checklist, commit secrets, include raw private seller/buyer data in unsafe exports, provide legal advice, or convert audit/backup records into live transmissions.
+
+V19 exception: real lead import and field testing can preview CSV rows, commit approved rows once, score lead QA, record manual call outcomes, block do-not-contact eligibility, and suggest explainable scoring adjustments from field feedback. It cannot auto-contact imported leads, create bulk outreach, publish imported rows to portals, invent valuation/profit inputs, guarantee deals, execute contracts, submit to title, collect payments, or apply scoring changes without owner review.
 
 Allowed:
 

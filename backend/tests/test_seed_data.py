@@ -61,6 +61,12 @@ def test_seed_payload_counts_and_hot_deals():
     assert len(payload["provider_sandbox_readiness_checks"]) == 3
     assert len(payload["environment_readiness_checks"]) == 5
     assert len(payload["deployment_hardening_checks"]) == 5
+    assert len(payload["lead_import_batches"]) == 1
+    assert len(payload["lead_import_rows"]) == 4
+    assert len(payload["lead_quality_reviews"]) == 4
+    assert len(payload["field_call_outcomes"]) == 3
+    assert len(payload["prediction_feedback_records"]) == 2
+    assert len(payload["scoring_adjustment_suggestions"]) == 2
     assert len(payload["contract_controls"]) == 5
     assert len(payload["seller_offer_publications"]) == 5
     assert len(payload["seller_portal_responses"]) == 4
