@@ -3,13 +3,18 @@ __pycache__/
 .pytest_cache/
 *.pyc
 *.db
+*.sqlite
 *.sqlite3
 .env
+.env.*
 
 node_modules/
 .next/
 out/
+dist/
+build/
 npm-debug.log*
+logs/
 
 .DS_Store
 Thumbs.db
