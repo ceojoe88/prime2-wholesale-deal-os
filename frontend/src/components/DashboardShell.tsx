@@ -56,7 +56,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <aside className="sidebar">
         <div className="brand">
           <h1>Prime 2</h1>
-          <span>Private Deal OS</span>
+          <span>Wholesale Deal OS</span>
         </div>
         <nav className="nav" aria-label="Dashboard navigation">
           {dashboardRoutes.map((route) => {

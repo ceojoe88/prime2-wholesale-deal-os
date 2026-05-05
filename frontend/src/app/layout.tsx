@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Wholesale Prime Deal OS",
+  title: "Prime 2 Wholesale Deal OS",
   description: "Private operator-only wholesale real estate command center"
 };
 

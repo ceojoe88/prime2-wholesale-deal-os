@@ -1,1 +1,1 @@
-"""Domain engines for the Wholesale Deal OS."""
+"""Domain engines for the Prime 2 Wholesale Deal OS."""

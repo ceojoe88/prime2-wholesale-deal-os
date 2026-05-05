@@ -1,20 +1,20 @@
-# Wholesale Prime Deal OS - System Overview
+# Prime 2 Wholesale Deal OS - System Overview
 
 ## Project Identity
 
-Name: Wholesale Prime Deal OS
+Name: Prime 2 Wholesale Deal OS
 
 Overseer: Prime 2
 
 Relationship: Prime 2 is the brother system to Vylarion Prime.
 
-Purpose: Wholesale Prime Deal OS is a private virtual wholesale real estate operating system for a single owner/operator. It helps identify, underwrite, control, coordinate, and assign wholesale real estate opportunities while preserving owner approval, compliance boundaries, buyer margin, seller offer reasonableness, and source-backed deal evidence.
+Purpose: Prime 2 Wholesale Deal OS is a private virtual wholesale real estate operating system for a single owner/operator. It helps identify, underwrite, control, coordinate, and assign wholesale real estate opportunities while preserving owner approval, compliance boundaries, buyer margin, seller offer reasonableness, and source-backed deal evidence.
 
 This is not a SaaS product, public marketplace, buyer blast tool, seller portal marketplace, legal platform, payment system, or contract execution product.
 
 ## What The System Does
 
-Wholesale Prime Deal OS supports the full internal acquisition-to-assignment workflow:
+Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment workflow:
 
 - Lead scoring and motivation ranking
 - Market and distressed-property intelligence
@@ -256,13 +256,13 @@ Recommended source sweeps:
 
 ```powershell
 Get-ChildItem -Recurse -File -Include *.py,*.ts,*.tsx,*.mjs,*.md backend,frontend\src,frontend\tests,docs,README.md |
-  Select-String -Pattern "Wholesale Prime" -CaseSensitive:$false
+  Select-String -Pattern ("Wholesale" + " Prime") -CaseSensitive:$false
 
 Get-ChildItem -Recurse -File -Include *.py,*.ts,*.tsx backend,frontend\src |
   Select-String -Pattern "execute contract|submit to title|buyer blast|bulk send|guaranteed profit|legal advice" -CaseSensitive:$false
 ```
 
-The only intended product/identity use of `Wholesale Prime` is the product title `Wholesale Prime Deal OS`; validation docs and tests may also contain the literal search term.
+No legacy overseer/product wording should remain in runtime source. The product/system identity is `Prime 2 Wholesale Deal OS`, and the overseer identity is `Prime 2`.
 
 ## Production Readiness Notes
 
@@ -282,6 +282,6 @@ Production checklist:
 
 ## Real-World Usage Boundary
 
-Wholesale Prime Deal OS supports wholesale real estate operations, but it does not replace professional judgment, local/state law compliance, attorney review, title company review, or licensed professional guidance where required.
+Prime 2 Wholesale Deal OS supports wholesale real estate operations, but it does not replace professional judgment, local/state law compliance, attorney review, title company review, or licensed professional guidance where required.
 
 Forecasts, buyer margins, assignment fees, ARV inputs, repair estimates, and probability scores are estimates or source-backed internal calculations. They are not guaranteed profits, guaranteed closings, legal advice, investment advice, or binding commitments.

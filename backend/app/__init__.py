@@ -1,1 +1,1 @@
-"""Wholesale Deal OS backend package."""
+"""Prime 2 Wholesale Deal OS backend package."""

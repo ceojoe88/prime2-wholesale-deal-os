@@ -9,7 +9,7 @@ def main() -> None:
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as session:
         counts = seed_database(session)
-    print("Seeded Wholesale Deal OS demo data:")
+    print("Seeded Prime 2 Wholesale Deal OS demo data:")
     for name, count in counts.items():
         print(f"- {name}: {count}")
 

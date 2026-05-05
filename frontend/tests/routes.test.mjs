@@ -185,14 +185,14 @@ test("dynamic detail route files guard missing ids with notFound", () => {
   }
 });
 
-test("Prime 2 identity is used internally and old overseer name is limited to product title", () => {
+test("Prime 2 identity is used internally and old overseer/product name is absent", () => {
   const sourceFiles = walk(join(root, "src")).filter((file) =>
     [".ts", ".tsx"].some((extension) => file.endsWith(extension))
   );
   const oldNameFiles = sourceFiles
-    .filter((file) => readFileSync(file, "utf8").includes("Wholesale Prime"))
+    .filter((file) => readFileSync(file, "utf8").includes(["Wholesale", "Prime"].join(" ")))
     .map(relativeFromRoot);
-  assert.deepEqual(oldNameFiles, ["src/app/layout.tsx"]);
+  assert.deepEqual(oldNameFiles, []);
 
   for (const routeFile of [
     "src/app/dashboard/overseer/page.tsx",

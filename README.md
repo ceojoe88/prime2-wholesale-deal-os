@@ -1,4 +1,4 @@
-# Wholesale Prime Deal OS
+# Prime 2 Wholesale Deal OS
 
 Private, operator-only virtual wholesale real estate command system with an executive overseer named **Prime 2**. Prime 2 is the brother system to Vylarion Prime and is purpose-built to help a single owner identify, underwrite, control, coordinate, and assign wholesale real estate opportunities while preserving owner approval, compliance boundaries, buyer margin, seller offer reasonableness, and evidence-backed profit attribution.
 
@@ -6,7 +6,7 @@ This repository is not a SaaS product, public CRM, buyer/seller marketplace, leg
 
 ## Why This Project Exists
 
-Wholesale deal flow can become messy fast: lead sources, seller motivation, ARV inputs, repairs, MAO, assignment spread, buyer demand, proof of funds, title readiness, compliance flags, follow-up timing, and owner approvals all compete for attention. Wholesale Prime Deal OS gives the owner a governed internal operating layer for those decisions.
+Wholesale deal flow can become messy fast: lead sources, seller motivation, ARV inputs, repairs, MAO, assignment spread, buyer demand, proof of funds, title readiness, compliance flags, follow-up timing, and owner approvals all compete for attention. Prime 2 Wholesale Deal OS gives the owner a governed internal operating layer for those decisions.
 
 The useful outcome is speed with guardrails:
 
@@ -20,7 +20,7 @@ The useful outcome is speed with guardrails:
 
 ## Prime 2 Identity
 
-Prime 2 is the executive overseer for the private Virtual Wholesale Real Estate Deal OS and the brother system to Vylarion Prime.
+Prime 2 is the executive overseer for the private Prime 2 Wholesale Deal OS and the brother system to Vylarion Prime.
 
 Prime 2 oversees seller acquisition, buyer disposition, 10K+ opportunity ranking, buyer margin protection, seller offer reasonableness, manager/agent routing, owner approval escalation, daily operating reports, and unsafe-action blocking. Prime 2 recommends, drafts, scores, routes, escalates, and briefs. It does not bypass owner approval or execute high-risk real-world actions.
 
@@ -28,7 +28,7 @@ Prime 2 oversees seller acquisition, buyer disposition, 10K+ opportunity ranking
 
 Implemented phases:
 
-- V1 private operator-only Wholesale Prime Deal OS
+- V1 private operator-only Prime 2 Wholesale Deal OS
 - V2 controlled buyer portal and deal room
 - V3 seller acquisition and follow-up gate
 - V4 contract control and title handoff gate
@@ -194,13 +194,13 @@ Useful source sweeps:
 
 ```powershell
 Get-ChildItem -Recurse -File -Include *.py,*.ts,*.tsx,*.mjs,*.md backend,frontend\src,frontend\tests,docs,README.md |
-  Select-String -Pattern "Wholesale Prime" -CaseSensitive:$false
+  Select-String -Pattern ("Wholesale" + " Prime") -CaseSensitive:$false
 
 Get-ChildItem -Recurse -File -Include *.py,*.ts,*.tsx backend,frontend\src |
   Select-String -Pattern "Send All|Blast|Auto Call|Execute Contract|Submit to Title|Guarantee Profit|Legal Advice|Publish Automatically|execute contract|submit to title|buyer blast|bulk send|guaranteed profit|legal advice" -CaseSensitive:$false
 ```
 
-The only intended product/identity use of `Wholesale Prime` is the product title `Wholesale Prime Deal OS`; validation docs and tests may also contain the literal search term.
+No legacy overseer/product wording should remain in runtime source. The product/system identity is `Prime 2 Wholesale Deal OS`, and the overseer identity is `Prime 2`.
 
 ## Production Readiness
 

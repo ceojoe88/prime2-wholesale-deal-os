@@ -6,7 +6,7 @@ The app is a private, single-owner command center. It intentionally has no publi
 
 Prime 2 is the executive overseer. It can recommend, route, summarize, escalate, and block unsafe action. It cannot send messages, contact buyers or sellers, execute contracts, provide legal advice, or make guaranteed profit claims.
 
-Prime 2 is the brother system to Vylarion Prime, purpose-built for the private Virtual Wholesale Real Estate Deal OS. Prime 2 is the private wholesale real estate overseer built to identify, control, and accelerate assignment-fee opportunities while preserving owner approval, compliance boundaries, and deal evidence.
+Prime 2 is the brother system to Vylarion Prime, purpose-built for the private Prime 2 Wholesale Deal OS. Prime 2 is the private wholesale real estate overseer built to identify, control, and accelerate assignment-fee opportunities while preserving owner approval, compliance boundaries, and deal evidence.
 
 Prime 2 is responsible for seller acquisition oversight, buyer disposition oversight, 10K+ opportunity ranking, buyer margin protection, seller offer reasonableness, manager and expert-agent coordination, owner approval escalation, daily operating reports, compliance boundaries, and gated high-risk live actions.
 

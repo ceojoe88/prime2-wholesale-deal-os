@@ -62,14 +62,14 @@ Expected coverage includes:
 
 ## Source Sweeps
 
-Old overseer naming:
+Old overseer or product naming:
 
 ```powershell
 Get-ChildItem -Recurse -File -Include *.py,*.ts,*.tsx,*.mjs,*.md backend,frontend\src,frontend\tests,docs,README.md |
-  Select-String -Pattern "Wholesale Prime" -CaseSensitive:$false
+  Select-String -Pattern ("Wholesale" + " Prime") -CaseSensitive:$false
 ```
 
-Allowed result: product/system title references such as `Wholesale Prime Deal OS`, plus validation docs or tests that contain the literal search term.
+Expected result: no legacy overseer/product wording in runtime source. Tests and docs should avoid storing the old phrase as a literal.
 
 Potential unsafe language and action references:
 

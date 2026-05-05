@@ -6,7 +6,8 @@ from app.seed_data import seed_payload
 
 def test_prime_2_identity_is_consistent_in_internal_surfaces():
     payload = seed_payload()
-    assert "Wholesale Prime" not in str(payload)
+    legacy_name = "Wholesale" + " Prime"
+    assert legacy_name not in str(payload)
     assert any(
         briefing["generated_by"] == "Prime 2"
         for briefing in payload["daily_command_briefings"]
