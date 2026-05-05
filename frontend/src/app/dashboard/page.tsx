@@ -22,6 +22,12 @@ import {
   blockedDealRooms,
   blockedAutomationAttempts,
   blockedDistributionPreps,
+  buyerAccelerationBlockedRecords,
+  buyerAccelerationPofGaps,
+  buyerAccelerationReadyDeals,
+  buyerAccelerationRecords,
+  buyerResponsesNeedingOwnerAction,
+  buyerSequencesBlocked,
   buyerMatches,
   buyerInterests,
   buyerDemandProfiles,
@@ -82,6 +88,7 @@ import {
   titleReviewOwnerApprovalNeeded,
   tenKDealsWithStrongBuyerDemand,
   fastCloseBuyerList,
+  fastestBuyerVelocity,
   underContractDeals,
   verified10kAssignmentFeeOpportunities,
   verifiedAssignmentFees
@@ -293,6 +300,24 @@ export default function DashboardPage() {
           <RecordCard title="Blocked attempts" meta={`${autoExecutionBlockedAttempts.length} bulk, unsafe, or missing-gate attempts blocked`} right={<Pill tone="red">blocked</Pill>} />
           <RecordCard title="Audit records" meta={`${autoExecutionAuditTrail.length} auto-execution events recorded`} right={<Pill tone="gold">audit</Pill>} />
           <RecordCard title="Bulk campaigns" meta="Blocked; no buyer blasts, cold SMS, or legal/contract messages." right={<Pill tone="red">off</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V14 Buyer Distribution Acceleration">
+        <div className="grid-three">
+          <RecordCard title="Acceleration records" meta={`${buyerAccelerationRecords.length} deal-level buyer speed snapshots`} right={<Pill>ranked</Pill>} />
+          <RecordCard title="Controlled-ready deals" meta={`${buyerAccelerationReadyDeals.length} can enter one-recipient owner-approved distribution`} right={<Pill tone="green">ready</Pill>} />
+          <RecordCard title="Fastest buyer velocity" meta={`${fastestBuyerVelocity[0] ? fastestBuyerVelocity[0].velocityScore : 0} top velocity score`} right={<Pill tone="green">speed</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="POF gaps routed" meta={`${buyerAccelerationPofGaps.length} buyer responses need POF review`} right={<Pill tone="gold">verify</Pill>} />
+          <RecordCard title="Response owner queue" meta={`${buyerResponsesNeedingOwnerAction.length} buyer responses need owner action`} right={<Pill tone="gold">owner</Pill>} />
+          <RecordCard title="Blocked acceleration" meta={`${buyerAccelerationBlockedRecords.length} records blocked by visibility, margin, compliance, or approvals`} right={<Pill tone="red">blocked</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Blocked sequences" meta={`${buyerSequencesBlocked.length} draft sequences flagged by sanitizer`} right={<Pill tone="red">review</Pill>} />
+          <RecordCard title="Controlled sends" meta="Require buyer-visible deal, sanitized sheet, V5/V13 gates, owner approval, and one recipient." right={<Pill tone="gold">gated</Pill>} />
+          <RecordCard title="Bulk buyer blast" meta="Blocked; no campaigns, fake scarcity, seller data, or internal profit logic exposure." right={<Pill tone="red">off</Pill>} />
         </div>
       </Section>
     </div>

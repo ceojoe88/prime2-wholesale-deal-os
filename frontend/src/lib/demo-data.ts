@@ -582,6 +582,78 @@ export type AutoExecutionAuditRecord = {
   idempotencyKey: string;
 };
 
+export type BuyerAccelerationRecord = {
+  id: string;
+  dealId: string;
+  buyerRankingSnapshot: { buyerId: string; rank: number; priorityScore: number }[];
+  topBuyerList: string[];
+  pofStatus: string;
+  buyerReliability: number;
+  buyerMarginStrength: number;
+  distributionReadiness: string;
+  ownerApprovalStatus: string;
+  blockedReasons: string[];
+  controlledSendAllowed: boolean;
+  buyerVisible: boolean;
+  sanitizedDealSheetReady: boolean;
+  buyerMatchApproved: boolean;
+  compliancePassed: boolean;
+  v13GatePassed: boolean;
+  v5GatePassed: boolean;
+  bulkBlastAllowed: false;
+};
+
+export type BuyerSequencePrep = {
+  id: string;
+  dealId: string;
+  buyerId: string;
+  accelerationRecordId: string;
+  firstBuyerNotice: string;
+  buyerDetailFollowUp: string;
+  pofRequest: string;
+  viewingAccessCoordination: string;
+  offerIntentFollowUp: string;
+  deadlineReminder: string;
+  safetyStatus: string;
+  blockedReasons: string[];
+  draftOnly: true;
+  liveSendAllowed: false;
+  bulkBlastAllowed: false;
+  deceptiveScarcityAllowed: false;
+  sellerPrivateDataExposed: false;
+  internalProfitLogicExposed: false;
+};
+
+export type BuyerResponseRoute = {
+  id: string;
+  dealId: string;
+  buyerId: string;
+  responseType: string;
+  routedStatus: string;
+  ownerActionRequired: boolean;
+  recommendedNextStep: string;
+  pofGap: boolean;
+  accessRequested: boolean;
+  offerIntentRecorded: boolean;
+  draftOnly: true;
+  contractExecutionAllowed: false;
+};
+
+export type BuyerVelocityProfile = {
+  id: string;
+  buyerId: string;
+  responseSpeed: number;
+  pofStrength: number;
+  closeHistory: number;
+  priceFit: number;
+  marketFit: number;
+  reliability: number;
+  previousIntentQuality: number;
+  velocityScore: number;
+  recommendedUse: string;
+  draftOnly: true;
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1404,6 +1476,151 @@ export const autoExecutionAuditRecords: AutoExecutionAuditRecord[] = [
   { id: "auto-audit-001", attemptId: "auto-attempt-001", ruleId: "auto-rule-internal-reminder", eventType: "internal_reminder_created", sourceRecordType: "autonomy_escalation", sourceRecordId: "auto-escalation-001", outcome: "completed_internal", blockedReasons: [], providerCalled: false, idempotencyKey: "seed:auto-audit-001" },
   { id: "auto-audit-002", attemptId: "auto-attempt-002", ruleId: "auto-rule-buyer-response-send", eventType: "single_execution_attempt", sourceRecordType: "buyer_interest", sourceRecordId: "interest-001", outcome: "mock_sent", blockedReasons: [], providerCalled: true, idempotencyKey: "seed:auto-audit-002" },
   { id: "auto-audit-003", attemptId: "auto-attempt-003", ruleId: "auto-rule-blocked-bulk", eventType: "blocked_execution_attempt", sourceRecordType: "deal_distribution", sourceRecordId: "distribution-001", outcome: "blocked", blockedReasons: ["action_not_allowed_for_auto_execution", "single_recipient_required"], providerCalled: false, idempotencyKey: "seed:auto-audit-003" }
+];
+
+export const buyerAccelerationRecords: BuyerAccelerationRecord[] = [
+  {
+    id: "buyer-accel-001",
+    dealId: "deal-001",
+    buyerRankingSnapshot: [
+      { buyerId: "buyer-001", rank: 1, priorityScore: 96 },
+      { buyerId: "buyer-002", rank: 2, priorityScore: 89 }
+    ],
+    topBuyerList: ["buyer-001", "buyer-002"],
+    pofStatus: "verified",
+    buyerReliability: 94,
+    buyerMarginStrength: 92,
+    distributionReadiness: "ready",
+    ownerApprovalStatus: "approved",
+    blockedReasons: [],
+    controlledSendAllowed: true,
+    buyerVisible: true,
+    sanitizedDealSheetReady: true,
+    buyerMatchApproved: true,
+    compliancePassed: true,
+    v13GatePassed: true,
+    v5GatePassed: true,
+    bulkBlastAllowed: false
+  },
+  {
+    id: "buyer-accel-002",
+    dealId: "deal-003",
+    buyerRankingSnapshot: [{ buyerId: "buyer-001", rank: 1, priorityScore: 87 }],
+    topBuyerList: ["buyer-001"],
+    pofStatus: "pof_request_allowed",
+    buyerReliability: 90,
+    buyerMarginStrength: 86,
+    distributionReadiness: "ready",
+    ownerApprovalStatus: "approved",
+    blockedReasons: [],
+    controlledSendAllowed: true,
+    buyerVisible: true,
+    sanitizedDealSheetReady: true,
+    buyerMatchApproved: true,
+    compliancePassed: true,
+    v13GatePassed: true,
+    v5GatePassed: true,
+    bulkBlastAllowed: false
+  },
+  {
+    id: "buyer-accel-003",
+    dealId: "deal-005",
+    buyerRankingSnapshot: [{ buyerId: "buyer-004", rank: 1, priorityScore: 84 }],
+    topBuyerList: ["buyer-004"],
+    pofStatus: "verified",
+    buyerReliability: 88,
+    buyerMarginStrength: 62,
+    distributionReadiness: "blocked",
+    ownerApprovalStatus: "pending",
+    blockedReasons: ["deal_not_buyer_visible", "compliance_not_passed", "buyer_margin_weak", "owner_approval_not_recorded"],
+    controlledSendAllowed: false,
+    buyerVisible: false,
+    sanitizedDealSheetReady: false,
+    buyerMatchApproved: true,
+    compliancePassed: false,
+    v13GatePassed: false,
+    v5GatePassed: false,
+    bulkBlastAllowed: false
+  }
+];
+
+const safeBuyerNotice = "Draft: a sanitized deal room is available for owner-approved review. This is informational only.";
+
+export const buyerSequencePreps: BuyerSequencePrep[] = [
+  {
+    id: "buyer-sequence-001",
+    dealId: "deal-001",
+    buyerId: "buyer-001",
+    accelerationRecordId: "buyer-accel-001",
+    firstBuyerNotice: safeBuyerNotice,
+    buyerDetailFollowUp: "Draft: confirm whether the sanitized ARV range, repair range, and asking price fit your buy box.",
+    pofRequest: "Draft: please provide current proof-of-funds status before any access coordination.",
+    viewingAccessCoordination: "Draft: access instructions are placeholders until owner review clears.",
+    offerIntentFollowUp: "Draft: submit non-binding offer intent for owner review only.",
+    deadlineReminder: "Draft reminder: owner is reviewing interest; no scarcity or guarantee is implied.",
+    safetyStatus: "approved",
+    blockedReasons: [],
+    draftOnly: true,
+    liveSendAllowed: false,
+    bulkBlastAllowed: false,
+    deceptiveScarcityAllowed: false,
+    sellerPrivateDataExposed: false,
+    internalProfitLogicExposed: false
+  },
+  {
+    id: "buyer-sequence-002",
+    dealId: "deal-003",
+    buyerId: "buyer-001",
+    accelerationRecordId: "buyer-accel-002",
+    firstBuyerNotice: safeBuyerNotice,
+    buyerDetailFollowUp: "Draft: review sanitized repair notes and price fit.",
+    pofRequest: "Draft: POF refresh requested before access review.",
+    viewingAccessCoordination: "Draft: viewing/access request will be routed to owner.",
+    offerIntentFollowUp: "Draft: offer intent remains non-binding until owner review.",
+    deadlineReminder: "Draft reminder: availability may change after owner review; no urgency claim.",
+    safetyStatus: "approved",
+    blockedReasons: [],
+    draftOnly: true,
+    liveSendAllowed: false,
+    bulkBlastAllowed: false,
+    deceptiveScarcityAllowed: false,
+    sellerPrivateDataExposed: false,
+    internalProfitLogicExposed: false
+  },
+  {
+    id: "buyer-sequence-003",
+    dealId: "deal-005",
+    buyerId: "buyer-004",
+    accelerationRecordId: "buyer-accel-003",
+    firstBuyerNotice: "Blocked draft: exposes seller private data and internal spread logic.",
+    buyerDetailFollowUp: "Blocked draft: unsafe internal details must be removed before any owner review.",
+    pofRequest: "Draft: request POF after sanitizer and compliance clear.",
+    viewingAccessCoordination: "Blocked until buyer-visible gate clears.",
+    offerIntentFollowUp: "Blocked until safety review clears.",
+    deadlineReminder: "Blocked draft: misleading urgency removed.",
+    safetyStatus: "blocked",
+    blockedReasons: ["seller_private_data", "internal_profit_logic", "deceptive_scarcity"],
+    draftOnly: true,
+    liveSendAllowed: false,
+    bulkBlastAllowed: false,
+    deceptiveScarcityAllowed: false,
+    sellerPrivateDataExposed: false,
+    internalProfitLogicExposed: false
+  }
+];
+
+export const buyerResponseRoutes: BuyerResponseRoute[] = [
+  { id: "buyer-route-001", dealId: "deal-001", buyerId: "buyer-001", responseType: "buyer_interested", routedStatus: "owner_review_queue", ownerActionRequired: true, recommendedNextStep: "Review buyer interest and verified POF before access coordination.", pofGap: false, accessRequested: false, offerIntentRecorded: true, draftOnly: true, contractExecutionAllowed: false },
+  { id: "buyer-route-002", dealId: "deal-003", buyerId: "buyer-001", responseType: "needs_pof", routedStatus: "pof_request_queue", ownerActionRequired: true, recommendedNextStep: "Send approved POF request draft only after V13/V5 gates.", pofGap: true, accessRequested: false, offerIntentRecorded: false, draftOnly: true, contractExecutionAllowed: false },
+  { id: "buyer-route-003", dealId: "deal-001", buyerId: "buyer-002", responseType: "wants_showing_access", routedStatus: "access_review_queue", ownerActionRequired: true, recommendedNextStep: "Coordinate access placeholder after owner review.", pofGap: false, accessRequested: true, offerIntentRecorded: false, draftOnly: true, contractExecutionAllowed: false },
+  { id: "buyer-route-004", dealId: "deal-005", buyerId: "buyer-004", responseType: "asks_for_repair_details", routedStatus: "blocked_compliance_queue", ownerActionRequired: true, recommendedNextStep: "Resolve buyer visibility and compliance blocks before any draft response.", pofGap: false, accessRequested: false, offerIntentRecorded: false, draftOnly: true, contractExecutionAllowed: false }
+];
+
+export const buyerVelocityProfiles: BuyerVelocityProfile[] = [
+  { id: "buyer-velocity-001", buyerId: "buyer-001", responseSpeed: 95, pofStrength: 96, closeHistory: 93, priceFit: 91, marketFit: 94, reliability: 94, previousIntentQuality: 90, velocityScore: 94, recommendedUse: "fast_close_priority", draftOnly: true },
+  { id: "buyer-velocity-002", buyerId: "buyer-002", responseSpeed: 90, pofStrength: 93, closeHistory: 88, priceFit: 85, marketFit: 90, reliability: 91, previousIntentQuality: 86, velocityScore: 89, recommendedUse: "fast_close_priority", draftOnly: true },
+  { id: "buyer-velocity-003", buyerId: "buyer-004", responseSpeed: 82, pofStrength: 92, closeHistory: 86, priceFit: 84, marketFit: 90, reliability: 88, previousIntentQuality: 82, velocityScore: 87, recommendedUse: "targeted_follow_up", draftOnly: true },
+  { id: "buyer-velocity-004", buyerId: "buyer-007", responseSpeed: 72, pofStrength: 30, closeHistory: 70, priceFit: 66, marketFit: 72, reliability: 74, previousIntentQuality: 66, velocityScore: 65, recommendedUse: "pof_or_fit_review", draftOnly: true }
 ];
 
 export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
@@ -2270,4 +2487,56 @@ export const autoExecutionSafetyCards = [
   { label: "Approved templates", value: String(approvedTemplateLibrary.length), detail: "Template safety required" },
   { label: "Blocked attempts", value: String(autoExecutionBlockedAttempts.length), detail: "Bulk/blast/unsafe paths audited" },
   { label: "Bulk send", value: "off", detail: "Single recipient only" }
+];
+
+export function getBuyerAccelerationRecordByDeal(dealId: string) {
+  return buyerAccelerationRecords.find((record) => record.dealId === dealId);
+}
+
+export function getBuyerSequencesForDeal(dealId: string) {
+  return buyerSequencePreps.filter((sequence) => sequence.dealId === dealId);
+}
+
+export function getBuyerResponseRoutesForDeal(dealId: string) {
+  return buyerResponseRoutes.filter((route) => route.dealId === dealId);
+}
+
+export const buyerAccelerationReadyDeals = buyerAccelerationRecords.filter(
+  (record) => record.controlledSendAllowed
+);
+export const buyerAccelerationBlockedRecords = buyerAccelerationRecords.filter(
+  (record) => record.blockedReasons.length > 0
+);
+export const buyerSequencesBlocked = buyerSequencePreps.filter(
+  (sequence) => sequence.safetyStatus === "blocked" || sequence.blockedReasons.length > 0
+);
+export const buyerResponsesNeedingOwnerAction = buyerResponseRoutes.filter(
+  (route) => route.ownerActionRequired
+);
+export const buyerAccelerationPofGaps = buyerResponseRoutes.filter((route) => route.pofGap);
+export const fastestBuyerVelocity = [...buyerVelocityProfiles].sort(
+  (first, second) => second.velocityScore - first.velocityScore
+);
+export const controlledDistributionAttempts = buyerAccelerationRecords.map((record) => ({
+  dealId: record.dealId,
+  status: record.controlledSendAllowed ? "ready_for_owner_approved_single_send" : "blocked",
+  blockedReasons: record.blockedReasons,
+  bulkBlastAllowed: record.bulkBlastAllowed,
+  v13GatePassed: record.v13GatePassed,
+  v5GatePassed: record.v5GatePassed
+}));
+export const topBuyerForTenKDeals = buyerAccelerationReadyDeals
+  .map((record) => {
+    const deal = getDeal(record.dealId);
+    const buyerId = record.topBuyerList[0];
+    return deal && deal.projectedAssignmentFee >= 10000
+      ? { record, deal, buyer: getBuyer(buyerId) }
+      : null;
+  })
+  .filter((item): item is { record: BuyerAccelerationRecord; deal: Deal; buyer: Buyer | undefined } => Boolean(item));
+export const buyerAccelerationSafetyCards = [
+  { label: "Bulk blast", value: "off", detail: "No campaigns or buyer blasts" },
+  { label: "Controlled sends", value: String(buyerAccelerationReadyDeals.length), detail: "Require V5/V13 gates and owner approval" },
+  { label: "POF gaps", value: String(buyerAccelerationPofGaps.length), detail: "Routed before access or offer intent follow-up" },
+  { label: "Blocked records", value: String(buyerAccelerationBlockedRecords.length), detail: "Sanitizer, margin, or compliance gaps" }
 ];

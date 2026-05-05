@@ -551,6 +551,11 @@ Internal routes:
 - `/dashboard/auto-execution/dry-runs`
 - `/dashboard/auto-execution/attempts`
 - `/dashboard/auto-execution/audit`
+- `/dashboard/buyer-acceleration`
+- `/dashboard/buyer-acceleration/[dealId]`
+- `/dashboard/buyer-sequences`
+- `/dashboard/buyer-response-router`
+- `/dashboard/buyer-velocity`
 
 Auto-execution rule records store rule name, action type, source type, allowed recipient type, trigger, required conditions, approved template, autonomy level, live flag requirements, risk score, owner approval status, status, and blocked reasons.
 
@@ -703,6 +708,8 @@ V11 exception: title/attorney review records and review packets are allowed only
 V12 exception: near-autonomous execution is allowed only for internal scoring, routing, scheduling, draft creation, blocker/evidence creation, readiness marking when existing gates pass, daily briefings, and escalation records. It cannot autonomously send messages, contact buyers or sellers, publish portal data, execute contracts, submit title packets, collect payments, change deal terms, provide legal advice, make commitments, or use Level 5 autonomy. Level 4 remains owner-approval-required and subordinate to every underlying gate.
 
 V13 exception: controlled auto-execution can complete internal reminders and task creation, prepare approved drafts, and mock-send a low-risk single message only when an approved rule, approved template, V5 safety, V5 dry-run receipt, V5 approval, live flags, provider readiness, single-recipient limit, idempotency, and audit creation all pass. It cannot send bulk campaigns, buyer blasts, cold SMS automation, legal/contract messages, pressure language, fake urgency, fake buyer claims, or any unapproved rule/template action.
+
+V14 exception: buyer distribution acceleration is allowed only as internal buyer ranking, sequence drafting, response routing, and velocity scoring. It can identify fastest buyers, POF gaps, controlled-distribution readiness, and draft follow-up sequences, but it cannot send buyer blasts, run bulk sends, expose seller/private data, expose internal spread or assignment-fee strategy, claim fake scarcity or competition, guarantee closing, or bypass the V5/V13 owner-approved one-recipient gate stack.
 
 Allowed:
 

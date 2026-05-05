@@ -13,6 +13,7 @@ from app.models import (
     AssignmentReadinessRecord,
     AutoExecutionRule,
     AutomationRule,
+    BuyerAccelerationRecord,
     BuyerDealPublication,
     BuyerDemandProfile,
     CommunicationDraft,
@@ -45,6 +46,7 @@ async def lifespan(app: FastAPI):
                 or session.query(TitleReviewCoordination).count() == 0
                 or session.query(AutomationRule).count() == 0
                 or session.query(AutoExecutionRule).count() == 0
+                or session.query(BuyerAccelerationRecord).count() == 0
                 or session.query(TitleHandoffPacket).count() == 0
                 or session.query(AssignmentReadinessRecord).count() == 0
                 or session.query(CommunicationDraft).count() == 0

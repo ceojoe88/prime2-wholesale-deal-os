@@ -28,6 +28,7 @@ export const dashboardRoutes = [
   { href: "/dashboard/buyer-demand", label: "Buyer Demand", icon: "UsersRound" },
   { href: "/dashboard/deal-distribution", label: "Deal Distribution", icon: "ClipboardList" },
   { href: "/dashboard/buyer-priority", label: "Buyer Priority", icon: "Handshake" },
+  { href: "/dashboard/buyer-acceleration", label: "Buyer Acceleration", icon: "TimerReset" },
   { href: "/dashboard/offer-conversion", label: "Offer Conversion", icon: "FileCheck2" },
   { href: "/dashboard/negotiations", label: "Negotiations", icon: "ListChecks" },
   { href: "/dashboard/contract-ready", label: "Contract Ready", icon: "ShieldCheck" },

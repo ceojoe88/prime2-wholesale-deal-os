@@ -46,6 +46,7 @@ import {
   evidenceFeesAtRisk,
   fastestPathToContract,
   fastCloseBuyerList,
+  fastestBuyerVelocity,
   formatCurrency,
   hotDeals,
   hotSellerLeads,
@@ -74,7 +75,12 @@ import {
   titleReviewOwnerApprovalNeeded,
   tenKDealsWithStrongBuyerDemand,
   verified10kAssignmentFeeOpportunities,
-  verifiedAssignmentFees
+  verifiedAssignmentFees,
+  buyerAccelerationBlockedRecords,
+  buyerAccelerationPofGaps,
+  buyerAccelerationReadyDeals,
+  buyerResponsesNeedingOwnerAction,
+  buyerSequencesBlocked
 } from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
@@ -159,6 +165,12 @@ export default function CommandCenterPage() {
         <MetricCard label="Auto-exec blocks" value={String(autoExecutionBlockedAttempts.length)} detail="Bulk/unsafe paths blocked" />
         <MetricCard label="Auto audit" value={String(autoExecutionAuditTrail.length)} detail="Attempt audit records" />
       </div>
+      <div className="metric-grid">
+        <MetricCard label="Buyer acceleration ready" value={String(buyerAccelerationReadyDeals.length)} detail="Controlled one-recipient distribution" />
+        <MetricCard label="Buyer acceleration blocks" value={String(buyerAccelerationBlockedRecords.length)} detail="Visibility, margin, approval, or compliance" />
+        <MetricCard label="Buyer POF response gaps" value={String(buyerAccelerationPofGaps.length)} detail="Routed before access or offer intent" />
+        <MetricCard label="Top buyer velocity" value={String(fastestBuyerVelocity[0]?.velocityScore ?? 0)} detail="Fast-close ranking score" />
+      </div>
       <div className="grid-two">
         <Section title="Hot Opportunities">
           <DealTable limit={8} />
@@ -212,6 +224,11 @@ export default function CommandCenterPage() {
               ["critical", "Review controlled auto-execution blocks", `${autoExecutionBlockedAttempts.length} V13 attempts blocked before provider action`],
               ["high", "Approve auto-execution templates", `${approvedTemplateLibrary.length} templates currently approved for rule matching`],
               ["normal", "Inspect auto-execution audit", `${autoExecutionAuditTrail.length} attempts and reminders have audit records`],
+              ["critical", "Review buyer acceleration queue", `${buyerAccelerationReadyDeals.length} deals are ready for controlled one-buyer distribution`],
+              ["high", "Resolve buyer acceleration blocks", `${buyerAccelerationBlockedRecords.length} deals have sanitizer, margin, approval, or compliance blocks`],
+              ["high", "Route buyer POF gaps", `${buyerAccelerationPofGaps.length} buyer responses require proof-of-funds handling`],
+              ["normal", "Inspect buyer sequence safety", `${buyerSequencesBlocked.length} buyer sequence drafts need sanitizer review`],
+              ["normal", "Review buyer response owner queue", `${buyerResponsesNeedingOwnerAction.length} buyer responses need owner action`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

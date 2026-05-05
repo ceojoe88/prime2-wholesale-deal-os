@@ -13,6 +13,11 @@ from app.domain.auto_execution import (
     validate_auto_execution_template,
 )
 from app.domain.buyer_matching import score_buyer_match
+from app.domain.buyer_acceleration import (
+    buyer_distribution_gate,
+    buyer_velocity_score,
+    sync_buyer_sequence,
+)
 from app.domain.buyer_demand import sync_buyer_deal_priority, sync_distribution_prep
 from app.domain.buyer_portal import update_publication_gate
 from app.domain.communications import (
@@ -52,11 +57,15 @@ from app.models import (
     AutonomousAgentTask,
     AutonomyEscalation,
     Buyer,
+    BuyerAccelerationRecord,
     BuyerDealPriority,
     BuyerDealPublication,
     BuyerDemandProfile,
     BuyerInterest,
     BuyerMatch,
+    BuyerResponseRoute,
+    BuyerSequencePrep,
+    BuyerVelocityProfile,
     ClosingCoordinationChecklist,
     ComplianceRecord,
     CommunicationApproval,
@@ -3094,6 +3103,266 @@ def build_auto_execution_audit_records() -> list[dict[str, object]]:
     ]
 
 
+def build_buyer_acceleration_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "buyer-accel-001",
+            "deal_id": "deal-001",
+            "buyer_ranking_snapshot": [
+                {"buyer_id": "buyer-001", "rank": 1, "priority_score": 96},
+                {"buyer_id": "buyer-002", "rank": 2, "priority_score": 89},
+            ],
+            "top_buyer_list": ["buyer-001", "buyer-002"],
+            "pof_status": "verified",
+            "buyer_reliability": 94,
+            "buyer_margin_strength": 92,
+            "distribution_readiness": "ready",
+            "owner_approval_status": "approved",
+            "blocked_reasons": [],
+            "controlled_send_allowed": True,
+            "buyer_visible": True,
+            "sanitized_deal_sheet_ready": True,
+            "buyer_match_approved": True,
+            "compliance_passed": True,
+            "v13_gate_passed": True,
+            "v5_gate_passed": True,
+            "bulk_blast_allowed": False,
+        },
+        {
+            "id": "buyer-accel-002",
+            "deal_id": "deal-003",
+            "buyer_ranking_snapshot": [
+                {"buyer_id": "buyer-001", "rank": 1, "priority_score": 87}
+            ],
+            "top_buyer_list": ["buyer-001"],
+            "pof_status": "pof_request_allowed",
+            "buyer_reliability": 90,
+            "buyer_margin_strength": 86,
+            "distribution_readiness": "ready",
+            "owner_approval_status": "approved",
+            "blocked_reasons": [],
+            "controlled_send_allowed": True,
+            "buyer_visible": True,
+            "sanitized_deal_sheet_ready": True,
+            "buyer_match_approved": True,
+            "compliance_passed": True,
+            "v13_gate_passed": True,
+            "v5_gate_passed": True,
+            "bulk_blast_allowed": False,
+        },
+        {
+            "id": "buyer-accel-003",
+            "deal_id": "deal-005",
+            "buyer_ranking_snapshot": [
+                {"buyer_id": "buyer-004", "rank": 1, "priority_score": 91}
+            ],
+            "top_buyer_list": ["buyer-004"],
+            "pof_status": "verified",
+            "buyer_reliability": 88,
+            "buyer_margin_strength": 89,
+            "distribution_readiness": "blocked",
+            "owner_approval_status": "approved",
+            "blocked_reasons": ["deal_not_buyer_visible", "compliance_not_passed"],
+            "controlled_send_allowed": False,
+            "buyer_visible": False,
+            "sanitized_deal_sheet_ready": True,
+            "buyer_match_approved": True,
+            "compliance_passed": False,
+            "v13_gate_passed": True,
+            "v5_gate_passed": True,
+            "bulk_blast_allowed": False,
+        },
+    ]
+
+
+def build_buyer_sequence_prep_records() -> list[dict[str, object]]:
+    safe_notice = "Draft: a sanitized deal room is available for owner-approved review. This is not a contract or commitment."
+    return [
+        {
+            "id": "buyer-sequence-001",
+            "deal_id": "deal-001",
+            "buyer_id": "buyer-001",
+            "acceleration_record_id": "buyer-accel-001",
+            "first_buyer_notice": safe_notice,
+            "buyer_detail_follow_up": "Draft: confirm whether the sanitized ARV range, repair range, and asking price fit your buy box.",
+            "pof_request": "Draft: please provide current proof-of-funds status before any access coordination.",
+            "viewing_access_coordination": "Draft: access instructions are placeholders until owner review clears.",
+            "offer_intent_follow_up": "Draft: submit non-binding offer intent for owner review only.",
+            "deadline_reminder": "Draft reminder: owner is reviewing interest; no scarcity or guarantee is implied.",
+            "safety_status": "approved",
+            "blocked_reasons": [],
+            "draft_only": True,
+            "live_send_allowed": False,
+            "bulk_blast_allowed": False,
+            "deceptive_scarcity_allowed": False,
+            "seller_private_data_exposed": False,
+            "internal_profit_logic_exposed": False,
+        },
+        {
+            "id": "buyer-sequence-002",
+            "deal_id": "deal-003",
+            "buyer_id": "buyer-001",
+            "acceleration_record_id": "buyer-accel-002",
+            "first_buyer_notice": safe_notice,
+            "buyer_detail_follow_up": "Draft: review sanitized repair notes and price fit.",
+            "pof_request": "Draft: POF refresh requested before access review.",
+            "viewing_access_coordination": "Draft: viewing/access request will be routed to owner.",
+            "offer_intent_follow_up": "Draft: offer intent remains non-binding until owner review.",
+            "deadline_reminder": "Draft reminder: availability may change after owner review; no urgency claim.",
+            "safety_status": "approved",
+            "blocked_reasons": [],
+            "draft_only": True,
+            "live_send_allowed": False,
+            "bulk_blast_allowed": False,
+            "deceptive_scarcity_allowed": False,
+            "seller_private_data_exposed": False,
+            "internal_profit_logic_exposed": False,
+        },
+        {
+            "id": "buyer-sequence-003",
+            "deal_id": "deal-005",
+            "buyer_id": "buyer-004",
+            "acceleration_record_id": "buyer-accel-003",
+            "first_buyer_notice": "Blocked draft: seller name and assignment fee should never be included.",
+            "buyer_detail_follow_up": "",
+            "pof_request": "",
+            "viewing_access_coordination": "",
+            "offer_intent_follow_up": "",
+            "deadline_reminder": "This will sell today.",
+            "safety_status": "blocked",
+            "blocked_reasons": ["seller_private_data", "internal_profit_logic", "deceptive_scarcity"],
+            "draft_only": True,
+            "live_send_allowed": False,
+            "bulk_blast_allowed": False,
+            "deceptive_scarcity_allowed": False,
+            "seller_private_data_exposed": False,
+            "internal_profit_logic_exposed": False,
+        },
+    ]
+
+
+def build_buyer_response_route_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "buyer-route-001",
+            "deal_id": "deal-001",
+            "buyer_id": "buyer-001",
+            "response_type": "buyer_interested",
+            "routed_status": "owner_review_queue",
+            "owner_action_required": True,
+            "recommended_next_step": "Review buyer interest and verified POF before access coordination.",
+            "pof_gap": False,
+            "access_requested": False,
+            "offer_intent_recorded": True,
+            "draft_only": True,
+            "contract_execution_allowed": False,
+        },
+        {
+            "id": "buyer-route-002",
+            "deal_id": "deal-003",
+            "buyer_id": "buyer-001",
+            "response_type": "needs_pof",
+            "routed_status": "pof_request_queue",
+            "owner_action_required": True,
+            "recommended_next_step": "Send approved POF request draft only after V13/V5 gates.",
+            "pof_gap": True,
+            "access_requested": False,
+            "offer_intent_recorded": False,
+            "draft_only": True,
+            "contract_execution_allowed": False,
+        },
+        {
+            "id": "buyer-route-003",
+            "deal_id": "deal-001",
+            "buyer_id": "buyer-002",
+            "response_type": "wants_showing_access",
+            "routed_status": "access_review_queue",
+            "owner_action_required": True,
+            "recommended_next_step": "Owner reviews access placeholder before coordination.",
+            "pof_gap": False,
+            "access_requested": True,
+            "offer_intent_recorded": False,
+            "draft_only": True,
+            "contract_execution_allowed": False,
+        },
+        {
+            "id": "buyer-route-004",
+            "deal_id": "deal-005",
+            "buyer_id": "buyer-004",
+            "response_type": "asks_for_repair_details",
+            "routed_status": "blocked_compliance_queue",
+            "owner_action_required": True,
+            "recommended_next_step": "Hold response until buyer-visible and compliance gates clear.",
+            "pof_gap": False,
+            "access_requested": False,
+            "offer_intent_recorded": False,
+            "draft_only": True,
+            "contract_execution_allowed": False,
+        },
+    ]
+
+
+def build_buyer_velocity_profile_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "buyer-velocity-001",
+            "buyer_id": "buyer-001",
+            "response_speed": 95,
+            "pof_strength": 96,
+            "close_history": 93,
+            "price_fit": 91,
+            "market_fit": 94,
+            "reliability": 94,
+            "previous_intent_quality": 90,
+            "velocity_score": 94,
+            "recommended_use": "fast_close_priority",
+            "draft_only": True,
+        },
+        {
+            "id": "buyer-velocity-002",
+            "buyer_id": "buyer-002",
+            "response_speed": 90,
+            "pof_strength": 93,
+            "close_history": 88,
+            "price_fit": 85,
+            "market_fit": 90,
+            "reliability": 91,
+            "previous_intent_quality": 86,
+            "velocity_score": 89,
+            "recommended_use": "fast_close_priority",
+            "draft_only": True,
+        },
+        {
+            "id": "buyer-velocity-003",
+            "buyer_id": "buyer-004",
+            "response_speed": 82,
+            "pof_strength": 92,
+            "close_history": 86,
+            "price_fit": 90,
+            "market_fit": 88,
+            "reliability": 88,
+            "previous_intent_quality": 81,
+            "velocity_score": 87,
+            "recommended_use": "targeted_follow_up",
+            "draft_only": True,
+        },
+        {
+            "id": "buyer-velocity-004",
+            "buyer_id": "buyer-007",
+            "response_speed": 72,
+            "pof_strength": 40,
+            "close_history": 68,
+            "price_fit": 78,
+            "market_fit": 75,
+            "reliability": 74,
+            "previous_intent_quality": 65,
+            "velocity_score": 65,
+            "recommended_use": "pof_or_fit_review",
+            "draft_only": True,
+        },
+    ]
+
+
 def build_assignment_readiness_records() -> list[dict[str, object]]:
     return [
         {
@@ -4239,6 +4508,10 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "auto_execution_dry_runs": build_auto_execution_dry_run_records(),
         "auto_execution_attempts": build_auto_execution_attempt_records(),
         "auto_execution_audit_records": build_auto_execution_audit_records(),
+        "buyer_acceleration_records": build_buyer_acceleration_records(),
+        "buyer_sequence_preps": build_buyer_sequence_prep_records(),
+        "buyer_response_routes": build_buyer_response_route_records(),
+        "buyer_velocity_profiles": build_buyer_velocity_profile_records(),
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
@@ -4263,6 +4536,10 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        BuyerVelocityProfile,
+        BuyerResponseRoute,
+        BuyerSequencePrep,
+        BuyerAccelerationRecord,
         AutoExecutionAuditRecord,
         AutoExecutionAttempt,
         AutoExecutionDryRun,
@@ -4358,6 +4635,14 @@ def seed_database(session: Session) -> dict[str, int]:
         AutoExecutionAuditRecord(**row)
         for row in payload["auto_execution_audit_records"]
     )
+    session.add_all(
+        BuyerAccelerationRecord(**row) for row in payload["buyer_acceleration_records"]
+    )
+    session.add_all(BuyerSequencePrep(**row) for row in payload["buyer_sequence_preps"])
+    session.add_all(BuyerResponseRoute(**row) for row in payload["buyer_response_routes"])
+    session.add_all(
+        BuyerVelocityProfile(**row) for row in payload["buyer_velocity_profiles"]
+    )
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
     session.add_all(
         SellerOfferPublication(**row)
@@ -4441,5 +4726,11 @@ def seed_database(session: Session) -> dict[str, int]:
         safety = validate_auto_execution_template(template)
         template.safety_status = "approved" if safety["allowed"] else "blocked"
         template.risk_flags = safety["risk_flags"]
+    for record in session.query(BuyerAccelerationRecord).all():
+        buyer_distribution_gate(record)
+    for sequence in session.query(BuyerSequencePrep).all():
+        sync_buyer_sequence(sequence)
+    for profile in session.query(BuyerVelocityProfile).all():
+        buyer_velocity_score(profile)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

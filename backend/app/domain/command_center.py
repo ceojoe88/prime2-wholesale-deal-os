@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.domain.auto_execution import auto_execution_dashboard
 from app.domain.autonomy import autonomy_dashboard
+from app.domain.buyer_acceleration import buyer_acceleration_dashboard
 from app.domain.buyer_portal import portal_publish_gate, update_publication_gate
 from app.domain.buyer_demand import buyer_demand_dashboard
 from app.domain.closing_coordination import closing_coordination_dashboard
@@ -137,4 +138,5 @@ def build_command_center(session: Session) -> dict[str, object]:
         "title_attorney_review": title_review_dashboard(session),
         "near_autonomous_execution": autonomy_dashboard(session),
         "controlled_auto_execution": auto_execution_dashboard(session),
+        "buyer_distribution_acceleration": buyer_acceleration_dashboard(session),
     }

@@ -23,6 +23,13 @@ from app.domain.buyer_portal import (
     sanitize_buyer_deal,
     update_publication_gate,
 )
+from app.domain.buyer_acceleration import (
+    buyer_acceleration_dashboard,
+    buyer_distribution_gate,
+    buyer_velocity_score,
+    sync_buyer_sequence,
+    validate_buyer_sequence_text,
+)
 from app.domain.buyer_demand import (
     buyer_deal_priority_summary,
     buyer_demand_dashboard,
@@ -112,11 +119,15 @@ from app.models import (
     AutonomousAgentTask,
     AutonomyEscalation,
     Buyer,
+    BuyerAccelerationRecord,
     BuyerDealPriority,
     BuyerDealPublication,
     BuyerDemandProfile,
     BuyerInterest,
     BuyerMatch,
+    BuyerResponseRoute,
+    BuyerSequencePrep,
+    BuyerVelocityProfile,
     ClosingCoordinationChecklist,
     ComplianceRecord,
     CommunicationApproval,
@@ -170,6 +181,10 @@ class ProfitClaimValidationRequest(BaseModel):
 class DistributionSafetyRequest(BaseModel):
     content: str
     assignment_fee_exposure_approved: bool = False
+
+
+class BuyerSequenceSafetyRequest(BaseModel):
+    content: str
 
 
 class ConversionSafetyRequest(BaseModel):
@@ -898,6 +913,122 @@ def deal_distribution_detail(
     summary = distribution_prep_summary(prep)
     session.commit()
     return summary
+
+
+@router.get("/buyer-acceleration")
+def buyer_acceleration(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = buyer_acceleration_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/buyer-acceleration/{deal_id}")
+def buyer_acceleration_detail(
+    deal_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    record = (
+        session.query(BuyerAccelerationRecord)
+        .filter(BuyerAccelerationRecord.deal_id == deal_id)
+        .first()
+    )
+    if record is None:
+        raise HTTPException(status_code=404, detail="Buyer acceleration record not found")
+    gate = buyer_distribution_gate(record)
+    sequences = (
+        session.query(BuyerSequencePrep)
+        .filter(BuyerSequencePrep.deal_id == deal_id)
+        .all()
+    )
+    routes = (
+        session.query(BuyerResponseRoute)
+        .filter(BuyerResponseRoute.deal_id == deal_id)
+        .all()
+    )
+    for sequence in sequences:
+        sync_buyer_sequence(sequence)
+    session.commit()
+    return {
+        **model_to_dict(record),
+        "gate": gate,
+        "buyer_sequences": [model_to_dict(sequence) for sequence in sequences],
+        "response_routes": [model_to_dict(route) for route in routes],
+        "live_send_requires_v5_v13_gates": True,
+        "bulk_blast_allowed": False,
+        "seller_private_data_exposed": False,
+        "internal_profit_logic_exposed": False,
+    }
+
+
+@router.get("/buyer-sequences")
+def buyer_sequences(session: Session = Depends(get_session)) -> dict[str, object]:
+    sequences = session.query(BuyerSequencePrep).all()
+    for sequence in sequences:
+        sync_buyer_sequence(sequence)
+    session.commit()
+    return {
+        "buyer_sequence_preps": [model_to_dict(sequence) for sequence in sequences],
+        "draft_only": True,
+        "live_send_allowed": False,
+        "bulk_blast_allowed": False,
+        "deceptive_scarcity_allowed": False,
+        "seller_private_data_exposed": False,
+        "internal_profit_logic_exposed": False,
+    }
+
+
+@router.post("/buyer-sequences/safety/validate")
+def buyer_sequence_safety(payload: BuyerSequenceSafetyRequest) -> dict[str, object]:
+    return validate_buyer_sequence_text(payload.content)
+
+
+@router.get("/buyer-response-router")
+def buyer_response_router(session: Session = Depends(get_session)) -> dict[str, object]:
+    routes = session.query(BuyerResponseRoute).all()
+    return {
+        "buyer_response_routes": [model_to_dict(route) for route in routes],
+        "buyer_interested": [
+            model_to_dict(route)
+            for route in routes
+            if route.response_type == "buyer_interested"
+        ],
+        "needs_pof": [model_to_dict(route) for route in routes if route.pof_gap],
+        "wants_showing_access": [
+            model_to_dict(route) for route in routes if route.access_requested
+        ],
+        "submits_offer_intent": [
+            model_to_dict(route)
+            for route in routes
+            if route.offer_intent_recorded
+        ],
+        "owner_action_required": [
+            model_to_dict(route) for route in routes if route.owner_action_required
+        ],
+        "draft_only": True,
+        "contract_execution_allowed": False,
+    }
+
+
+@router.get("/buyer-velocity")
+def buyer_velocity(session: Session = Depends(get_session)) -> dict[str, object]:
+    profiles = session.query(BuyerVelocityProfile).all()
+    for profile in profiles:
+        buyer_velocity_score(profile)
+    session.commit()
+    return {
+        "buyer_velocity_profiles": [
+            model_to_dict(profile)
+            for profile in sorted(profiles, key=lambda item: item.velocity_score, reverse=True)
+        ],
+        "fast_close_buyers": [
+            model_to_dict(profile)
+            for profile in profiles
+            if profile.recommended_use == "fast_close_priority"
+        ],
+        "draft_only": True,
+        "live_contact_allowed": False,
+        "buyer_blast_allowed": False,
+    }
 
 
 @router.get("/offer-conversion")

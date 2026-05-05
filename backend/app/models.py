@@ -839,6 +839,88 @@ class AutoExecutionAuditRecord(TimestampMixin, Base):
     attempt: Mapped[AutoExecutionAttempt | None] = relationship()
 
 
+class BuyerAccelerationRecord(TimestampMixin, Base):
+    __tablename__ = "buyer_acceleration_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    buyer_ranking_snapshot: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    top_buyer_list: Mapped[list[str]] = mapped_column(JSON, default=list)
+    pof_status: Mapped[str] = mapped_column(String(80), default="missing")
+    buyer_reliability: Mapped[float] = mapped_column(Float, default=0)
+    buyer_margin_strength: Mapped[float] = mapped_column(Float, default=0)
+    distribution_readiness: Mapped[str] = mapped_column(String(80), default="blocked")
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    controlled_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_visible: Mapped[bool] = mapped_column(Boolean, default=False)
+    sanitized_deal_sheet_ready: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_match_approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    compliance_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    v13_gate_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    v5_gate_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class BuyerSequencePrep(TimestampMixin, Base):
+    __tablename__ = "buyer_sequence_preps"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    buyer_id: Mapped[str] = mapped_column(ForeignKey("buyers.id"), nullable=False)
+    acceleration_record_id: Mapped[str | None] = mapped_column(
+        ForeignKey("buyer_acceleration_records.id"), nullable=True
+    )
+    first_buyer_notice: Mapped[str] = mapped_column(Text, default="")
+    buyer_detail_follow_up: Mapped[str] = mapped_column(Text, default="")
+    pof_request: Mapped[str] = mapped_column(Text, default="")
+    viewing_access_coordination: Mapped[str] = mapped_column(Text, default="")
+    offer_intent_follow_up: Mapped[str] = mapped_column(Text, default="")
+    deadline_reminder: Mapped[str] = mapped_column(Text, default="")
+    safety_status: Mapped[str] = mapped_column(String(80), default="unchecked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    deceptive_scarcity_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    seller_private_data_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+    internal_profit_logic_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class BuyerResponseRoute(TimestampMixin, Base):
+    __tablename__ = "buyer_response_routes"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str] = mapped_column(ForeignKey("deals.id"), nullable=False)
+    buyer_id: Mapped[str] = mapped_column(ForeignKey("buyers.id"), nullable=False)
+    response_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    routed_status: Mapped[str] = mapped_column(String(100), default="queued")
+    owner_action_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+    pof_gap: Mapped[bool] = mapped_column(Boolean, default=False)
+    access_requested: Mapped[bool] = mapped_column(Boolean, default=False)
+    offer_intent_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class BuyerVelocityProfile(TimestampMixin, Base):
+    __tablename__ = "buyer_velocity_profiles"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    buyer_id: Mapped[str] = mapped_column(ForeignKey("buyers.id"), nullable=False)
+    response_speed: Mapped[float] = mapped_column(Float, default=0)
+    pof_strength: Mapped[float] = mapped_column(Float, default=0)
+    close_history: Mapped[float] = mapped_column(Float, default=0)
+    price_fit: Mapped[float] = mapped_column(Float, default=0)
+    market_fit: Mapped[float] = mapped_column(Float, default=0)
+    reliability: Mapped[float] = mapped_column(Float, default=0)
+    previous_intent_quality: Mapped[float] = mapped_column(Float, default=0)
+    velocity_score: Mapped[float] = mapped_column(Float, default=0)
+    recommended_use: Mapped[str] = mapped_column(Text, default="")
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
 class ComplianceRecord(TimestampMixin, Base):
     __tablename__ = "compliance_records"
 

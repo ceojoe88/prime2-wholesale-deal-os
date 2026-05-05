@@ -251,6 +251,13 @@ Controlled auto-execution V13 routes:
 - [http://localhost:3000/dashboard/auto-execution/attempts](http://localhost:3000/dashboard/auto-execution/attempts)
 - [http://localhost:3000/dashboard/auto-execution/audit](http://localhost:3000/dashboard/auto-execution/audit)
 
+Buyer acceleration V14 routes:
+
+- [http://localhost:3000/dashboard/buyer-acceleration](http://localhost:3000/dashboard/buyer-acceleration)
+- [http://localhost:3000/dashboard/buyer-sequences](http://localhost:3000/dashboard/buyer-sequences)
+- [http://localhost:3000/dashboard/buyer-response-router](http://localhost:3000/dashboard/buyer-response-router)
+- [http://localhost:3000/dashboard/buyer-velocity](http://localhost:3000/dashboard/buyer-velocity)
+
 ## Validation
 
 ```powershell
