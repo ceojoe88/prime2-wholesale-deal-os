@@ -1513,6 +1513,148 @@ class ScoringAdjustmentSuggestion(TimestampMixin, Base):
     )
 
 
+class AITemplate(TimestampMixin, Base):
+    __tablename__ = "ai_templates"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    request_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    template_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    template_version: Mapped[str] = mapped_column(String(40), default="v1")
+    template_sections: Mapped[list[str]] = mapped_column(JSON, default=list)
+    template_body: Mapped[str] = mapped_column(Text, default="")
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    safety_status: Mapped[str] = mapped_column(String(80), default="approved")
+    risk_flags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    uses_system_data_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    can_invent_numbers: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_generation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class AIRequestLog(TimestampMixin, Base):
+    __tablename__ = "ai_request_logs"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    request_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    model: Mapped[str] = mapped_column(String(120), nullable=False)
+    template_id: Mapped[str | None] = mapped_column(
+        ForeignKey("ai_templates.id"), nullable=True
+    )
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(100), default="")
+    prompt: Mapped[str] = mapped_column(Text, default="")
+    source_data: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    token_estimate: Mapped[int] = mapped_column(Integer, default=0)
+    cost_estimate: Mapped[float] = mapped_column(Float, default=0)
+    response: Mapped[str] = mapped_column(Text, default="")
+    safety_status: Mapped[str] = mapped_column(String(80), default="pending")
+    blocked_reason: Mapped[str] = mapped_column(Text, default="")
+    safety_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    provider_mode: Mapped[str] = mapped_column(String(80), default="mock/dry_run")
+    monthly_cost_after_request: Mapped[float] = mapped_column(Float, default=0)
+    real_provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_generation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    financial_calculation_override_allowed: Mapped[bool] = mapped_column(
+        Boolean, default=False
+    )
+
+
+class AIAuditRecord(TimestampMixin, Base):
+    __tablename__ = "ai_audit_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    request_id: Mapped[str | None] = mapped_column(
+        ForeignKey("ai_request_logs.id"), nullable=True
+    )
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    request_type: Mapped[str] = mapped_column(String(80), default="")
+    safety_status: Mapped[str] = mapped_column(String(80), default="pending")
+    blocked_reason: Mapped[str] = mapped_column(Text, default="")
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(100), default="")
+    token_estimate: Mapped[int] = mapped_column(Integer, default=0)
+    cost_estimate: Mapped[float] = mapped_column(Float, default=0)
+    response_hash: Mapped[str] = mapped_column(String(128), default="")
+    provider_mode: Mapped[str] = mapped_column(String(80), default="mock/dry_run")
+    real_provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class AICostLedger(TimestampMixin, Base):
+    __tablename__ = "ai_cost_ledgers"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    request_id: Mapped[str | None] = mapped_column(
+        ForeignKey("ai_request_logs.id"), nullable=True
+    )
+    period: Mapped[str] = mapped_column(String(20), nullable=False)
+    request_type: Mapped[str] = mapped_column(String(80), default="")
+    model: Mapped[str] = mapped_column(String(120), default="")
+    token_estimate: Mapped[int] = mapped_column(Integer, default=0)
+    cost_estimate: Mapped[float] = mapped_column(Float, default=0)
+    monthly_total_after: Mapped[float] = mapped_column(Float, default=0)
+    monthly_cap: Mapped[float] = mapped_column(Float, default=0)
+    cap_status: Mapped[str] = mapped_column(String(80), default="within_cap")
+    provider_mode: Mapped[str] = mapped_column(String(80), default="mock/dry_run")
+
+
+class WorkerJob(TimestampMixin, Base):
+    __tablename__ = "worker_jobs"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    job_id: Mapped[str] = mapped_column(String(80), unique=True, nullable=False)
+    job_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_record: Mapped[str] = mapped_column(String(160), default="")
+    status: Mapped[str] = mapped_column(String(80), default="pending")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    last_run: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    next_run: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    idempotency_key: Mapped[str] = mapped_column(String(180), unique=True, nullable=False)
+    error_message: Mapped[str] = mapped_column(Text, default="")
+    priority: Mapped[str] = mapped_column(String(40), default="normal")
+    max_attempts: Mapped[int] = mapped_column(Integer, default=3)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    owner_approval_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    payment_handling_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class WorkerJobLog(TimestampMixin, Base):
+    __tablename__ = "worker_job_logs"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    job_id: Mapped[str | None] = mapped_column(
+        ForeignKey("worker_jobs.job_id"), nullable=True
+    )
+    job_type: Mapped[str] = mapped_column(String(100), default="")
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(80), default="recorded")
+    message: Mapped[str] = mapped_column(Text, default="")
+    attempt_number: Mapped[int] = mapped_column(Integer, default=0)
+    idempotency_key: Mapped[str] = mapped_column(String(180), default="")
+    safety_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    real_world_action_taken: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class WorkerHeartbeat(TimestampMixin, Base):
+    __tablename__ = "worker_heartbeats"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    worker_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    status: Mapped[str] = mapped_column(String(80), default="healthy")
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    stuck_jobs_detected: Mapped[int] = mapped_column(Integer, default=0)
+    recovery_recommended: Mapped[bool] = mapped_column(Boolean, default=False)
+    health_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    live_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
 class ComplianceRecord(TimestampMixin, Base):
     __tablename__ = "compliance_records"
 

@@ -34,6 +34,8 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Near-autonomous and semi-autonomous internal operator workflows
 - Production readiness checks, safe audit exports, attachment metadata, and backup/export metadata
 - Real CSV lead import, lead QA, field-call outcome tracking, and prediction feedback
+- Controlled AI drafting, summarization, negotiation support, and briefing through a safety/cost/audit gateway
+- Background worker runtime for scheduled internal prep jobs, retries, idempotency, ledgers, and heartbeat monitoring
 
 ## Command Hierarchy
 
@@ -125,7 +127,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V19
+## Phase Map V1-V21
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -183,6 +185,12 @@ Although outside the requested V1-V17 phase map, the current project also includ
 
 V19 Real Lead Import and Field Testing Loop:
 Added preview-first CSV lead import, import batch and row records, critical field validation, phone/email normalization, property-plus-phone dedupe, lead QA scoring, call outcome tracking, do-not-contact eligibility blocking, Prime 2 prediction-versus-reality feedback, deterministic scoring adjustment suggestions, and field-testing daily briefing. Imports remain private/operator-only and cannot trigger live outreach, bulk messages, portal publishing, contract execution, title submission, or payment handling.
+
+V20 AI Gateway:
+Added a controlled intelligence layer for approved request types only: seller script drafts, buyer message drafts, objection responses, deal summaries, daily briefings, negotiation assistance, and field-testing summaries. The gateway enforces versioned templates, system-data-only numbers, response safety scanning, token/cost tracking, monthly caps, environment-only API key loading, request audit logs, and blocks legal advice, contract generation, guaranteed profit claims, deceptive urgency/scarcity, and financial calculation overrides.
+
+V21 Background Worker Runtime:
+Added a production-grade internal worker layer with queued jobs, scheduler cadence, retries/backoff, job ledgers, idempotency keys, heartbeat health, stuck-job detection, and Prime 2 routing. Supported jobs are internal prep only: lead scoring refresh, follow-up scheduling, daily briefing generation, buyer ranking refresh, QA checks, automation rule evaluation, field-testing summary, and forecast refresh. The worker cannot trigger live outreach, buyer blasts, contract execution, title submission, portal publishing, payment handling, or term changes.
 
 ## Local Run Commands
 
@@ -243,6 +251,13 @@ Recommended route smoke checks:
 - `/dashboard/feedback-loop`
 - `/dashboard/scoring-adjustments`
 - `/dashboard/field-briefing`
+- `/dashboard/ai`
+- `/dashboard/ai/audit`
+- `/dashboard/ai/costs`
+- `/dashboard/ai/templates`
+- `/dashboard/worker`
+- `/dashboard/worker/jobs`
+- `/dashboard/worker/health`
 - `/dashboard/buyer-acceleration`
 - `/dashboard/optimization`
 - `/dashboard/revenue-forecast`

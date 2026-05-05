@@ -46,6 +46,10 @@ V18 adds production readiness, audit export, evidence attachment metadata, backu
 
 V19 adds real lead import and field testing. It creates preview-first CSV import batches, row-level validation and dedupe, lead QA scoring, manual seller call outcome tracking, do-not-contact eligibility blocks, Prime 2 prediction-versus-reality feedback, explainable scoring adjustment suggestions, and a field briefing. Imported leads cannot trigger live outreach, bulk messages, automatic portal publishing, contract execution, title submission, or payment handling.
 
+V20 adds the AI Gateway controlled intelligence layer. It supports only approved Prime 2 request types: seller script drafts, buyer message drafts, objection responses, deal summaries, daily briefings, negotiation assistance, and field-testing summaries. Every request is template-gated, token/cost-estimated, safety-scanned, audit-logged, and blocked from legal advice, contract generation, deceptive urgency/scarcity, guaranteed profit claims, role misrepresentation, invented ARV/repairs, or financial calculation overrides. `OPENAI_API_KEY` is read from environment only and provider mode defaults to mock/dry-run.
+
+V21 adds the background worker runtime. It introduces queued internal jobs, scheduler cadence, retries/backoff, idempotency keys, job ledgers, heartbeat health, stuck-job detection, and Prime 2 feeds into autonomy, daily briefing, escalation, and next-best-action surfaces. Worker jobs prepare, schedule, route, draft, and escalate only. The worker cannot send SMS/email, call sellers, contact buyers, publish portals, execute contracts, submit to title, change seller/buyer terms, handle payments, or bypass approval gates.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, backups, lead imports, lead QA, call outcomes, field feedback, and scoring adjustment suggestions.
@@ -59,6 +63,8 @@ V19 adds real lead import and field testing. It creates preview-first CSV import
 - `app/domain/autonomy.py`: V12 automation rule engine, scheduler runtime, run/attempt ledgers, idempotency guard, autonomous task queue, event trigger summaries, daily command briefing generation, escalation queue, and autonomy safety guard.
 - `app/domain/auto_execution.py`: V13 controlled auto-execution rules, approved template safety checks, conditional execution gate, dry-run receipts, idempotent single-attempt workflow, and audit trail aggregation.
 - `app/domain/field_testing.py`: V19 CSV import preview/commit workflow, normalization, critical field validation, dedupe checks, lead QA scoring, call outcome updates, do-not-contact guard, prediction feedback comparison, scoring adjustment suggestions, field dashboard, and daily field briefing.
+- `app/domains/ai_gateway/*`: V20 controlled AI Gateway with request type allowlist, versioned templates, safety scanner, token/cost ledger, request audit trail, and deterministic mock/template responses.
+- `app/domains/worker_runtime/*`: V21 background worker runtime with queueing, scheduler, runner, retry manager, idempotency, ledgers, heartbeat health, and hard blocks against live action.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -162,7 +168,48 @@ erDiagram
   LEAD ||--o{ FIELD_CALL_OUTCOME : records
   FIELD_CALL_OUTCOME ||--o{ PREDICTION_FEEDBACK_RECORD : compares
   PREDICTION_FEEDBACK_RECORD ||--o{ SCORING_ADJUSTMENT_SUGGESTION : suggests
+  AI_TEMPLATE ||--o{ AI_REQUEST_LOG : gates
+  AI_REQUEST_LOG ||--o{ AI_AUDIT_RECORD : audits
+  AI_REQUEST_LOG ||--o{ AI_COST_LEDGER : costs
+  WORKER_JOB ||--o{ WORKER_JOB_LOG : ledgers
+  WORKER_HEARTBEAT ||--o{ WORKER_JOB : monitors
 ```
+
+## V20 AI Gateway
+
+Backend routes:
+
+- `/api/v1/ai`
+- `/api/v1/ai/request`
+- `/api/v1/ai/audit`
+- `/api/v1/ai/costs`
+- `/api/v1/ai/templates`
+
+Frontend routes:
+
+- `/dashboard/ai`
+- `/dashboard/ai/audit`
+- `/dashboard/ai/costs`
+- `/dashboard/ai/templates`
+
+The gateway is not an open AI chat surface. It is a controlled internal service that renders approved templates with system data, estimates tokens and cost, scans prompts and responses, records audit and cost ledgers, and rejects unsupported or unsafe request types. It does not make real provider calls in the default configuration and it never allows AI to override system financial calculations.
+
+## V21 Worker Runtime
+
+Backend routes:
+
+- `/api/v1/worker`
+- `/api/v1/worker/health`
+- `/api/v1/worker/jobs`
+- `/api/v1/worker/logs`
+
+Frontend routes:
+
+- `/dashboard/worker`
+- `/dashboard/worker/jobs`
+- `/dashboard/worker/health`
+
+Supported worker jobs are lead scoring refresh, follow-up scheduling, daily briefing generation, buyer ranking refresh, QA checks, automation rule evaluation, field-testing summary, and forecast refresh. Jobs use idempotency keys to prevent duplicate execution, retry/backoff to avoid runaway loops, and ledgers for completed or failed attempts. Heartbeat health reports stuck jobs and recovery needs without granting live execution authority.
 
 ## V2 Buyer Portal
 

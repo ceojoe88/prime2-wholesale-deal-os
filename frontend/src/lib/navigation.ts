@@ -3,6 +3,8 @@ export const dashboardRoutes = [
   { href: "/dashboard/command-center", label: "Command Center", icon: "Command" },
   { href: "/dashboard/autonomy", label: "Autonomy", icon: "Command" },
   { href: "/dashboard/auto-execution", label: "Auto Execution", icon: "TimerReset" },
+  { href: "/dashboard/ai", label: "AI Gateway", icon: "Bot" },
+  { href: "/dashboard/worker", label: "Worker Runtime", icon: "TimerReset" },
   { href: "/dashboard/command-hierarchy", label: "Hierarchy", icon: "Network" },
   { href: "/dashboard/overseer", label: "Prime 2", icon: "Crown" },
   { href: "/dashboard/divisions", label: "Divisions", icon: "Building2" },

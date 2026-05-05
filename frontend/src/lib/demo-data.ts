@@ -3664,3 +3664,273 @@ export const v19SafetyCards = [
   { label: "Bad rows", value: String(blockedLeadImportRows.length), detail: "Visible with reasons before commit" },
   { label: "DNC records", value: String(doNotContactOutcomes.length), detail: "Future live outreach eligibility blocked" }
 ];
+
+export type AITemplateRecord = {
+  id: string;
+  requestType: string;
+  templateName: string;
+  templateVersion: string;
+  templateSections: string[];
+  safetyStatus: string;
+  usesSystemDataOnly: boolean;
+  canInventNumbers: boolean;
+};
+
+export type AIRequestRecord = {
+  id: string;
+  requestType: string;
+  model: string;
+  tokenEstimate: number;
+  costEstimate: number;
+  safetyStatus: string;
+  blockedReason: string;
+  providerMode: string;
+  realProviderCalled: boolean;
+  legalAdviceAllowed: boolean;
+  contractGenerationAllowed: boolean;
+  financialCalculationOverrideAllowed: boolean;
+};
+
+export type AIAuditRecord = {
+  id: string;
+  requestId: string;
+  eventType: string;
+  safetyStatus: string;
+  blockedReason: string;
+  providerMode: string;
+  realProviderCalled: boolean;
+};
+
+export type AICostLedgerRecord = {
+  id: string;
+  requestId: string;
+  period: string;
+  tokenEstimate: number;
+  costEstimate: number;
+  monthlyTotalAfter: number;
+  monthlyCap: number;
+  capStatus: string;
+};
+
+export type WorkerJobRecord = {
+  id: string;
+  jobId: string;
+  jobType: string;
+  sourceRecord: string;
+  status: "pending" | "running" | "completed" | "failed";
+  attempts: number;
+  idempotencyKey: string;
+  errorMessage: string;
+  priority: string;
+  liveActionAllowed: boolean;
+  contractExecutionAllowed: boolean;
+  titleSubmissionAllowed: boolean;
+  portalPublishAllowed: boolean;
+  paymentHandlingAllowed: boolean;
+  bulkSendAllowed: boolean;
+};
+
+export type WorkerJobLogRecord = {
+  id: string;
+  jobId: string;
+  jobType: string;
+  eventType: string;
+  status: string;
+  message: string;
+  providerCalled: boolean;
+  realWorldActionTaken: boolean;
+};
+
+export type WorkerHeartbeatRecord = {
+  id: string;
+  workerName: string;
+  status: string;
+  active: boolean;
+  stuckJobsDetected: number;
+  recoveryRecommended: boolean;
+  liveActionAllowed: boolean;
+};
+
+export const aiTemplates: AITemplateRecord[] = [
+  {
+    id: "ai-template-seller-script-v20",
+    requestType: "seller_script_draft",
+    templateName: "Seller script draft",
+    templateVersion: "v20.1",
+    templateSections: ["intro", "empathy", "property question", "soft close"],
+    safetyStatus: "approved",
+    usesSystemDataOnly: true,
+    canInventNumbers: false
+  },
+  {
+    id: "ai-template-buyer-message-v20",
+    requestType: "buyer_message_draft",
+    templateName: "Buyer message draft",
+    templateVersion: "v20.1",
+    templateSections: ["deal summary", "system numbers", "CTA"],
+    safetyStatus: "approved",
+    usesSystemDataOnly: true,
+    canInventNumbers: false
+  },
+  {
+    id: "ai-template-daily-briefing-v20",
+    requestType: "daily_briefing",
+    templateName: "Prime 2 daily briefing",
+    templateVersion: "v20.1",
+    templateSections: ["hot deals", "approval queue", "blockers", "safe actions"],
+    safetyStatus: "approved",
+    usesSystemDataOnly: true,
+    canInventNumbers: false
+  }
+];
+
+export const aiRequestLogs: AIRequestRecord[] = [
+  {
+    id: "ai-request-001",
+    requestType: "deal_summary",
+    model: "prime2-controlled-template",
+    tokenEstimate: 142,
+    costEstimate: 0,
+    safetyStatus: "approved",
+    blockedReason: "",
+    providerMode: "mock/dry_run",
+    realProviderCalled: false,
+    legalAdviceAllowed: false,
+    contractGenerationAllowed: false,
+    financialCalculationOverrideAllowed: false
+  },
+  {
+    id: "ai-request-002",
+    requestType: "contract_generation",
+    model: "prime2-controlled-template",
+    tokenEstimate: 32,
+    costEstimate: 0,
+    safetyStatus: "blocked",
+    blockedReason: "blocked_request_type",
+    providerMode: "mock/dry_run",
+    realProviderCalled: false,
+    legalAdviceAllowed: false,
+    contractGenerationAllowed: false,
+    financialCalculationOverrideAllowed: false
+  }
+];
+
+export const aiAuditRecords: AIAuditRecord[] = [
+  {
+    id: "ai-audit-001",
+    requestId: "ai-request-001",
+    eventType: "ai_response_approved",
+    safetyStatus: "approved",
+    blockedReason: "",
+    providerMode: "mock/dry_run",
+    realProviderCalled: false
+  },
+  {
+    id: "ai-audit-002",
+    requestId: "ai-request-002",
+    eventType: "ai_response_blocked",
+    safetyStatus: "blocked",
+    blockedReason: "blocked_request_type",
+    providerMode: "mock/dry_run",
+    realProviderCalled: false
+  }
+];
+
+export const aiCostLedgers: AICostLedgerRecord[] = [
+  {
+    id: "ai-cost-001",
+    requestId: "ai-request-001",
+    period: "2026-05",
+    tokenEstimate: 142,
+    costEstimate: 0,
+    monthlyTotalAfter: 0,
+    monthlyCap: 25,
+    capStatus: "within_cap"
+  },
+  {
+    id: "ai-cost-002",
+    requestId: "ai-request-002",
+    period: "2026-05",
+    tokenEstimate: 32,
+    costEstimate: 0,
+    monthlyTotalAfter: 0,
+    monthlyCap: 25,
+    capStatus: "within_cap"
+  }
+];
+
+export const workerJobs: WorkerJobRecord[] = [
+  {
+    id: "worker-job-seed-001",
+    jobId: "job-001",
+    jobType: "lead_scoring_refresh",
+    sourceRecord: "leads",
+    status: "completed",
+    attempts: 1,
+    idempotencyKey: "seed:lead-scoring:2026050413",
+    errorMessage: "",
+    priority: "high",
+    liveActionAllowed: false,
+    contractExecutionAllowed: false,
+    titleSubmissionAllowed: false,
+    portalPublishAllowed: false,
+    paymentHandlingAllowed: false,
+    bulkSendAllowed: false
+  },
+  {
+    id: "worker-job-seed-002",
+    jobId: "job-002",
+    jobType: "automation_rule_evaluation",
+    sourceRecord: "automation_rules",
+    status: "pending",
+    attempts: 0,
+    idempotencyKey: "seed:automation:202605041305",
+    errorMessage: "",
+    priority: "normal",
+    liveActionAllowed: false,
+    contractExecutionAllowed: false,
+    titleSubmissionAllowed: false,
+    portalPublishAllowed: false,
+    paymentHandlingAllowed: false,
+    bulkSendAllowed: false
+  }
+];
+
+export const workerJobLogs: WorkerJobLogRecord[] = [
+  {
+    id: "worker-log-001",
+    jobId: "job-001",
+    jobType: "lead_scoring_refresh",
+    eventType: "job_completed",
+    status: "completed",
+    message: "Lead scoring refresh completed as internal prep.",
+    providerCalled: false,
+    realWorldActionTaken: false
+  },
+  {
+    id: "worker-log-002",
+    jobId: "job-002",
+    jobType: "automation_rule_evaluation",
+    eventType: "job_enqueued",
+    status: "pending",
+    message: "Automation rule check queued with no live action path.",
+    providerCalled: false,
+    realWorldActionTaken: false
+  }
+];
+
+export const workerHeartbeat: WorkerHeartbeatRecord = {
+  id: "worker-heartbeat-001",
+  workerName: "prime2-worker",
+  status: "healthy",
+  active: true,
+  stuckJobsDetected: 0,
+  recoveryRecommended: false,
+  liveActionAllowed: false
+};
+
+export const blockedAiRequests = aiRequestLogs.filter((request) => request.safetyStatus === "blocked");
+export const approvedAiTemplates = aiTemplates.filter((template) => template.safetyStatus === "approved");
+export const pendingWorkerJobs = workerJobs.filter((job) => job.status === "pending");
+export const failedWorkerJobs = workerJobs.filter((job) => job.status === "failed");
+export const completedWorkerJobs = workerJobs.filter((job) => job.status === "completed");

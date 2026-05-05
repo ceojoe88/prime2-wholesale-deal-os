@@ -8,6 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_session
+from app.domains.ai_gateway.ai_gateway import ai_cost_dashboard, ai_gateway_dashboard
+from app.domains.ai_gateway.ai_router import handle_ai_request
+from app.domains.worker_runtime.heartbeat import worker_health
+from app.domains.worker_runtime.job_queue import enqueue_job
+from app.domains.worker_runtime.job_runner import run_due_jobs, run_worker_job
+from app.domains.worker_runtime.scheduler import schedule_recurring_jobs
+from app.domains.worker_runtime.worker_runtime import worker_dashboard
 from app.domain.autonomy import (
     autonomy_dashboard,
     autonomy_safety_guard,
@@ -153,6 +160,10 @@ from app.domain.title_review import (
 from app.models import (
     Agent,
     ApprovalUxReview,
+    AIAuditRecord,
+    AICostLedger,
+    AIRequestLog,
+    AITemplate,
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     ApprovedTemplate,
@@ -227,6 +238,8 @@ from app.models import (
     TitleReviewCoordination,
     TitleHandoffPacket,
     UnifiedDealRoom,
+    WorkerJob,
+    WorkerJobLog,
 )
 from app.serializers import model_to_dict
 
@@ -364,6 +377,23 @@ class PredictionFeedbackRequest(BaseModel):
 
 class FieldTestingSafetyRequest(BaseModel):
     content: str
+
+
+class AIRequestPayload(BaseModel):
+    request_type: str
+    model: str | None = None
+    prompt: str = ""
+    source_record_type: str = ""
+    source_record_id: str = ""
+    source_data: dict[str, object] = {}
+    template_id: str | None = None
+
+
+class WorkerJobCreateRequest(BaseModel):
+    job_type: str
+    source_record: str = ""
+    idempotency_key: str | None = None
+    priority: str = "normal"
 
 
 def all_records(session: Session, model) -> list[dict]:
@@ -800,6 +830,127 @@ def scoring_adjustments(session: Session = Depends(get_session)) -> dict[str, ob
         "black_box_ml_used": False,
         "deterministic_explainable_scoring": True,
     }
+
+
+@router.get("/v1/ai/templates")
+def ai_templates(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = ai_gateway_dashboard(session)
+    return {
+        "ai_templates": [model_to_dict(template) for template in session.query(AITemplate).all()],
+        "allowed_request_types": dashboard["allowed_request_types"],
+        "templates_enforced": True,
+        "system_data_only": True,
+        "can_invent_numbers": False,
+    }
+
+
+@router.get("/v1/ai/audit")
+def ai_audit(session: Session = Depends(get_session)) -> dict[str, object]:
+    return {
+        "ai_audit_records": all_records(session, AIAuditRecord),
+        "real_provider_calls_allowed": False,
+        "legal_advice_allowed": False,
+        "contract_generation_allowed": False,
+    }
+
+
+@router.get("/v1/ai/costs")
+def ai_costs(session: Session = Depends(get_session)) -> dict[str, object]:
+    return ai_cost_dashboard(session)
+
+
+@router.post("/v1/ai/request")
+def ai_request(
+    payload: AIRequestPayload,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    result = handle_ai_request(
+        session,
+        request_type=payload.request_type,
+        prompt=payload.prompt,
+        model=payload.model,
+        source_record_type=payload.source_record_type,
+        source_record_id=payload.source_record_id,
+        source_data=payload.source_data,
+        template_id=payload.template_id,
+    )
+    if not result["allowed"]:
+        raise HTTPException(status_code=400, detail=result)
+    return result
+
+
+@router.get("/v1/ai")
+def ai_gateway(session: Session = Depends(get_session)) -> dict[str, object]:
+    return ai_gateway_dashboard(session)
+
+
+@router.get("/v1/worker/health")
+def worker_runtime_health(session: Session = Depends(get_session)) -> dict[str, object]:
+    return worker_health(session)
+
+
+@router.get("/v1/worker/jobs")
+def worker_jobs(session: Session = Depends(get_session)) -> dict[str, object]:
+    return {
+        "jobs": all_records(session, WorkerJob),
+        "scheduler_runtime": {
+            "every_5_min": "automation checks",
+            "hourly": "scoring refresh",
+            "daily": "briefing and forecast",
+            "event_driven": "workflow triggers",
+        },
+        "live_actions_allowed": False,
+    }
+
+
+@router.post("/v1/worker/jobs")
+def worker_job_create(
+    payload: WorkerJobCreateRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return enqueue_job(
+        session,
+        job_type=payload.job_type,
+        source_record=payload.source_record,
+        idempotency_key=payload.idempotency_key,
+        priority=payload.priority,
+    )
+
+
+@router.post("/v1/worker/jobs/{job_id}/run")
+def worker_job_run(
+    job_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    job = (
+        session.query(WorkerJob)
+        .filter((WorkerJob.job_id == job_id) | (WorkerJob.id == job_id))
+        .one_or_none()
+    )
+    if job is None:
+        raise HTTPException(status_code=404, detail="Worker job not found")
+    return run_worker_job(session, job)
+
+
+@router.post("/v1/worker/scheduler/run")
+def worker_scheduler_run(session: Session = Depends(get_session)) -> dict[str, object]:
+    schedule = schedule_recurring_jobs(session)
+    due = run_due_jobs(session)
+    return {**schedule, "due_run": due, "live_action_triggered": False}
+
+
+@router.get("/v1/worker/logs")
+def worker_logs(session: Session = Depends(get_session)) -> dict[str, object]:
+    return {
+        "logs": all_records(session, WorkerJobLog),
+        "provider_called": False,
+        "real_world_action_taken": False,
+    }
+
+
+@router.get("/v1/worker")
+def worker_runtime(session: Session = Depends(get_session)) -> dict[str, object]:
+    return worker_dashboard(session)
 
 
 @router.get("/command-center")

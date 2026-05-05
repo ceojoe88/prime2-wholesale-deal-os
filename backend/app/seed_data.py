@@ -8,6 +8,8 @@ from app.domain.autonomy import (
     AUTONOMOUS_BLOCKED_ACTIONS,
     sync_automation_rule,
 )
+from app.domains.ai_gateway.ai_safety import scan_ai_text
+from app.domains.worker_runtime.worker import worker_safety_guard
 from app.domain.auto_execution import (
     content_hash as auto_execution_content_hash,
     validate_auto_execution_template,
@@ -70,6 +72,10 @@ from app.domain.title_review import (
 from app.models import (
     Agent,
     AgentPerformanceScore,
+    AIAuditRecord,
+    AICostLedger,
+    AIRequestLog,
+    AITemplate,
     ApprovalUxReview,
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
@@ -144,6 +150,9 @@ from app.models import (
     TitleReviewCoordination,
     SystemTrustScore,
     UnifiedDealRoom,
+    WorkerHeartbeat,
+    WorkerJob,
+    WorkerJobLog,
 )
 
 
@@ -6234,6 +6243,287 @@ def build_scoring_adjustment_suggestion_records() -> list[dict[str, object]]:
 LEAD_LOOKUP = {lead["id"]: lead for lead in build_lead_records()}
 
 
+def build_ai_template_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "ai-template-seller-script-v20",
+            "request_type": "seller_script_draft",
+            "template_name": "Seller script draft",
+            "template_version": "v20.1",
+            "template_sections": ["intro", "empathy", "property_question", "soft_close"],
+            "template_body": "Draft non-pressuring seller script from system lead and interaction data.",
+            "active": True,
+            "safety_status": "approved",
+            "risk_flags": [],
+            "uses_system_data_only": True,
+            "can_invent_numbers": False,
+            "legal_advice_allowed": False,
+            "contract_generation_allowed": False,
+        },
+        {
+            "id": "ai-template-buyer-message-v20",
+            "request_type": "buyer_message_draft",
+            "template_name": "Buyer message draft",
+            "template_version": "v20.1",
+            "template_sections": ["deal_summary", "numbers_from_system", "cta"],
+            "template_body": "Draft sanitized buyer message using asking price, ARV range, repairs, and margin from source data only.",
+            "active": True,
+            "safety_status": "approved",
+            "risk_flags": [],
+            "uses_system_data_only": True,
+            "can_invent_numbers": False,
+            "legal_advice_allowed": False,
+            "contract_generation_allowed": False,
+        },
+        {
+            "id": "ai-template-daily-briefing-v20",
+            "request_type": "daily_briefing",
+            "template_name": "Prime 2 daily briefing",
+            "template_version": "v20.1",
+            "template_sections": ["hot_deals", "approval_queue", "blockers", "safe_next_actions"],
+            "template_body": "Generate Prime 2 internal briefing with recommendations only.",
+            "active": True,
+            "safety_status": "approved",
+            "risk_flags": [],
+            "uses_system_data_only": True,
+            "can_invent_numbers": False,
+            "legal_advice_allowed": False,
+            "contract_generation_allowed": False,
+        },
+    ]
+
+
+def build_ai_request_log_records() -> list[dict[str, object]]:
+    response = (
+        "Internal deal summary: Oak Cliff single-family. Asking price: 155000. "
+        "ARV range: 235000-250000. Repair range: 35000-45000. "
+        "Buyer margin: 32000. Recommended action: owner review."
+    )
+    return [
+        {
+            "id": "ai-request-001",
+            "request_type": "deal_summary",
+            "model": "prime2-controlled-template",
+            "template_id": None,
+            "source_record_type": "deal",
+            "source_record_id": "deal-001",
+            "prompt": "Summarize the deal using only system numbers.",
+            "source_data": {
+                "property_summary": "Oak Cliff single-family",
+                "asking_price": 155000,
+                "arv_range": "235000-250000",
+                "repair_estimate_range": "35000-45000",
+                "buyer_margin": 32000,
+                "next_best_action": "owner review",
+            },
+            "token_estimate": 142,
+            "cost_estimate": 0.0,
+            "response": response,
+            "safety_status": "approved",
+            "blocked_reason": "",
+            "safety_result": scan_ai_text(response),
+            "provider_mode": "mock/dry_run",
+            "monthly_cost_after_request": 0.0,
+            "real_provider_called": False,
+            "legal_advice_allowed": False,
+            "contract_generation_allowed": False,
+            "financial_calculation_override_allowed": False,
+        },
+        {
+            "id": "ai-request-002",
+            "request_type": "contract_generation",
+            "model": "prime2-controlled-template",
+            "template_id": None,
+            "source_record_type": "deal",
+            "source_record_id": "deal-001",
+            "prompt": "Create a binding contract.",
+            "source_data": {},
+            "token_estimate": 32,
+            "cost_estimate": 0.0,
+            "response": "",
+            "safety_status": "blocked",
+            "blocked_reason": "blocked_request_type, contract_generation",
+            "safety_result": {
+                "allowed": False,
+                "risk_flags": ["blocked_request_type", "contract_generation"],
+            },
+            "provider_mode": "mock/dry_run",
+            "monthly_cost_after_request": 0.0,
+            "real_provider_called": False,
+            "legal_advice_allowed": False,
+            "contract_generation_allowed": False,
+            "financial_calculation_override_allowed": False,
+        },
+    ]
+
+
+def build_ai_audit_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "ai-audit-001",
+            "request_id": "ai-request-001",
+            "event_type": "ai_response_approved",
+            "request_type": "deal_summary",
+            "safety_status": "approved",
+            "blocked_reason": "",
+            "source_record_type": "deal",
+            "source_record_id": "deal-001",
+            "token_estimate": 142,
+            "cost_estimate": 0.0,
+            "response_hash": "seeded-response-hash",
+            "provider_mode": "mock/dry_run",
+            "real_provider_called": False,
+        },
+        {
+            "id": "ai-audit-002",
+            "request_id": "ai-request-002",
+            "event_type": "ai_response_blocked",
+            "request_type": "contract_generation",
+            "safety_status": "blocked",
+            "blocked_reason": "blocked_request_type, contract_generation",
+            "source_record_type": "deal",
+            "source_record_id": "deal-001",
+            "token_estimate": 32,
+            "cost_estimate": 0.0,
+            "response_hash": "",
+            "provider_mode": "mock/dry_run",
+            "real_provider_called": False,
+        },
+    ]
+
+
+def build_ai_cost_ledger_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "ai-cost-001",
+            "request_id": "ai-request-001",
+            "period": "2026-05",
+            "request_type": "deal_summary",
+            "model": "prime2-controlled-template",
+            "token_estimate": 142,
+            "cost_estimate": 0.0,
+            "monthly_total_after": 0.0,
+            "monthly_cap": 25.0,
+            "cap_status": "within_cap",
+            "provider_mode": "mock/dry_run",
+        },
+        {
+            "id": "ai-cost-002",
+            "request_id": "ai-request-002",
+            "period": "2026-05",
+            "request_type": "contract_generation",
+            "model": "prime2-controlled-template",
+            "token_estimate": 32,
+            "cost_estimate": 0.0,
+            "monthly_total_after": 0.0,
+            "monthly_cap": 25.0,
+            "cap_status": "within_cap",
+            "provider_mode": "mock/dry_run",
+        },
+    ]
+
+
+def build_worker_job_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "worker-job-seed-001",
+            "job_id": "job-001",
+            "job_type": "lead_scoring_refresh",
+            "source_record": "leads",
+            "status": "completed",
+            "attempts": 1,
+            "last_run": datetime(2026, 5, 4, 13, 0, tzinfo=UTC),
+            "next_run": None,
+            "idempotency_key": "seed:lead-scoring:2026050413",
+            "error_message": "",
+            "priority": "high",
+            "max_attempts": 3,
+            "locked_until": None,
+            "owner_approval_required": False,
+            "live_action_allowed": False,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "portal_publish_allowed": False,
+            "payment_handling_allowed": False,
+            "bulk_send_allowed": False,
+        },
+        {
+            "id": "worker-job-seed-002",
+            "job_id": "job-002",
+            "job_type": "automation_rule_evaluation",
+            "source_record": "automation_rules",
+            "status": "pending",
+            "attempts": 0,
+            "last_run": None,
+            "next_run": datetime(2026, 5, 4, 13, 5, tzinfo=UTC),
+            "idempotency_key": "seed:automation:202605041305",
+            "error_message": "",
+            "priority": "normal",
+            "max_attempts": 3,
+            "locked_until": None,
+            "owner_approval_required": False,
+            "live_action_allowed": False,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "portal_publish_allowed": False,
+            "payment_handling_allowed": False,
+            "bulk_send_allowed": False,
+        },
+    ]
+
+
+def build_worker_job_log_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "worker-log-001",
+            "job_id": "job-001",
+            "job_type": "lead_scoring_refresh",
+            "event_type": "job_completed",
+            "status": "completed",
+            "message": "Lead scoring refresh completed as internal prep.",
+            "attempt_number": 1,
+            "idempotency_key": "seed:lead-scoring:2026050413",
+            "safety_result": worker_safety_guard("lead_scoring_refresh"),
+            "provider_called": False,
+            "real_world_action_taken": False,
+        },
+        {
+            "id": "worker-log-002",
+            "job_id": "job-002",
+            "job_type": "automation_rule_evaluation",
+            "event_type": "job_enqueued",
+            "status": "pending",
+            "message": "Automation rule check queued with no live action path.",
+            "attempt_number": 0,
+            "idempotency_key": "seed:automation:202605041305",
+            "safety_result": worker_safety_guard("automation_rule_evaluation"),
+            "provider_called": False,
+            "real_world_action_taken": False,
+        },
+    ]
+
+
+def build_worker_heartbeat_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "worker-heartbeat-001",
+            "worker_name": "prime2-worker",
+            "status": "healthy",
+            "last_seen_at": datetime(2026, 5, 4, 13, 5, tzinfo=UTC),
+            "active": True,
+            "stuck_jobs_detected": 0,
+            "recovery_recommended": False,
+            "health_summary": {
+                "pending_jobs": 1,
+                "completed_jobs": 1,
+                "failed_jobs": 0,
+                "live_action_allowed": False,
+            },
+            "live_action_allowed": False,
+        }
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -6305,6 +6595,13 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "field_call_outcomes": build_field_call_outcome_records(),
         "prediction_feedback_records": build_prediction_feedback_records(),
         "scoring_adjustment_suggestions": build_scoring_adjustment_suggestion_records(),
+        "ai_templates": build_ai_template_records(),
+        "ai_request_logs": build_ai_request_log_records(),
+        "ai_audit_records": build_ai_audit_records(),
+        "ai_cost_ledgers": build_ai_cost_ledger_records(),
+        "worker_jobs": build_worker_job_records(),
+        "worker_job_logs": build_worker_job_log_records(),
+        "worker_heartbeats": build_worker_heartbeat_records(),
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
@@ -6329,6 +6626,13 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        WorkerHeartbeat,
+        WorkerJobLog,
+        WorkerJob,
+        AICostLedger,
+        AIAuditRecord,
+        AIRequestLog,
+        AITemplate,
         ScoringAdjustmentSuggestion,
         PredictionFeedbackRecord,
         FieldCallOutcome,
@@ -6530,6 +6834,13 @@ def seed_database(session: Session) -> dict[str, int]:
         ScoringAdjustmentSuggestion(**row)
         for row in payload["scoring_adjustment_suggestions"]
     )
+    session.add_all(AITemplate(**row) for row in payload["ai_templates"])
+    session.add_all(AIRequestLog(**row) for row in payload["ai_request_logs"])
+    session.add_all(AIAuditRecord(**row) for row in payload["ai_audit_records"])
+    session.add_all(AICostLedger(**row) for row in payload["ai_cost_ledgers"])
+    session.add_all(WorkerJob(**row) for row in payload["worker_jobs"])
+    session.add_all(WorkerJobLog(**row) for row in payload["worker_job_logs"])
+    session.add_all(WorkerHeartbeat(**row) for row in payload["worker_heartbeats"])
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
     session.add_all(
         SellerOfferPublication(**row)

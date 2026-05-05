@@ -40,6 +40,8 @@ Expected coverage includes:
 - Evidence and forecast source requirements
 - Production readiness and audit export sanitizers
 - V19 CSV import preview, approved-row commit, dedupe, lead QA, call outcomes, do-not-contact blocking, field feedback, and scoring adjustment guardrails
+- V20 AI Gateway request allowlist, unsafe response blocking, template enforcement, token/cost tracking, audit logs, and no number overrides
+- V21 worker job creation, scheduler execution, retries, idempotency, failed-job logging, heartbeat health, and no live action paths
 
 ## Frontend
 
@@ -59,6 +61,7 @@ Expected coverage includes:
 - Prime 2 identity appears on internal operator routes
 - Old overseer naming remains limited to the product title
 - V19 dashboard routes render and do not expose unsafe live-action buttons
+- V20/V21 dashboard routes render and expose no live execution controls
 
 ## Source Sweeps
 
@@ -108,6 +111,13 @@ Smoke check:
 - `/dashboard/feedback-loop`
 - `/dashboard/scoring-adjustments`
 - `/dashboard/field-briefing`
+- `/dashboard/ai`
+- `/dashboard/ai/audit`
+- `/dashboard/ai/costs`
+- `/dashboard/ai/templates`
+- `/dashboard/worker`
+- `/dashboard/worker/jobs`
+- `/dashboard/worker/health`
 - `/dashboard/production-readiness`
 - `/dashboard/backups`
 - `/buyer-portal`
@@ -135,6 +145,14 @@ Smoke check:
 - `/api/field-briefing`
 - `/api/feedback-loop`
 - `/api/scoring-adjustments`
+- `/api/v1/ai`
+- `/api/v1/ai/audit`
+- `/api/v1/ai/costs`
+- `/api/v1/ai/templates`
+- `/api/v1/worker`
+- `/api/v1/worker/health`
+- `/api/v1/worker/jobs`
+- `/api/v1/worker/logs`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist

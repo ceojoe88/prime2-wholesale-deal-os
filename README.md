@@ -47,6 +47,8 @@ Implemented phases:
 - V17 semi-autonomous operator mode
 - V18 production readiness and audit export layer
 - V19 real lead import and field testing loop
+- V20 AI Gateway controlled intelligence layer
+- V21 background worker runtime
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -57,8 +59,8 @@ Backend:
 - Alembic migrations
 - SQLite for local use and Postgres-ready `DATABASE_URL`
 - Seed/demo data for divisions, managers, agents, leads, buyers, deals, portals, evidence, forecasts, automation, audit exports, production readiness, real lead imports, QA, call outcomes, and field feedback
-- Deterministic domain modules for scoring, underwriting, profit control, portals, communication gates, automation, optimization, forecasting, readiness checks, CSV import QA, field-call outcome tracking, and prediction feedback
-- Tests for safety gates, formulas, route coverage, portal sanitizers, automation blocks, evidence attribution, production readiness, seed integrity, real CSV import, lead QA, call outcomes, and field-testing guardrails
+- Deterministic domain modules for scoring, underwriting, profit control, portals, communication gates, automation, optimization, forecasting, readiness checks, CSV import QA, field-call outcome tracking, prediction feedback, controlled AI drafting/summarization, and background worker jobs
+- Tests for safety gates, formulas, route coverage, portal sanitizers, automation blocks, evidence attribution, production readiness, seed integrity, real CSV import, lead QA, call outcomes, field-testing guardrails, AI Gateway safety/cost/audit controls, and worker runtime idempotency/retry/heartbeat behavior
 
 Frontend:
 
@@ -84,6 +86,12 @@ V19 moves the project from demo-ready toward real operator testing:
 
 CSV imports never auto-contact sellers, create campaigns, publish portals, execute contracts, submit title packets, or change terms.
 
+## V20 AI Gateway And V21 Worker Runtime
+
+V20 adds a controlled AI Gateway for Prime 2. It allows only approved request types such as seller script drafts, buyer message drafts, objection responses, deal summaries, daily briefings, negotiation assistance, and field-testing summaries. Outputs are template-gated, scanned for unsafe language, cost-estimated, audit-logged, and blocked from inventing numbers or overriding system calculations. `OPENAI_API_KEY` is read from the environment only, and the default provider mode remains mock/dry-run.
+
+V21 adds a background worker runtime for continuous internal operation. It supports queued jobs for lead scoring refresh, follow-up scheduling, daily briefing generation, buyer ranking refresh, QA checks, automation rule evaluation, field-testing summaries, and forecast refresh. Jobs have idempotency keys, retry/backoff, status ledgers, and heartbeat health. The worker can prepare, schedule, route, draft, and escalate only; it cannot send live outreach, execute contracts, publish portals, submit to title, change terms, handle payments, or bypass approval gates.
+
 ## Safety Boundaries
 
 Allowed:
@@ -108,6 +116,8 @@ Blocked:
 - Autonomous portal publishing
 - Autonomous seller or buyer term changes
 - Level 5 full autonomy
+- AI legal/contract/profit-promise output
+- Worker live outreach, title, contract, portal publishing, payment, or bulk-send execution
 
 Controlled provider actions require all relevant gates:
 
@@ -165,6 +175,8 @@ Open:
 - Field testing: [http://localhost:3000/dashboard/field-testing](http://localhost:3000/dashboard/field-testing)
 - Lead imports: [http://localhost:3000/dashboard/lead-imports](http://localhost:3000/dashboard/lead-imports)
 - Field briefing: [http://localhost:3000/dashboard/field-briefing](http://localhost:3000/dashboard/field-briefing)
+- AI Gateway: [http://localhost:3000/dashboard/ai](http://localhost:3000/dashboard/ai)
+- Worker runtime: [http://localhost:3000/dashboard/worker](http://localhost:3000/dashboard/worker)
 - Production readiness: [http://localhost:3000/dashboard/production-readiness](http://localhost:3000/dashboard/production-readiness)
 - Buyer portal demo: [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - Seller portal demo: [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)

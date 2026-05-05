@@ -9,6 +9,8 @@ from app.api.routes import router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
 from app.models import (
+    AIRequestLog,
+    AITemplate,
     AuditExportPacket,
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
@@ -36,6 +38,8 @@ from app.models import (
     RevenueForecastRecord,
     ScoringAdjustmentSuggestion,
     TitleReviewCoordination,
+    WorkerHeartbeat,
+    WorkerJob,
     SellerInteraction,
     SellerOfferPublication,
     SystemTrustScore,
@@ -82,6 +86,10 @@ async def lifespan(app: FastAPI):
                 or session.query(LeadQualityReview).count() == 0
                 or session.query(FieldCallOutcome).count() == 0
                 or session.query(PredictionFeedbackRecord).count() == 0
+                or session.query(AITemplate).count() == 0
+                or session.query(AIRequestLog).count() == 0
+                or session.query(WorkerJob).count() == 0
+                or session.query(WorkerHeartbeat).count() == 0
                 or session.query(ScoringAdjustmentSuggestion).count() == 0
             ):
                 seed_database(session)

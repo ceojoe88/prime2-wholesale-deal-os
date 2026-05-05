@@ -21,6 +21,13 @@ const requiredRouteFiles = [
   "src/app/dashboard/auto-execution/dry-runs/page.tsx",
   "src/app/dashboard/auto-execution/attempts/page.tsx",
   "src/app/dashboard/auto-execution/audit/page.tsx",
+  "src/app/dashboard/ai/page.tsx",
+  "src/app/dashboard/ai/audit/page.tsx",
+  "src/app/dashboard/ai/costs/page.tsx",
+  "src/app/dashboard/ai/templates/page.tsx",
+  "src/app/dashboard/worker/page.tsx",
+  "src/app/dashboard/worker/jobs/page.tsx",
+  "src/app/dashboard/worker/health/page.tsx",
   "src/app/dashboard/command-hierarchy/page.tsx",
   "src/app/dashboard/overseer/page.tsx",
   "src/app/dashboard/divisions/page.tsx",
@@ -273,6 +280,31 @@ test("V19 field-testing pages expose no unsafe live-action buttons", () => {
     "guarantee profit",
     "legal advice",
     "publish automatically"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V20 and V21 pages expose no live execution controls", () => {
+  const files = [
+    "src/app/dashboard/ai/page.tsx",
+    "src/app/dashboard/ai/audit/page.tsx",
+    "src/app/dashboard/ai/costs/page.tsx",
+    "src/app/dashboard/ai/templates/page.tsx",
+    "src/app/dashboard/worker/page.tsx",
+    "src/app/dashboard/worker/jobs/page.tsx",
+    "src/app/dashboard/worker/health/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "bulk blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "provider calls\" value=\"1"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

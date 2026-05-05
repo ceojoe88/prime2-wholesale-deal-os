@@ -60,6 +60,9 @@ def test_seed_relationships_reference_existing_source_records():
     lead_import_row_ids = {row["id"] for row in payload["lead_import_rows"]}
     call_outcome_ids = {row["id"] for row in payload["field_call_outcomes"]}
     feedback_ids = {row["id"] for row in payload["prediction_feedback_records"]}
+    ai_request_ids = {row["id"] for row in payload["ai_request_logs"]}
+    ai_template_ids = {row["id"] for row in payload["ai_templates"]}
+    worker_job_ids = {row["job_id"] for row in payload["worker_jobs"]}
 
     for deal in payload["deals"]:
         assert deal["lead_id"] in lead_ids
@@ -181,6 +184,22 @@ def test_seed_relationships_reference_existing_source_records():
     for suggestion in payload["scoring_adjustment_suggestions"]:
         assert suggestion["feedback_id"] in feedback_ids
         assert suggestion["deterministic"] is True
+    for request in payload["ai_request_logs"]:
+        if request.get("template_id"):
+            assert request["template_id"] in ai_template_ids
+        assert request["real_provider_called"] is False
+        assert request["legal_advice_allowed"] is False
+        assert request["contract_generation_allowed"] is False
+        assert request["financial_calculation_override_allowed"] is False
+    for audit in payload["ai_audit_records"]:
+        assert audit["request_id"] in ai_request_ids
+        assert audit["real_provider_called"] is False
+    for ledger in payload["ai_cost_ledgers"]:
+        assert ledger["request_id"] in ai_request_ids
+    for log in payload["worker_job_logs"]:
+        assert log["job_id"] in worker_job_ids
+        assert log["provider_called"] is False
+        assert log["real_world_action_taken"] is False
 
 
 def test_seeded_automation_and_provider_paths_remain_guarded():
@@ -214,6 +233,19 @@ def test_seeded_automation_and_provider_paths_remain_guarded():
     for item in payload["owner_approval_items"]:
         assert item["owner_required"] is True
         assert item["executed"] is False
+
+    for request in payload["ai_request_logs"]:
+        assert request["real_provider_called"] is False
+        assert request["legal_advice_allowed"] is False
+        assert request["contract_generation_allowed"] is False
+
+    for job in payload["worker_jobs"]:
+        assert job["live_action_allowed"] is False
+        assert job["contract_execution_allowed"] is False
+        assert job["title_submission_allowed"] is False
+        assert job["portal_publish_allowed"] is False
+        assert job["payment_handling_allowed"] is False
+        assert job["bulk_send_allowed"] is False
 
 
 def test_all_documented_core_get_routes_are_registered():
@@ -317,6 +349,14 @@ def test_all_documented_core_get_routes_are_registered():
         "/api/auto-execution/dry-runs",
         "/api/auto-execution/attempts",
         "/api/auto-execution/audit",
+        "/api/v1/ai",
+        "/api/v1/ai/audit",
+        "/api/v1/ai/costs",
+        "/api/v1/ai/templates",
+        "/api/v1/worker",
+        "/api/v1/worker/health",
+        "/api/v1/worker/jobs",
+        "/api/v1/worker/logs",
         "/api/communications",
         "/api/communications/dry-runs",
         "/api/communications/attempts",
