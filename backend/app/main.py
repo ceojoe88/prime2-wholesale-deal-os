@@ -9,6 +9,7 @@ from app.api.routes import router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
 from app.models import (
+    AuditExportPacket,
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     AutoExecutionRule,
@@ -22,6 +23,7 @@ from app.models import (
     ContractReadyState,
     DealProbabilityRecord,
     Division,
+    ProviderSandboxReadinessCheck,
     LeadSpendPlan,
     MarketScalingScore,
     OfferPacket,
@@ -63,6 +65,8 @@ async def lifespan(app: FastAPI):
                 or session.query(OperatorModeSetting).count() == 0
                 or session.query(AutonomousDailyOperatingReport).count() == 0
                 or session.query(SystemTrustScore).count() == 0
+                or session.query(AuditExportPacket).count() == 0
+                or session.query(ProviderSandboxReadinessCheck).count() == 0
                 or session.query(TitleHandoffPacket).count() == 0
                 or session.query(AssignmentReadinessRecord).count() == 0
                 or session.query(CommunicationDraft).count() == 0

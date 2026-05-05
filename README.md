@@ -283,6 +283,14 @@ Semi-autonomous operator mode V17 routes:
 - [http://localhost:3000/dashboard/operator-mode/system-trust](http://localhost:3000/dashboard/operator-mode/system-trust)
 - [http://localhost:3000/dashboard/operator-mode/settings](http://localhost:3000/dashboard/operator-mode/settings)
 
+Production readiness/audit export V18 routes:
+
+- [http://localhost:3000/dashboard/production-readiness](http://localhost:3000/dashboard/production-readiness)
+- [http://localhost:3000/dashboard/audit-exports](http://localhost:3000/dashboard/audit-exports)
+- [http://localhost:3000/dashboard/evidence-attachments](http://localhost:3000/dashboard/evidence-attachments)
+- [http://localhost:3000/dashboard/provider-readiness](http://localhost:3000/dashboard/provider-readiness)
+- [http://localhost:3000/dashboard/backups](http://localhost:3000/dashboard/backups)
+
 ## Validation
 
 ```powershell

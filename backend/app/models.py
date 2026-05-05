@@ -1177,6 +1177,147 @@ class SystemTrustScore(TimestampMixin, Base):
     source_record_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
+class ApprovalUxReview(TimestampMixin, Base):
+    __tablename__ = "approval_ux_reviews"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    owner_approval_item_id: Mapped[str | None] = mapped_column(
+        ForeignKey("owner_approval_items.id"), nullable=True
+    )
+    approval_type: Mapped[str] = mapped_column(String(120), default="")
+    source_record_type: Mapped[str] = mapped_column(String(120), default="")
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    context_summary: Mapped[str] = mapped_column(Text, default="")
+    risk_summary: Mapped[str] = mapped_column(Text, default="")
+    gate_summary: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    confirmation_prompt: Mapped[str] = mapped_column(Text, default="")
+    recommended_decision: Mapped[str] = mapped_column(String(80), default="review")
+    approval_status: Mapped[str] = mapped_column(String(80), default="pending_owner")
+    owner_action_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    approval_is_not_execution: Mapped[bool] = mapped_column(Boolean, default=True)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class AuditExportPacket(TimestampMixin, Base):
+    __tablename__ = "audit_export_packets"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    export_type: Mapped[str] = mapped_column(String(120), default="operator_audit")
+    source_record_type: Mapped[str] = mapped_column(String(120), default="")
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    requested_by: Mapped[str] = mapped_column(String(120), default="Owner")
+    export_scope: Mapped[str] = mapped_column(String(120), default="internal")
+    requested_payload: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    sanitized_payload: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    included_record_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    omitted_sensitive_fields: Mapped[list[str]] = mapped_column(JSON, default=list)
+    internal_fields_removed: Mapped[list[str]] = mapped_column(JSON, default=list)
+    export_status: Mapped[str] = mapped_column(String(80), default="draft")
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending_owner")
+    safe_for_external_share: Mapped[bool] = mapped_column(Boolean, default=False)
+    contains_raw_private_data: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_included: Mapped[bool] = mapped_column(Boolean, default=False)
+    secrets_included: Mapped[bool] = mapped_column(Boolean, default=False)
+    packet_hash: Mapped[str] = mapped_column(String(128), default="")
+    retention_notes: Mapped[str] = mapped_column(Text, default="")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class EvidenceAttachmentRecord(TimestampMixin, Base):
+    __tablename__ = "evidence_attachment_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    source_record_type: Mapped[str] = mapped_column(String(120), default="")
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    deal_id: Mapped[str | None] = mapped_column(ForeignKey("deals.id"), nullable=True)
+    evidence_packet_id: Mapped[str | None] = mapped_column(
+        ForeignKey("deal_evidence_packets.id"), nullable=True
+    )
+    attachment_type: Mapped[str] = mapped_column(String(120), default="")
+    filename_placeholder: Mapped[str] = mapped_column(String(180), default="")
+    storage_mode: Mapped[str] = mapped_column(String(80), default="local_placeholder")
+    sanitized_metadata: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    contains_sensitive_data: Mapped[bool] = mapped_column(Boolean, default=False)
+    source_linkage_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    source_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    safe_to_export: Mapped[bool] = mapped_column(Boolean, default=False)
+    upload_status: Mapped[str] = mapped_column(String(80), default="placeholder_only")
+    operator_notes: Mapped[str] = mapped_column(Text, default="")
+    raw_file_path_committed: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class BackupExportRecord(TimestampMixin, Base):
+    __tablename__ = "backup_export_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    backup_type: Mapped[str] = mapped_column(String(120), default="metadata_snapshot")
+    backup_scope: Mapped[str] = mapped_column(String(120), default="operator_local")
+    storage_target: Mapped[str] = mapped_column(String(160), default="local_export_placeholder")
+    included_tables: Mapped[list[str]] = mapped_column(JSON, default=list)
+    excluded_fields: Mapped[list[str]] = mapped_column(JSON, default=list)
+    generated_metadata: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    safe_metadata: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    backup_status: Mapped[str] = mapped_column(String(80), default="prepared")
+    contains_raw_private_data: Mapped[bool] = mapped_column(Boolean, default=False)
+    safe_metadata_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    file_path_placeholder: Mapped[str] = mapped_column(String(200), default="")
+    restore_test_status: Mapped[str] = mapped_column(String(80), default="not_tested")
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending_owner")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class ProviderSandboxReadinessCheck(TimestampMixin, Base):
+    __tablename__ = "provider_sandbox_readiness_checks"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    provider_type: Mapped[str] = mapped_column(String(80), default="")
+    provider_name: Mapped[str] = mapped_column(String(120), default="")
+    mode: Mapped[str] = mapped_column(String(80), default="mock")
+    sandbox_ready: Mapped[bool] = mapped_column(Boolean, default=False)
+    secrets_configured: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_flag_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    safety_check_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    dry_run_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    owner_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    idempotency_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    audit_trail_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    provider_calls_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    readiness_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    last_checked_notes: Mapped[str] = mapped_column(Text, default="")
+
+
+class EnvironmentReadinessCheck(TimestampMixin, Base):
+    __tablename__ = "environment_readiness_checks"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    category: Mapped[str] = mapped_column(String(80), default="")
+    check_name: Mapped[str] = mapped_column(String(160), default="")
+    required: Mapped[bool] = mapped_column(Boolean, default=True)
+    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    status: Mapped[str] = mapped_column(String(80), default="missing")
+    detail: Mapped[str] = mapped_column(Text, default="")
+    remediation: Mapped[str] = mapped_column(Text, default="")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    prevents_production: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class DeploymentHardeningCheck(TimestampMixin, Base):
+    __tablename__ = "deployment_hardening_checks"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    area: Mapped[str] = mapped_column(String(80), default="")
+    check_name: Mapped[str] = mapped_column(String(160), default="")
+    required: Mapped[bool] = mapped_column(Boolean, default=True)
+    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    status: Mapped[str] = mapped_column(String(80), default="open")
+    detail: Mapped[str] = mapped_column(Text, default="")
+    remediation: Mapped[str] = mapped_column(Text, default="")
+    owner_action_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
 class ComplianceRecord(TimestampMixin, Base):
     __tablename__ = "compliance_records"
 

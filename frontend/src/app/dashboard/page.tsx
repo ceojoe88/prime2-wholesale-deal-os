@@ -108,6 +108,12 @@ import {
   operatorExceptionsOpen,
   criticalOperatorExceptions,
   operatorHardBoundaryCards,
+  auditExportsReady,
+  blockedProviderReadiness,
+  evidenceAttachmentRecords,
+  failedEnvironmentChecks,
+  productionReady,
+  safeBackupExports,
   underContractDeals,
   verified10kAssignmentFeeOpportunities,
   verifiedAssignmentFees
@@ -391,6 +397,19 @@ export default function DashboardPage() {
           {operatorHardBoundaryCards.slice(0, 3).map((card) => (
             <RecordCard key={card.label} title={card.label} meta={card.detail} right={<Pill tone="red">{card.value}</Pill>} />
           ))}
+        </div>
+      </Section>
+
+      <Section title="V18 Production Readiness and Audit Export">
+        <div className="grid-three">
+          <RecordCard title="Production readiness" meta={productionReady ? "All readiness gates clear" : "Auth, env, secrets, providers, or hardening still block production"} right={<Pill tone={productionReady ? "green" : "red"}>{productionReady ? "ready" : "blocked"}</Pill>} />
+          <RecordCard title="Audit exports" meta={`${auditExportsReady.length} sanitized packets ready for owner review`} right={<Pill tone="green">sanitized</Pill>} />
+          <RecordCard title="Evidence attachments" meta={`${evidenceAttachmentRecords.length} metadata-only source-linked records`} right={<Pill>linked</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Backup metadata" meta={`${safeBackupExports.length} safe backup/export records`} right={<Pill tone="green">safe</Pill>} />
+          <RecordCard title="Provider readiness" meta={`${blockedProviderReadiness.length} providers default blocked until sandbox gates pass`} right={<Pill tone="red">blocked</Pill>} />
+          <RecordCard title="Environment blockers" meta={`${failedEnvironmentChecks.length} required auth/env/secret checks missing`} right={<Pill tone="red">review</Pill>} />
         </div>
       </Section>
     </div>

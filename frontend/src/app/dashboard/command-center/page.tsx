@@ -95,7 +95,12 @@ import {
   activeOperatorMode,
   pendingOwnerApprovals,
   operatorExceptionsOpen,
-  currentSystemTrustScore
+  currentSystemTrustScore,
+  auditExportsReady,
+  blockedProviderReadiness,
+  failedEnvironmentChecks,
+  productionReady,
+  safeBackupExports
 } from "@/lib/demo-data";
 
 export default function CommandCenterPage() {
@@ -275,6 +280,10 @@ export default function CommandCenterPage() {
               ["critical", "Work owner approval console", `${pendingOwnerApprovals.length} V17 approval items are queued before real-world action`],
               ["critical", "Review operator exceptions", `${operatorExceptionsOpen.length} exceptions require strategic or risk review`],
               ["normal", "Check system trust score", `Trust score ${currentSystemTrustScore.overallTrustScore} with status ${currentSystemTrustScore.trustStatus}`],
+              ["critical", "Clear production readiness blockers", productionReady ? "Production readiness is clear" : `${failedEnvironmentChecks.length} auth/env/secret checks block production`],
+              ["high", "Review sanitized audit exports", `${auditExportsReady.length} audit export packets are ready for owner review`],
+              ["high", "Keep providers sandbox-blocked", `${blockedProviderReadiness.length} provider checks remain blocked until sandbox gates pass`],
+              ["normal", "Verify backup metadata", `${safeBackupExports.length} safe metadata-only backups are prepared`],
               ["high", "Clear buyer portal publishing blocks", `${buyerPortalBlockedDeals.length} deals are blocked from buyer visibility`],
               ["normal", "Monitor visible deal rooms", `${buyerVisibleDeals.length} sanitized deals are currently visible`],
               ["normal", "Prepare draft follow-up notes", `${staleFollowUps.length} seller records need timing recommendations`]

@@ -573,6 +573,34 @@ Internal routes:
 - `/dashboard/operator-mode/daily-report`
 - `/dashboard/operator-mode/system-trust`
 - `/dashboard/operator-mode/settings`
+- `/dashboard/production-readiness`
+- `/dashboard/audit-exports`
+- `/dashboard/audit-exports/[exportId]`
+- `/dashboard/evidence-attachments`
+- `/dashboard/provider-readiness`
+- `/dashboard/backups`
+- `/dashboard/buyer-acceleration`
+- `/dashboard/buyer-acceleration/[dealId]`
+- `/dashboard/buyer-sequences`
+- `/dashboard/buyer-response-router`
+- `/dashboard/buyer-velocity`
+- `/dashboard/optimization`
+- `/dashboard/optimization/patterns`
+- `/dashboard/optimization/recommendations`
+- `/dashboard/optimization/agent-performance`
+- `/dashboard/optimization/lost-deals`
+- `/dashboard/optimization/source-quality`
+- `/dashboard/revenue-forecast`
+- `/dashboard/revenue-forecast/[forecastId]`
+- `/dashboard/market-scaling`
+- `/dashboard/lead-spend-planner`
+- `/dashboard/pipeline-value`
+- `/dashboard/operator-mode`
+- `/dashboard/operator-mode/approvals`
+- `/dashboard/operator-mode/exceptions`
+- `/dashboard/operator-mode/daily-report`
+- `/dashboard/operator-mode/system-trust`
+- `/dashboard/operator-mode/settings`
 
 Auto-execution rule records store rule name, action type, source type, allowed recipient type, trigger, required conditions, approved template, autonomy level, live flag requirements, risk score, owner approval status, status, and blocked reasons.
 
@@ -604,6 +632,12 @@ Blocked V13 actions:
 - Any action without an approved rule and approved template
 
 Auto-execution attempts are one-recipient and one-source-record scoped. Idempotency prevents duplicate sends, and every attempt creates an audit record with outcome, blocked reasons, safety snapshot, provider-call status, and source record.
+
+## V18 Production Readiness
+
+The production readiness layer is still private/operator-only. It adds `ApprovalUxReview`, `AuditExportPacket`, `EvidenceAttachmentRecord`, `BackupExportRecord`, `ProviderSandboxReadinessCheck`, `EnvironmentReadinessCheck`, and `DeploymentHardeningCheck` records plus deterministic gates in `app.domain.production_readiness`.
+
+Audit packets are sanitized before review by stripping seller/buyer contact fields, secrets, lead-source details, internal spread strategy, assignment-fee logic, negotiation notes, and compliance internals. Backup/export records expose safe metadata only. Attachment records require source linkage to a source record and a deal or evidence packet, and raw local file paths are blocked. Provider readiness defaults to mock/blocked until sandbox readiness, external secret configuration, safety checks, dry-runs, owner approval, idempotency, and audit trails are present. Production readiness remains blocked when auth, environment variables, secrets, public-exposure hardening, or provider sandbox checks are missing.
 
 ## Frontend Routes
 
@@ -733,6 +767,8 @@ V15 exception: deal-flow optimization is allowed only as deterministic, explaina
 V16 exception: revenue forecasting and market scaling are allowed only as estimate-labeled, source-backed planning tools. They can calculate probability-adjusted pipeline value, conservative/base/aggressive forecast scenarios, market scaling scores, and lead-spend recommendations, but they cannot guarantee revenue or profit, invent close probabilities, recommend unsupported spend, or present ROI without evidence and owner review.
 
 V17 exception: semi-autonomous operator mode can run the internal scan-score-route-prepare-check-escalate-brief-log-optimize loop and queue owner approvals, but it cannot bypass approvals, execute contracts, submit title packets, send bulk campaigns, change seller/buyer terms, publish portals without approval, handle payments, provide legal advice, guarantee closing/profit, or enable Level 5 autonomy.
+
+V18 exception: production readiness records can prepare approval UX summaries, sanitized audit export packets, evidence attachment metadata, backup/export metadata, provider sandbox checks, environment checks, and deployment hardening checklists. They cannot make real provider calls unless sandbox-ready and explicitly gated, expose the system publicly without an auth checklist, commit secrets, include raw private seller/buyer data in unsafe exports, provide legal advice, or convert audit/backup records into live transmissions.
 
 Allowed:
 

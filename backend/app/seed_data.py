@@ -35,6 +35,12 @@ from app.domain.optimization import (
     validate_learning_record,
 )
 from app.domain.operator_mode import calculate_system_trust, operator_mode_gate
+from app.domain.production_readiness import (
+    attachment_linkage_gate,
+    backup_metadata,
+    provider_readiness_gate,
+    sync_audit_export,
+)
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.revenue_forecast import (
     calculate_deal_probability,
@@ -56,12 +62,14 @@ from app.domain.title_review import (
 from app.models import (
     Agent,
     AgentPerformanceScore,
+    ApprovalUxReview,
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     AutomationAttempt,
     AutomationEventTrigger,
     AutomationRule,
     ApprovedTemplate,
+    AuditExportPacket,
     AutoExecutionAttempt,
     AutoExecutionAuditRecord,
     AutoExecutionDryRun,
@@ -69,6 +77,7 @@ from app.models import (
     AutonomousDailyOperatingReport,
     AutonomousAgentTask,
     AutonomyEscalation,
+    BackupExportRecord,
     Buyer,
     BuyerAccelerationRecord,
     BuyerDealPriority,
@@ -93,7 +102,10 @@ from app.models import (
     DealEvidencePacket,
     DealProbabilityRecord,
     DealRoomBlocker,
+    DeploymentHardeningCheck,
     Division,
+    EnvironmentReadinessCheck,
+    EvidenceAttachmentRecord,
     LeadSpendPlan,
     Lead,
     MarketScalingScore,
@@ -105,6 +117,7 @@ from app.models import (
     OptimizationRecommendation,
     OutcomeLearningRecord,
     OwnerApprovalItem,
+    ProviderSandboxReadinessCheck,
     ReviewPacketPrep,
     RevenueForecastRecord,
     SellerInteraction,
@@ -4221,6 +4234,444 @@ def build_system_trust_score_records() -> list[dict[str, object]]:
     ]
 
 
+def build_approval_ux_review_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "approval-ux-001",
+            "owner_approval_item_id": "approval-006",
+            "approval_type": "buyer_distribution",
+            "source_record_type": "buyer_acceleration",
+            "source_record_id": "buyer-accel-001",
+            "context_summary": "One buyer, sanitized deal sheet, verified POF, no bulk blast.",
+            "risk_summary": "Live communication remains blocked until V5/V13 gates and owner approval.",
+            "gate_summary": [
+                {"gate": "sanitized_deal_sheet", "passed": True},
+                {"gate": "bulk_send_blocked", "passed": True},
+                {"gate": "owner_approval_required", "passed": True},
+            ],
+            "confirmation_prompt": "Approve preparation only; this does not send buyer communication.",
+            "recommended_decision": "review_ready",
+            "approval_status": "pending_owner",
+            "owner_action_required": True,
+            "approval_is_not_execution": True,
+            "blocked_reasons": [],
+        },
+        {
+            "id": "approval-ux-002",
+            "owner_approval_item_id": "approval-007",
+            "approval_type": "portal_visibility",
+            "source_record_type": "buyer_deal_publication",
+            "source_record_id": "publication-001",
+            "context_summary": "Portal visibility needs explicit owner review before any external exposure.",
+            "risk_summary": "Publishing is blocked until owner visibility approval is recorded.",
+            "gate_summary": [
+                {"gate": "portal_visibility_enabled", "passed": False},
+                {"gate": "seller_private_data_hidden", "passed": True},
+            ],
+            "confirmation_prompt": "Review sanitizer and blocked reasons before enabling visibility.",
+            "recommended_decision": "hold",
+            "approval_status": "blocked",
+            "owner_action_required": True,
+            "approval_is_not_execution": True,
+            "blocked_reasons": ["final_owner_visibility_review_missing"],
+        },
+        {
+            "id": "approval-ux-003",
+            "owner_approval_item_id": "approval-008",
+            "approval_type": "forecast_spend_recommendation",
+            "source_record_type": "lead_spend_plan",
+            "source_record_id": "lead-spend-001",
+            "context_summary": "Lead spend estimate is evidence-backed and labeled as an estimate.",
+            "risk_summary": "No guaranteed profit or unsupported ROI language is present.",
+            "gate_summary": [
+                {"gate": "estimate_label_present", "passed": True},
+                {"gate": "source_basis_present", "passed": True},
+            ],
+            "confirmation_prompt": "Approve the spend recommendation for operator planning only.",
+            "recommended_decision": "review_ready",
+            "approval_status": "pending_owner",
+            "owner_action_required": True,
+            "approval_is_not_execution": True,
+            "blocked_reasons": [],
+        },
+    ]
+
+
+def build_audit_export_packet_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "audit-export-001",
+            "export_type": "deal_evidence_audit",
+            "source_record_type": "deal_evidence_packet",
+            "source_record_id": "evidence-001",
+            "requested_by": "Owner",
+            "export_scope": "internal_owner_review",
+            "requested_payload": {
+                "deal_id": "deal-001",
+                "city": "Dallas",
+                "state": "TX",
+                "projected_assignment_fee": 17000,
+                "seller_name": "Angela Moreno",
+                "seller_phone": "214-555-0101",
+                "lead_source": "driving for dollars",
+                "seller_contract_price": 151000,
+                "assignment_fee_logic": "internal spread protected by Wholesale Prime",
+                "evidence_ids": ["evidence-001", "fee-001"],
+                "compliance_summary": "Owner review required before external use.",
+            },
+            "sanitized_payload": {},
+            "included_record_ids": ["evidence-001", "fee-001", "contract-001"],
+            "omitted_sensitive_fields": [],
+            "internal_fields_removed": [],
+            "export_status": "draft",
+            "owner_approval_status": "pending_owner",
+            "safe_for_external_share": False,
+            "contains_raw_private_data": False,
+            "legal_advice_included": False,
+            "secrets_included": False,
+            "packet_hash": "",
+            "retention_notes": "Internal owner audit packet only; sanitize before any external use.",
+            "blocked_reasons": [],
+        },
+        {
+            "id": "audit-export-002",
+            "export_type": "approval_audit",
+            "source_record_type": "owner_approval_item",
+            "source_record_id": "approval-006",
+            "requested_by": "Owner",
+            "export_scope": "internal_owner_review",
+            "requested_payload": {
+                "approval_id": "approval-006",
+                "action": "controlled buyer distribution review",
+                "buyer_name": "Jules Carter",
+                "buyer_email": "jules@example.test",
+                "risk_summary": "One-recipient gate present; no bulk blast.",
+                "internal_notes": "Keep assignment fee logic out of buyer-facing packet.",
+            },
+            "sanitized_payload": {},
+            "included_record_ids": ["approval-006", "buyer-accel-001", "auto-attempt-002"],
+            "omitted_sensitive_fields": [],
+            "internal_fields_removed": [],
+            "export_status": "draft",
+            "owner_approval_status": "pending_owner",
+            "safe_for_external_share": False,
+            "contains_raw_private_data": False,
+            "legal_advice_included": False,
+            "secrets_included": False,
+            "packet_hash": "",
+            "retention_notes": "Approval history packet uses redacted recipient placeholders.",
+            "blocked_reasons": [],
+        },
+    ]
+
+
+def build_evidence_attachment_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "attachment-001",
+            "source_record_type": "deal_evidence_packet",
+            "source_record_id": "evidence-001",
+            "deal_id": "deal-001",
+            "evidence_packet_id": "evidence-001",
+            "attachment_type": "underwriting_snapshot",
+            "filename_placeholder": "underwriting-snapshot-deal-001.pdf",
+            "storage_mode": "local_placeholder",
+            "sanitized_metadata": {"pages": 3, "redacted": True, "source": "underwriting"},
+            "contains_sensitive_data": False,
+            "source_linkage_verified": True,
+            "source_verified": True,
+            "safe_to_export": True,
+            "upload_status": "placeholder_only",
+            "operator_notes": "Metadata only; no file bytes committed.",
+            "raw_file_path_committed": False,
+            "blocked_reasons": [],
+        },
+        {
+            "id": "attachment-002",
+            "source_record_type": "seller_interaction",
+            "source_record_id": "seller-interaction-001",
+            "deal_id": "deal-001",
+            "evidence_packet_id": "evidence-001",
+            "attachment_type": "seller_interaction_proof",
+            "filename_placeholder": "seller-call-notes-redacted.txt",
+            "storage_mode": "local_placeholder",
+            "sanitized_metadata": {"redacted": True, "contact_data_removed": True},
+            "contains_sensitive_data": True,
+            "source_linkage_verified": True,
+            "source_verified": True,
+            "safe_to_export": False,
+            "upload_status": "placeholder_only",
+            "operator_notes": "Sensitive seller details stay internal unless separately sanitized.",
+            "raw_file_path_committed": False,
+            "blocked_reasons": [],
+        },
+        {
+            "id": "attachment-003",
+            "source_record_type": "buyer_interest",
+            "source_record_id": "interest-001",
+            "deal_id": "deal-001",
+            "evidence_packet_id": "evidence-001",
+            "attachment_type": "pof_placeholder",
+            "filename_placeholder": "pof-status-placeholder.pdf",
+            "storage_mode": "local_placeholder",
+            "sanitized_metadata": {"pof_status": "verified", "document_bytes_stored": False},
+            "contains_sensitive_data": True,
+            "source_linkage_verified": True,
+            "source_verified": True,
+            "safe_to_export": False,
+            "upload_status": "placeholder_only",
+            "operator_notes": "POF proof status only; no financial document stored in repo.",
+            "raw_file_path_committed": False,
+            "blocked_reasons": [],
+        },
+    ]
+
+
+def build_backup_export_record_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "backup-001",
+            "backup_type": "metadata_snapshot",
+            "backup_scope": "operator_local",
+            "storage_target": "local_export_placeholder",
+            "included_tables": [
+                "deals",
+                "deal_evidence_packets",
+                "assignment_fee_attributions",
+                "owner_approval_items",
+            ],
+            "excluded_fields": [
+                "seller_name",
+                "seller_phone",
+                "buyer_email",
+                "buyer_phone",
+                "api_key",
+                "provider_secret",
+                "internal_notes",
+            ],
+            "generated_metadata": {"record_count": 42, "format": "jsonl", "encrypted": "operator_required"},
+            "safe_metadata": {},
+            "backup_status": "prepared",
+            "contains_raw_private_data": False,
+            "safe_metadata_only": True,
+            "file_path_placeholder": "exports/backup-001.metadata.json",
+            "restore_test_status": "not_tested",
+            "owner_approval_status": "pending_owner",
+            "blocked_reasons": [],
+        },
+        {
+            "id": "backup-002",
+            "backup_type": "audit_index",
+            "backup_scope": "audit_records_only",
+            "storage_target": "local_export_placeholder",
+            "included_tables": [
+                "audit_export_packets",
+                "auto_execution_audit_records",
+                "communication_send_attempts",
+            ],
+            "excluded_fields": ["recipient", "seller_phone", "buyer_email", "provider_secret"],
+            "generated_metadata": {"record_count": 17, "format": "csv", "encrypted": "operator_required"},
+            "safe_metadata": {},
+            "backup_status": "prepared",
+            "contains_raw_private_data": False,
+            "safe_metadata_only": True,
+            "file_path_placeholder": "exports/backup-002.metadata.json",
+            "restore_test_status": "not_tested",
+            "owner_approval_status": "pending_owner",
+            "blocked_reasons": [],
+        },
+    ]
+
+
+def build_provider_sandbox_readiness_check_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "provider-ready-001",
+            "provider_type": "email",
+            "provider_name": "Email adapter sandbox",
+            "mode": "mock",
+            "sandbox_ready": False,
+            "secrets_configured": False,
+            "live_flag_enabled": False,
+            "safety_check_required": True,
+            "dry_run_required": True,
+            "owner_approval_required": True,
+            "idempotency_required": True,
+            "audit_trail_required": True,
+            "provider_calls_allowed": False,
+            "readiness_status": "blocked",
+            "blocked_reasons": [],
+            "last_checked_notes": "Default remains mock until sandbox credentials are configured outside the repo.",
+        },
+        {
+            "id": "provider-ready-002",
+            "provider_type": "sms",
+            "provider_name": "SMS adapter sandbox",
+            "mode": "mock",
+            "sandbox_ready": False,
+            "secrets_configured": False,
+            "live_flag_enabled": False,
+            "safety_check_required": True,
+            "dry_run_required": True,
+            "owner_approval_required": True,
+            "idempotency_required": True,
+            "audit_trail_required": True,
+            "provider_calls_allowed": False,
+            "readiness_status": "blocked",
+            "blocked_reasons": [],
+            "last_checked_notes": "SMS remains blocked; opt-out and sandbox provider checks required.",
+        },
+        {
+            "id": "provider-ready-003",
+            "provider_type": "title_review",
+            "provider_name": "Title coordination placeholder",
+            "mode": "mock",
+            "sandbox_ready": False,
+            "secrets_configured": False,
+            "live_flag_enabled": False,
+            "safety_check_required": True,
+            "dry_run_required": True,
+            "owner_approval_required": True,
+            "idempotency_required": True,
+            "audit_trail_required": True,
+            "provider_calls_allowed": False,
+            "readiness_status": "blocked",
+            "blocked_reasons": [],
+            "last_checked_notes": "No title-company submission integration exists in V18.",
+        },
+    ]
+
+
+def build_environment_readiness_check_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "env-ready-001",
+            "category": "auth",
+            "check_name": "operator auth configured",
+            "required": True,
+            "passed": False,
+            "status": "missing",
+            "detail": "Production auth is not configured; private local mode remains the only safe mode.",
+            "remediation": "Add authenticated owner-only access before any production exposure.",
+            "blocked_reasons": ["operator_auth_missing"],
+            "prevents_production": True,
+        },
+        {
+            "id": "env-ready-002",
+            "category": "env",
+            "check_name": "production environment variables configured",
+            "required": True,
+            "passed": False,
+            "status": "missing",
+            "detail": "Required production environment variables are not confirmed.",
+            "remediation": "Define production env values outside git and verify startup checks.",
+            "blocked_reasons": ["production_env_missing"],
+            "prevents_production": True,
+        },
+        {
+            "id": "env-ready-003",
+            "category": "secrets",
+            "check_name": "provider secrets configured outside repo",
+            "required": True,
+            "passed": False,
+            "status": "missing",
+            "detail": "No provider secrets are committed or configured for production.",
+            "remediation": "Use a secret manager or deployment environment variables; never commit secrets.",
+            "blocked_reasons": ["provider_secrets_missing"],
+            "prevents_production": True,
+        },
+        {
+            "id": "env-ready-004",
+            "category": "database",
+            "check_name": "postgres ready migration path",
+            "required": True,
+            "passed": True,
+            "status": "passed",
+            "detail": "SQLAlchemy/Alembic migration path remains Postgres-ready.",
+            "remediation": "",
+            "blocked_reasons": [],
+            "prevents_production": False,
+        },
+        {
+            "id": "env-ready-005",
+            "category": "private_mode",
+            "check_name": "private operator mode preserved",
+            "required": True,
+            "passed": True,
+            "status": "passed",
+            "detail": "No public signup or client portal exposure is registered.",
+            "remediation": "",
+            "blocked_reasons": [],
+            "prevents_production": False,
+        },
+    ]
+
+
+def build_deployment_hardening_check_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "hardening-001",
+            "area": "auth",
+            "check_name": "public exposure auth checklist",
+            "required": True,
+            "passed": False,
+            "status": "blocked",
+            "detail": "Do not expose the app publicly until owner auth, session policy, and HTTPS are configured.",
+            "remediation": "Add owner-only authentication and deploy behind HTTPS before public networking.",
+            "owner_action_required": True,
+            "blocked_reasons": ["auth_required_before_public_exposure"],
+        },
+        {
+            "id": "hardening-002",
+            "area": "secrets",
+            "check_name": "secret scanning and env isolation",
+            "required": True,
+            "passed": False,
+            "status": "open",
+            "detail": "Secrets must live outside source control and pass pre-deploy scanning.",
+            "remediation": "Enable secret scanning and document provider env names without values.",
+            "owner_action_required": True,
+            "blocked_reasons": ["secret_scanning_not_confirmed"],
+        },
+        {
+            "id": "hardening-003",
+            "area": "audit",
+            "check_name": "audit export redaction review",
+            "required": True,
+            "passed": True,
+            "status": "passed",
+            "detail": "Audit export packets remove sensitive and internal fields by default.",
+            "remediation": "",
+            "owner_action_required": False,
+            "blocked_reasons": [],
+        },
+        {
+            "id": "hardening-004",
+            "area": "providers",
+            "check_name": "sandbox provider only",
+            "required": True,
+            "passed": True,
+            "status": "passed",
+            "detail": "Provider checks default blocked and never call live providers in V18.",
+            "remediation": "",
+            "owner_action_required": False,
+            "blocked_reasons": [],
+        },
+        {
+            "id": "hardening-005",
+            "area": "backup",
+            "check_name": "backup metadata safe mode",
+            "required": True,
+            "passed": True,
+            "status": "passed",
+            "detail": "Backup records expose safe metadata only and exclude private fields.",
+            "remediation": "",
+            "owner_action_required": False,
+            "blocked_reasons": [],
+        },
+    ]
+
+
 def build_assignment_readiness_records() -> list[dict[str, object]]:
     return [
         {
@@ -5384,6 +5835,13 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "operator_exception_records": build_operator_exception_records(),
         "autonomous_daily_operating_reports": build_autonomous_daily_operating_report_records(),
         "system_trust_scores": build_system_trust_score_records(),
+        "approval_ux_reviews": build_approval_ux_review_records(),
+        "audit_export_packets": build_audit_export_packet_records(),
+        "evidence_attachment_records": build_evidence_attachment_records(),
+        "backup_export_records": build_backup_export_record_records(),
+        "provider_sandbox_readiness_checks": build_provider_sandbox_readiness_check_records(),
+        "environment_readiness_checks": build_environment_readiness_check_records(),
+        "deployment_hardening_checks": build_deployment_hardening_check_records(),
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
@@ -5408,6 +5866,13 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        DeploymentHardeningCheck,
+        EnvironmentReadinessCheck,
+        ProviderSandboxReadinessCheck,
+        BackupExportRecord,
+        EvidenceAttachmentRecord,
+        AuditExportPacket,
+        ApprovalUxReview,
         SystemTrustScore,
         AutonomousDailyOperatingReport,
         OperatorExceptionRecord,
@@ -5571,6 +6036,19 @@ def seed_database(session: Session) -> dict[str, int]:
         for row in payload["autonomous_daily_operating_reports"]
     )
     session.add_all(SystemTrustScore(**row) for row in payload["system_trust_scores"])
+    session.add_all(ApprovalUxReview(**row) for row in payload["approval_ux_reviews"])
+    session.add_all(AuditExportPacket(**row) for row in payload["audit_export_packets"])
+    session.add_all(BackupExportRecord(**row) for row in payload["backup_export_records"])
+    session.add_all(
+        ProviderSandboxReadinessCheck(**row)
+        for row in payload["provider_sandbox_readiness_checks"]
+    )
+    session.add_all(
+        EnvironmentReadinessCheck(**row) for row in payload["environment_readiness_checks"]
+    )
+    session.add_all(
+        DeploymentHardeningCheck(**row) for row in payload["deployment_hardening_checks"]
+    )
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
     session.add_all(
         SellerOfferPublication(**row)
@@ -5592,6 +6070,9 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(DealRoomBlocker(**row) for row in payload["deal_room_blockers"])
     session.add_all(
         DealEvidencePacket(**row) for row in payload["deal_evidence_packets"]
+    )
+    session.add_all(
+        EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]
     )
     session.add_all(
         AssignmentFeeAttribution(**row)
@@ -5676,5 +6157,13 @@ def seed_database(session: Session) -> dict[str, int]:
         operator_mode_gate(setting)
     for trust in session.query(SystemTrustScore).all():
         calculate_system_trust(trust)
+    for packet in session.query(AuditExportPacket).all():
+        sync_audit_export(packet)
+    for attachment in session.query(EvidenceAttachmentRecord).all():
+        attachment_linkage_gate(attachment)
+    for backup in session.query(BackupExportRecord).all():
+        backup_metadata(backup)
+    for provider in session.query(ProviderSandboxReadinessCheck).all():
+        provider_readiness_gate(provider)
     session.commit()
     return {key: len(value) for key, value in payload.items()}

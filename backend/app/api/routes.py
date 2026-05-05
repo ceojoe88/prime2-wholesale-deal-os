@@ -92,6 +92,14 @@ from app.domain.operator_mode import (
     operator_mode_dashboard,
     operator_mode_gate,
 )
+from app.domain.production_readiness import (
+    attachment_linkage_gate,
+    audit_export_gate,
+    backup_metadata,
+    production_readiness_dashboard,
+    provider_readiness_gate,
+    sync_audit_export,
+)
 from app.domain.profit_control import ProfitControlInput, calculate_profit_control
 from app.domain.revenue_forecast import (
     calculate_deal_probability,
@@ -127,9 +135,11 @@ from app.domain.title_review import (
 )
 from app.models import (
     Agent,
+    ApprovalUxReview,
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
     ApprovedTemplate,
+    AuditExportPacket,
     AutoExecutionAttempt,
     AutoExecutionAuditRecord,
     AutoExecutionDryRun,
@@ -139,6 +149,7 @@ from app.models import (
     AutomationRule,
     AutonomousAgentTask,
     AutonomyEscalation,
+    BackupExportRecord,
     Buyer,
     BuyerAccelerationRecord,
     BuyerDealPriority,
@@ -163,7 +174,10 @@ from app.models import (
     DealEvidencePacket,
     DealProbabilityRecord,
     DealRoomBlocker,
+    DeploymentHardeningCheck,
     Division,
+    EnvironmentReadinessCheck,
+    EvidenceAttachmentRecord,
     LeadSpendPlan,
     Lead,
     MarketScalingScore,
@@ -177,6 +191,7 @@ from app.models import (
     OptimizationRecommendation,
     OutcomeLearningRecord,
     OwnerApprovalItem,
+    ProviderSandboxReadinessCheck,
     RevenueForecastRecord,
     ReviewPacketPrep,
     SellerInteraction,
@@ -1301,6 +1316,82 @@ def operator_mode_run_safety(
     if loop is None:
         raise HTTPException(status_code=404, detail="Command loop run not found")
     return {**model_to_dict(loop), "safety": command_loop_safety(loop)}
+
+
+@router.get("/production-readiness")
+def production_readiness(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = production_readiness_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/audit-exports")
+def audit_exports(session: Session = Depends(get_session)) -> dict[str, object]:
+    packets = session.query(AuditExportPacket).all()
+    for packet in packets:
+        sync_audit_export(packet)
+    session.commit()
+    return {
+        "audit_exports": [
+            {**model_to_dict(packet), "gate": audit_export_gate(packet)}
+            for packet in packets
+        ],
+        "raw_private_data_allowed": False,
+        "secrets_committed_allowed": False,
+    }
+
+
+@router.get("/audit-exports/{export_id}")
+def audit_export_detail(
+    export_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    packet = session.get(AuditExportPacket, export_id)
+    if packet is None:
+        raise HTTPException(status_code=404, detail="Audit export not found")
+    sync_audit_export(packet)
+    session.commit()
+    return {**model_to_dict(packet), "gate": audit_export_gate(packet)}
+
+
+@router.get("/evidence-attachments")
+def evidence_attachments(session: Session = Depends(get_session)) -> dict[str, object]:
+    attachments = session.query(EvidenceAttachmentRecord).all()
+    return {
+        "evidence_attachments": [
+            {**model_to_dict(attachment), "gate": attachment_linkage_gate(attachment)}
+            for attachment in attachments
+        ],
+        "source_linkage_required": True,
+        "raw_file_path_committed_allowed": False,
+    }
+
+
+@router.get("/provider-readiness")
+def provider_readiness(session: Session = Depends(get_session)) -> dict[str, object]:
+    providers = session.query(ProviderSandboxReadinessCheck).all()
+    return {
+        "provider_readiness": [
+            {**model_to_dict(provider), "gate": provider_readiness_gate(provider)}
+            for provider in providers
+        ],
+        "default_provider_mode": "mock",
+        "real_provider_calls_require_sandbox_and_gates": True,
+        "bulk_send_allowed": False,
+    }
+
+
+@router.get("/backups")
+def backups(session: Session = Depends(get_session)) -> dict[str, object]:
+    records = session.query(BackupExportRecord).all()
+    return {
+        "backup_exports": [
+            {**model_to_dict(record), "safe_metadata": backup_metadata(record)}
+            for record in records
+        ],
+        "safe_metadata_only": True,
+        "raw_private_data_allowed": False,
+    }
 
 
 @router.get("/offer-conversion")

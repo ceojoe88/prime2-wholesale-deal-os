@@ -882,6 +882,127 @@ export type SystemTrustScore = {
   sourceRecordIds: string[];
 };
 
+export type ApprovalUxReview = {
+  id: string;
+  ownerApprovalItemId: string | null;
+  approvalType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  contextSummary: string;
+  riskSummary: string;
+  gateSummary: { gate: string; passed: boolean }[];
+  confirmationPrompt: string;
+  recommendedDecision: string;
+  approvalStatus: string;
+  ownerActionRequired: boolean;
+  approvalIsNotExecution: boolean;
+  blockedReasons: string[];
+};
+
+export type AuditExportPacket = {
+  id: string;
+  exportType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  requestedBy: string;
+  exportScope: string;
+  sanitizedPayload: Record<string, string | number | boolean | string[]>;
+  includedRecordIds: string[];
+  omittedSensitiveFields: string[];
+  internalFieldsRemoved: string[];
+  exportStatus: string;
+  ownerApprovalStatus: string;
+  safeForExternalShare: boolean;
+  containsRawPrivateData: boolean;
+  legalAdviceIncluded: boolean;
+  secretsIncluded: boolean;
+  packetHash: string;
+  retentionNotes: string;
+  blockedReasons: string[];
+};
+
+export type EvidenceAttachmentRecord = {
+  id: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  dealId: string | null;
+  evidencePacketId: string | null;
+  attachmentType: string;
+  filenamePlaceholder: string;
+  storageMode: string;
+  sanitizedMetadata: Record<string, string | number | boolean>;
+  containsSensitiveData: boolean;
+  sourceLinkageVerified: boolean;
+  sourceVerified: boolean;
+  safeToExport: boolean;
+  uploadStatus: string;
+  operatorNotes: string;
+  rawFilePathCommitted: boolean;
+  blockedReasons: string[];
+};
+
+export type BackupExportRecord = {
+  id: string;
+  backupType: string;
+  backupScope: string;
+  storageTarget: string;
+  includedTables: string[];
+  excludedFields: string[];
+  safeMetadata: Record<string, string | number | boolean | string[]>;
+  backupStatus: string;
+  containsRawPrivateData: boolean;
+  safeMetadataOnly: boolean;
+  filePathPlaceholder: string;
+  restoreTestStatus: string;
+  ownerApprovalStatus: string;
+  blockedReasons: string[];
+};
+
+export type ProviderSandboxReadinessCheck = {
+  id: string;
+  providerType: string;
+  providerName: string;
+  mode: string;
+  sandboxReady: boolean;
+  secretsConfigured: boolean;
+  liveFlagEnabled: boolean;
+  safetyCheckRequired: boolean;
+  dryRunRequired: boolean;
+  ownerApprovalRequired: boolean;
+  idempotencyRequired: boolean;
+  auditTrailRequired: boolean;
+  providerCallsAllowed: boolean;
+  readinessStatus: string;
+  blockedReasons: string[];
+  lastCheckedNotes: string;
+};
+
+export type EnvironmentReadinessCheck = {
+  id: string;
+  category: string;
+  checkName: string;
+  required: boolean;
+  passed: boolean;
+  status: string;
+  detail: string;
+  remediation: string;
+  blockedReasons: string[];
+  preventsProduction: boolean;
+};
+
+export type DeploymentHardeningCheck = {
+  id: string;
+  area: string;
+  checkName: string;
+  required: boolean;
+  passed: boolean;
+  status: string;
+  detail: string;
+  remediation: string;
+  ownerActionRequired: boolean;
+  blockedReasons: string[];
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1940,6 +2061,50 @@ export const systemTrustScores: SystemTrustScore[] = [
   { id: "trust-001", automationSuccessRate: 86, blockedUnsafeActions: 9, approvalQueueAgeHours: 6, staleTasks: 2, scoringConfidence: 84, forecastConfidence: 78, buyerResponseVelocity: 88, sellerConversionVelocity: 76, overallTrustScore: 82, trustStatus: "strong_guarded", sourceRecordIds: ["operator-loop-001", "auto-audit-003", "forecast-2026-05"] }
 ];
 
+export const approvalUxReviews: ApprovalUxReview[] = [
+  { id: "approval-ux-001", ownerApprovalItemId: "approval-006", approvalType: "buyer_distribution", sourceRecordType: "buyer_acceleration", sourceRecordId: "buyer-accel-001", contextSummary: "One buyer, sanitized deal sheet, verified POF, no bulk blast.", riskSummary: "Live communication remains blocked until V5/V13 gates and owner approval.", gateSummary: [{ gate: "sanitized_deal_sheet", passed: true }, { gate: "bulk_send_blocked", passed: true }, { gate: "owner_approval_required", passed: true }], confirmationPrompt: "Approve preparation only; this does not send buyer communication.", recommendedDecision: "review_ready", approvalStatus: "pending_owner", ownerActionRequired: true, approvalIsNotExecution: true, blockedReasons: [] },
+  { id: "approval-ux-002", ownerApprovalItemId: "approval-007", approvalType: "portal_visibility", sourceRecordType: "buyer_deal_publication", sourceRecordId: "publication-001", contextSummary: "Portal visibility needs explicit owner review before any external exposure.", riskSummary: "Publishing is blocked until owner visibility approval is recorded.", gateSummary: [{ gate: "portal_visibility_enabled", passed: false }, { gate: "seller_private_data_hidden", passed: true }], confirmationPrompt: "Review sanitizer and blocked reasons before enabling visibility.", recommendedDecision: "hold", approvalStatus: "blocked", ownerActionRequired: true, approvalIsNotExecution: true, blockedReasons: ["final_owner_visibility_review_missing"] },
+  { id: "approval-ux-003", ownerApprovalItemId: "approval-008", approvalType: "forecast_spend_recommendation", sourceRecordType: "lead_spend_plan", sourceRecordId: "lead-spend-001", contextSummary: "Lead spend estimate is evidence-backed and labeled as an estimate.", riskSummary: "No guaranteed profit or unsupported ROI language is present.", gateSummary: [{ gate: "estimate_label_present", passed: true }, { gate: "source_basis_present", passed: true }], confirmationPrompt: "Approve the spend recommendation for operator planning only.", recommendedDecision: "review_ready", approvalStatus: "pending_owner", ownerActionRequired: true, approvalIsNotExecution: true, blockedReasons: [] }
+];
+
+export const auditExportPackets: AuditExportPacket[] = [
+  { id: "audit-export-001", exportType: "deal_evidence_audit", sourceRecordType: "deal_evidence_packet", sourceRecordId: "evidence-001", requestedBy: "Owner", exportScope: "internal_owner_review", sanitizedPayload: { deal_id: "deal-001", city: "Dallas", state: "TX", projected_assignment_fee: 17000, evidence_ids: ["evidence-001", "fee-001"], compliance_summary: "Owner review required before external use." }, includedRecordIds: ["evidence-001", "fee-001", "contract-001"], omittedSensitiveFields: ["seller_name", "seller_phone"], internalFieldsRemoved: ["assignment_fee_logic", "lead_source", "seller_contract_price"], exportStatus: "ready_for_owner_review", ownerApprovalStatus: "pending_owner", safeForExternalShare: false, containsRawPrivateData: false, legalAdviceIncluded: false, secretsIncluded: false, packetHash: "audit-hash-001", retentionNotes: "Internal owner audit packet only; sanitize before any external use.", blockedReasons: [] },
+  { id: "audit-export-002", exportType: "approval_audit", sourceRecordType: "owner_approval_item", sourceRecordId: "approval-006", requestedBy: "Owner", exportScope: "internal_owner_review", sanitizedPayload: { approval_id: "approval-006", action: "controlled buyer distribution review", risk_summary: "One-recipient gate present; no bulk blast." }, includedRecordIds: ["approval-006", "buyer-accel-001", "auto-attempt-002"], omittedSensitiveFields: ["buyer_name", "buyer_email"], internalFieldsRemoved: ["internal_notes"], exportStatus: "ready_for_owner_review", ownerApprovalStatus: "pending_owner", safeForExternalShare: false, containsRawPrivateData: false, legalAdviceIncluded: false, secretsIncluded: false, packetHash: "audit-hash-002", retentionNotes: "Approval history packet uses redacted recipient placeholders.", blockedReasons: [] }
+];
+
+export const evidenceAttachmentRecords: EvidenceAttachmentRecord[] = [
+  { id: "attachment-001", sourceRecordType: "deal_evidence_packet", sourceRecordId: "evidence-001", dealId: "deal-001", evidencePacketId: "evidence-001", attachmentType: "underwriting_snapshot", filenamePlaceholder: "underwriting-snapshot-deal-001.pdf", storageMode: "local_placeholder", sanitizedMetadata: { pages: 3, redacted: true, source: "underwriting" }, containsSensitiveData: false, sourceLinkageVerified: true, sourceVerified: true, safeToExport: true, uploadStatus: "placeholder_only", operatorNotes: "Metadata only; no file bytes committed.", rawFilePathCommitted: false, blockedReasons: [] },
+  { id: "attachment-002", sourceRecordType: "seller_interaction", sourceRecordId: "seller-interaction-001", dealId: "deal-001", evidencePacketId: "evidence-001", attachmentType: "seller_interaction_proof", filenamePlaceholder: "seller-call-notes-redacted.txt", storageMode: "local_placeholder", sanitizedMetadata: { redacted: true, contactDataRemoved: true }, containsSensitiveData: true, sourceLinkageVerified: true, sourceVerified: true, safeToExport: false, uploadStatus: "placeholder_only", operatorNotes: "Sensitive seller details stay internal unless separately sanitized.", rawFilePathCommitted: false, blockedReasons: [] },
+  { id: "attachment-003", sourceRecordType: "buyer_interest", sourceRecordId: "interest-001", dealId: "deal-001", evidencePacketId: "evidence-001", attachmentType: "pof_placeholder", filenamePlaceholder: "pof-status-placeholder.pdf", storageMode: "local_placeholder", sanitizedMetadata: { pofStatus: "verified", documentBytesStored: false }, containsSensitiveData: true, sourceLinkageVerified: true, sourceVerified: true, safeToExport: false, uploadStatus: "placeholder_only", operatorNotes: "POF proof status only; no financial document stored in repo.", rawFilePathCommitted: false, blockedReasons: [] }
+];
+
+export const backupExportRecords: BackupExportRecord[] = [
+  { id: "backup-001", backupType: "metadata_snapshot", backupScope: "operator_local", storageTarget: "local_export_placeholder", includedTables: ["deals", "deal_evidence_packets", "assignment_fee_attributions", "owner_approval_items"], excludedFields: ["seller_name", "seller_phone", "buyer_email", "buyer_phone", "api_key", "provider_secret", "internal_notes"], safeMetadata: { includedTableCount: 4, containsRawPrivateData: false, safeMetadataOnly: true }, backupStatus: "prepared", containsRawPrivateData: false, safeMetadataOnly: true, filePathPlaceholder: "exports/backup-001.metadata.json", restoreTestStatus: "not_tested", ownerApprovalStatus: "pending_owner", blockedReasons: [] },
+  { id: "backup-002", backupType: "audit_index", backupScope: "audit_records_only", storageTarget: "local_export_placeholder", includedTables: ["audit_export_packets", "auto_execution_audit_records", "communication_send_attempts"], excludedFields: ["recipient", "seller_phone", "buyer_email", "provider_secret"], safeMetadata: { includedTableCount: 3, containsRawPrivateData: false, safeMetadataOnly: true }, backupStatus: "prepared", containsRawPrivateData: false, safeMetadataOnly: true, filePathPlaceholder: "exports/backup-002.metadata.json", restoreTestStatus: "not_tested", ownerApprovalStatus: "pending_owner", blockedReasons: [] }
+];
+
+export const providerSandboxReadinessChecks: ProviderSandboxReadinessCheck[] = [
+  { id: "provider-ready-001", providerType: "email", providerName: "Email adapter sandbox", mode: "mock", sandboxReady: false, secretsConfigured: false, liveFlagEnabled: false, safetyCheckRequired: true, dryRunRequired: true, ownerApprovalRequired: true, idempotencyRequired: true, auditTrailRequired: true, providerCallsAllowed: false, readinessStatus: "blocked", blockedReasons: ["sandbox_ready_required", "sandbox_secrets_missing"], lastCheckedNotes: "Default remains mock until sandbox credentials are configured outside the repo." },
+  { id: "provider-ready-002", providerType: "sms", providerName: "SMS adapter sandbox", mode: "mock", sandboxReady: false, secretsConfigured: false, liveFlagEnabled: false, safetyCheckRequired: true, dryRunRequired: true, ownerApprovalRequired: true, idempotencyRequired: true, auditTrailRequired: true, providerCallsAllowed: false, readinessStatus: "blocked", blockedReasons: ["sandbox_ready_required", "sandbox_secrets_missing"], lastCheckedNotes: "SMS remains blocked; opt-out and sandbox provider checks required." },
+  { id: "provider-ready-003", providerType: "title_review", providerName: "Title coordination placeholder", mode: "mock", sandboxReady: false, secretsConfigured: false, liveFlagEnabled: false, safetyCheckRequired: true, dryRunRequired: true, ownerApprovalRequired: true, idempotencyRequired: true, auditTrailRequired: true, providerCallsAllowed: false, readinessStatus: "blocked", blockedReasons: ["sandbox_ready_required", "sandbox_secrets_missing"], lastCheckedNotes: "No title-company submission integration exists in V18." }
+];
+
+export const environmentReadinessChecks: EnvironmentReadinessCheck[] = [
+  { id: "env-ready-001", category: "auth", checkName: "operator auth configured", required: true, passed: false, status: "missing", detail: "Production auth is not configured; private local mode remains the only safe mode.", remediation: "Add authenticated owner-only access before any production exposure.", blockedReasons: ["operator_auth_missing"], preventsProduction: true },
+  { id: "env-ready-002", category: "env", checkName: "production environment variables configured", required: true, passed: false, status: "missing", detail: "Required production environment variables are not confirmed.", remediation: "Define production env values outside git and verify startup checks.", blockedReasons: ["production_env_missing"], preventsProduction: true },
+  { id: "env-ready-003", category: "secrets", checkName: "provider secrets configured outside repo", required: true, passed: false, status: "missing", detail: "No provider secrets are committed or configured for production.", remediation: "Use a secret manager or deployment environment variables; never commit secrets.", blockedReasons: ["provider_secrets_missing"], preventsProduction: true },
+  { id: "env-ready-004", category: "database", checkName: "postgres ready migration path", required: true, passed: true, status: "passed", detail: "SQLAlchemy/Alembic migration path remains Postgres-ready.", remediation: "", blockedReasons: [], preventsProduction: false },
+  { id: "env-ready-005", category: "private_mode", checkName: "private operator mode preserved", required: true, passed: true, status: "passed", detail: "No public signup or client portal exposure is registered.", remediation: "", blockedReasons: [], preventsProduction: false }
+];
+
+export const deploymentHardeningChecks: DeploymentHardeningCheck[] = [
+  { id: "hardening-001", area: "auth", checkName: "public exposure auth checklist", required: true, passed: false, status: "blocked", detail: "Do not expose the app publicly until owner auth, session policy, and HTTPS are configured.", remediation: "Add owner-only authentication and deploy behind HTTPS before public networking.", ownerActionRequired: true, blockedReasons: ["auth_required_before_public_exposure"] },
+  { id: "hardening-002", area: "secrets", checkName: "secret scanning and env isolation", required: true, passed: false, status: "open", detail: "Secrets must live outside source control and pass pre-deploy scanning.", remediation: "Enable secret scanning and document provider env names without values.", ownerActionRequired: true, blockedReasons: ["secret_scanning_not_confirmed"] },
+  { id: "hardening-003", area: "audit", checkName: "audit export redaction review", required: true, passed: true, status: "passed", detail: "Audit export packets remove sensitive and internal fields by default.", remediation: "", ownerActionRequired: false, blockedReasons: [] },
+  { id: "hardening-004", area: "providers", checkName: "sandbox provider only", required: true, passed: true, status: "passed", detail: "Provider checks default blocked and never call live providers in V18.", remediation: "", ownerActionRequired: false, blockedReasons: [] },
+  { id: "hardening-005", area: "backup", checkName: "backup metadata safe mode", required: true, passed: true, status: "passed", detail: "Backup records expose safe metadata only and exclude private fields.", remediation: "", ownerActionRequired: false, blockedReasons: [] }
+];
+
 export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
   { id: "assignment-ready-001", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-001", buyerMatchId: "match-001", buyerInterestId: "interest-001", readinessStatus: "assignment_ready", assignmentReady: true, blockedReasons: [], assignmentAllowedConfirmed: true, buyerPofStatus: "verified", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
   { id: "assignment-ready-002", contractControlId: "contract-001", dealId: "deal-001", buyerId: "buyer-003", buyerMatchId: "match-001", buyerInterestId: "interest-004", readinessStatus: "blocked", assignmentReady: false, blockedReasons: ["buyer_pof_not_verified"], assignmentAllowedConfirmed: true, buyerPofStatus: "needs_refresh", complianceReviewPassed: true, ownerApprovalRecorded: true, draftOnly: true, contractExecutionAllowed: false, titleSubmissionAllowed: false },
@@ -2921,6 +3086,10 @@ export function getRevenueForecast(forecastId: string) {
   return revenueForecastRecords.find((forecast) => forecast.id === forecastId);
 }
 
+export function getAuditExportPacket(exportId: string) {
+  return auditExportPackets.find((packet) => packet.id === exportId);
+}
+
 export const revenueForecastByPeriod = [...revenueForecastRecords];
 export const pipelineProjectedMonthlyRevenue = revenueForecastRecords.reduce(
   (total, forecast) => total + forecast.projectedAssignmentFees,
@@ -2985,4 +3154,31 @@ export const operatorApprovalAggregates = ownerApprovalItems.reduce<Record<strin
     return acc;
   },
   {}
+);
+export const productionReadinessBlockedReasons = [
+  ...environmentReadinessChecks.flatMap((check) => check.blockedReasons),
+  ...deploymentHardeningChecks.flatMap((check) => check.blockedReasons),
+  ...providerSandboxReadinessChecks.flatMap((check) => check.blockedReasons)
+];
+export const productionReady = productionReadinessBlockedReasons.length === 0;
+export const blockedProviderReadiness = providerSandboxReadinessChecks.filter(
+  (check) => !check.providerCallsAllowed
+);
+export const auditExportsReady = auditExportPackets.filter(
+  (packet) => packet.exportStatus === "ready_for_owner_review"
+);
+export const sensitiveAttachments = evidenceAttachmentRecords.filter(
+  (attachment) => attachment.containsSensitiveData
+);
+export const safeBackupExports = backupExportRecords.filter(
+  (backup) => backup.safeMetadataOnly && !backup.containsRawPrivateData
+);
+export const failedEnvironmentChecks = environmentReadinessChecks.filter(
+  (check) => check.required && !check.passed
+);
+export const failedHardeningChecks = deploymentHardeningChecks.filter(
+  (check) => check.required && !check.passed
+);
+export const approvalUxReady = approvalUxReviews.filter(
+  (review) => review.recommendedDecision === "review_ready"
 );
