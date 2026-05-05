@@ -85,6 +85,7 @@ def handle_ai_request(
             "negotiation_assist",
             "field_testing_summary",
             "call_intelligence_extraction",
+            "document_intelligence_extraction",
         }
         else {}
     )

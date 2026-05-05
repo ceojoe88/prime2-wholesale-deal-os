@@ -59,6 +59,12 @@ TEMPLATE_LIBRARY: dict[str, dict[str, object]] = {
         "template_sections": ["seller_signals", "objections", "risk_flags", "next_action"],
         "template_body": "Extract seller conversation signals from provided transcript basis only. Do not invent prices, repairs, motivation, or commitments.",
     },
+    "document_intelligence_extraction": {
+        "template_name": "Document intelligence extraction",
+        "template_version": "v24.1",
+        "template_sections": ["classification", "fields", "issues", "review_route"],
+        "template_body": "Extract deal document fields from source text only. Do not rewrite contracts, invent missing terms, provide legal conclusions, or mark documents executed.",
+    },
 }
 
 
@@ -108,6 +114,10 @@ def build_template_response(request_type: str, source_data: dict[str, Any]) -> s
         "call_intelligence_extraction": (
             "Call intelligence extraction draft: review transcript-based seller signals, objections, DNC status, "
             f"risk flags, and draft-only next action. Recommended next action: {next_action}."
+        ),
+        "document_intelligence_extraction": (
+            "Document intelligence extraction draft: classify the file, extract parties, prices, dates, signatures, "
+            f"POF and assignment-language signals from source data only. Recommended next action: {next_action}."
         ),
     }
     return responses[request_type]

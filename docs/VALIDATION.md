@@ -174,6 +174,10 @@ Smoke check:
 - `/api/v1/call-intelligence/objections`
 - `/api/v1/call-intelligence/follow-ups`
 - `/api/v1/call-intelligence/quality`
+- `/api/v1/documents`
+- `/api/v1/documents/issues`
+- `/api/v1/documents/review-queue`
+- `/api/v1/documents/evidence`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -200,6 +204,7 @@ Before any hosted deployment:
 - V22 provider readiness must keep credential values outside the database and expose masked env reference names only.
 - Webhook receiver records must create review tasks only and never mutate deals automatically.
 - Call intelligence must remain text-only and analysis-only; no audio recording, live calling, automatic seller response, or term changes.
+- Document intelligence must remain classification/extraction/review routing only; full text must stay out of external surfaces and no document should trigger contract execution, title delivery, or portal publishing.
 - Audit exports must be sanitized.
 - Backup/export records must be metadata-safe unless a future encrypted storage design is added.
 - Legal/title review remains external.

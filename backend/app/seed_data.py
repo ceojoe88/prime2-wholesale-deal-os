@@ -122,6 +122,12 @@ from app.models import (
     DealProbabilityRecord,
     DealRoomBlocker,
     DeploymentHardeningCheck,
+    DocumentClassificationResult,
+    DocumentEvidenceLink,
+    DocumentExtractedFields,
+    DocumentIntelligenceFile,
+    DocumentIssueFlag,
+    DocumentReviewTask,
     Division,
     EnvironmentReadinessCheck,
     EvidenceAttachmentRecord,
@@ -6707,6 +6713,21 @@ def build_ai_template_records() -> list[dict[str, object]]:
             "legal_advice_allowed": False,
             "contract_generation_allowed": False,
         },
+        {
+            "id": "ai-template-document-intelligence-v24",
+            "request_type": "document_intelligence_extraction",
+            "template_name": "Document intelligence extraction",
+            "template_version": "v24.1",
+            "template_sections": ["classification", "fields", "issues", "review_route"],
+            "template_body": "Extract document fields from source text only; no legal conclusions, contract rewrites, or invented terms.",
+            "active": True,
+            "safety_status": "approved",
+            "risk_flags": [],
+            "uses_system_data_only": True,
+            "can_invent_numbers": False,
+            "legal_advice_allowed": False,
+            "contract_generation_allowed": False,
+        },
     ]
 
 
@@ -6976,6 +6997,306 @@ def build_worker_heartbeat_records() -> list[dict[str, object]]:
     ]
 
 
+def build_document_intelligence_file_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "doc-intel-001",
+            "source_deal_id": "deal-001",
+            "source_lead_id": "lead-001",
+            "source_buyer_id": None,
+            "uploaded_by": "Owner",
+            "original_filename": "deal-001-purchase-agreement-draft.txt",
+            "file_type": "text",
+            "storage_reference": "local-placeholder/doc-001",
+            "document_type": "purchase_agreement",
+            "status": "needs_review",
+            "classification_confidence": 92,
+            "extracted_summary": "Purchase agreement draft with missing signature and title company.",
+            "extracted_price": 140000,
+            "extracted_buyer_name": "Prime 2 Acquisitions LLC",
+            "extracted_seller_name": "Angela Morris",
+            "extracted_property_address": "1420 Cedar Crest Ave, Dallas, TX 75216",
+            "extracted_effective_date": "05/08/2026",
+            "extracted_closing_date": "05/30/2026",
+            "extracted_signature_status": "missing",
+            "extracted_assignment_language_present": True,
+            "extracted_pof_amount": None,
+            "risk_status": "needs_review",
+            "owner_review_status": "pending_review",
+            "full_text_internal": "Internal-only purchase agreement text placeholder. Not exposed to portals.",
+            "raw_text_stored": True,
+            "portal_publish_allowed": False,
+            "legal_advice_provided": False,
+            "executable_contract_generated": False,
+        },
+        {
+            "id": "doc-intel-002",
+            "source_deal_id": "deal-001",
+            "source_lead_id": None,
+            "source_buyer_id": "buyer-001",
+            "uploaded_by": "Owner",
+            "original_filename": "buyer-001-pof-letter.txt",
+            "file_type": "text",
+            "storage_reference": "local-placeholder/doc-002",
+            "document_type": "proof_of_funds",
+            "status": "needs_review",
+            "classification_confidence": 90,
+            "extracted_summary": "POF amount is below buyer purchase price and needs follow-up.",
+            "extracted_price": None,
+            "extracted_buyer_name": "Jules Carter",
+            "extracted_seller_name": "",
+            "extracted_property_address": "",
+            "extracted_effective_date": "",
+            "extracted_closing_date": "",
+            "extracted_signature_status": "signed",
+            "extracted_assignment_language_present": False,
+            "extracted_pof_amount": 145000,
+            "risk_status": "high",
+            "owner_review_status": "pending_review",
+            "full_text_internal": "Internal-only POF text placeholder. Not exposed to portals.",
+            "raw_text_stored": True,
+            "portal_publish_allowed": False,
+            "legal_advice_provided": False,
+            "executable_contract_generated": False,
+        },
+        {
+            "id": "doc-intel-003",
+            "source_deal_id": "deal-005",
+            "source_lead_id": "lead-005",
+            "source_buyer_id": None,
+            "uploaded_by": "Owner",
+            "original_filename": "assignment-language-review.txt",
+            "file_type": "text",
+            "storage_reference": "local-placeholder/doc-003",
+            "document_type": "assignment_agreement",
+            "status": "needs_review",
+            "classification_confidence": 84,
+            "extracted_summary": "Assignment agreement language needs external review reminder.",
+            "extracted_price": 210000,
+            "extracted_buyer_name": "Buyer Entity Placeholder",
+            "extracted_seller_name": "Robert Fields",
+            "extracted_property_address": "5218 Bexar St, Dallas, TX 75215",
+            "extracted_effective_date": "05/10/2026",
+            "extracted_closing_date": "",
+            "extracted_signature_status": "unknown",
+            "extracted_assignment_language_present": False,
+            "extracted_pof_amount": None,
+            "risk_status": "high",
+            "owner_review_status": "pending_review",
+            "full_text_internal": "Internal-only assignment review placeholder. Not exposed to portals.",
+            "raw_text_stored": True,
+            "portal_publish_allowed": False,
+            "legal_advice_provided": False,
+            "executable_contract_generated": False,
+        },
+    ]
+
+
+def build_document_classification_result_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "doc-class-001",
+            "document_id": "doc-intel-001",
+            "document_type": "purchase_agreement",
+            "confidence_score": 92,
+            "classification_reasons": ["matched_purchase_keywords"],
+            "classifier_version": "v24.deterministic",
+            "owner_review_required": True,
+        },
+        {
+            "id": "doc-class-002",
+            "document_id": "doc-intel-002",
+            "document_type": "proof_of_funds",
+            "confidence_score": 90,
+            "classification_reasons": ["matched_pof_keywords"],
+            "classifier_version": "v24.deterministic",
+            "owner_review_required": True,
+        },
+        {
+            "id": "doc-class-003",
+            "document_id": "doc-intel-003",
+            "document_type": "assignment_agreement",
+            "confidence_score": 84,
+            "classification_reasons": ["matched_assignment_keywords"],
+            "classifier_version": "v24.deterministic",
+            "owner_review_required": True,
+        },
+    ]
+
+
+def build_document_extracted_field_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "doc-fields-001",
+            "document_id": "doc-intel-001",
+            "parties": {"seller": "Angela Morris", "buyer": "Prime 2 Acquisitions LLC"},
+            "prices": {"purchase_price": 140000},
+            "dates": {"effective_date": "05/08/2026", "closing_date": "05/30/2026"},
+            "signature_status": "missing",
+            "assignment_language_present": True,
+            "pof_amount": None,
+            "title_company_name": "",
+            "missing_fields": ["signature", "title_company_name"],
+            "source_basis": {"deterministic_fallback": True, "manual_seed": True},
+            "deterministic_fallback_used": True,
+            "ai_request_id": None,
+        },
+        {
+            "id": "doc-fields-002",
+            "document_id": "doc-intel-002",
+            "parties": {"buyer": "Jules Carter"},
+            "prices": {},
+            "dates": {},
+            "signature_status": "signed",
+            "assignment_language_present": False,
+            "pof_amount": 145000,
+            "title_company_name": "",
+            "missing_fields": [],
+            "source_basis": {"deterministic_fallback": True, "manual_seed": True},
+            "deterministic_fallback_used": True,
+            "ai_request_id": None,
+        },
+        {
+            "id": "doc-fields-003",
+            "document_id": "doc-intel-003",
+            "parties": {"seller": "Robert Fields", "buyer": "Buyer Entity Placeholder"},
+            "prices": {"purchase_price": 210000},
+            "dates": {"effective_date": "05/10/2026", "closing_date": ""},
+            "signature_status": "unknown",
+            "assignment_language_present": False,
+            "pof_amount": None,
+            "title_company_name": "",
+            "missing_fields": ["closing_date", "signature", "assignment_language"],
+            "source_basis": {"deterministic_fallback": True, "manual_seed": True},
+            "deterministic_fallback_used": True,
+            "ai_request_id": None,
+        },
+    ]
+
+
+def build_document_issue_flag_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "doc-issue-001",
+            "document_id": "doc-intel-001",
+            "issue_type": "missing_signature",
+            "severity": "high",
+            "source_field": "signature_status",
+            "explanation": "Purchase agreement draft is not signed and cannot be treated as controlled execution.",
+            "recommended_next_action": "Owner review and external attorney/title review reminder before relying on the file.",
+            "owner_review_required": True,
+            "compliance_review_required": True,
+            "external_review_reminder": True,
+            "resolved": False,
+        },
+        {
+            "id": "doc-issue-002",
+            "document_id": "doc-intel-002",
+            "issue_type": "pof_amount_below_buyer_offer",
+            "severity": "high",
+            "source_field": "pof_amount",
+            "explanation": "POF amount is below the buyer purchase price on the deal record.",
+            "recommended_next_action": "Queue buyer POF follow-up; no buyer-facing claim should be made.",
+            "owner_review_required": True,
+            "compliance_review_required": True,
+            "external_review_reminder": False,
+            "resolved": False,
+        },
+        {
+            "id": "doc-issue-003",
+            "document_id": "doc-intel-003",
+            "issue_type": "assignment_language_missing",
+            "severity": "high",
+            "source_field": "assignment_language_present",
+            "explanation": "Assignment language was not detected and must be reviewed externally before assignment readiness.",
+            "recommended_next_action": "Route to title/attorney external review reminder.",
+            "owner_review_required": True,
+            "compliance_review_required": True,
+            "external_review_reminder": True,
+            "resolved": False,
+        },
+    ]
+
+
+def build_document_review_task_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "doc-review-001",
+            "document_id": "doc-intel-001",
+            "task_type": "title_attorney_external_review_reminder",
+            "assigned_to": "Prime 2",
+            "status": "open",
+            "priority": "high",
+            "reason": "Missing signature and title company data.",
+            "recommended_next_action": "Prepare review reminder only; no document submission.",
+            "owner_review_required": True,
+            "live_send_allowed": False,
+            "legal_review_external_only": True,
+        },
+        {
+            "id": "doc-review-002",
+            "document_id": "doc-intel-002",
+            "task_type": "buyer_pof_follow_up",
+            "assigned_to": "Owner",
+            "status": "open",
+            "priority": "high",
+            "reason": "POF is below buyer purchase price.",
+            "recommended_next_action": "Ask for updated POF only through gated communication drafts.",
+            "owner_review_required": True,
+            "live_send_allowed": False,
+            "legal_review_external_only": False,
+        },
+        {
+            "id": "doc-review-003",
+            "document_id": "doc-intel-003",
+            "task_type": "compliance_review",
+            "assigned_to": "Prime 2",
+            "status": "open",
+            "priority": "high",
+            "reason": "Assignment language is missing or unclear.",
+            "recommended_next_action": "Create external review reminder; no legal conclusion.",
+            "owner_review_required": True,
+            "live_send_allowed": False,
+            "legal_review_external_only": True,
+        },
+    ]
+
+
+def build_document_evidence_link_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "doc-evidence-001",
+            "document_id": "doc-intel-001",
+            "deal_evidence_packet_id": "evidence-001",
+            "source_record_type": "deal",
+            "source_record_id": "deal-001",
+            "linkage_status": "linked",
+            "sanitized_for_export": True,
+            "portal_publish_allowed": False,
+        },
+        {
+            "id": "doc-evidence-002",
+            "document_id": "doc-intel-002",
+            "deal_evidence_packet_id": "evidence-001",
+            "source_record_type": "buyer",
+            "source_record_id": "buyer-001",
+            "linkage_status": "linked",
+            "sanitized_for_export": True,
+            "portal_publish_allowed": False,
+        },
+        {
+            "id": "doc-evidence-003",
+            "document_id": "doc-intel-003",
+            "deal_evidence_packet_id": "evidence-003",
+            "source_record_type": "deal",
+            "source_record_id": "deal-005",
+            "linkage_status": "linked",
+            "sanitized_for_export": True,
+            "portal_publish_allowed": False,
+        },
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -7069,6 +7390,12 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "closing_coordination_checklists": build_closing_coordination_checklist_records(),
         "deal_room_blockers": build_deal_room_blocker_records(),
         "deal_evidence_packets": build_deal_evidence_packet_records(),
+        "document_intelligence_files": build_document_intelligence_file_records(),
+        "document_classification_results": build_document_classification_result_records(),
+        "document_extracted_fields": build_document_extracted_field_records(),
+        "document_issue_flags": build_document_issue_flag_records(),
+        "document_review_tasks": build_document_review_task_records(),
+        "document_evidence_links": build_document_evidence_link_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -7089,6 +7416,12 @@ def seed_database(session: Session) -> dict[str, int]:
         WorkerHeartbeat,
         WorkerJobLog,
         WorkerJob,
+        DocumentEvidenceLink,
+        DocumentReviewTask,
+        DocumentIssueFlag,
+        DocumentExtractedFields,
+        DocumentClassificationResult,
+        DocumentIntelligenceFile,
         ProviderWebhookEvent,
         ProviderAttemptAudit,
         ProviderRegistry,
@@ -7353,6 +7686,27 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(DealRoomBlocker(**row) for row in payload["deal_room_blockers"])
     session.add_all(
         DealEvidencePacket(**row) for row in payload["deal_evidence_packets"]
+    )
+    session.add_all(
+        DocumentIntelligenceFile(**row)
+        for row in payload["document_intelligence_files"]
+    )
+    session.add_all(
+        DocumentClassificationResult(**row)
+        for row in payload["document_classification_results"]
+    )
+    session.add_all(
+        DocumentExtractedFields(**row)
+        for row in payload["document_extracted_fields"]
+    )
+    session.add_all(
+        DocumentIssueFlag(**row) for row in payload["document_issue_flags"]
+    )
+    session.add_all(
+        DocumentReviewTask(**row) for row in payload["document_review_tasks"]
+    )
+    session.add_all(
+        DocumentEvidenceLink(**row) for row in payload["document_evidence_links"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

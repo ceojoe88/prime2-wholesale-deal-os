@@ -3737,6 +3737,100 @@ export const callFollowUpRecommendations: CallFollowUpRecommendation[] = [
   { id: "call-follow-up-002", sessionId: "call-intel-003", followUpType: "compliance_review", recommendedTiming: "before any seller response", draftMessageSummary: "Route title/attorney question to review reminder; do not answer with legal guidance.", ownerReviewRequired: true, liveSendAllowed: false }
 ];
 
+export type DocumentIntelligenceFile = {
+  id: string;
+  sourceDealId: string | null;
+  sourceLeadId: string | null;
+  sourceBuyerId: string | null;
+  uploadedBy: string;
+  originalFilename: string;
+  fileType: string;
+  storageReference: string;
+  documentType: string;
+  status: string;
+  classificationConfidence: number;
+  extractedSummary: string;
+  extractedPrice: number | null;
+  extractedBuyerName: string;
+  extractedSellerName: string;
+  extractedPropertyAddress: string;
+  extractedEffectiveDate: string;
+  extractedClosingDate: string;
+  extractedSignatureStatus: string;
+  extractedAssignmentLanguagePresent: boolean;
+  extractedPofAmount: number | null;
+  riskStatus: string;
+  ownerReviewStatus: string;
+  rawTextStored: boolean;
+  fullTextHidden: true;
+  portalPublishAllowed: false;
+  legalAdviceProvided: false;
+  executableContractGenerated: false;
+};
+
+export type DocumentIssueFlag = {
+  id: string;
+  documentId: string;
+  issueType: string;
+  severity: "low" | "medium" | "high";
+  sourceField: string;
+  explanation: string;
+  recommendedNextAction: string;
+  ownerReviewRequired: true;
+  complianceReviewRequired: boolean;
+  externalReviewReminder: boolean;
+  resolved: boolean;
+};
+
+export type DocumentReviewTask = {
+  id: string;
+  documentId: string;
+  taskType: string;
+  assignedTo: string;
+  status: string;
+  priority: "low" | "normal" | "high";
+  reason: string;
+  recommendedNextAction: string;
+  ownerReviewRequired: true;
+  liveSendAllowed: false;
+  legalReviewExternalOnly: boolean;
+};
+
+export type DocumentEvidenceLink = {
+  id: string;
+  documentId: string;
+  dealEvidencePacketId: string | null;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  linkageStatus: string;
+  sanitizedForExport: true;
+  portalPublishAllowed: false;
+};
+
+export const documentIntelligenceFiles: DocumentIntelligenceFile[] = [
+  { id: "doc-intel-001", sourceDealId: "deal-001", sourceLeadId: "lead-001", sourceBuyerId: null, uploadedBy: "Owner", originalFilename: "deal-001-purchase-agreement-draft.txt", fileType: "text", storageReference: "local-placeholder/doc-001", documentType: "purchase_agreement", status: "needs_review", classificationConfidence: 92, extractedSummary: "Purchase agreement draft with missing signature and title company.", extractedPrice: 140000, extractedBuyerName: "Prime 2 Acquisitions LLC", extractedSellerName: "Angela Morris", extractedPropertyAddress: "1420 Cedar Crest Ave, Dallas, TX 75216", extractedEffectiveDate: "05/08/2026", extractedClosingDate: "05/30/2026", extractedSignatureStatus: "missing", extractedAssignmentLanguagePresent: true, extractedPofAmount: null, riskStatus: "needs_review", ownerReviewStatus: "pending_review", rawTextStored: true, fullTextHidden: true, portalPublishAllowed: false, legalAdviceProvided: false, executableContractGenerated: false },
+  { id: "doc-intel-002", sourceDealId: "deal-001", sourceLeadId: null, sourceBuyerId: "buyer-001", uploadedBy: "Owner", originalFilename: "buyer-001-pof-letter.txt", fileType: "text", storageReference: "local-placeholder/doc-002", documentType: "proof_of_funds", status: "needs_review", classificationConfidence: 90, extractedSummary: "POF amount is below buyer purchase price and needs follow-up.", extractedPrice: null, extractedBuyerName: "Jules Carter", extractedSellerName: "", extractedPropertyAddress: "", extractedEffectiveDate: "", extractedClosingDate: "", extractedSignatureStatus: "signed", extractedAssignmentLanguagePresent: false, extractedPofAmount: 145000, riskStatus: "high", ownerReviewStatus: "pending_review", rawTextStored: true, fullTextHidden: true, portalPublishAllowed: false, legalAdviceProvided: false, executableContractGenerated: false },
+  { id: "doc-intel-003", sourceDealId: "deal-005", sourceLeadId: "lead-005", sourceBuyerId: null, uploadedBy: "Owner", originalFilename: "assignment-language-review.txt", fileType: "text", storageReference: "local-placeholder/doc-003", documentType: "assignment_agreement", status: "needs_review", classificationConfidence: 84, extractedSummary: "Assignment agreement language needs external review reminder.", extractedPrice: 210000, extractedBuyerName: "Buyer Entity Placeholder", extractedSellerName: "Robert Fields", extractedPropertyAddress: "5218 Bexar St, Dallas, TX 75215", extractedEffectiveDate: "05/10/2026", extractedClosingDate: "", extractedSignatureStatus: "unknown", extractedAssignmentLanguagePresent: false, extractedPofAmount: null, riskStatus: "high", ownerReviewStatus: "pending_review", rawTextStored: true, fullTextHidden: true, portalPublishAllowed: false, legalAdviceProvided: false, executableContractGenerated: false }
+];
+
+export const documentIssueFlags: DocumentIssueFlag[] = [
+  { id: "doc-issue-001", documentId: "doc-intel-001", issueType: "missing_signature", severity: "high", sourceField: "signature_status", explanation: "Purchase agreement draft is not signed and cannot be treated as controlled execution.", recommendedNextAction: "Owner review and external review reminder before relying on the file.", ownerReviewRequired: true, complianceReviewRequired: true, externalReviewReminder: true, resolved: false },
+  { id: "doc-issue-002", documentId: "doc-intel-002", issueType: "pof_amount_below_buyer_offer", severity: "high", sourceField: "pof_amount", explanation: "POF amount is below the buyer purchase price on the deal record.", recommendedNextAction: "Queue buyer POF follow-up through gated communication drafts.", ownerReviewRequired: true, complianceReviewRequired: true, externalReviewReminder: false, resolved: false },
+  { id: "doc-issue-003", documentId: "doc-intel-003", issueType: "assignment_language_missing", severity: "high", sourceField: "assignment_language_present", explanation: "Assignment language was not detected and must be externally reviewed before assignment readiness.", recommendedNextAction: "Route to title/attorney external review reminder.", ownerReviewRequired: true, complianceReviewRequired: true, externalReviewReminder: true, resolved: false }
+];
+
+export const documentReviewTasks: DocumentReviewTask[] = [
+  { id: "doc-review-001", documentId: "doc-intel-001", taskType: "title_attorney_external_review_reminder", assignedTo: "Prime 2", status: "open", priority: "high", reason: "Missing signature and title company data.", recommendedNextAction: "Prepare reminder only; no document submission.", ownerReviewRequired: true, liveSendAllowed: false, legalReviewExternalOnly: true },
+  { id: "doc-review-002", documentId: "doc-intel-002", taskType: "buyer_pof_follow_up", assignedTo: "Owner", status: "open", priority: "high", reason: "POF is below buyer purchase price.", recommendedNextAction: "Ask for updated POF only through gated drafts.", ownerReviewRequired: true, liveSendAllowed: false, legalReviewExternalOnly: false },
+  { id: "doc-review-003", documentId: "doc-intel-003", taskType: "compliance_review", assignedTo: "Prime 2", status: "open", priority: "high", reason: "Assignment language is missing or unclear.", recommendedNextAction: "Create external review reminder; no legal conclusion.", ownerReviewRequired: true, liveSendAllowed: false, legalReviewExternalOnly: true }
+];
+
+export const documentEvidenceLinks: DocumentEvidenceLink[] = [
+  { id: "doc-evidence-001", documentId: "doc-intel-001", dealEvidencePacketId: "evidence-001", sourceRecordType: "deal", sourceRecordId: "deal-001", linkageStatus: "linked", sanitizedForExport: true, portalPublishAllowed: false },
+  { id: "doc-evidence-002", documentId: "doc-intel-002", dealEvidencePacketId: "evidence-001", sourceRecordType: "buyer", sourceRecordId: "buyer-001", linkageStatus: "linked", sanitizedForExport: true, portalPublishAllowed: false },
+  { id: "doc-evidence-003", documentId: "doc-intel-003", dealEvidencePacketId: "evidence-003", sourceRecordType: "deal", sourceRecordId: "deal-005", linkageStatus: "linked", sanitizedForExport: true, portalPublishAllowed: false }
+];
+
 export const predictionFeedbackRecords: PredictionFeedbackRecord[] = [
   {
     id: "feedback-001",
@@ -3833,6 +3927,22 @@ export function getCallFollowUps(sessionId: string) {
   return callFollowUpRecommendations.filter((followUp) => followUp.sessionId === sessionId);
 }
 
+export function getDocumentIntelligenceFile(documentId: string) {
+  return documentIntelligenceFiles.find((document) => document.id === documentId);
+}
+
+export function getDocumentIssues(documentId: string) {
+  return documentIssueFlags.filter((issue) => issue.documentId === documentId);
+}
+
+export function getDocumentReviewTasks(documentId: string) {
+  return documentReviewTasks.filter((task) => task.documentId === documentId);
+}
+
+export function getDocumentEvidenceLinks(documentId: string) {
+  return documentEvidenceLinks.filter((link) => link.documentId === documentId);
+}
+
 export function getPredictionFeedback(feedbackId: string) {
   return predictionFeedbackRecords.find((record) => record.id === feedbackId);
 }
@@ -3856,6 +3966,24 @@ export const complianceCallEscalations = callIntelligenceSessions.filter(
 export const callQualityAverage = Math.round(
   callIntelligenceSessions.reduce((total, session) => total + session.callQualityScore, 0) /
     callIntelligenceSessions.length
+);
+export const documentsNeedingReview = documentIntelligenceFiles.filter(
+  (document) => document.ownerReviewStatus === "pending_review"
+);
+export const documentMissingSignatures = documentIntelligenceFiles.filter(
+  (document) => document.extractedSignatureStatus !== "signed"
+);
+export const documentPriceMismatches = documentIssueFlags.filter(
+  (issue) => issue.issueType === "mismatched_purchase_price"
+);
+export const documentPofIssues = documentIssueFlags.filter((issue) =>
+  issue.issueType.includes("pof")
+);
+export const documentAssignmentWarnings = documentIssueFlags.filter((issue) =>
+  issue.issueType.includes("assignment")
+);
+export const documentExternalReviewTasks = documentReviewTasks.filter(
+  (task) => task.legalReviewExternalOnly
 );
 export const predictionMisses = predictionFeedbackRecords.filter((record) => record.accuracyScore < 70);
 export const pendingScoringAdjustments = scoringAdjustmentSuggestions.filter((suggestion) => suggestion.ownerReviewStatus === "pending_review");

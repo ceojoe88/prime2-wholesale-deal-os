@@ -12,6 +12,7 @@ ALLOWED_AI_REQUEST_TYPES = {
     "negotiation_assist",
     "field_testing_summary",
     "call_intelligence_extraction",
+    "document_intelligence_extraction",
 }
 
 BLOCKED_AI_REQUEST_TYPES = {
@@ -19,6 +20,7 @@ BLOCKED_AI_REQUEST_TYPES = {
     "contract_generation",
     "purchase_agreement",
     "assignment_contract",
+    "contract_rewrite",
     "closing_instruction",
     "profit_guarantee",
     "financial_calculation_override",

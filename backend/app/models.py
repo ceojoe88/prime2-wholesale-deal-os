@@ -2435,3 +2435,123 @@ class AssignmentFeeAttribution(TimestampMixin, Base):
     evidence_packet: Mapped[DealEvidencePacket | None] = relationship(
         back_populates="assignment_fee_attributions"
     )
+
+
+class DocumentIntelligenceFile(TimestampMixin, Base):
+    __tablename__ = "document_intelligence_files"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    source_deal_id: Mapped[str | None] = mapped_column(ForeignKey("deals.id"), nullable=True)
+    source_lead_id: Mapped[str | None] = mapped_column(ForeignKey("leads.id"), nullable=True)
+    source_buyer_id: Mapped[str | None] = mapped_column(ForeignKey("buyers.id"), nullable=True)
+    uploaded_by: Mapped[str] = mapped_column(String(120), default="Owner")
+    original_filename: Mapped[str] = mapped_column(String(220), default="")
+    file_type: Mapped[str] = mapped_column(String(80), default="text")
+    storage_reference: Mapped[str] = mapped_column(String(220), default="")
+    document_type: Mapped[str] = mapped_column(String(80), default="other")
+    status: Mapped[str] = mapped_column(String(80), default="uploaded")
+    classification_confidence: Mapped[float] = mapped_column(Float, default=0)
+    extracted_summary: Mapped[str] = mapped_column(Text, default="")
+    extracted_price: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    extracted_buyer_name: Mapped[str] = mapped_column(String(160), default="")
+    extracted_seller_name: Mapped[str] = mapped_column(String(160), default="")
+    extracted_property_address: Mapped[str] = mapped_column(String(220), default="")
+    extracted_effective_date: Mapped[str] = mapped_column(String(80), default="")
+    extracted_closing_date: Mapped[str] = mapped_column(String(80), default="")
+    extracted_signature_status: Mapped[str] = mapped_column(String(80), default="unknown")
+    extracted_assignment_language_present: Mapped[bool] = mapped_column(Boolean, default=False)
+    extracted_pof_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    risk_status: Mapped[str] = mapped_column(String(80), default="needs_review")
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    full_text_internal: Mapped[str] = mapped_column(Text, default="")
+    raw_text_stored: Mapped[bool] = mapped_column(Boolean, default=False)
+    portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_provided: Mapped[bool] = mapped_column(Boolean, default=False)
+    executable_contract_generated: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class DocumentClassificationResult(TimestampMixin, Base):
+    __tablename__ = "document_classification_results"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("document_intelligence_files.id"), nullable=False
+    )
+    document_type: Mapped[str] = mapped_column(String(80), default="other")
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    classification_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    classifier_version: Mapped[str] = mapped_column(String(40), default="v24.deterministic")
+    owner_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class DocumentExtractedFields(TimestampMixin, Base):
+    __tablename__ = "document_extracted_fields"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("document_intelligence_files.id"), nullable=False
+    )
+    parties: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    prices: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    dates: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    signature_status: Mapped[str] = mapped_column(String(80), default="unknown")
+    assignment_language_present: Mapped[bool] = mapped_column(Boolean, default=False)
+    pof_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    title_company_name: Mapped[str] = mapped_column(String(180), default="")
+    missing_fields: Mapped[list[str]] = mapped_column(JSON, default=list)
+    source_basis: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    deterministic_fallback_used: Mapped[bool] = mapped_column(Boolean, default=True)
+    ai_request_id: Mapped[str | None] = mapped_column(ForeignKey("ai_request_logs.id"), nullable=True)
+
+
+class DocumentIssueFlag(TimestampMixin, Base):
+    __tablename__ = "document_issue_flags"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("document_intelligence_files.id"), nullable=False
+    )
+    issue_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(40), default="medium")
+    source_field: Mapped[str] = mapped_column(String(120), default="")
+    explanation: Mapped[str] = mapped_column(Text, default="")
+    recommended_next_action: Mapped[str] = mapped_column(Text, default="")
+    owner_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    compliance_review_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    external_review_reminder: Mapped[bool] = mapped_column(Boolean, default=False)
+    resolved: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class DocumentReviewTask(TimestampMixin, Base):
+    __tablename__ = "document_review_tasks"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("document_intelligence_files.id"), nullable=False
+    )
+    task_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    assigned_to: Mapped[str] = mapped_column(String(120), default="Owner")
+    status: Mapped[str] = mapped_column(String(80), default="open")
+    priority: Mapped[str] = mapped_column(String(40), default="normal")
+    reason: Mapped[str] = mapped_column(Text, default="")
+    recommended_next_action: Mapped[str] = mapped_column(Text, default="")
+    owner_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_review_external_only: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class DocumentEvidenceLink(TimestampMixin, Base):
+    __tablename__ = "document_evidence_links"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("document_intelligence_files.id"), nullable=False
+    )
+    deal_evidence_packet_id: Mapped[str | None] = mapped_column(
+        ForeignKey("deal_evidence_packets.id"), nullable=True
+    )
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(100), default="")
+    linkage_status: Mapped[str] = mapped_column(String(80), default="linked")
+    sanitized_for_export: Mapped[bool] = mapped_column(Boolean, default=True)
+    portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)

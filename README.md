@@ -51,6 +51,7 @@ Implemented phases:
 - V21 background worker runtime
 - V22 provider sandbox and credential readiness gate
 - V23 call intelligence layer
+- V24 deal document intelligence
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -105,6 +106,12 @@ Webhook handling is a skeleton for mock or sandbox events only. Events create re
 V23 converts manual seller call notes and pasted text transcripts into structured intelligence: motivation reason, urgency, asking price, condition clues, objections, decision-maker status, trust, price flexibility, follow-up preference, DNC detection, risk flags, quality score, and next best action. It is text-only; no audio processing, live calling, or automatic response execution is added.
 
 Do-not-contact detection creates a V19 call outcome and blocks future outreach eligibility. Legal/title/contract questions create compliance escalations and attorney/title review reminders. Objections produce safe draft-only responses that remain owner-reviewed and cannot send without the existing V5/V13 gates.
+
+## V24 Deal Document Intelligence
+
+V24 adds internal document intelligence for deal files. Prime 2 can classify purchase agreements, assignment agreements, proof-of-funds letters, title docs, seller/buyer docs, inspection notes, repair estimates, comp reports, and other files from manual metadata or pasted text. It extracts safe metadata such as parties, property address, prices, dates, signatures, assignment-language presence, POF amount, and title company name.
+
+The layer flags missing fields, price mismatches, weak POF, unclear assignment language, risky language, unsupported ARV/repair claims, and external review needs. It is review routing only: no legal conclusions, no contract rewriting, no file delivery, no title submission, and no automatic portal publishing.
 
 ## Safety Boundaries
 

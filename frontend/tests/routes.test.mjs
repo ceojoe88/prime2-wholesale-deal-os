@@ -83,6 +83,12 @@ const requiredRouteFiles = [
   "src/app/dashboard/closing-coordination/readiness/page.tsx",
   "src/app/dashboard/deal-evidence/page.tsx",
   "src/app/dashboard/deal-evidence/[packetId]/page.tsx",
+  "src/app/dashboard/documents/page.tsx",
+  "src/app/dashboard/documents/[documentId]/page.tsx",
+  "src/app/dashboard/documents/upload/page.tsx",
+  "src/app/dashboard/documents/issues/page.tsx",
+  "src/app/dashboard/documents/review-queue/page.tsx",
+  "src/app/dashboard/documents/evidence/page.tsx",
   "src/app/dashboard/assignment-fees/page.tsx",
   "src/app/dashboard/assignment-fees/[feeId]/page.tsx",
   "src/app/dashboard/buyer-demand/page.tsx",
@@ -363,6 +369,31 @@ test("V23 call intelligence pages expose no live call or send controls", () => {
     "publish automatically",
     "live calling enabled",
     "live response generated"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V24 document intelligence pages expose no execution or raw document controls", () => {
+  const files = [
+    "src/app/dashboard/documents/page.tsx",
+    "src/app/dashboard/documents/[documentId]/page.tsx",
+    "src/app/dashboard/documents/upload/page.tsx",
+    "src/app/dashboard/documents/issues/page.tsx",
+    "src/app/dashboard/documents/review-queue/page.tsx",
+    "src/app/dashboard/documents/evidence/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "bulk blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "raw document text",
+    "legal advice"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

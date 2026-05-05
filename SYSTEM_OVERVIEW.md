@@ -38,6 +38,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Background worker runtime for scheduled internal prep jobs, retries, idempotency, ledgers, and heartbeat monitoring
 - Provider sandbox and credential readiness checks for future integrations without storing secrets or making uncontrolled provider calls
 - Seller call intelligence from manual notes or pasted transcripts, including DNC detection, objections, quality scoring, and draft-only follow-up recommendations
+- Deal document intelligence for classification, metadata extraction, issue flags, review routing, and sanitized evidence links
 
 ## Command Hierarchy
 
@@ -129,7 +130,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V23
+## Phase Map V1-V24
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -199,6 +200,9 @@ Added provider registry records for OpenAI, email, SMS, CRM, skip-trace, storage
 
 V23 Call Intelligence Layer:
 Added text-only call intelligence sessions for manual notes and pasted transcripts, seller signal extraction, objection records, motivation/contactability/readiness deltas, call quality scoring, follow-up recommendations, DNC detection tied to outreach eligibility blocks, and compliance escalation for title/contract questions. It can draft and recommend only; it does not place calls, record audio, send responses, change offer terms, or bypass V5/V13 communication gates.
+
+V24 Deal Document Intelligence:
+Added internal document intelligence files, classification results, extracted document fields, issue flags, review tasks, and document evidence links. Prime 2 can classify and extract metadata from manual entries or pasted text, flag missing signatures, price mismatches, POF gaps, unclear assignment language, risky phrases, and external review reminders. It does not provide legal conclusions, rewrite documents, generate executable contracts, submit files to title, or publish documents to portals automatically.
 
 ## Local Run Commands
 

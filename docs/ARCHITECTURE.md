@@ -54,6 +54,8 @@ V22 adds provider sandbox and credential readiness. It introduces provider regis
 
 V23 adds call intelligence. It accepts manual call notes or pasted transcripts, extracts seller signals and objections, updates deterministic score deltas, detects DNC requests, routes legal/title questions to compliance reminders, and creates draft-only follow-up recommendations. It does not add audio processing, live calling, automatic responses, offer-term changes, or any communication bypass.
 
+V24 adds deal document intelligence. It classifies internal deal files, extracts safe metadata, flags missing fields, price mismatches, weak POF, unclear assignment language, risky phrases, and review needs. It is review routing only and cannot provide legal conclusions, rewrite contracts, submit files to title, publish documents to portals, or mark documents executed.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, backups, lead imports, lead QA, call outcomes, field feedback, and scoring adjustment suggestions.
@@ -71,6 +73,7 @@ V23 adds call intelligence. It accepts manual call notes or pasted transcripts, 
 - `app/domains/worker_runtime/*`: V21 background worker runtime with queueing, scheduler, runner, retry manager, idempotency, ledgers, heartbeat health, and hard blocks against live action.
 - `app/domains/provider_readiness/*`: V22 provider readiness registry, credential posture checks, provider attempt audits, webhook review skeleton, response sanitizers, and hard blocks against secret storage or uncontrolled provider calls.
 - `app/domains/call_intelligence/*`: V23 text-only call intelligence extraction, DNC/legal risk detection, objection drafting, score-delta explanations, follow-up recommendations, AI Gateway allowlist integration, and worker-safe analysis jobs.
+- `app/domains/document_intelligence/*`: V24 document classification, deterministic field extraction, issue flagging, sanitized document responses, review routing, evidence linking, AI Gateway allowlist integration, and hard blocks against legal conclusions, executable contracts, title submission, and portal publishing.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -266,6 +269,28 @@ Frontend routes:
 - `/dashboard/call-intelligence/quality`
 
 Call intelligence uses a deterministic extractor by default and can optionally request AI assistance through the allowlisted `call_intelligence_extraction` request type. AI assistance must use transcript/source basis and cannot invent numbers. DNC phrases create an outreach eligibility block through the V19 call-outcome path. Legal/title/contract questions create compliance escalation records and reminders for outside qualified review. Worker jobs may queue `call_analysis` but the worker still cannot call sellers, send follow-ups, change terms, publish portals, or execute contracts.
+
+## V24 Deal Document Intelligence
+
+Backend routes:
+
+- `/api/v1/documents`
+- `/api/v1/documents/analyze`
+- `/api/v1/documents/{documentId}`
+- `/api/v1/documents/issues`
+- `/api/v1/documents/review-queue`
+- `/api/v1/documents/evidence`
+
+Frontend routes:
+
+- `/dashboard/documents`
+- `/dashboard/documents/[documentId]`
+- `/dashboard/documents/upload`
+- `/dashboard/documents/issues`
+- `/dashboard/documents/review-queue`
+- `/dashboard/documents/evidence`
+
+Document records store source deal, lead, and buyer references; upload metadata; document type; classification confidence; extracted safe metadata; risk status; owner review status; and internal-only text. Sanitized responses hide full text and force portal publishing, contract execution, title delivery, and legal guidance flags off. Issue flags record type, severity, source field, explanation, next action, owner review, compliance review, and external review reminders. Review tasks route owner review, compliance review, missing data, buyer POF follow-up, seller document follow-up, and title/attorney reminders without sending anything.
 
 ## V2 Buyer Portal
 
