@@ -488,6 +488,100 @@ export type AutonomyEscalation = {
   idempotencyKey: string;
 };
 
+export type AutoExecutionRule = {
+  id: string;
+  ruleName: string;
+  actionType: string;
+  sourceType: string;
+  allowedRecipientType: string;
+  trigger: string;
+  requiredConditions: string[];
+  approvedTemplateId: string;
+  autonomyLevel: number;
+  liveFlagRequired: boolean;
+  riskScore: number;
+  ownerApprovalStatus: string;
+  status: string;
+  blockedReasons: string[];
+  bulkSendAllowed: false;
+  buyerBlastAllowed: false;
+  legalContractMessageAllowed: false;
+  coldSmsAllowed: false;
+};
+
+export type ApprovedTemplate = {
+  id: string;
+  templateName: string;
+  templateType: string;
+  channel: string;
+  recipientType: string;
+  subject: string;
+  body: string;
+  approved: boolean;
+  safetyStatus: string;
+  riskFlags: string[];
+  requiresOptOut: boolean;
+  includesOptOut: boolean;
+  legalAdviceAllowed: false;
+  pressureLanguageAllowed: false;
+  fakeUrgencyAllowed: false;
+  fakeBuyerClaimAllowed: false;
+  draftOnlyDefault: true;
+};
+
+export type AutoExecutionDryRun = {
+  id: string;
+  ruleId: string;
+  templateId: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  recipientType: string;
+  recipientPlaceholder: string;
+  subjectBodyHash: string;
+  safetyPassed: boolean;
+  riskStatus: string;
+  providerMode: string;
+  idempotencyKey: string;
+  status: string;
+};
+
+export type AutoExecutionAttempt = {
+  id: string;
+  ruleId: string;
+  templateId: string;
+  dryRunId: string | null;
+  actionType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  recipientType: string;
+  recipientCount: number;
+  attemptStatus: string;
+  blockedReasons: string[];
+  ownerApprovalRecorded: boolean;
+  v5SafetyPassed: boolean;
+  v5DryRunReceiptExists: boolean;
+  v5ApprovalRecorded: boolean;
+  liveFlagsEnabled: boolean;
+  providerReady: boolean;
+  providerCalled: boolean;
+  providerMode: string;
+  idempotencyKey: string;
+  auditRecordCreated: boolean;
+};
+
+export type AutoExecutionAuditRecord = {
+  id: string;
+  attemptId: string;
+  ruleId: string;
+  eventType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  outcome: string;
+  blockedReasons: string[];
+  providerCalled: boolean;
+  idempotencyKey: string;
+};
+
 export type SellerInteraction = {
   id: string;
   leadId: string;
@@ -1278,6 +1372,38 @@ export const dailyCommandBriefings: DailyCommandBriefing[] = [
 export const autonomyEscalations: AutonomyEscalation[] = [
   { id: "auto-escalation-001", runId: "run-hot-deal-001", dealId: "deal-001", leadId: "lead-001", escalationType: "hot_deal_acceleration", severity: "critical", reason: "Deal-001 protects a 10K+ spread and has verified buyer demand, but owner review is still required before any real-world move.", recommendedAction: "Review seller follow-up draft, buyer POF, compliance status, and owner approvals.", status: "open", ownerActionRequired: true, autonomyLevel: 3, realWorldActionBlocked: true, idempotencyKey: "seed:auto-escalation-001" },
   { id: "auto-escalation-002", runId: "run-hot-deal-001", dealId: "deal-005", leadId: "lead-005", escalationType: "compliance_blocker", severity: "high", reason: "Inherited property path needs seller authority and compliance review before title, portal, or assignment readiness movement.", recommendedAction: "Resolve compliance blocker and missing seller documents; do not publish or submit anything.", status: "open", ownerActionRequired: true, autonomyLevel: 3, realWorldActionBlocked: true, idempotencyKey: "seed:auto-escalation-002" }
+];
+
+export const approvedTemplates: ApprovedTemplate[] = [
+  { id: "template-seller-followup-safe", templateName: "Approved Seller Follow-Up Draft", templateType: "seller_follow_up", channel: "sms", recipientType: "seller", subject: "", body: "Hi {{seller_first_name}}, this is a draft follow-up for owner review. We can talk through the as-is offer basis when convenient. Reply STOP to opt out.", approved: true, safetyStatus: "approved", riskFlags: [], requiresOptOut: true, includesOptOut: true, legalAdviceAllowed: false, pressureLanguageAllowed: false, fakeUrgencyAllowed: false, fakeBuyerClaimAllowed: false, draftOnlyDefault: true },
+  { id: "template-buyer-response-safe", templateName: "Approved Buyer Interest Response", templateType: "buyer_response", channel: "email", recipientType: "buyer", subject: "Draft response on deal interest", body: "Thanks for the interest. The owner will review proof of funds and deal-room details before any next step. This is not a contract or commitment.", approved: true, safetyStatus: "approved", riskFlags: [], requiresOptOut: false, includesOptOut: false, legalAdviceAllowed: false, pressureLanguageAllowed: false, fakeUrgencyAllowed: false, fakeBuyerClaimAllowed: false, draftOnlyDefault: true },
+  { id: "template-internal-reminder", templateName: "Internal Owner Reminder", templateType: "internal_reminder", channel: "internal", recipientType: "owner", subject: "Review queued deal action", body: "Internal reminder: review the gated action, dry-run receipt, safety result, and idempotency record before approval.", approved: true, safetyStatus: "approved", riskFlags: [], requiresOptOut: false, includesOptOut: false, legalAdviceAllowed: false, pressureLanguageAllowed: false, fakeUrgencyAllowed: false, fakeBuyerClaimAllowed: false, draftOnlyDefault: true },
+  { id: "template-title-review-coordination", templateName: "Title Review Coordination Draft", templateType: "title_review_coordination", channel: "email", recipientType: "internal", subject: "Draft title review coordination", body: "Draft-only coordination note: confirm required documents, owner approval, and attorney/title review reminder before any external action.", approved: true, safetyStatus: "approved", riskFlags: [], requiresOptOut: false, includesOptOut: false, legalAdviceAllowed: false, pressureLanguageAllowed: false, fakeUrgencyAllowed: false, fakeBuyerClaimAllowed: false, draftOnlyDefault: true },
+  { id: "template-unsafe-pressure", templateName: "Blocked Pressure Example", templateType: "seller_follow_up", channel: "sms", recipientType: "seller", subject: "", body: "You must sign now. This is your last chance and we already have a buyer.", approved: false, safetyStatus: "blocked", riskFlags: ["pressure_language", "fake_urgency", "fake_buyer_claim", "missing_sms_opt_out"], requiresOptOut: true, includesOptOut: false, legalAdviceAllowed: false, pressureLanguageAllowed: false, fakeUrgencyAllowed: false, fakeBuyerClaimAllowed: false, draftOnlyDefault: true }
+];
+
+export const autoExecutionRules: AutoExecutionRule[] = [
+  { id: "auto-rule-internal-reminder", ruleName: "Create Internal Owner Reminder", actionType: "internal_reminder", sourceType: "autonomy_escalation", allowedRecipientType: "owner", trigger: "escalation_created", requiredConditions: ["source_record_exists", "template_approved"], approvedTemplateId: "template-internal-reminder", autonomyLevel: 3, liveFlagRequired: false, riskScore: 5, ownerApprovalStatus: "approved", status: "approved", blockedReasons: [], bulkSendAllowed: false, buyerBlastAllowed: false, legalContractMessageAllowed: false, coldSmsAllowed: false },
+  { id: "auto-rule-seller-followup-draft", ruleName: "Approved Seller Follow-Up Draft", actionType: "seller_follow_up_draft", sourceType: "seller_interaction", allowedRecipientType: "seller", trigger: "follow_up_due", requiredConditions: ["template_approved", "seller_source_tied", "owner_review_queue"], approvedTemplateId: "template-seller-followup-safe", autonomyLevel: 3, liveFlagRequired: false, riskScore: 18, ownerApprovalStatus: "approved", status: "approved", blockedReasons: [], bulkSendAllowed: false, buyerBlastAllowed: false, legalContractMessageAllowed: false, coldSmsAllowed: false },
+  { id: "auto-rule-buyer-response-send", ruleName: "Approved Low-Risk Buyer Response Send", actionType: "low_risk_single_message_send", sourceType: "buyer_interest", allowedRecipientType: "buyer", trigger: "buyer_interest_received", requiredConditions: ["template_approved", "v5_safety_passed", "v5_dry_run_receipt", "v5_owner_approval", "live_flags_enabled", "provider_ready", "single_recipient"], approvedTemplateId: "template-buyer-response-safe", autonomyLevel: 4, liveFlagRequired: true, riskScore: 22, ownerApprovalStatus: "approved", status: "approved", blockedReasons: [], bulkSendAllowed: false, buyerBlastAllowed: false, legalContractMessageAllowed: false, coldSmsAllowed: false },
+  { id: "auto-rule-blocked-bulk", ruleName: "Blocked Buyer Blast Example", actionType: "buyer_blast", sourceType: "deal_distribution", allowedRecipientType: "buyer", trigger: "hot_deal_created", requiredConditions: ["blocked_by_design"], approvedTemplateId: "template-buyer-response-safe", autonomyLevel: 4, liveFlagRequired: true, riskScore: 90, ownerApprovalStatus: "pending", status: "blocked", blockedReasons: ["buyer_blast_blocked"], bulkSendAllowed: false, buyerBlastAllowed: false, legalContractMessageAllowed: false, coldSmsAllowed: false }
+];
+
+export const autoExecutionDryRuns: AutoExecutionDryRun[] = [
+  { id: "auto-dryrun-001", ruleId: "auto-rule-buyer-response-send", templateId: "template-buyer-response-safe", sourceRecordType: "buyer_interest", sourceRecordId: "interest-001", recipientType: "buyer", recipientPlaceholder: "buyer-email-placeholder", subjectBodyHash: "hash-auto-buyer-safe", safetyPassed: true, riskStatus: "clear", providerMode: "mock/dry_run", idempotencyKey: "seed:auto-execution-dryrun-001", status: "created" },
+  { id: "auto-dryrun-002", ruleId: "auto-rule-seller-followup-draft", templateId: "template-unsafe-pressure", sourceRecordType: "seller_interaction", sourceRecordId: "seller-interaction-005", recipientType: "seller", recipientPlaceholder: "seller-phone-placeholder", subjectBodyHash: "hash-auto-pressure-blocked", safetyPassed: false, riskStatus: "blocked", providerMode: "mock/dry_run", idempotencyKey: "seed:auto-execution-dryrun-002", status: "blocked" }
+];
+
+export const autoExecutionAttempts: AutoExecutionAttempt[] = [
+  { id: "auto-attempt-001", ruleId: "auto-rule-internal-reminder", templateId: "template-internal-reminder", dryRunId: null, actionType: "internal_reminder", sourceRecordType: "autonomy_escalation", sourceRecordId: "auto-escalation-001", recipientType: "owner", recipientCount: 1, attemptStatus: "completed_internal", blockedReasons: [], ownerApprovalRecorded: true, v5SafetyPassed: false, v5DryRunReceiptExists: false, v5ApprovalRecorded: false, liveFlagsEnabled: false, providerReady: false, providerCalled: false, providerMode: "internal", idempotencyKey: "seed:auto-attempt-001", auditRecordCreated: true },
+  { id: "auto-attempt-002", ruleId: "auto-rule-buyer-response-send", templateId: "template-buyer-response-safe", dryRunId: "auto-dryrun-001", actionType: "low_risk_single_message_send", sourceRecordType: "buyer_interest", sourceRecordId: "interest-001", recipientType: "buyer", recipientCount: 1, attemptStatus: "mock_sent", blockedReasons: [], ownerApprovalRecorded: true, v5SafetyPassed: true, v5DryRunReceiptExists: true, v5ApprovalRecorded: true, liveFlagsEnabled: true, providerReady: true, providerCalled: true, providerMode: "mock/dry_run", idempotencyKey: "seed:auto-attempt-002", auditRecordCreated: true },
+  { id: "auto-attempt-003", ruleId: "auto-rule-blocked-bulk", templateId: "template-buyer-response-safe", dryRunId: null, actionType: "buyer_blast", sourceRecordType: "deal_distribution", sourceRecordId: "distribution-001", recipientType: "buyer", recipientCount: 12, attemptStatus: "blocked", blockedReasons: ["action_not_allowed_for_auto_execution", "single_recipient_required", "risk_score_too_high"], ownerApprovalRecorded: false, v5SafetyPassed: false, v5DryRunReceiptExists: false, v5ApprovalRecorded: false, liveFlagsEnabled: false, providerReady: false, providerCalled: false, providerMode: "blocked", idempotencyKey: "seed:auto-attempt-003", auditRecordCreated: true }
+];
+
+export const autoExecutionAuditRecords: AutoExecutionAuditRecord[] = [
+  { id: "auto-audit-001", attemptId: "auto-attempt-001", ruleId: "auto-rule-internal-reminder", eventType: "internal_reminder_created", sourceRecordType: "autonomy_escalation", sourceRecordId: "auto-escalation-001", outcome: "completed_internal", blockedReasons: [], providerCalled: false, idempotencyKey: "seed:auto-audit-001" },
+  { id: "auto-audit-002", attemptId: "auto-attempt-002", ruleId: "auto-rule-buyer-response-send", eventType: "single_execution_attempt", sourceRecordType: "buyer_interest", sourceRecordId: "interest-001", outcome: "mock_sent", blockedReasons: [], providerCalled: true, idempotencyKey: "seed:auto-audit-002" },
+  { id: "auto-audit-003", attemptId: "auto-attempt-003", ruleId: "auto-rule-blocked-bulk", eventType: "blocked_execution_attempt", sourceRecordType: "deal_distribution", sourceRecordId: "distribution-001", outcome: "blocked", blockedReasons: ["action_not_allowed_for_auto_execution", "single_recipient_required"], providerCalled: false, idempotencyKey: "seed:auto-audit-003" }
 ];
 
 export const assignmentReadinessRecords: AssignmentReadinessRecord[] = [
@@ -2120,4 +2246,28 @@ export const autonomySafetyBoundaryCards = [
   { label: "Portal publishing", value: "off", detail: "Buyer/seller portal visibility remains operator-gated" },
   { label: "Contracts/title", value: "off", detail: "No execution, no title submission, no review packet send" },
   { label: "Level 5", value: "disabled", detail: autonomyLevel5Disabled ? "Unavailable in V12" : "Review configuration" }
+];
+
+export const approvedAutoExecutionRules = autoExecutionRules.filter(
+  (rule) => rule.status === "approved" && rule.ownerApprovalStatus === "approved"
+);
+export const approvedTemplateLibrary = approvedTemplates.filter((template) => template.approved);
+export const blockedAutoExecutionRules = autoExecutionRules.filter(
+  (rule) => rule.status !== "approved" || rule.blockedReasons.length > 0
+);
+export const autoExecutionBlockedAttempts = autoExecutionAttempts.filter(
+  (attempt) => attempt.attemptStatus === "blocked" || attempt.blockedReasons.length > 0
+);
+export const autoExecutionMockSentAttempts = autoExecutionAttempts.filter(
+  (attempt) => attempt.attemptStatus === "mock_sent"
+);
+export const autoExecutionDryRunBlocks = autoExecutionDryRuns.filter(
+  (dryRun) => !dryRun.safetyPassed || dryRun.riskStatus === "blocked"
+);
+export const autoExecutionAuditTrail = autoExecutionAuditRecords;
+export const autoExecutionSafetyCards = [
+  { label: "Approved rules", value: String(approvedAutoExecutionRules.length), detail: "Rule and owner approval required" },
+  { label: "Approved templates", value: String(approvedTemplateLibrary.length), detail: "Template safety required" },
+  { label: "Blocked attempts", value: String(autoExecutionBlockedAttempts.length), detail: "Bulk/blast/unsafe paths audited" },
+  { label: "Bulk send", value: "off", detail: "Single recipient only" }
 ];

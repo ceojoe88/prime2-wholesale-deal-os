@@ -691,6 +691,154 @@ class AutonomyEscalation(TimestampMixin, Base):
     run: Mapped[SchedulerRun | None] = relationship(back_populates="escalations")
 
 
+class AutoExecutionRule(TimestampMixin, Base):
+    __tablename__ = "auto_execution_rules"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    rule_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_type: Mapped[str] = mapped_column(String(100), default="")
+    allowed_recipient_type: Mapped[str] = mapped_column(String(100), default="")
+    trigger: Mapped[str] = mapped_column(String(140), default="")
+    required_conditions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    approved_template_id: Mapped[str | None] = mapped_column(
+        ForeignKey("approved_templates.id"), nullable=True
+    )
+    autonomy_level: Mapped[int] = mapped_column(Integer, default=3)
+    live_flag_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    risk_score: Mapped[float] = mapped_column(Float, default=0)
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending")
+    status: Mapped[str] = mapped_column(String(80), default="draft")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    bulk_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_contract_message_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    cold_sms_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    approved_template: Mapped["ApprovedTemplate | None"] = relationship(
+        back_populates="rules"
+    )
+    dry_runs: Mapped[list["AutoExecutionDryRun"]] = relationship(back_populates="rule")
+    attempts: Mapped[list["AutoExecutionAttempt"]] = relationship(back_populates="rule")
+    audit_records: Mapped[list["AutoExecutionAuditRecord"]] = relationship(
+        back_populates="rule"
+    )
+
+
+class ApprovedTemplate(TimestampMixin, Base):
+    __tablename__ = "approved_templates"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    template_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    template_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    channel: Mapped[str] = mapped_column(String(60), default="internal")
+    recipient_type: Mapped[str] = mapped_column(String(100), default="")
+    subject: Mapped[str] = mapped_column(String(180), default="")
+    body: Mapped[str] = mapped_column(Text, default="")
+    approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    safety_status: Mapped[str] = mapped_column(String(80), default="unchecked")
+    risk_flags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    requires_opt_out: Mapped[bool] = mapped_column(Boolean, default=False)
+    includes_opt_out: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    pressure_language_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    fake_urgency_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    fake_buyer_claim_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    draft_only_default: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    rules: Mapped[list[AutoExecutionRule]] = relationship(
+        back_populates="approved_template"
+    )
+    dry_runs: Mapped[list["AutoExecutionDryRun"]] = relationship(
+        back_populates="template"
+    )
+    attempts: Mapped[list["AutoExecutionAttempt"]] = relationship(
+        back_populates="template"
+    )
+
+
+class AutoExecutionDryRun(TimestampMixin, Base):
+    __tablename__ = "auto_execution_dry_runs"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    rule_id: Mapped[str] = mapped_column(ForeignKey("auto_execution_rules.id"))
+    template_id: Mapped[str] = mapped_column(ForeignKey("approved_templates.id"))
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(100), default="")
+    recipient_type: Mapped[str] = mapped_column(String(100), default="")
+    recipient_placeholder: Mapped[str] = mapped_column(String(180), default="")
+    subject_body_hash: Mapped[str] = mapped_column(String(160), default="")
+    safety_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    safety_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    risk_status: Mapped[str] = mapped_column(String(80), default="unchecked")
+    provider_mode: Mapped[str] = mapped_column(String(80), default="mock/dry_run")
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(80), default="created")
+
+    rule: Mapped[AutoExecutionRule] = relationship(back_populates="dry_runs")
+    template: Mapped[ApprovedTemplate] = relationship(back_populates="dry_runs")
+
+
+class AutoExecutionAttempt(TimestampMixin, Base):
+    __tablename__ = "auto_execution_attempts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    rule_id: Mapped[str | None] = mapped_column(
+        ForeignKey("auto_execution_rules.id"), nullable=True
+    )
+    template_id: Mapped[str | None] = mapped_column(
+        ForeignKey("approved_templates.id"), nullable=True
+    )
+    dry_run_id: Mapped[str | None] = mapped_column(
+        ForeignKey("auto_execution_dry_runs.id"), nullable=True
+    )
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(100), default="")
+    recipient_type: Mapped[str] = mapped_column(String(100), default="")
+    recipient_count: Mapped[int] = mapped_column(Integer, default=1)
+    attempt_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    safety_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    v5_safety_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    v5_dry_run_receipt_exists: Mapped[bool] = mapped_column(Boolean, default=False)
+    v5_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_flags_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_ready: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_mode: Mapped[str] = mapped_column(String(80), default="mock/dry_run")
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+    audit_record_created: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    rule: Mapped[AutoExecutionRule | None] = relationship(back_populates="attempts")
+    template: Mapped[ApprovedTemplate | None] = relationship(back_populates="attempts")
+    dry_run: Mapped[AutoExecutionDryRun | None] = relationship()
+
+
+class AutoExecutionAuditRecord(TimestampMixin, Base):
+    __tablename__ = "auto_execution_audit_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    attempt_id: Mapped[str | None] = mapped_column(
+        ForeignKey("auto_execution_attempts.id"), nullable=True
+    )
+    rule_id: Mapped[str | None] = mapped_column(
+        ForeignKey("auto_execution_rules.id"), nullable=True
+    )
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(100), default="")
+    outcome: Mapped[str] = mapped_column(String(100), default="blocked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    safety_snapshot: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+
+    rule: Mapped[AutoExecutionRule | None] = relationship(back_populates="audit_records")
+    attempt: Mapped[AutoExecutionAttempt | None] = relationship()
+
+
 class ComplianceRecord(TimestampMixin, Base):
     __tablename__ = "compliance_records"
 

@@ -12,6 +12,11 @@ from app.domain.autonomy import (
     daily_briefing_summary,
     run_scheduler_workflow,
 )
+from app.domain.auto_execution import (
+    auto_execution_dashboard,
+    execute_with_auto_gate,
+    validate_auto_execution_template,
+)
 from app.domain.buyer_portal import (
     buyer_portal_rules,
     portal_publish_gate,
@@ -96,6 +101,11 @@ from app.models import (
     Agent,
     AssignmentFeeAttribution,
     AssignmentReadinessRecord,
+    ApprovedTemplate,
+    AutoExecutionAttempt,
+    AutoExecutionAuditRecord,
+    AutoExecutionDryRun,
+    AutoExecutionRule,
     AutomationAttempt,
     AutomationEventTrigger,
     AutomationRule,
@@ -180,6 +190,20 @@ class AutonomyRunRequest(BaseModel):
     workflow_type: str
     idempotency_key: str
     owner_approval_recorded: bool = False
+
+
+class AutoExecutionRequest(BaseModel):
+    rule_id: str | None = None
+    template_id: str | None = None
+    idempotency_key: str
+    source_record_type: str = ""
+    source_record_id: str = ""
+    recipient_count: int = 1
+    v5_safety_passed: bool = False
+    v5_dry_run_receipt_exists: bool = False
+    v5_approval_recorded: bool = False
+    live_flags_enabled: bool = False
+    provider_ready: bool = False
 
 
 class SellerLanguageRequest(BaseModel):
@@ -1129,6 +1153,95 @@ def autonomy_run(
         payload.idempotency_key,
         owner_approval_recorded=payload.owner_approval_recorded,
     )
+
+
+@router.get("/auto-execution")
+def auto_execution(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = auto_execution_dashboard(session)
+    session.commit()
+    return dashboard
+
+
+@router.get("/auto-execution/rules")
+def auto_execution_rules(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = auto_execution_dashboard(session)
+    session.commit()
+    return {
+        "auto_execution_rules": dashboard["auto_execution_rules"],
+        "allowed_actions": dashboard["allowed_actions"],
+        "blocked_actions": dashboard["blocked_actions"],
+    }
+
+
+@router.get("/auto-execution/templates")
+def auto_execution_templates(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = auto_execution_dashboard(session)
+    session.commit()
+    return {
+        "approved_templates": dashboard["approved_templates"],
+        "template_library": [
+            "seller follow-up templates",
+            "buyer response templates",
+            "internal reminder templates",
+            "title/review coordination templates",
+            "opt-out-safe SMS templates",
+            "email templates",
+        ],
+    }
+
+
+@router.get("/auto-execution/dry-runs")
+def auto_execution_dry_runs(session: Session = Depends(get_session)) -> list[dict]:
+    return all_records(session, AutoExecutionDryRun)
+
+
+@router.get("/auto-execution/attempts")
+def auto_execution_attempts(session: Session = Depends(get_session)) -> dict[str, object]:
+    dashboard = auto_execution_dashboard(session)
+    session.commit()
+    return {
+        "attempts": dashboard["attempts"],
+        "blocked_attempts": dashboard["blocked_attempts"],
+        "bulk_send_allowed": False,
+        "buyer_blast_allowed": False,
+    }
+
+
+@router.get("/auto-execution/audit")
+def auto_execution_audit(session: Session = Depends(get_session)) -> list[dict]:
+    return all_records(session, AutoExecutionAuditRecord)
+
+
+@router.post("/auto-execution/execute")
+def auto_execution_execute(
+    payload: AutoExecutionRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return execute_with_auto_gate(
+        session,
+        rule_id=payload.rule_id,
+        template_id=payload.template_id,
+        idempotency_key=payload.idempotency_key,
+        source_record_type=payload.source_record_type,
+        source_record_id=payload.source_record_id,
+        recipient_count=payload.recipient_count,
+        v5_safety_passed=payload.v5_safety_passed,
+        v5_dry_run_receipt_exists=payload.v5_dry_run_receipt_exists,
+        v5_approval_recorded=payload.v5_approval_recorded,
+        live_flags_enabled=payload.live_flags_enabled,
+        provider_ready=payload.provider_ready,
+    )
+
+
+@router.post("/auto-execution/templates/{template_id}/safety")
+def auto_execution_template_safety(
+    template_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    template = session.get(ApprovedTemplate, template_id)
+    if template is None:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return validate_auto_execution_template(template)
 
 
 @router.get("/communications")

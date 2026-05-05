@@ -28,6 +28,8 @@ V11 adds title company/attorney review coordination. It prepares draft-only revi
 
 V12 adds near-autonomous internal execution. Wholesale Prime and its divisions can continuously analyze, prepare, prioritize, route, schedule, escalate, and brief the operator. The default autonomy model is Level 2 for autonomous internal prep, Level 3 for autonomous draft creation and scheduling, Level 4 for controlled live-action review with owner approval only, and Level 5 disabled/unavailable. Real-world actions remain blocked unless a prior controlled gate explicitly allows owner-reviewed next steps.
 
+V13 adds a controlled auto-execution gate for very narrow approved repeatable actions. It does not loosen V5 or V12; it requires approved rules, approved templates, safety, dry-run receipts, owner approval where needed, live flags, provider readiness, one recipient, idempotency, and audit records before a low-risk single-message path can even mock-send.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
@@ -39,6 +41,7 @@ V12 adds near-autonomous internal execution. Wholesale Prime and its divisions c
 - `app/domain/offer_conversion.py`: V10 offer positioning summaries, negotiation readiness scoring, conversion gates, deal acceleration recommendations, contract-ready state sync, and conversion safety validation.
 - `app/domain/title_review.py`: V11 title/attorney review coordination gates, draft review packet summaries, missing-item queues, safety validation, and no-submission boundaries.
 - `app/domain/autonomy.py`: V12 automation rule engine, scheduler runtime, run/attempt ledgers, idempotency guard, autonomous task queue, event trigger summaries, daily command briefing generation, escalation queue, and autonomy safety guard.
+- `app/domain/auto_execution.py`: V13 controlled auto-execution rules, approved template safety checks, conditional execution gate, dry-run receipts, idempotent single-attempt workflow, and audit trail aggregation.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -129,6 +132,12 @@ erDiagram
   SCHEDULER_RUN ||--o{ AUTONOMY_ESCALATION : escalates
   DEAL ||--o{ AUTONOMY_ESCALATION : raises
   LEAD ||--o{ AUTONOMY_ESCALATION : raises
+  APPROVED_TEMPLATE ||--o{ AUTO_EXECUTION_RULE : authorizes
+  AUTO_EXECUTION_RULE ||--o{ AUTO_EXECUTION_DRY_RUN : produces
+  APPROVED_TEMPLATE ||--o{ AUTO_EXECUTION_DRY_RUN : hashes
+  AUTO_EXECUTION_RULE ||--o{ AUTO_EXECUTION_ATTEMPT : gates
+  AUTO_EXECUTION_DRY_RUN ||--o{ AUTO_EXECUTION_ATTEMPT : supports
+  AUTO_EXECUTION_ATTEMPT ||--o{ AUTO_EXECUTION_AUDIT_RECORD : audits
 ```
 
 ## V2 Buyer Portal
@@ -532,6 +541,48 @@ The autonomy safety guard blocks:
 
 Level 4 is owner-approval-required and still cannot bypass the specific communication, portal, title, contract, payment, or compliance gates.
 
+## V13 Controlled Auto-Execution
+
+Internal routes:
+
+- `/dashboard/auto-execution`
+- `/dashboard/auto-execution/rules`
+- `/dashboard/auto-execution/templates`
+- `/dashboard/auto-execution/dry-runs`
+- `/dashboard/auto-execution/attempts`
+- `/dashboard/auto-execution/audit`
+
+Auto-execution rule records store rule name, action type, source type, allowed recipient type, trigger, required conditions, approved template, autonomy level, live flag requirements, risk score, owner approval status, status, and blocked reasons.
+
+Approved templates cover seller follow-up templates, buyer response templates, internal reminder templates, title/review coordination templates, opt-out-safe SMS templates, and email templates. Template safety blocks pressure language, fake urgency, fake buyer claims, legal advice, contract execution language, hidden assignment fee deception, unsupported claims, and missing SMS opt-out language.
+
+The conditional execution workflow is:
+
+```text
+trigger -> template match -> safety check -> dry run -> approval check -> live flag check -> provider readiness -> single execution attempt -> audit record
+```
+
+Allowed V13 actions:
+
+- Internal reminders
+- Operator task creation
+- Approved seller follow-up drafts
+- Approved buyer response drafts
+- Approved low-risk single-message sends only when V5 gates pass
+
+Blocked V13 actions:
+
+- Bulk campaigns
+- Buyer blasts
+- Cold SMS automation
+- Legal or contract messages
+- Seller pressure language
+- Fake urgency
+- Fake buyer claims
+- Any action without an approved rule and approved template
+
+Auto-execution attempts are one-recipient and one-source-record scoped. Idempotency prevents duplicate sends, and every attempt creates an audit record with outcome, blocked reasons, safety snapshot, provider-call status, and source record.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -596,6 +647,12 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/autonomy/tasks`
 - `/dashboard/autonomy/daily-briefing`
 - `/dashboard/autonomy/escalations`
+- `/dashboard/auto-execution`
+- `/dashboard/auto-execution/rules`
+- `/dashboard/auto-execution/templates`
+- `/dashboard/auto-execution/dry-runs`
+- `/dashboard/auto-execution/attempts`
+- `/dashboard/auto-execution/audit`
 
 Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
 
@@ -644,6 +701,8 @@ V10 exception: offer-to-contract conversion records are allowed only as internal
 V11 exception: title/attorney review records and review packets are allowed only as internal draft coordination artifacts. They can track title placeholders, required documents, missing items, compliance checklists, and owner approval, but they cannot submit documents, send title-company email, execute contracts, give legal advice, claim an attorney-client relationship, or guarantee closing.
 
 V12 exception: near-autonomous execution is allowed only for internal scoring, routing, scheduling, draft creation, blocker/evidence creation, readiness marking when existing gates pass, daily briefings, and escalation records. It cannot autonomously send messages, contact buyers or sellers, publish portal data, execute contracts, submit title packets, collect payments, change deal terms, provide legal advice, make commitments, or use Level 5 autonomy. Level 4 remains owner-approval-required and subordinate to every underlying gate.
+
+V13 exception: controlled auto-execution can complete internal reminders and task creation, prepare approved drafts, and mock-send a low-risk single message only when an approved rule, approved template, V5 safety, V5 dry-run receipt, V5 approval, live flags, provider readiness, single-recipient limit, idempotency, and audit creation all pass. It cannot send bulk campaigns, buyer blasts, cold SMS automation, legal/contract messages, pressure language, fake urgency, fake buyer claims, or any unapproved rule/template action.
 
 Allowed:
 

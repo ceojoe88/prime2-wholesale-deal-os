@@ -20,6 +20,7 @@ Private, operator-only acquisition-to-assignment command center for wholesale re
 - V10 controlled offer-to-contract conversion gate with offer positioning, negotiation tracking, seller acceptance readiness scoring, contract-ready state gates, and no contract execution.
 - V11 title company/attorney review coordination gate with draft-only review records, review packet prep, missing-item queues, and no title submission, title email, legal advice, or contract execution.
 - V12 near-autonomous execution engine with automation rules, scheduler runtime, run/attempt ledgers, autonomous agent task queues, event triggers, daily command briefings, escalation queues, and a Wholesale Prime autonomy panel.
+- V13 controlled auto-execution gate with approved rules, approved template library, conditional dry-run/approval/live-flag workflow, single-attempt idempotency, and audit records.
 
 ## Safety Boundaries
 
@@ -48,6 +49,8 @@ V10 converts high-confidence seller opportunities into contract-ready internal s
 V11 prepares title/attorney review coordination for V10 contract-ready deals only. Review records track selected title company placeholders, review status, required documents, missing items, notes, and owner approval. Review packets organize property summary, seller terms, buyer/assignment readiness, timeline, access notes, compliance checklist, and document checklist. Packet prep is blocked unless V10 contract-ready, compliance passed, owner approval recorded, numbers locked, and seller acceptance readiness is high or contract-ready. Legal advice, contract execution, document submission, title-company email sending, attorney-client relationship claims, and closing guarantees are blocked.
 
 V12 adds near-autonomous internal execution. Level 2 allows autonomous internal prep, Level 3 allows autonomous draft creation and scheduling, Level 4 allows only controlled live-action review with owner approval, and Level 5 is disabled. Wholesale Prime can score leads, refresh deal scores, update queues, create drafts, create evidence packets, create blockers, schedule reminders, escalate urgent deals, mark internal readiness when gates pass, and generate daily briefings. It cannot autonomously send SMS/email, call sellers, contact buyers, execute contracts, submit title packets, collect payments, publish buyer/seller portal data, change terms, give legal advice, or make binding commitments. Scheduler runs and blocked attempts are auditable, and idempotency prevents duplicate task creation.
+
+V13 allows only very narrow controlled automation for approved low-risk repeatable actions. A trigger must match an approved auto-execution rule and approved template, pass safety, create a dry-run receipt, pass owner approval and live-flag checks when applicable, verify provider readiness, enforce one recipient and idempotency, and create an audit record. Allowed actions are internal reminders, operator task creation, approved seller follow-up drafts, approved buyer response drafts, and approved low-risk single-message sends only when V5 gates pass. Bulk campaigns, buyer blasts, cold SMS automation, legal/contract messages, pressure language, fake urgency, fake buyer claims, and actions without an approved rule/template are blocked.
 
 ## Backend
 
@@ -137,6 +140,13 @@ Useful endpoints:
 - `GET /api/autonomy/escalations`
 - `POST /api/autonomy/safety/validate`
 - `POST /api/autonomy/run`
+- `GET /api/auto-execution`
+- `GET /api/auto-execution/rules`
+- `GET /api/auto-execution/templates`
+- `GET /api/auto-execution/dry-runs`
+- `GET /api/auto-execution/attempts`
+- `GET /api/auto-execution/audit`
+- `POST /api/auto-execution/execute`
 - `GET /api/compliance`
 - `POST /api/actions/validate`
 - `POST /api/data-import/leads/preview`
@@ -231,6 +241,15 @@ Near-autonomous execution V12 routes:
 - [http://localhost:3000/dashboard/autonomy/tasks](http://localhost:3000/dashboard/autonomy/tasks)
 - [http://localhost:3000/dashboard/autonomy/daily-briefing](http://localhost:3000/dashboard/autonomy/daily-briefing)
 - [http://localhost:3000/dashboard/autonomy/escalations](http://localhost:3000/dashboard/autonomy/escalations)
+
+Controlled auto-execution V13 routes:
+
+- [http://localhost:3000/dashboard/auto-execution](http://localhost:3000/dashboard/auto-execution)
+- [http://localhost:3000/dashboard/auto-execution/rules](http://localhost:3000/dashboard/auto-execution/rules)
+- [http://localhost:3000/dashboard/auto-execution/templates](http://localhost:3000/dashboard/auto-execution/templates)
+- [http://localhost:3000/dashboard/auto-execution/dry-runs](http://localhost:3000/dashboard/auto-execution/dry-runs)
+- [http://localhost:3000/dashboard/auto-execution/attempts](http://localhost:3000/dashboard/auto-execution/attempts)
+- [http://localhost:3000/dashboard/auto-execution/audit](http://localhost:3000/dashboard/auto-execution/audit)
 
 ## Validation
 

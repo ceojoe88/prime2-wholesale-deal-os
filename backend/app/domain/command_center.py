@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.domain.auto_execution import auto_execution_dashboard
 from app.domain.autonomy import autonomy_dashboard
 from app.domain.buyer_portal import portal_publish_gate, update_publication_gate
 from app.domain.buyer_demand import buyer_demand_dashboard
@@ -135,4 +136,5 @@ def build_command_center(session: Session) -> dict[str, object]:
         "offer_to_contract_conversion": offer_conversion_dashboard(session),
         "title_attorney_review": title_review_dashboard(session),
         "near_autonomous_execution": autonomy_dashboard(session),
+        "controlled_auto_execution": auto_execution_dashboard(session),
     }

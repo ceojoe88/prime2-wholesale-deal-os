@@ -31,6 +31,11 @@ def test_seed_payload_counts_and_hot_deals():
     assert len(payload["automation_event_triggers"]) == 5
     assert len(payload["daily_command_briefings"]) == 1
     assert len(payload["autonomy_escalations"]) == 2
+    assert len(payload["approved_templates"]) == 5
+    assert len(payload["auto_execution_rules"]) == 4
+    assert len(payload["auto_execution_dry_runs"]) == 2
+    assert len(payload["auto_execution_attempts"]) == 3
+    assert len(payload["auto_execution_audit_records"]) == 3
     assert len(payload["contract_controls"]) == 5
     assert len(payload["seller_offer_publications"]) == 5
     assert len(payload["seller_portal_responses"]) == 4

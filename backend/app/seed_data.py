@@ -8,6 +8,10 @@ from app.domain.autonomy import (
     AUTONOMOUS_BLOCKED_ACTIONS,
     sync_automation_rule,
 )
+from app.domain.auto_execution import (
+    content_hash as auto_execution_content_hash,
+    validate_auto_execution_template,
+)
 from app.domain.buyer_matching import score_buyer_match
 from app.domain.buyer_demand import sync_buyer_deal_priority, sync_distribution_prep
 from app.domain.buyer_portal import update_publication_gate
@@ -40,6 +44,11 @@ from app.models import (
     AutomationAttempt,
     AutomationEventTrigger,
     AutomationRule,
+    ApprovedTemplate,
+    AutoExecutionAttempt,
+    AutoExecutionAuditRecord,
+    AutoExecutionDryRun,
+    AutoExecutionRule,
     AutonomousAgentTask,
     AutonomyEscalation,
     Buyer,
@@ -2725,6 +2734,366 @@ def build_autonomy_escalation_records() -> list[dict[str, object]]:
     ]
 
 
+def build_approved_template_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "template-seller-followup-safe",
+            "template_name": "Approved Seller Follow-Up Draft",
+            "template_type": "seller_follow_up",
+            "channel": "sms",
+            "recipient_type": "seller",
+            "subject": "",
+            "body": "Hi {{seller_first_name}}, this is a draft follow-up for owner review. We can talk through the as-is offer basis when convenient. Reply STOP to opt out.",
+            "approved": True,
+            "safety_status": "approved",
+            "risk_flags": [],
+            "requires_opt_out": True,
+            "includes_opt_out": True,
+            "legal_advice_allowed": False,
+            "pressure_language_allowed": False,
+            "fake_urgency_allowed": False,
+            "fake_buyer_claim_allowed": False,
+            "draft_only_default": True,
+        },
+        {
+            "id": "template-buyer-response-safe",
+            "template_name": "Approved Buyer Interest Response",
+            "template_type": "buyer_response",
+            "channel": "email",
+            "recipient_type": "buyer",
+            "subject": "Draft response on deal interest",
+            "body": "Thanks for the interest. The owner will review proof of funds and deal-room details before any next step. This is not a contract or commitment.",
+            "approved": True,
+            "safety_status": "approved",
+            "risk_flags": [],
+            "requires_opt_out": False,
+            "includes_opt_out": False,
+            "legal_advice_allowed": False,
+            "pressure_language_allowed": False,
+            "fake_urgency_allowed": False,
+            "fake_buyer_claim_allowed": False,
+            "draft_only_default": True,
+        },
+        {
+            "id": "template-internal-reminder",
+            "template_name": "Internal Owner Reminder",
+            "template_type": "internal_reminder",
+            "channel": "internal",
+            "recipient_type": "owner",
+            "subject": "Review queued deal action",
+            "body": "Internal reminder: review the gated action, dry-run receipt, safety result, and idempotency record before approval.",
+            "approved": True,
+            "safety_status": "approved",
+            "risk_flags": [],
+            "requires_opt_out": False,
+            "includes_opt_out": False,
+            "legal_advice_allowed": False,
+            "pressure_language_allowed": False,
+            "fake_urgency_allowed": False,
+            "fake_buyer_claim_allowed": False,
+            "draft_only_default": True,
+        },
+        {
+            "id": "template-title-review-coordination",
+            "template_name": "Title Review Coordination Draft",
+            "template_type": "title_review_coordination",
+            "channel": "email",
+            "recipient_type": "internal",
+            "subject": "Draft title review coordination",
+            "body": "Draft-only coordination note: confirm required documents, owner approval, and attorney/title review reminder before any external action.",
+            "approved": True,
+            "safety_status": "approved",
+            "risk_flags": [],
+            "requires_opt_out": False,
+            "includes_opt_out": False,
+            "legal_advice_allowed": False,
+            "pressure_language_allowed": False,
+            "fake_urgency_allowed": False,
+            "fake_buyer_claim_allowed": False,
+            "draft_only_default": True,
+        },
+        {
+            "id": "template-unsafe-pressure",
+            "template_name": "Blocked Pressure Example",
+            "template_type": "seller_follow_up",
+            "channel": "sms",
+            "recipient_type": "seller",
+            "subject": "",
+            "body": "You must sign now. This is your last chance and we already have a buyer.",
+            "approved": False,
+            "safety_status": "blocked",
+            "risk_flags": ["pressure_language", "fake_urgency", "fake_buyer_claim", "missing_sms_opt_out"],
+            "requires_opt_out": True,
+            "includes_opt_out": False,
+            "legal_advice_allowed": False,
+            "pressure_language_allowed": False,
+            "fake_urgency_allowed": False,
+            "fake_buyer_claim_allowed": False,
+            "draft_only_default": True,
+        },
+    ]
+
+
+def build_auto_execution_rule_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "auto-rule-internal-reminder",
+            "rule_name": "Create Internal Owner Reminder",
+            "action_type": "internal_reminder",
+            "source_type": "autonomy_escalation",
+            "allowed_recipient_type": "owner",
+            "trigger": "escalation_created",
+            "required_conditions": ["source_record_exists", "template_approved"],
+            "approved_template_id": "template-internal-reminder",
+            "autonomy_level": 3,
+            "live_flag_required": False,
+            "risk_score": 5,
+            "owner_approval_status": "approved",
+            "status": "approved",
+            "blocked_reasons": [],
+            "bulk_send_allowed": False,
+            "buyer_blast_allowed": False,
+            "legal_contract_message_allowed": False,
+            "cold_sms_allowed": False,
+        },
+        {
+            "id": "auto-rule-seller-followup-draft",
+            "rule_name": "Approved Seller Follow-Up Draft",
+            "action_type": "seller_follow_up_draft",
+            "source_type": "seller_interaction",
+            "allowed_recipient_type": "seller",
+            "trigger": "follow_up_due",
+            "required_conditions": ["template_approved", "seller_source_tied", "owner_review_queue"],
+            "approved_template_id": "template-seller-followup-safe",
+            "autonomy_level": 3,
+            "live_flag_required": False,
+            "risk_score": 18,
+            "owner_approval_status": "approved",
+            "status": "approved",
+            "blocked_reasons": [],
+            "bulk_send_allowed": False,
+            "buyer_blast_allowed": False,
+            "legal_contract_message_allowed": False,
+            "cold_sms_allowed": False,
+        },
+        {
+            "id": "auto-rule-buyer-response-send",
+            "rule_name": "Approved Low-Risk Buyer Response Send",
+            "action_type": "low_risk_single_message_send",
+            "source_type": "buyer_interest",
+            "allowed_recipient_type": "buyer",
+            "trigger": "buyer_interest_received",
+            "required_conditions": [
+                "template_approved",
+                "v5_safety_passed",
+                "v5_dry_run_receipt",
+                "v5_owner_approval",
+                "live_flags_enabled",
+                "provider_ready",
+                "single_recipient",
+            ],
+            "approved_template_id": "template-buyer-response-safe",
+            "autonomy_level": 4,
+            "live_flag_required": True,
+            "risk_score": 22,
+            "owner_approval_status": "approved",
+            "status": "approved",
+            "blocked_reasons": [],
+            "bulk_send_allowed": False,
+            "buyer_blast_allowed": False,
+            "legal_contract_message_allowed": False,
+            "cold_sms_allowed": False,
+        },
+        {
+            "id": "auto-rule-blocked-bulk",
+            "rule_name": "Blocked Buyer Blast Example",
+            "action_type": "buyer_blast",
+            "source_type": "deal_distribution",
+            "allowed_recipient_type": "buyer",
+            "trigger": "hot_deal_created",
+            "required_conditions": ["blocked_by_design"],
+            "approved_template_id": "template-buyer-response-safe",
+            "autonomy_level": 4,
+            "live_flag_required": True,
+            "risk_score": 90,
+            "owner_approval_status": "pending",
+            "status": "blocked",
+            "blocked_reasons": ["buyer_blast_blocked"],
+            "bulk_send_allowed": False,
+            "buyer_blast_allowed": False,
+            "legal_contract_message_allowed": False,
+            "cold_sms_allowed": False,
+        },
+    ]
+
+
+def build_auto_execution_dry_run_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "auto-dryrun-001",
+            "rule_id": "auto-rule-buyer-response-send",
+            "template_id": "template-buyer-response-safe",
+            "source_record_type": "buyer_interest",
+            "source_record_id": "interest-001",
+            "recipient_type": "buyer",
+            "recipient_placeholder": "buyer-email-placeholder",
+            "subject_body_hash": auto_execution_content_hash(
+                "Draft response on deal interest",
+                "Thanks for the interest. The owner will review proof of funds and deal-room details before any next step. This is not a contract or commitment.",
+            ),
+            "safety_passed": True,
+            "safety_result": {"allowed": True, "risk_flags": []},
+            "risk_status": "clear",
+            "provider_mode": "mock/dry_run",
+            "idempotency_key": "seed:auto-execution-dryrun-001",
+            "status": "created",
+        },
+        {
+            "id": "auto-dryrun-002",
+            "rule_id": "auto-rule-seller-followup-draft",
+            "template_id": "template-unsafe-pressure",
+            "source_record_type": "seller_interaction",
+            "source_record_id": "seller-interaction-005",
+            "recipient_type": "seller",
+            "recipient_placeholder": "seller-phone-placeholder",
+            "subject_body_hash": auto_execution_content_hash(
+                "",
+                "You must sign now. This is your last chance and we already have a buyer.",
+            ),
+            "safety_passed": False,
+            "safety_result": {
+                "allowed": False,
+                "risk_flags": ["pressure_language", "fake_urgency", "fake_buyer_claim"],
+            },
+            "risk_status": "blocked",
+            "provider_mode": "mock/dry_run",
+            "idempotency_key": "seed:auto-execution-dryrun-002",
+            "status": "blocked",
+        },
+    ]
+
+
+def build_auto_execution_attempt_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "auto-attempt-001",
+            "rule_id": "auto-rule-internal-reminder",
+            "template_id": "template-internal-reminder",
+            "dry_run_id": None,
+            "action_type": "internal_reminder",
+            "source_record_type": "autonomy_escalation",
+            "source_record_id": "auto-escalation-001",
+            "recipient_type": "owner",
+            "recipient_count": 1,
+            "attempt_status": "completed_internal",
+            "blocked_reasons": [],
+            "safety_result": {"allowed": True, "risk_flags": []},
+            "owner_approval_recorded": True,
+            "v5_safety_passed": False,
+            "v5_dry_run_receipt_exists": False,
+            "v5_approval_recorded": False,
+            "live_flags_enabled": False,
+            "provider_ready": False,
+            "provider_called": False,
+            "provider_mode": "internal",
+            "idempotency_key": "seed:auto-attempt-001",
+            "audit_record_created": True,
+        },
+        {
+            "id": "auto-attempt-002",
+            "rule_id": "auto-rule-buyer-response-send",
+            "template_id": "template-buyer-response-safe",
+            "dry_run_id": "auto-dryrun-001",
+            "action_type": "low_risk_single_message_send",
+            "source_record_type": "buyer_interest",
+            "source_record_id": "interest-001",
+            "recipient_type": "buyer",
+            "recipient_count": 1,
+            "attempt_status": "mock_sent",
+            "blocked_reasons": [],
+            "safety_result": {"allowed": True, "risk_flags": []},
+            "owner_approval_recorded": True,
+            "v5_safety_passed": True,
+            "v5_dry_run_receipt_exists": True,
+            "v5_approval_recorded": True,
+            "live_flags_enabled": True,
+            "provider_ready": True,
+            "provider_called": True,
+            "provider_mode": "mock/dry_run",
+            "idempotency_key": "seed:auto-attempt-002",
+            "audit_record_created": True,
+        },
+        {
+            "id": "auto-attempt-003",
+            "rule_id": "auto-rule-blocked-bulk",
+            "template_id": "template-buyer-response-safe",
+            "dry_run_id": None,
+            "action_type": "buyer_blast",
+            "source_record_type": "deal_distribution",
+            "source_record_id": "distribution-001",
+            "recipient_type": "buyer",
+            "recipient_count": 12,
+            "attempt_status": "blocked",
+            "blocked_reasons": ["action_not_allowed_for_auto_execution", "single_recipient_required", "risk_score_too_high"],
+            "safety_result": {"allowed": False, "risk_flags": []},
+            "owner_approval_recorded": False,
+            "v5_safety_passed": False,
+            "v5_dry_run_receipt_exists": False,
+            "v5_approval_recorded": False,
+            "live_flags_enabled": False,
+            "provider_ready": False,
+            "provider_called": False,
+            "provider_mode": "blocked",
+            "idempotency_key": "seed:auto-attempt-003",
+            "audit_record_created": True,
+        },
+    ]
+
+
+def build_auto_execution_audit_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "auto-audit-001",
+            "attempt_id": "auto-attempt-001",
+            "rule_id": "auto-rule-internal-reminder",
+            "event_type": "internal_reminder_created",
+            "source_record_type": "autonomy_escalation",
+            "source_record_id": "auto-escalation-001",
+            "outcome": "completed_internal",
+            "blocked_reasons": [],
+            "safety_snapshot": {"allowed": True, "provider_called": False},
+            "provider_called": False,
+            "idempotency_key": "seed:auto-audit-001",
+        },
+        {
+            "id": "auto-audit-002",
+            "attempt_id": "auto-attempt-002",
+            "rule_id": "auto-rule-buyer-response-send",
+            "event_type": "single_execution_attempt",
+            "source_record_type": "buyer_interest",
+            "source_record_id": "interest-001",
+            "outcome": "mock_sent",
+            "blocked_reasons": [],
+            "safety_snapshot": {"allowed": True, "provider_mode": "mock/dry_run"},
+            "provider_called": True,
+            "idempotency_key": "seed:auto-audit-002",
+        },
+        {
+            "id": "auto-audit-003",
+            "attempt_id": "auto-attempt-003",
+            "rule_id": "auto-rule-blocked-bulk",
+            "event_type": "blocked_execution_attempt",
+            "source_record_type": "deal_distribution",
+            "source_record_id": "distribution-001",
+            "outcome": "blocked",
+            "blocked_reasons": ["action_not_allowed_for_auto_execution", "single_recipient_required"],
+            "safety_snapshot": {"allowed": False, "provider_called": False},
+            "provider_called": False,
+            "idempotency_key": "seed:auto-audit-003",
+        },
+    ]
+
+
 def build_assignment_readiness_records() -> list[dict[str, object]]:
     return [
         {
@@ -3865,6 +4234,11 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "automation_event_triggers": build_automation_event_trigger_records(),
         "daily_command_briefings": build_daily_command_briefing_records(),
         "autonomy_escalations": build_autonomy_escalation_records(),
+        "approved_templates": build_approved_template_records(),
+        "auto_execution_rules": build_auto_execution_rule_records(),
+        "auto_execution_dry_runs": build_auto_execution_dry_run_records(),
+        "auto_execution_attempts": build_auto_execution_attempt_records(),
+        "auto_execution_audit_records": build_auto_execution_audit_records(),
         "contract_controls": build_contract_control_records(),
         "seller_offer_publications": build_seller_offer_publication_records(),
         "seller_portal_responses": build_seller_portal_response_records(),
@@ -3889,6 +4263,11 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
 
 def seed_database(session: Session) -> dict[str, int]:
     for model in [
+        AutoExecutionAuditRecord,
+        AutoExecutionAttempt,
+        AutoExecutionDryRun,
+        AutoExecutionRule,
+        ApprovedTemplate,
         AutonomyEscalation,
         DailyCommandBriefing,
         AutomationEventTrigger,
@@ -3967,6 +4346,18 @@ def seed_database(session: Session) -> dict[str, int]:
         DailyCommandBriefing(**row) for row in payload["daily_command_briefings"]
     )
     session.add_all(AutonomyEscalation(**row) for row in payload["autonomy_escalations"])
+    session.add_all(ApprovedTemplate(**row) for row in payload["approved_templates"])
+    session.add_all(AutoExecutionRule(**row) for row in payload["auto_execution_rules"])
+    session.add_all(
+        AutoExecutionDryRun(**row) for row in payload["auto_execution_dry_runs"]
+    )
+    session.add_all(
+        AutoExecutionAttempt(**row) for row in payload["auto_execution_attempts"]
+    )
+    session.add_all(
+        AutoExecutionAuditRecord(**row)
+        for row in payload["auto_execution_audit_records"]
+    )
     session.add_all(ContractControl(**row) for row in payload["contract_controls"])
     session.add_all(
         SellerOfferPublication(**row)
@@ -4046,5 +4437,9 @@ def seed_database(session: Session) -> dict[str, int]:
         sync_review_packet_prep(packet)
     for rule in session.query(AutomationRule).all():
         sync_automation_rule(rule)
+    for template in session.query(ApprovedTemplate).all():
+        safety = validate_auto_execution_template(template)
+        template.safety_status = "approved" if safety["allowed"] else "blocked"
+        template.risk_flags = safety["risk_flags"]
     session.commit()
     return {key: len(value) for key, value in payload.items()}

@@ -7,6 +7,11 @@ import { Section } from "@/components/Section";
 import {
   activeDealRooms,
   automationRules,
+  approvedAutoExecutionRules,
+  approvedTemplateLibrary,
+  autoExecutionAuditTrail,
+  autoExecutionBlockedAttempts,
+  autoExecutionMockSentAttempts,
   autonomousAgentTasks,
   autonomyEscalationQueue,
   autonomyLevel4Rules,
@@ -275,6 +280,19 @@ export default function DashboardPage() {
           <RecordCard title="Escalation queue" meta={`${autonomyEscalationQueue.length} urgent recommendations require owner attention`} right={<Pill tone="red">owner</Pill>} />
           <RecordCard title="Blocked attempts" meta={`${blockedAutomationAttempts.length} live or unsafe attempts audited without provider calls`} right={<Pill tone="red">blocked</Pill>} />
           <RecordCard title="Level 4 / Level 5" meta={`${autonomyLevel4Rules.length} Level 4 owner-gated rule; Level 5 unavailable`} right={<Pill tone="gold">controlled</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="V13 Controlled Auto-Execution Gate">
+        <div className="grid-three">
+          <RecordCard title="Approved auto rules" meta={`${approvedAutoExecutionRules.length} rules can enter conditional workflow`} right={<Pill tone="green">approved</Pill>} />
+          <RecordCard title="Template library" meta={`${approvedTemplateLibrary.length} approved templates are safety checked`} right={<Pill tone="green">safe</Pill>} />
+          <RecordCard title="Mock-sent attempts" meta={`${autoExecutionMockSentAttempts.length} low-risk single-message attempt passed gates`} right={<Pill>mock</Pill>} />
+        </div>
+        <div className="grid-three">
+          <RecordCard title="Blocked attempts" meta={`${autoExecutionBlockedAttempts.length} bulk, unsafe, or missing-gate attempts blocked`} right={<Pill tone="red">blocked</Pill>} />
+          <RecordCard title="Audit records" meta={`${autoExecutionAuditTrail.length} auto-execution events recorded`} right={<Pill tone="gold">audit</Pill>} />
+          <RecordCard title="Bulk campaigns" meta="Blocked; no buyer blasts, cold SMS, or legal/contract messages." right={<Pill tone="red">off</Pill>} />
         </div>
       </Section>
     </div>
