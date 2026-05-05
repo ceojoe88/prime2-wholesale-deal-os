@@ -3831,6 +3831,139 @@ export const documentEvidenceLinks: DocumentEvidenceLink[] = [
   { id: "doc-evidence-003", documentId: "doc-intel-003", dealEvidencePacketId: "evidence-003", sourceRecordType: "deal", sourceRecordId: "deal-005", linkageStatus: "linked", sanitizedForExport: true, portalPublishAllowed: false }
 ];
 
+export type CampaignRuleRecord = {
+  id: string;
+  campaignId: string;
+  name: string;
+  campaignType: string;
+  audienceType: "seller" | "buyer";
+  segmentDefinition: Record<string, unknown>;
+  approvedTemplateIds: string[];
+  maxRecipientsPerDay: number;
+  maxMessagesPerRecipient: number;
+  sendWindowStart: string;
+  sendWindowEnd: string;
+  cooldownHours: number;
+  stopConditions: string[];
+  dncGuardEnabled: boolean;
+  complianceGuardEnabled: boolean;
+  ownerApprovalStatus: string;
+  liveFlagRequired: boolean;
+  providerReadinessRequired: boolean;
+  status: string;
+  safetyStatus: string;
+  audiencePreviewApproved: boolean;
+  blockedReasons: string[];
+  bulkBlastAllowed: false;
+  oneMessageEventModel: true;
+  liveSendAllowed: false;
+};
+
+export type CampaignAudiencePreview = {
+  id: string;
+  campaignId: string;
+  recipientId: string;
+  recipientType: string;
+  segmentName: string;
+  inclusionStatus: string;
+  excluded: boolean;
+  exclusionReasons: string[];
+  score: number;
+  previewApproved: boolean;
+  doNotContact: boolean;
+  complianceRiskStatus: string;
+  consentStatus: string;
+};
+
+export type CampaignSequenceStep = {
+  id: string;
+  campaignId: string;
+  stepOrder: number;
+  messagePurpose: string;
+  templateId: string | null;
+  timingOffsetHours: number;
+  recipientType: string;
+  safetyStatus: string;
+  dryRunStatus: string;
+  approvalStatus: string;
+  stopCondition: string;
+  draftOnly: true;
+  liveSendAllowed: false;
+  bulkSendAllowed: false;
+  deceptiveScarcityAllowed: false;
+};
+
+export type CampaignActivationAttempt = {
+  id: string;
+  campaignId: string;
+  attemptStatus: string;
+  blockedReasons: string[];
+  idempotencyKey: string;
+  bulkBlastAllowed: false;
+  oneRecipientPerEvent: true;
+  liveSendAttempted: false;
+};
+
+export type CampaignStopEvent = {
+  id: string;
+  campaignId: string;
+  recipientId: string;
+  eventType: string;
+  reason: string;
+  campaignPaused: boolean;
+  ownerReviewRequired: true;
+};
+
+export type CampaignPerformanceRecord = {
+  id: string;
+  campaignId: string;
+  recipientsQueued: number;
+  messagesPrepared: number;
+  dryRunsPassed: number;
+  approvalsPending: number;
+  attemptsBlocked: number;
+  responsesReceived: number;
+  dncEvents: number;
+  conversionsToCall: number;
+  conversionsToAppointment: number;
+  conversionsToInterest: number;
+  campaignHealthScore: number;
+  roiClaimsAllowed: false;
+  guaranteedProfitLanguageAllowed: false;
+  bulkBlastAllowed: false;
+};
+
+export const campaignRuleRecords: CampaignRuleRecord[] = [
+  { id: "campaign-rule-001", campaignId: "campaign-001", name: "Hot seller follow-up prep", campaignType: "seller_follow_up", audienceType: "seller", segmentDefinition: { segment: "hot_motivation" }, approvedTemplateIds: ["template-seller-followup-safe"], maxRecipientsPerDay: 3, maxMessagesPerRecipient: 1, sendWindowStart: "09:00", sendWindowEnd: "17:00", cooldownHours: 24, stopConditions: ["recipient_replies", "dnc_detected", "compliance_risk_detected", "seller_legal_question", "buyer_terms_not_approved", "provider_readiness_fails", "owner_pauses", "max_attempts_reached"], dncGuardEnabled: true, complianceGuardEnabled: true, ownerApprovalStatus: "pending", liveFlagRequired: true, providerReadinessRequired: true, status: "draft", safetyStatus: "passed", audiencePreviewApproved: false, blockedReasons: ["owner_approval_required", "audience_preview_approval_required"], bulkBlastAllowed: false, oneMessageEventModel: true, liveSendAllowed: false },
+  { id: "campaign-rule-002", campaignId: "campaign-002", name: "Buyer POF request prep", campaignType: "buyer_pof_request", audienceType: "buyer", segmentDefinition: { segment: "POF_verified", deal_id: "deal-001" }, approvedTemplateIds: ["template-buyer-response-safe"], maxRecipientsPerDay: 2, maxMessagesPerRecipient: 1, sendWindowStart: "10:00", sendWindowEnd: "16:00", cooldownHours: 48, stopConditions: ["recipient_replies", "dnc_detected", "compliance_risk_detected", "seller_legal_question", "buyer_terms_not_approved", "provider_readiness_fails", "owner_pauses", "max_attempts_reached"], dncGuardEnabled: true, complianceGuardEnabled: true, ownerApprovalStatus: "approved", liveFlagRequired: true, providerReadinessRequired: true, status: "active_controlled", safetyStatus: "passed", audiencePreviewApproved: true, blockedReasons: [], bulkBlastAllowed: false, oneMessageEventModel: true, liveSendAllowed: false },
+  { id: "campaign-rule-003", campaignId: "campaign-003", name: "Stale lead reactivation draft", campaignType: "stale_lead_reactivation", audienceType: "seller", segmentDefinition: { segment: "stale_but_qualified" }, approvedTemplateIds: [], maxRecipientsPerDay: 0, maxMessagesPerRecipient: 1, sendWindowStart: "", sendWindowEnd: "", cooldownHours: 72, stopConditions: [], dncGuardEnabled: true, complianceGuardEnabled: true, ownerApprovalStatus: "pending", liveFlagRequired: true, providerReadinessRequired: true, status: "blocked", safetyStatus: "blocked", audiencePreviewApproved: false, blockedReasons: ["approved_templates_required", "max_daily_cap_required", "stop_conditions_required"], bulkBlastAllowed: false, oneMessageEventModel: true, liveSendAllowed: false }
+];
+
+export const campaignAudiencePreviews: CampaignAudiencePreview[] = [
+  { id: "campaign-preview-001", campaignId: "campaign-001", recipientId: "lead-001", recipientType: "seller", segmentName: "hot_motivation", inclusionStatus: "included", excluded: false, exclusionReasons: [], score: 86, previewApproved: false, doNotContact: false, complianceRiskStatus: "clear", consentStatus: "unknown" },
+  { id: "campaign-preview-002", campaignId: "campaign-001", recipientId: "lead-008", recipientType: "seller", segmentName: "hot_motivation", inclusionStatus: "excluded", excluded: true, exclusionReasons: ["do_not_contact_excluded"], score: 35, previewApproved: false, doNotContact: true, complianceRiskStatus: "clear", consentStatus: "unknown" },
+  { id: "campaign-preview-003", campaignId: "campaign-002", recipientId: "buyer-001", recipientType: "buyer", segmentName: "POF_verified", inclusionStatus: "included", excluded: false, exclusionReasons: [], score: 98, previewApproved: true, doNotContact: false, complianceRiskStatus: "clear", consentStatus: "unknown" }
+];
+
+export const campaignSequenceSteps: CampaignSequenceStep[] = [
+  { id: "campaign-step-001", campaignId: "campaign-001", stepOrder: 1, messagePurpose: "checking if still interested", templateId: "template-seller-followup-safe", timingOffsetHours: 0, recipientType: "seller", safetyStatus: "passed", dryRunStatus: "not_started", approvalStatus: "pending", stopCondition: "stop if recipient replies, DNC, compliance risk, provider failure, owner pause, or max attempts", draftOnly: true, liveSendAllowed: false, bulkSendAllowed: false, deceptiveScarcityAllowed: false },
+  { id: "campaign-step-002", campaignId: "campaign-002", stepOrder: 1, messagePurpose: "POF request", templateId: "template-buyer-response-safe", timingOffsetHours: 0, recipientType: "buyer", safetyStatus: "passed", dryRunStatus: "dry_run_ready", approvalStatus: "approved", stopCondition: "stop if buyer replies, POF received, provider fails, owner pauses, or max attempts", draftOnly: true, liveSendAllowed: false, bulkSendAllowed: false, deceptiveScarcityAllowed: false }
+];
+
+export const campaignActivationAttempts: CampaignActivationAttempt[] = [
+  { id: "campaign-activation-001", campaignId: "campaign-001", attemptStatus: "blocked", blockedReasons: ["owner_approval_required", "audience_preview_approval_required"], idempotencyKey: "seed:campaign-activation-001", bulkBlastAllowed: false, oneRecipientPerEvent: true, liveSendAttempted: false },
+  { id: "campaign-activation-002", campaignId: "campaign-002", attemptStatus: "active_controlled", blockedReasons: [], idempotencyKey: "seed:campaign-activation-002", bulkBlastAllowed: false, oneRecipientPerEvent: true, liveSendAttempted: false }
+];
+
+export const campaignStopEvents: CampaignStopEvent[] = [
+  { id: "campaign-stop-001", campaignId: "campaign-001", recipientId: "lead-008", eventType: "dnc_detected", reason: "DNC record excludes seller from campaign preview.", campaignPaused: true, ownerReviewRequired: true }
+];
+
+export const campaignPerformanceRecords: CampaignPerformanceRecord[] = [
+  { id: "campaign-performance-001", campaignId: "campaign-001", recipientsQueued: 1, messagesPrepared: 1, dryRunsPassed: 0, approvalsPending: 1, attemptsBlocked: 1, responsesReceived: 0, dncEvents: 1, conversionsToCall: 0, conversionsToAppointment: 0, conversionsToInterest: 0, campaignHealthScore: 58, roiClaimsAllowed: false, guaranteedProfitLanguageAllowed: false, bulkBlastAllowed: false },
+  { id: "campaign-performance-002", campaignId: "campaign-002", recipientsQueued: 1, messagesPrepared: 1, dryRunsPassed: 1, approvalsPending: 0, attemptsBlocked: 0, responsesReceived: 0, dncEvents: 0, conversionsToCall: 0, conversionsToAppointment: 0, conversionsToInterest: 1, campaignHealthScore: 82, roiClaimsAllowed: false, guaranteedProfitLanguageAllowed: false, bulkBlastAllowed: false }
+];
+
 export const predictionFeedbackRecords: PredictionFeedbackRecord[] = [
   {
     id: "feedback-001",
@@ -3943,6 +4076,30 @@ export function getDocumentEvidenceLinks(documentId: string) {
   return documentEvidenceLinks.filter((link) => link.documentId === documentId);
 }
 
+export function getCampaignRule(campaignId: string) {
+  return campaignRuleRecords.find((campaign) => campaign.campaignId === campaignId || campaign.id === campaignId);
+}
+
+export function getCampaignAudience(campaignId: string) {
+  return campaignAudiencePreviews.filter((preview) => preview.campaignId === campaignId);
+}
+
+export function getCampaignSequence(campaignId: string) {
+  return campaignSequenceSteps.filter((step) => step.campaignId === campaignId);
+}
+
+export function getCampaignAttempts(campaignId: string) {
+  return campaignActivationAttempts.filter((attempt) => attempt.campaignId === campaignId);
+}
+
+export function getCampaignStops(campaignId: string) {
+  return campaignStopEvents.filter((event) => event.campaignId === campaignId);
+}
+
+export function getCampaignPerformance(campaignId: string) {
+  return campaignPerformanceRecords.filter((record) => record.campaignId === campaignId);
+}
+
 export function getPredictionFeedback(feedbackId: string) {
   return predictionFeedbackRecords.find((record) => record.id === feedbackId);
 }
@@ -3985,6 +4142,13 @@ export const documentAssignmentWarnings = documentIssueFlags.filter((issue) =>
 export const documentExternalReviewTasks = documentReviewTasks.filter(
   (task) => task.legalReviewExternalOnly
 );
+export const campaignDrafts = campaignRuleRecords.filter((campaign) => campaign.status === "draft");
+export const campaignActiveControlled = campaignRuleRecords.filter((campaign) => campaign.status === "active_controlled");
+export const campaignBlocked = campaignRuleRecords.filter((campaign) => campaign.status === "blocked");
+export const campaignApprovalsNeeded = campaignRuleRecords.filter((campaign) => campaign.ownerApprovalStatus !== "approved");
+export const campaignDncExclusions = campaignAudiencePreviews.filter((preview) => preview.doNotContact || preview.exclusionReasons.includes("do_not_contact_excluded"));
+export const campaignStopConditionEvents = campaignStopEvents;
+export const campaignAttemptsBlocked = campaignActivationAttempts.filter((attempt) => attempt.attemptStatus === "blocked");
 export const predictionMisses = predictionFeedbackRecords.filter((record) => record.accuracyScore < 70);
 export const pendingScoringAdjustments = scoringAdjustmentSuggestions.filter((suggestion) => suggestion.ownerReviewStatus === "pending_review");
 export const fieldTestingAccuracy = Math.round(

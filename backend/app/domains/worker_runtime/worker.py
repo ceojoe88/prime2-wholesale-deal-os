@@ -13,6 +13,11 @@ ALLOWED_WORKER_JOB_TYPES = {
     "field_testing_summary",
     "forecast_refresh",
     "call_analysis",
+    "campaign_segment_evaluation",
+    "campaign_sequence_prep",
+    "campaign_dry_run_task",
+    "campaign_pause_evaluation",
+    "campaign_owner_approval_task",
 }
 
 JOB_ACTION_MAP = {
@@ -25,6 +30,11 @@ JOB_ACTION_MAP = {
     "field_testing_summary": "create_next_best_action",
     "forecast_refresh": "create_next_best_action",
     "call_analysis": "create_next_best_action",
+    "campaign_segment_evaluation": "create_next_best_action",
+    "campaign_sequence_prep": "create_next_best_action",
+    "campaign_dry_run_task": "create_next_best_action",
+    "campaign_pause_evaluation": "create_next_best_action",
+    "campaign_owner_approval_task": "create_next_best_action",
 }
 
 WORKER_BLOCKED_ACTIONS = {

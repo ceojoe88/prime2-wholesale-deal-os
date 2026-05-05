@@ -127,6 +127,13 @@ const requiredRouteFiles = [
   "src/app/dashboard/provider-readiness/attempts/page.tsx",
   "src/app/dashboard/provider-readiness/webhooks/page.tsx",
   "src/app/dashboard/provider-readiness/credentials/page.tsx",
+  "src/app/dashboard/campaigns/page.tsx",
+  "src/app/dashboard/campaigns/[campaignId]/page.tsx",
+  "src/app/dashboard/campaigns/new/page.tsx",
+  "src/app/dashboard/campaigns/segments/page.tsx",
+  "src/app/dashboard/campaigns/sequences/page.tsx",
+  "src/app/dashboard/campaigns/approvals/page.tsx",
+  "src/app/dashboard/campaigns/performance/page.tsx",
   "src/app/dashboard/backups/page.tsx",
   "src/app/dashboard/offer-conversion/page.tsx",
   "src/app/dashboard/offer-conversion/[dealId]/page.tsx",
@@ -394,6 +401,32 @@ test("V24 document intelligence pages expose no execution or raw document contro
     "publish automatically",
     "raw document text",
     "legal advice"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V25 campaign brain pages expose no bulk or uncontrolled send controls", () => {
+  const files = [
+    "src/app/dashboard/campaigns/page.tsx",
+    "src/app/dashboard/campaigns/[campaignId]/page.tsx",
+    "src/app/dashboard/campaigns/new/page.tsx",
+    "src/app/dashboard/campaigns/segments/page.tsx",
+    "src/app/dashboard/campaigns/sequences/page.tsx",
+    "src/app/dashboard/campaigns/approvals/page.tsx",
+    "src/app/dashboard/campaigns/performance/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "guaranteed profit",
+    "this will sell today"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

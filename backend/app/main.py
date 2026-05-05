@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
+from app.domains.campaign_brain.router import router as campaign_brain_v1_router
 from app.domains.document_intelligence.router import router as document_intelligence_v1_router
 from app.domains.provider_readiness.router import router as provider_readiness_v1_router
 from app.models import (
@@ -21,6 +22,7 @@ from app.models import (
     BuyerAccelerationRecord,
     AutonomousDailyOperatingReport,
     CallIntelligenceSession,
+    CampaignRuleRecord,
     BuyerDealPublication,
     BuyerDemandProfile,
     CommunicationDraft,
@@ -99,6 +101,7 @@ async def lifespan(app: FastAPI):
                 or session.query(ScoringAdjustmentSuggestion).count() == 0
                 or session.query(CallIntelligenceSession).count() == 0
                 or session.query(DocumentIntelligenceFile).count() == 0
+                or session.query(CampaignRuleRecord).count() == 0
             ):
                 seed_database(session)
     yield
@@ -122,6 +125,7 @@ app.add_middleware(
 app.include_router(router)
 app.include_router(provider_readiness_v1_router)
 app.include_router(document_intelligence_v1_router)
+app.include_router(campaign_brain_v1_router)
 
 
 @app.get("/health")

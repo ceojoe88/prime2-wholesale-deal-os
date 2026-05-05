@@ -103,6 +103,12 @@ from app.models import (
     BuyerResponseRoute,
     BuyerSequencePrep,
     BuyerVelocityProfile,
+    CampaignActivationAttempt,
+    CampaignAudiencePreview,
+    CampaignPerformanceRecord,
+    CampaignRuleRecord,
+    CampaignSequenceStep,
+    CampaignStopEvent,
     CallFollowUpRecommendation,
     CallIntelligenceSession,
     CallObjectionRecord,
@@ -7297,6 +7303,283 @@ def build_document_evidence_link_records() -> list[dict[str, object]]:
     ]
 
 
+def build_campaign_rule_records() -> list[dict[str, object]]:
+    required_stops = [
+        "recipient_replies",
+        "dnc_detected",
+        "compliance_risk_detected",
+        "seller_legal_question",
+        "buyer_terms_not_approved",
+        "provider_readiness_fails",
+        "owner_pauses",
+        "max_attempts_reached",
+    ]
+    return [
+        {
+            "id": "campaign-rule-001",
+            "campaign_id": "campaign-001",
+            "name": "Hot seller follow-up prep",
+            "campaign_type": "seller_follow_up",
+            "audience_type": "seller",
+            "segment_definition": {"segment": "hot_motivation"},
+            "approved_template_ids": ["template-seller-followup-safe"],
+            "max_recipients_per_day": 3,
+            "max_messages_per_recipient": 1,
+            "send_window_start": "09:00",
+            "send_window_end": "17:00",
+            "cooldown_hours": 24,
+            "stop_conditions": required_stops,
+            "dnc_guard_enabled": True,
+            "compliance_guard_enabled": True,
+            "owner_approval_status": "pending",
+            "live_flag_required": True,
+            "provider_readiness_required": True,
+            "status": "draft",
+            "safety_status": "passed",
+            "audience_preview_approved": False,
+            "blocked_reasons": ["owner_approval_required", "audience_preview_approval_required"],
+            "bulk_blast_allowed": False,
+            "one_message_event_model": True,
+            "live_send_allowed": False,
+        },
+        {
+            "id": "campaign-rule-002",
+            "campaign_id": "campaign-002",
+            "name": "Buyer POF request prep",
+            "campaign_type": "buyer_pof_request",
+            "audience_type": "buyer",
+            "segment_definition": {"segment": "POF_verified", "deal_id": "deal-001"},
+            "approved_template_ids": ["template-buyer-response-safe"],
+            "max_recipients_per_day": 2,
+            "max_messages_per_recipient": 1,
+            "send_window_start": "10:00",
+            "send_window_end": "16:00",
+            "cooldown_hours": 48,
+            "stop_conditions": required_stops,
+            "dnc_guard_enabled": True,
+            "compliance_guard_enabled": True,
+            "owner_approval_status": "approved",
+            "live_flag_required": True,
+            "provider_readiness_required": True,
+            "status": "active_controlled",
+            "safety_status": "passed",
+            "audience_preview_approved": True,
+            "blocked_reasons": [],
+            "bulk_blast_allowed": False,
+            "one_message_event_model": True,
+            "live_send_allowed": False,
+        },
+        {
+            "id": "campaign-rule-003",
+            "campaign_id": "campaign-003",
+            "name": "Stale lead reactivation draft",
+            "campaign_type": "stale_lead_reactivation",
+            "audience_type": "seller",
+            "segment_definition": {"segment": "stale_but_qualified"},
+            "approved_template_ids": [],
+            "max_recipients_per_day": 0,
+            "max_messages_per_recipient": 1,
+            "send_window_start": "",
+            "send_window_end": "",
+            "cooldown_hours": 72,
+            "stop_conditions": [],
+            "dnc_guard_enabled": True,
+            "compliance_guard_enabled": True,
+            "owner_approval_status": "pending",
+            "live_flag_required": True,
+            "provider_readiness_required": True,
+            "status": "blocked",
+            "safety_status": "blocked",
+            "audience_preview_approved": False,
+            "blocked_reasons": ["approved_templates_required", "max_daily_cap_required", "stop_conditions_required"],
+            "bulk_blast_allowed": False,
+            "one_message_event_model": True,
+            "live_send_allowed": False,
+        },
+    ]
+
+
+def build_campaign_audience_preview_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "campaign-preview-001",
+            "campaign_id": "campaign-001",
+            "recipient_id": "lead-001",
+            "recipient_type": "seller",
+            "segment_name": "hot_motivation",
+            "inclusion_status": "included",
+            "excluded": False,
+            "exclusion_reasons": [],
+            "score": 86,
+            "preview_approved": False,
+            "do_not_contact": False,
+            "compliance_risk_status": "clear",
+            "consent_status": "unknown",
+        },
+        {
+            "id": "campaign-preview-002",
+            "campaign_id": "campaign-001",
+            "recipient_id": "lead-008",
+            "recipient_type": "seller",
+            "segment_name": "hot_motivation",
+            "inclusion_status": "excluded",
+            "excluded": True,
+            "exclusion_reasons": ["do_not_contact_excluded"],
+            "score": 35,
+            "preview_approved": False,
+            "do_not_contact": True,
+            "compliance_risk_status": "clear",
+            "consent_status": "unknown",
+        },
+        {
+            "id": "campaign-preview-003",
+            "campaign_id": "campaign-002",
+            "recipient_id": "buyer-001",
+            "recipient_type": "buyer",
+            "segment_name": "POF_verified",
+            "inclusion_status": "included",
+            "excluded": False,
+            "exclusion_reasons": [],
+            "score": 98,
+            "preview_approved": True,
+            "do_not_contact": False,
+            "compliance_risk_status": "clear",
+            "consent_status": "unknown",
+        },
+    ]
+
+
+def build_campaign_sequence_step_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "campaign-step-001",
+            "campaign_id": "campaign-001",
+            "step_order": 1,
+            "message_purpose": "checking if still interested",
+            "template_id": "template-seller-followup-safe",
+            "timing_offset_hours": 0,
+            "recipient_type": "seller",
+            "safety_status": "passed",
+            "dry_run_status": "not_started",
+            "approval_status": "pending",
+            "stop_condition": "stop if recipient replies, DNC, compliance risk, provider failure, owner pause, or max attempts",
+            "draft_only": True,
+            "live_send_allowed": False,
+            "bulk_send_allowed": False,
+            "deceptive_scarcity_allowed": False,
+        },
+        {
+            "id": "campaign-step-002",
+            "campaign_id": "campaign-002",
+            "step_order": 1,
+            "message_purpose": "POF request",
+            "template_id": "template-buyer-response-safe",
+            "timing_offset_hours": 0,
+            "recipient_type": "buyer",
+            "safety_status": "passed",
+            "dry_run_status": "dry_run_ready",
+            "approval_status": "approved",
+            "stop_condition": "stop if buyer replies, POF received, provider fails, owner pauses, or max attempts",
+            "draft_only": True,
+            "live_send_allowed": False,
+            "bulk_send_allowed": False,
+            "deceptive_scarcity_allowed": False,
+        },
+    ]
+
+
+def build_campaign_activation_attempt_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "campaign-activation-001",
+            "campaign_id": "campaign-001",
+            "attempt_status": "blocked",
+            "gate_result": {"preview_count": 2, "included_count": 1, "one_message_event_model": True},
+            "blocked_reasons": ["owner_approval_required", "audience_preview_approval_required"],
+            "idempotency_key": "seed:campaign-activation-001",
+            "owner_approval_required": True,
+            "provider_readiness_required": True,
+            "v5_gate_required": True,
+            "v13_gate_required": True,
+            "v22_gate_required": True,
+            "bulk_blast_allowed": False,
+            "one_recipient_per_event": True,
+            "live_send_attempted": False,
+        },
+        {
+            "id": "campaign-activation-002",
+            "campaign_id": "campaign-002",
+            "attempt_status": "active_controlled",
+            "gate_result": {"preview_count": 1, "included_count": 1, "one_message_event_model": True},
+            "blocked_reasons": [],
+            "idempotency_key": "seed:campaign-activation-002",
+            "owner_approval_required": True,
+            "provider_readiness_required": True,
+            "v5_gate_required": True,
+            "v13_gate_required": True,
+            "v22_gate_required": True,
+            "bulk_blast_allowed": False,
+            "one_recipient_per_event": True,
+            "live_send_attempted": False,
+        },
+    ]
+
+
+def build_campaign_stop_event_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "campaign-stop-001",
+            "campaign_id": "campaign-001",
+            "recipient_id": "lead-008",
+            "event_type": "dnc_detected",
+            "reason": "DNC record excludes seller from campaign preview.",
+            "campaign_paused": True,
+            "owner_review_required": True,
+        }
+    ]
+
+
+def build_campaign_performance_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "campaign-performance-001",
+            "campaign_id": "campaign-001",
+            "recipients_queued": 1,
+            "messages_prepared": 1,
+            "dry_runs_passed": 0,
+            "approvals_pending": 1,
+            "attempts_blocked": 1,
+            "responses_received": 0,
+            "dnc_events": 1,
+            "conversions_to_call": 0,
+            "conversions_to_appointment": 0,
+            "conversions_to_interest": 0,
+            "campaign_health_score": 58,
+            "roi_claims_allowed": False,
+            "guaranteed_profit_language_allowed": False,
+            "bulk_blast_allowed": False,
+        },
+        {
+            "id": "campaign-performance-002",
+            "campaign_id": "campaign-002",
+            "recipients_queued": 1,
+            "messages_prepared": 1,
+            "dry_runs_passed": 1,
+            "approvals_pending": 0,
+            "attempts_blocked": 0,
+            "responses_received": 0,
+            "dnc_events": 0,
+            "conversions_to_call": 0,
+            "conversions_to_appointment": 0,
+            "conversions_to_interest": 1,
+            "campaign_health_score": 82,
+            "roi_claims_allowed": False,
+            "guaranteed_profit_language_allowed": False,
+            "bulk_blast_allowed": False,
+        },
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -7396,6 +7679,12 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "document_issue_flags": build_document_issue_flag_records(),
         "document_review_tasks": build_document_review_task_records(),
         "document_evidence_links": build_document_evidence_link_records(),
+        "campaign_rule_records": build_campaign_rule_records(),
+        "campaign_audience_previews": build_campaign_audience_preview_records(),
+        "campaign_sequence_steps": build_campaign_sequence_step_records(),
+        "campaign_activation_attempts": build_campaign_activation_attempt_records(),
+        "campaign_stop_events": build_campaign_stop_event_records(),
+        "campaign_performance_records": build_campaign_performance_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -7416,6 +7705,12 @@ def seed_database(session: Session) -> dict[str, int]:
         WorkerHeartbeat,
         WorkerJobLog,
         WorkerJob,
+        CampaignPerformanceRecord,
+        CampaignStopEvent,
+        CampaignActivationAttempt,
+        CampaignSequenceStep,
+        CampaignAudiencePreview,
+        CampaignRuleRecord,
         DocumentEvidenceLink,
         DocumentReviewTask,
         DocumentIssueFlag,
@@ -7707,6 +8002,27 @@ def seed_database(session: Session) -> dict[str, int]:
     )
     session.add_all(
         DocumentEvidenceLink(**row) for row in payload["document_evidence_links"]
+    )
+    session.add_all(
+        CampaignRuleRecord(**row) for row in payload["campaign_rule_records"]
+    )
+    session.add_all(
+        CampaignAudiencePreview(**row)
+        for row in payload["campaign_audience_previews"]
+    )
+    session.add_all(
+        CampaignSequenceStep(**row) for row in payload["campaign_sequence_steps"]
+    )
+    session.add_all(
+        CampaignActivationAttempt(**row)
+        for row in payload["campaign_activation_attempts"]
+    )
+    session.add_all(
+        CampaignStopEvent(**row) for row in payload["campaign_stop_events"]
+    )
+    session.add_all(
+        CampaignPerformanceRecord(**row)
+        for row in payload["campaign_performance_records"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

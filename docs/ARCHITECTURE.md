@@ -56,6 +56,8 @@ V23 adds call intelligence. It accepts manual call notes or pasted transcripts, 
 
 V24 adds deal document intelligence. It classifies internal deal files, extracts safe metadata, flags missing fields, price mismatches, weak POF, unclear assignment language, risky phrases, and review needs. It is review routing only and cannot provide legal conclusions, rewrite contracts, submit files to title, publish documents to portals, or mark documents executed.
 
+V25 adds the controlled campaign brain. It segments sellers and buyers, previews audience exclusions, prepares safe sequence steps, gates controlled activation, records stop-condition events, and tracks performance without becoming a mass-send engine. Any live path remains subordinate to V5, V13, and V22 safety/readiness/approval/idempotency controls.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, backups, lead imports, lead QA, call outcomes, field feedback, and scoring adjustment suggestions.
@@ -74,6 +76,7 @@ V24 adds deal document intelligence. It classifies internal deal files, extracts
 - `app/domains/provider_readiness/*`: V22 provider readiness registry, credential posture checks, provider attempt audits, webhook review skeleton, response sanitizers, and hard blocks against secret storage or uncontrolled provider calls.
 - `app/domains/call_intelligence/*`: V23 text-only call intelligence extraction, DNC/legal risk detection, objection drafting, score-delta explanations, follow-up recommendations, AI Gateway allowlist integration, and worker-safe analysis jobs.
 - `app/domains/document_intelligence/*`: V24 document classification, deterministic field extraction, issue flagging, sanitized document responses, review routing, evidence linking, AI Gateway allowlist integration, and hard blocks against legal conclusions, executable contracts, title submission, and portal publishing.
+- `app/domains/campaign_brain/*`: V25 campaign planning, audience segmentation, sequence prep, activation gating, stop-condition handling, performance tracking, route sanitization, and hard blocks against uncontrolled outreach, bulk sending, deceptive scarcity, fake claims, and approval bypass.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -291,6 +294,33 @@ Frontend routes:
 - `/dashboard/documents/evidence`
 
 Document records store source deal, lead, and buyer references; upload metadata; document type; classification confidence; extracted safe metadata; risk status; owner review status; and internal-only text. Sanitized responses hide full text and force portal publishing, contract execution, title delivery, and legal guidance flags off. Issue flags record type, severity, source field, explanation, next action, owner review, compliance review, and external review reminders. Review tasks route owner review, compliance review, missing data, buyer POF follow-up, seller document follow-up, and title/attorney reminders without sending anything.
+
+## V25 Controlled Campaign Brain
+
+Backend routes:
+
+- `/api/v1/campaigns`
+- `/api/v1/campaigns/{campaignId}`
+- `/api/v1/campaigns/{campaignId}/preview`
+- `/api/v1/campaigns/{campaignId}/sequences`
+- `/api/v1/campaigns/{campaignId}/activate`
+- `/api/v1/campaigns/{campaignId}/stop-events`
+- `/api/v1/campaigns/segments`
+- `/api/v1/campaigns/sequences`
+- `/api/v1/campaigns/approvals`
+- `/api/v1/campaigns/performance`
+
+Frontend routes:
+
+- `/dashboard/campaigns`
+- `/dashboard/campaigns/[campaignId]`
+- `/dashboard/campaigns/new`
+- `/dashboard/campaigns/segments`
+- `/dashboard/campaigns/sequences`
+- `/dashboard/campaigns/approvals`
+- `/dashboard/campaigns/performance`
+
+Campaign rules store campaign type, audience type, segment definition, approved template IDs, daily caps, per-recipient caps, send windows, cooldowns, stop conditions, DNC/compliance guard state, owner approval, live flag requirements, provider readiness requirements, safety status, and blocked reasons. Audience previews explicitly exclude DNC records, high-risk compliance records, missing consent where relevant, low-quality records, and weak-margin buyer-deal situations. Sequence steps are draft-only and safety-scanned. Activation attempts are idempotent, audit-like records that require owner approval, approved templates, audience preview approval, DNC and compliance guards, caps, stop conditions, one-message event modeling, and V5/V13/V22/provider/live-flag gates if a live path is requested.
 
 ## V2 Buyer Portal
 

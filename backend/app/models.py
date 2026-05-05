@@ -2555,3 +2555,123 @@ class DocumentEvidenceLink(TimestampMixin, Base):
     linkage_status: Mapped[str] = mapped_column(String(80), default="linked")
     sanitized_for_export: Mapped[bool] = mapped_column(Boolean, default=True)
     portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class CampaignRuleRecord(TimestampMixin, Base):
+    __tablename__ = "campaign_rule_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    campaign_id: Mapped[str] = mapped_column(String(80), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    campaign_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    audience_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    segment_definition: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    approved_template_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    max_recipients_per_day: Mapped[int] = mapped_column(Integer, default=0)
+    max_messages_per_recipient: Mapped[int] = mapped_column(Integer, default=1)
+    send_window_start: Mapped[str] = mapped_column(String(40), default="")
+    send_window_end: Mapped[str] = mapped_column(String(40), default="")
+    cooldown_hours: Mapped[int] = mapped_column(Integer, default=24)
+    stop_conditions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    dnc_guard_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    compliance_guard_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending")
+    live_flag_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    provider_readiness_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    status: Mapped[str] = mapped_column(String(80), default="draft")
+    safety_status: Mapped[str] = mapped_column(String(80), default="pending")
+    audience_preview_approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    bulk_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    one_message_event_model: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class CampaignAudiencePreview(TimestampMixin, Base):
+    __tablename__ = "campaign_audience_previews"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    campaign_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    recipient_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    recipient_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    segment_name: Mapped[str] = mapped_column(String(120), default="")
+    inclusion_status: Mapped[str] = mapped_column(String(80), default="included")
+    excluded: Mapped[bool] = mapped_column(Boolean, default=False)
+    exclusion_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    score: Mapped[float] = mapped_column(Float, default=0)
+    preview_approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    do_not_contact: Mapped[bool] = mapped_column(Boolean, default=False)
+    compliance_risk_status: Mapped[str] = mapped_column(String(80), default="clear")
+    consent_status: Mapped[str] = mapped_column(String(80), default="unknown")
+
+
+class CampaignSequenceStep(TimestampMixin, Base):
+    __tablename__ = "campaign_sequence_steps"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    campaign_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    step_order: Mapped[int] = mapped_column(Integer, default=1)
+    message_purpose: Mapped[str] = mapped_column(String(160), nullable=False)
+    template_id: Mapped[str | None] = mapped_column(ForeignKey("approved_templates.id"), nullable=True)
+    timing_offset_hours: Mapped[int] = mapped_column(Integer, default=0)
+    recipient_type: Mapped[str] = mapped_column(String(80), default="")
+    safety_status: Mapped[str] = mapped_column(String(80), default="pending")
+    dry_run_status: Mapped[str] = mapped_column(String(80), default="not_started")
+    approval_status: Mapped[str] = mapped_column(String(80), default="pending")
+    stop_condition: Mapped[str] = mapped_column(String(160), default="")
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    deceptive_scarcity_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class CampaignActivationAttempt(TimestampMixin, Base):
+    __tablename__ = "campaign_activation_attempts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    campaign_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    attempt_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    gate_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    idempotency_key: Mapped[str] = mapped_column(String(180), unique=True, nullable=False)
+    owner_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    provider_readiness_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    v5_gate_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    v13_gate_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    v22_gate_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    bulk_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    one_recipient_per_event: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_send_attempted: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class CampaignStopEvent(TimestampMixin, Base):
+    __tablename__ = "campaign_stop_events"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    campaign_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    recipient_id: Mapped[str] = mapped_column(String(80), default="")
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    campaign_paused: Mapped[bool] = mapped_column(Boolean, default=True)
+    owner_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class CampaignPerformanceRecord(TimestampMixin, Base):
+    __tablename__ = "campaign_performance_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    campaign_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    recipients_queued: Mapped[int] = mapped_column(Integer, default=0)
+    messages_prepared: Mapped[int] = mapped_column(Integer, default=0)
+    dry_runs_passed: Mapped[int] = mapped_column(Integer, default=0)
+    approvals_pending: Mapped[int] = mapped_column(Integer, default=0)
+    attempts_blocked: Mapped[int] = mapped_column(Integer, default=0)
+    responses_received: Mapped[int] = mapped_column(Integer, default=0)
+    dnc_events: Mapped[int] = mapped_column(Integer, default=0)
+    conversions_to_call: Mapped[int] = mapped_column(Integer, default=0)
+    conversions_to_appointment: Mapped[int] = mapped_column(Integer, default=0)
+    conversions_to_interest: Mapped[int] = mapped_column(Integer, default=0)
+    campaign_health_score: Mapped[float] = mapped_column(Float, default=0)
+    roi_claims_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    guaranteed_profit_language_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)

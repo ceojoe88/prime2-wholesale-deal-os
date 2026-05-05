@@ -178,6 +178,11 @@ Smoke check:
 - `/api/v1/documents/issues`
 - `/api/v1/documents/review-queue`
 - `/api/v1/documents/evidence`
+- `/api/v1/campaigns`
+- `/api/v1/campaigns/segments`
+- `/api/v1/campaigns/sequences`
+- `/api/v1/campaigns/approvals`
+- `/api/v1/campaigns/performance`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -205,6 +210,7 @@ Before any hosted deployment:
 - Webhook receiver records must create review tasks only and never mutate deals automatically.
 - Call intelligence must remain text-only and analysis-only; no audio recording, live calling, automatic seller response, or term changes.
 - Document intelligence must remain classification/extraction/review routing only; full text must stay out of external surfaces and no document should trigger contract execution, title delivery, or portal publishing.
+- Campaign brain must remain draft/preview/governance-first; DNC and compliance exclusions, owner approval, caps, stop conditions, one-message event modeling, V5/V13/V22 gates, idempotency, and audit must remain required before any controlled live path.
 - Audit exports must be sanitized.
 - Backup/export records must be metadata-safe unless a future encrypted storage design is added.
 - Legal/title review remains external.

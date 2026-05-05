@@ -52,6 +52,7 @@ Implemented phases:
 - V22 provider sandbox and credential readiness gate
 - V23 call intelligence layer
 - V24 deal document intelligence
+- V25 controlled campaign brain
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -112,6 +113,12 @@ Do-not-contact detection creates a V19 call outcome and blocks future outreach e
 V24 adds internal document intelligence for deal files. Prime 2 can classify purchase agreements, assignment agreements, proof-of-funds letters, title docs, seller/buyer docs, inspection notes, repair estimates, comp reports, and other files from manual metadata or pasted text. It extracts safe metadata such as parties, property address, prices, dates, signatures, assignment-language presence, POF amount, and title company name.
 
 The layer flags missing fields, price mismatches, weak POF, unclear assignment language, risky language, unsupported ARV/repair claims, and external review needs. It is review routing only: no legal conclusions, no contract rewriting, no file delivery, no title submission, and no automatic portal publishing.
+
+## V25 Controlled Campaign Brain
+
+V25 adds campaign planning and governance for sellers, buyers, stale leads, appointment reminders, POF requests, and internal operator pushes. Campaigns default to draft, segment audiences with DNC/compliance/quality exclusions, prepare safe sequences, require owner approval and daily caps, and pause on replies, DNC, compliance risk, provider readiness failure, owner pause, or max attempts.
+
+This is not a mass outreach engine. Controlled activation is one-recipient/one-message-event based, audited, idempotent, capped, and any live path remains subordinate to V5 communication safety, V13 auto-execution rules/templates, V22 provider readiness, dry-runs, live flags, and owner approval.
 
 ## Safety Boundaries
 

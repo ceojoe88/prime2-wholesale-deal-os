@@ -39,6 +39,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Provider sandbox and credential readiness checks for future integrations without storing secrets or making uncontrolled provider calls
 - Seller call intelligence from manual notes or pasted transcripts, including DNC detection, objections, quality scoring, and draft-only follow-up recommendations
 - Deal document intelligence for classification, metadata extraction, issue flags, review routing, and sanitized evidence links
+- Controlled campaign planning, segmentation, sequence prep, activation gates, stop conditions, and performance tracking
 
 ## Command Hierarchy
 
@@ -130,7 +131,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V24
+## Phase Map V1-V25
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -203,6 +204,9 @@ Added text-only call intelligence sessions for manual notes and pasted transcrip
 
 V24 Deal Document Intelligence:
 Added internal document intelligence files, classification results, extracted document fields, issue flags, review tasks, and document evidence links. Prime 2 can classify and extract metadata from manual entries or pasted text, flag missing signatures, price mismatches, POF gaps, unclear assignment language, risky phrases, and external review reminders. It does not provide legal conclusions, rewrite documents, generate executable contracts, submit files to title, or publish documents to portals automatically.
+
+V25 Controlled Campaign Brain:
+Added campaign rule records, audience previews, sequence steps, activation attempts, stop events, and performance records. Campaigns default to draft, exclude DNC/high-risk records, require approved templates, owner approval, caps, stop conditions, audience approval, V5/V13/V22 gates for any live path, one-recipient events, idempotency, and audit. It cannot run uncontrolled outreach, mass sends, deceptive scarcity, fake claims, or approval bypass.
 
 ## Local Run Commands
 
