@@ -1297,6 +1297,69 @@ class ProviderSandboxReadinessCheck(TimestampMixin, Base):
     last_checked_notes: Mapped[str] = mapped_column(Text, default="")
 
 
+class ProviderRegistry(TimestampMixin, Base):
+    __tablename__ = "provider_registries"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    provider_name: Mapped[str] = mapped_column(String(140), nullable=False)
+    provider_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    provider_mode: Mapped[str] = mapped_column(String(40), default="mock")
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    sandbox_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    credential_reference_name: Mapped[str] = mapped_column(String(160), default="")
+    credential_present: Mapped[bool] = mapped_column(Boolean, default=False)
+    credential_source: Mapped[str] = mapped_column(String(80), default="env")
+    readiness_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reason: Mapped[str] = mapped_column(Text, default="")
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    owner_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    raw_secret_value_stored: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_network_call_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ProviderAttemptAudit(TimestampMixin, Base):
+    __tablename__ = "provider_attempt_audits"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    provider_id: Mapped[str | None] = mapped_column(
+        ForeignKey("provider_registries.id"), nullable=True
+    )
+    provider_name: Mapped[str] = mapped_column(String(140), default="")
+    provider_type: Mapped[str] = mapped_column(String(80), default="")
+    source_domain: Mapped[str] = mapped_column(String(120), default="")
+    action_type: Mapped[str] = mapped_column(String(120), default="")
+    mode: Mapped[str] = mapped_column(String(40), default="mock")
+    readiness_result: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    attempt_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reason: Mapped[str] = mapped_column(Text, default="")
+    idempotency_key: Mapped[str] = mapped_column(String(180), unique=True, nullable=False)
+    request_metadata_hash: Mapped[str] = mapped_column(String(128), default="")
+    response_metadata_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    real_network_call_made: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ProviderWebhookEvent(TimestampMixin, Base):
+    __tablename__ = "provider_webhook_events"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    provider_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    received_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    mode: Mapped[str] = mapped_column(String(40), default="mock")
+    signature_present: Mapped[bool] = mapped_column(Boolean, default=False)
+    signature_valid: Mapped[bool] = mapped_column(Boolean, default=False)
+    normalized_event_status: Mapped[str] = mapped_column(String(80), default="review_queued")
+    source_metadata_hash: Mapped[str] = mapped_column(String(128), default="")
+    review_task_created: Mapped[bool] = mapped_column(Boolean, default=True)
+    deal_mutation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    deal_mutated: Mapped[bool] = mapped_column(Boolean, default=False)
+    raw_payload_stored: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reason: Mapped[str] = mapped_column(Text, default="")
+
+
 class EnvironmentReadinessCheck(TimestampMixin, Base):
     __tablename__ = "environment_readiness_checks"
 

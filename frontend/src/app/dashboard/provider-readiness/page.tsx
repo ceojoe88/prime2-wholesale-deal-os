@@ -1,65 +1,72 @@
+import Link from "next/link";
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
-import { blockedProviderReadiness, providerSandboxReadinessChecks } from "@/lib/demo-data";
+import {
+  blockedProviderAttempts,
+  blockedProviderRegistries,
+  providerAttemptAudits,
+  providerCredentialPosture,
+  providerRegistries,
+  providerWebhookReviewQueue
+} from "@/lib/demo-data";
 
 export default function ProviderReadinessPage() {
   return (
     <div className="page">
       <PageHeader
-        eyebrow="V18 Provider Sandbox Readiness"
-        title="Provider readiness checks"
-        description="Email, SMS, and title coordination adapters remain mock or blocked until sandbox readiness, safety checks, dry runs, owner approvals, idempotency, and audit trails are all present."
+        eyebrow="V22 Provider Sandbox Readiness"
+        title="Provider sandbox and credential gate"
+        description="Prime 2 tracks provider registry, env-only credential posture, sandbox separation, readiness outcomes, attempts, and webhook review queues without making real provider calls."
       />
 
       <div className="metric-grid">
-        <MetricCard label="Providers" value={String(providerSandboxReadinessChecks.length)} detail="Email, SMS, title placeholder" />
-        <MetricCard label="Blocked" value={String(blockedProviderReadiness.length)} detail="Default safe state" />
-        <MetricCard label="Live flags enabled" value="0" detail="No real provider calls" />
-        <MetricCard label="Bulk send" value="off" detail="Campaigns remain blocked" />
+        <MetricCard label="Registered" value={String(providerRegistries.length)} detail="OpenAI, email, SMS, storage" />
+        <MetricCard label="Blocked" value={String(blockedProviderRegistries.length)} detail="Missing credentials or live gates" />
+        <MetricCard label="Attempts" value={String(providerAttemptAudits.length)} detail={`${blockedProviderAttempts.length} blocked safely`} />
+        <MetricCard label="Stored secrets" value={String(providerCredentialPosture.storedSecretValues)} detail="Reference names only" />
       </div>
 
-      <Section title="Provider Checks">
+      <Section title="Provider Registry">
         <div className="record-list">
-          {providerSandboxReadinessChecks.map((provider) => (
+          {providerRegistries.map((provider) => (
             <RecordCard
               key={provider.id}
               title={provider.providerName}
-              meta={`${provider.mode} / ${provider.lastCheckedNotes}`}
-              right={<Pill tone={provider.providerCallsAllowed ? "green" : "red"}>{provider.readinessStatus}</Pill>}
+              meta={`${provider.providerType} / ${provider.providerMode} / credential ${provider.credentialReferenceMasked}`}
+              right={<Link href={`/dashboard/provider-readiness/${provider.id}`}><Pill tone={provider.readinessStatus === "ready" ? "green" : "red"}>{provider.readinessStatus}</Pill></Link>}
             />
           ))}
         </div>
       </Section>
 
-      <Section title="Required Gates">
+      <Section title="Readiness Work Areas">
+        <div className="grid-three">
+          <RecordCard title="Attempts" meta="Blocked, mock, sandbox-ready, and approval-pending attempts" right={<Link href="/dashboard/provider-readiness/attempts">Open</Link>} />
+          <RecordCard title="Webhooks" meta={`${providerWebhookReviewQueue.length} mock or sandbox events queued for review`} right={<Link href="/dashboard/provider-readiness/webhooks">Open</Link>} />
+          <RecordCard title="Credentials" meta="Env-only posture and masked references" right={<Link href="/dashboard/provider-readiness/credentials">Open</Link>} />
+        </div>
+      </Section>
+
+      <Section title="Hard Boundary">
         <table className="data-table">
           <thead>
             <tr>
-              <th>Provider</th>
-              <th>Sandbox</th>
-              <th>Secrets</th>
-              <th>Safety</th>
-              <th>Dry Run</th>
-              <th>Owner</th>
+              <th>Control</th>
+              <th>Status</th>
+              <th>Reason</th>
             </tr>
           </thead>
           <tbody>
-            {providerSandboxReadinessChecks.map((provider) => (
-              <tr key={provider.id}>
-                <td>{provider.providerType}</td>
-                <td>{provider.sandboxReady ? "ready" : "missing"}</td>
-                <td>{provider.secretsConfigured ? "configured" : "missing"}</td>
-                <td>{provider.safetyCheckRequired ? "required" : "missing"}</td>
-                <td>{provider.dryRunRequired ? "required" : "missing"}</td>
-                <td>{provider.ownerApprovalRequired ? "required" : "missing"}</td>
-              </tr>
-            ))}
+            <tr><td>Default mode</td><td>mock</td><td>No real provider network path is active</td></tr>
+            <tr><td>Live provider calls</td><td>disabled</td><td>Owner approval, live flags, readiness, and audit are still required</td></tr>
+            <tr><td>Credential values</td><td>not stored</td><td>Only masked environment reference names are displayed</td></tr>
           </tbody>
         </table>
       </Section>
     </div>
   );
 }
+

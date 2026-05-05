@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.database import get_session
 from app.domains.ai_gateway.ai_gateway import ai_cost_dashboard, ai_gateway_dashboard
 from app.domains.ai_gateway.ai_router import handle_ai_request
+from app.domains.provider_readiness.service import provider_registry_dashboard
 from app.domains.worker_runtime.heartbeat import worker_health
 from app.domains.worker_runtime.job_queue import enqueue_job
 from app.domains.worker_runtime.job_runner import run_due_jobs, run_worker_job
@@ -225,6 +226,9 @@ from app.models import (
     OwnerApprovalItem,
     PredictionFeedbackRecord,
     ProviderSandboxReadinessCheck,
+    ProviderAttemptAudit,
+    ProviderRegistry,
+    ProviderWebhookEvent,
     RevenueForecastRecord,
     ReviewPacketPrep,
     SellerInteraction,
@@ -1972,14 +1976,20 @@ def evidence_attachments(session: Session = Depends(get_session)) -> dict[str, o
 @router.get("/provider-readiness")
 def provider_readiness(session: Session = Depends(get_session)) -> dict[str, object]:
     providers = session.query(ProviderSandboxReadinessCheck).all()
+    v22 = provider_registry_dashboard(session)
     return {
         "provider_readiness": [
             {**model_to_dict(provider), "gate": provider_readiness_gate(provider)}
             for provider in providers
         ],
+        "provider_registry": v22["providers"],
+        "provider_attempts": v22["provider_attempts"],
+        "webhook_events": v22["webhook_events"],
+        "credential_posture": v22["credential_posture"],
         "default_provider_mode": "mock",
         "real_provider_calls_require_sandbox_and_gates": True,
         "bulk_send_allowed": False,
+        "live_provider_calls_allowed": False,
     }
 
 

@@ -9,6 +9,7 @@ from app.domain.autonomy import (
     sync_automation_rule,
 )
 from app.domains.ai_gateway.ai_safety import scan_ai_text
+from app.domains.provider_readiness.readiness import provider_readiness
 from app.domains.worker_runtime.worker import worker_safety_guard
 from app.domain.auto_execution import (
     content_hash as auto_execution_content_hash,
@@ -137,6 +138,9 @@ from app.models import (
     OwnerApprovalItem,
     PredictionFeedbackRecord,
     ProviderSandboxReadinessCheck,
+    ProviderAttemptAudit,
+    ProviderRegistry,
+    ProviderWebhookEvent,
     ReviewPacketPrep,
     RevenueForecastRecord,
     SellerInteraction,
@@ -4565,6 +4569,175 @@ def build_provider_sandbox_readiness_check_records() -> list[dict[str, object]]:
     ]
 
 
+def build_provider_registry_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "provider-openai-mock",
+            "provider_name": "OpenAI controlled gateway",
+            "provider_type": "openai",
+            "provider_mode": "mock",
+            "enabled": True,
+            "sandbox_enabled": False,
+            "live_enabled": False,
+            "credential_reference_name": "OPENAI_API_KEY",
+            "credential_present": False,
+            "credential_source": "env",
+            "readiness_status": "ready",
+            "blocked_reason": "",
+            "owner_approval_required": True,
+            "notes": "Mock mode only; env reference is metadata and no provider call is made.",
+            "raw_secret_value_stored": False,
+            "live_network_call_allowed": False,
+        },
+        {
+            "id": "provider-email-sandbox",
+            "provider_name": "Email sandbox adapter",
+            "provider_type": "email",
+            "provider_mode": "sandbox",
+            "enabled": True,
+            "sandbox_enabled": True,
+            "live_enabled": False,
+            "credential_reference_name": "EMAIL_SANDBOX_API_KEY",
+            "credential_present": False,
+            "credential_source": "env",
+            "readiness_status": "missing_credentials",
+            "blocked_reason": "credential_env_value_missing",
+            "owner_approval_required": True,
+            "notes": "Sandbox use requires env-only credential presence and V5/V13 gates.",
+            "raw_secret_value_stored": False,
+            "live_network_call_allowed": False,
+        },
+        {
+            "id": "provider-sms-live",
+            "provider_name": "SMS provider live placeholder",
+            "provider_type": "sms",
+            "provider_mode": "live",
+            "enabled": True,
+            "sandbox_enabled": True,
+            "live_enabled": False,
+            "credential_reference_name": "SMS_PROVIDER_API_KEY",
+            "credential_present": False,
+            "credential_source": "env",
+            "readiness_status": "blocked",
+            "blocked_reason": "live_flag_required, owner_approval_required_for_live",
+            "owner_approval_required": True,
+            "notes": "Live SMS remains unavailable unless explicit live flag, owner approval, readiness, and audit gates pass.",
+            "raw_secret_value_stored": False,
+            "live_network_call_allowed": False,
+        },
+        {
+            "id": "provider-storage-mock",
+            "provider_name": "Storage export placeholder",
+            "provider_type": "storage",
+            "provider_mode": "mock",
+            "enabled": True,
+            "sandbox_enabled": False,
+            "live_enabled": False,
+            "credential_reference_name": "STORAGE_SANDBOX_KEY",
+            "credential_present": False,
+            "credential_source": "env",
+            "readiness_status": "ready",
+            "blocked_reason": "",
+            "owner_approval_required": True,
+            "notes": "Metadata-only storage readiness; no file provider call path exists in V22.",
+            "raw_secret_value_stored": False,
+            "live_network_call_allowed": False,
+        },
+    ]
+
+
+def build_provider_attempt_audit_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "provider-attempt-seed-001",
+            "provider_id": "provider-email-sandbox",
+            "provider_name": "Email sandbox adapter",
+            "provider_type": "email",
+            "source_domain": "communications",
+            "action_type": "seller_follow_up_dry_run",
+            "mode": "sandbox",
+            "readiness_result": {
+                "status": "missing_credentials",
+                "ready": False,
+                "blocked_reasons": ["credential_env_value_missing"],
+                "provider_calls_allowed": False,
+            },
+            "attempt_status": "blocked",
+            "blocked_reason": "credential_env_value_missing",
+            "idempotency_key": "seed:provider-attempt:email:001",
+            "request_metadata_hash": "seed-email-metadata-hash",
+            "response_metadata_summary": {
+                "network_call": "not_performed",
+                "audit_only": True,
+            },
+            "provider_called": False,
+            "real_network_call_made": False,
+        },
+        {
+            "id": "provider-attempt-seed-002",
+            "provider_id": "provider-openai-mock",
+            "provider_name": "OpenAI controlled gateway",
+            "provider_type": "openai",
+            "source_domain": "ai_gateway",
+            "action_type": "deal_summary_template",
+            "mode": "mock",
+            "readiness_result": {
+                "status": "ready",
+                "ready": True,
+                "blocked_reasons": [],
+                "provider_calls_allowed": False,
+            },
+            "attempt_status": "mock_success",
+            "blocked_reason": "",
+            "idempotency_key": "seed:provider-attempt:openai:001",
+            "request_metadata_hash": "seed-openai-metadata-hash",
+            "response_metadata_summary": {
+                "network_call": "not_performed",
+                "mock_only": True,
+            },
+            "provider_called": False,
+            "real_network_call_made": False,
+        },
+    ]
+
+
+def build_provider_webhook_event_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "provider-webhook-seed-001",
+            "provider_type": "crm",
+            "event_type": "mock_lead_status",
+            "received_at": datetime(2026, 5, 4, 14, 0, tzinfo=UTC),
+            "mode": "mock",
+            "signature_present": False,
+            "signature_valid": False,
+            "normalized_event_status": "review_queued",
+            "source_metadata_hash": "seed-webhook-metadata-hash",
+            "review_task_created": True,
+            "deal_mutation_allowed": False,
+            "deal_mutated": False,
+            "raw_payload_stored": False,
+            "blocked_reason": "",
+        },
+        {
+            "id": "provider-webhook-seed-002",
+            "provider_type": "sms",
+            "event_type": "live_like_delivery_status",
+            "received_at": datetime(2026, 5, 4, 14, 5, tzinfo=UTC),
+            "mode": "live",
+            "signature_present": False,
+            "signature_valid": False,
+            "normalized_event_status": "blocked",
+            "source_metadata_hash": "seed-webhook-blocked-hash",
+            "review_task_created": False,
+            "deal_mutation_allowed": False,
+            "deal_mutated": False,
+            "raw_payload_stored": False,
+            "blocked_reason": "unsigned_live_like_webhook_rejected",
+        },
+    ]
+
+
 def build_environment_readiness_check_records() -> list[dict[str, object]]:
     return [
         {
@@ -6587,6 +6760,9 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "evidence_attachment_records": build_evidence_attachment_records(),
         "backup_export_records": build_backup_export_record_records(),
         "provider_sandbox_readiness_checks": build_provider_sandbox_readiness_check_records(),
+        "provider_registries": build_provider_registry_records(),
+        "provider_attempt_audits": build_provider_attempt_audit_records(),
+        "provider_webhook_events": build_provider_webhook_event_records(),
         "environment_readiness_checks": build_environment_readiness_check_records(),
         "deployment_hardening_checks": build_deployment_hardening_check_records(),
         "lead_import_batches": build_lead_import_batch_records(),
@@ -6629,6 +6805,9 @@ def seed_database(session: Session) -> dict[str, int]:
         WorkerHeartbeat,
         WorkerJobLog,
         WorkerJob,
+        ProviderWebhookEvent,
+        ProviderAttemptAudit,
+        ProviderRegistry,
         AICostLedger,
         AIAuditRecord,
         AIRequestLog,
@@ -6816,6 +6995,13 @@ def seed_database(session: Session) -> dict[str, int]:
         ProviderSandboxReadinessCheck(**row)
         for row in payload["provider_sandbox_readiness_checks"]
     )
+    session.add_all(ProviderRegistry(**row) for row in payload["provider_registries"])
+    session.add_all(
+        ProviderAttemptAudit(**row) for row in payload["provider_attempt_audits"]
+    )
+    session.add_all(
+        ProviderWebhookEvent(**row) for row in payload["provider_webhook_events"]
+    )
     session.add_all(
         EnvironmentReadinessCheck(**row) for row in payload["environment_readiness_checks"]
     )
@@ -6957,6 +7143,8 @@ def seed_database(session: Session) -> dict[str, int]:
         backup_metadata(backup)
     for provider in session.query(ProviderSandboxReadinessCheck).all():
         provider_readiness_gate(provider)
+    for provider in session.query(ProviderRegistry).all():
+        provider_readiness(provider)
     for batch in session.query(LeadImportBatch).all():
         sync_batch_counts(batch)
     for review in session.query(LeadQualityReview).all():

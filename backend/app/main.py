@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
+from app.domains.provider_readiness.router import router as provider_readiness_v1_router
 from app.models import (
     AIRequestLog,
     AITemplate,
@@ -29,6 +30,7 @@ from app.models import (
     LeadImportBatch,
     LeadQualityReview,
     ProviderSandboxReadinessCheck,
+    ProviderRegistry,
     LeadSpendPlan,
     MarketScalingScore,
     OfferPacket,
@@ -76,6 +78,7 @@ async def lifespan(app: FastAPI):
                 or session.query(SystemTrustScore).count() == 0
                 or session.query(AuditExportPacket).count() == 0
                 or session.query(ProviderSandboxReadinessCheck).count() == 0
+                or session.query(ProviderRegistry).count() == 0
                 or session.query(TitleHandoffPacket).count() == 0
                 or session.query(AssignmentReadinessRecord).count() == 0
                 or session.query(CommunicationDraft).count() == 0
@@ -112,6 +115,7 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(provider_readiness_v1_router)
 
 
 @app.get("/health")

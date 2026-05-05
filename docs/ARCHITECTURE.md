@@ -50,6 +50,8 @@ V20 adds the AI Gateway controlled intelligence layer. It supports only approved
 
 V21 adds the background worker runtime. It introduces queued internal jobs, scheduler cadence, retries/backoff, idempotency keys, job ledgers, heartbeat health, stuck-job detection, and Prime 2 feeds into autonomy, daily briefing, escalation, and next-best-action surfaces. Worker jobs prepare, schedule, route, draft, and escalate only. The worker cannot send SMS/email, call sellers, contact buyers, publish portals, execute contracts, submit to title, change seller/buyer terms, handle payments, or bypass approval gates.
 
+V22 adds provider sandbox and credential readiness. It introduces provider registry records, mock/sandbox/live separation, env-only credential presence checks, masked provider API responses, provider attempt audits, and webhook receiver records. Provider attempts are readiness/audit events only in V22; they do not perform network calls. Webhooks create review tasks only and cannot mutate deals automatically.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, backups, lead imports, lead QA, call outcomes, field feedback, and scoring adjustment suggestions.
@@ -65,6 +67,7 @@ V21 adds the background worker runtime. It introduces queued internal jobs, sche
 - `app/domain/field_testing.py`: V19 CSV import preview/commit workflow, normalization, critical field validation, dedupe checks, lead QA scoring, call outcome updates, do-not-contact guard, prediction feedback comparison, scoring adjustment suggestions, field dashboard, and daily field briefing.
 - `app/domains/ai_gateway/*`: V20 controlled AI Gateway with request type allowlist, versioned templates, safety scanner, token/cost ledger, request audit trail, and deterministic mock/template responses.
 - `app/domains/worker_runtime/*`: V21 background worker runtime with queueing, scheduler, runner, retry manager, idempotency, ledgers, heartbeat health, and hard blocks against live action.
+- `app/domains/provider_readiness/*`: V22 provider readiness registry, credential posture checks, provider attempt audits, webhook review skeleton, response sanitizers, and hard blocks against secret storage or uncontrolled provider calls.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -173,6 +176,8 @@ erDiagram
   AI_REQUEST_LOG ||--o{ AI_COST_LEDGER : costs
   WORKER_JOB ||--o{ WORKER_JOB_LOG : ledgers
   WORKER_HEARTBEAT ||--o{ WORKER_JOB : monitors
+  PROVIDER_REGISTRY ||--o{ PROVIDER_ATTEMPT_AUDIT : audits
+  PROVIDER_REGISTRY ||--o{ PROVIDER_WEBHOOK_EVENT : reviews
 ```
 
 ## V20 AI Gateway
@@ -210,6 +215,26 @@ Frontend routes:
 - `/dashboard/worker/health`
 
 Supported worker jobs are lead scoring refresh, follow-up scheduling, daily briefing generation, buyer ranking refresh, QA checks, automation rule evaluation, field-testing summary, and forecast refresh. Jobs use idempotency keys to prevent duplicate execution, retry/backoff to avoid runaway loops, and ledgers for completed or failed attempts. Heartbeat health reports stuck jobs and recovery needs without granting live execution authority.
+
+## V22 Provider Sandbox Readiness
+
+Backend routes:
+
+- `/api/v1/provider-readiness`
+- `/api/v1/provider-readiness/{providerId}`
+- `/api/v1/provider-readiness/attempts`
+- `/api/v1/provider-readiness/webhooks`
+- `/api/v1/provider-readiness/credentials`
+
+Frontend routes:
+
+- `/dashboard/provider-readiness`
+- `/dashboard/provider-readiness/[providerId]`
+- `/dashboard/provider-readiness/attempts`
+- `/dashboard/provider-readiness/webhooks`
+- `/dashboard/provider-readiness/credentials`
+
+Provider readiness records support OpenAI, email, SMS, CRM, skip-trace, storage, and webhook categories. Every non-mock mode requires an environment credential reference and passing readiness checks. API responses expose masked reference names only. Attempt records store metadata hashes, readiness results, blocked reasons, and idempotency keys; provider calls remain disabled. Webhook events are review-only and cannot update deal state automatically.
 
 ## V2 Buyer Portal
 

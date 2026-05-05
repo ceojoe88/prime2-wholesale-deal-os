@@ -49,6 +49,7 @@ Implemented phases:
 - V19 real lead import and field testing loop
 - V20 AI Gateway controlled intelligence layer
 - V21 background worker runtime
+- V22 provider sandbox and credential readiness gate
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -92,6 +93,12 @@ V20 adds a controlled AI Gateway for Prime 2. It allows only approved request ty
 
 V21 adds a background worker runtime for continuous internal operation. It supports queued jobs for lead scoring refresh, follow-up scheduling, daily briefing generation, buyer ranking refresh, QA checks, automation rule evaluation, field-testing summaries, and forecast refresh. Jobs have idempotency keys, retry/backoff, status ledgers, and heartbeat health. The worker can prepare, schedule, route, draft, and escalate only; it cannot send live outreach, execute contracts, publish portals, submit to title, change terms, handle payments, or bypass approval gates.
 
+## V22 Provider Sandbox Readiness
+
+V22 adds a provider registry and credential readiness gate for future OpenAI, email, SMS, CRM, skip-trace, storage, and webhook integrations. Providers default to mock mode, credential values are never stored, only masked environment reference names are surfaced, sandbox/live modes are separated, and every attempt records readiness, idempotency, metadata hashes, blocked reasons, and audit-only status.
+
+Webhook handling is a skeleton for mock or sandbox events only. Events create review queue records and never mutate deals automatically. Unsigned live-like webhook payloads are rejected and recorded safely.
+
 ## Safety Boundaries
 
 Allowed:
@@ -118,6 +125,7 @@ Blocked:
 - Level 5 full autonomy
 - AI legal/contract/profit-promise output
 - Worker live outreach, title, contract, portal publishing, payment, or bulk-send execution
+- Provider secret storage or uncontrolled provider calls
 
 Controlled provider actions require all relevant gates:
 
@@ -177,6 +185,7 @@ Open:
 - Field briefing: [http://localhost:3000/dashboard/field-briefing](http://localhost:3000/dashboard/field-briefing)
 - AI Gateway: [http://localhost:3000/dashboard/ai](http://localhost:3000/dashboard/ai)
 - Worker runtime: [http://localhost:3000/dashboard/worker](http://localhost:3000/dashboard/worker)
+- Provider readiness: [http://localhost:3000/dashboard/provider-readiness](http://localhost:3000/dashboard/provider-readiness)
 - Production readiness: [http://localhost:3000/dashboard/production-readiness](http://localhost:3000/dashboard/production-readiness)
 - Buyer portal demo: [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - Seller portal demo: [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)

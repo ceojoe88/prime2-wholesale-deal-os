@@ -977,6 +977,57 @@ export type ProviderSandboxReadinessCheck = {
   lastCheckedNotes: string;
 };
 
+export type ProviderRegistry = {
+  id: string;
+  providerName: string;
+  providerType: "openai" | "email" | "sms" | "crm" | "skip_trace" | "storage" | "webhook";
+  providerMode: "mock" | "sandbox" | "live";
+  enabled: boolean;
+  sandboxEnabled: boolean;
+  liveEnabled: boolean;
+  credentialReferenceMasked: string;
+  credentialPresent: boolean;
+  credentialSource: "env";
+  readinessStatus: string;
+  blockedReason: string;
+  ownerApprovalRequired: boolean;
+  notes: string;
+  rawSecretValueStored: false;
+  liveNetworkCallAllowed: false;
+};
+
+export type ProviderAttemptAudit = {
+  id: string;
+  providerId: string | null;
+  providerName: string;
+  providerType: string;
+  sourceDomain: string;
+  actionType: string;
+  mode: "mock" | "sandbox" | "live";
+  attemptStatus: string;
+  blockedReason: string;
+  idempotencyKey: string;
+  requestMetadataHash: string;
+  providerCalled: false;
+  realNetworkCallMade: false;
+};
+
+export type ProviderWebhookEvent = {
+  id: string;
+  providerType: string;
+  eventType: string;
+  receivedAt: string;
+  mode: "mock" | "sandbox" | "live";
+  signaturePresent: boolean;
+  signatureValid: boolean;
+  normalizedEventStatus: string;
+  reviewTaskCreated: boolean;
+  dealMutationAllowed: false;
+  dealMutated: false;
+  rawPayloadStored: false;
+  blockedReason: string;
+};
+
 export type EnvironmentReadinessCheck = {
   id: string;
   category: string;
@@ -2089,6 +2140,23 @@ export const providerSandboxReadinessChecks: ProviderSandboxReadinessCheck[] = [
   { id: "provider-ready-003", providerType: "title_review", providerName: "Title coordination placeholder", mode: "mock", sandboxReady: false, secretsConfigured: false, liveFlagEnabled: false, safetyCheckRequired: true, dryRunRequired: true, ownerApprovalRequired: true, idempotencyRequired: true, auditTrailRequired: true, providerCallsAllowed: false, readinessStatus: "blocked", blockedReasons: ["sandbox_ready_required", "sandbox_secrets_missing"], lastCheckedNotes: "No title-company submission integration exists in V18." }
 ];
 
+export const providerRegistries: ProviderRegistry[] = [
+  { id: "provider-openai-mock", providerName: "OpenAI controlled gateway", providerType: "openai", providerMode: "mock", enabled: true, sandboxEnabled: false, liveEnabled: false, credentialReferenceMasked: "OPE***KEY", credentialPresent: false, credentialSource: "env", readinessStatus: "ready", blockedReason: "", ownerApprovalRequired: true, notes: "Mock mode only; env reference is metadata and no provider call is made.", rawSecretValueStored: false, liveNetworkCallAllowed: false },
+  { id: "provider-email-sandbox", providerName: "Email sandbox adapter", providerType: "email", providerMode: "sandbox", enabled: true, sandboxEnabled: true, liveEnabled: false, credentialReferenceMasked: "EMA***KEY", credentialPresent: false, credentialSource: "env", readinessStatus: "missing_credentials", blockedReason: "credential_env_value_missing", ownerApprovalRequired: true, notes: "Sandbox use requires env-only credential presence and communication gates.", rawSecretValueStored: false, liveNetworkCallAllowed: false },
+  { id: "provider-sms-live", providerName: "SMS provider live placeholder", providerType: "sms", providerMode: "live", enabled: true, sandboxEnabled: true, liveEnabled: false, credentialReferenceMasked: "SMS***KEY", credentialPresent: false, credentialSource: "env", readinessStatus: "blocked", blockedReason: "live_flag_required, owner_approval_required_for_live", ownerApprovalRequired: true, notes: "Live SMS remains unavailable unless explicit live flag, owner approval, readiness, and audit gates pass.", rawSecretValueStored: false, liveNetworkCallAllowed: false },
+  { id: "provider-storage-mock", providerName: "Storage export placeholder", providerType: "storage", providerMode: "mock", enabled: true, sandboxEnabled: false, liveEnabled: false, credentialReferenceMasked: "STO***KEY", credentialPresent: false, credentialSource: "env", readinessStatus: "ready", blockedReason: "", ownerApprovalRequired: true, notes: "Metadata-only storage readiness; no file provider call path exists in V22.", rawSecretValueStored: false, liveNetworkCallAllowed: false }
+];
+
+export const providerAttemptAudits: ProviderAttemptAudit[] = [
+  { id: "provider-attempt-seed-001", providerId: "provider-email-sandbox", providerName: "Email sandbox adapter", providerType: "email", sourceDomain: "communications", actionType: "seller_follow_up_dry_run", mode: "sandbox", attemptStatus: "blocked", blockedReason: "credential_env_value_missing", idempotencyKey: "seed:provider-attempt:email:001", requestMetadataHash: "seed-email-metadata-hash", providerCalled: false, realNetworkCallMade: false },
+  { id: "provider-attempt-seed-002", providerId: "provider-openai-mock", providerName: "OpenAI controlled gateway", providerType: "openai", sourceDomain: "ai_gateway", actionType: "deal_summary_template", mode: "mock", attemptStatus: "mock_success", blockedReason: "", idempotencyKey: "seed:provider-attempt:openai:001", requestMetadataHash: "seed-openai-metadata-hash", providerCalled: false, realNetworkCallMade: false }
+];
+
+export const providerWebhookEvents: ProviderWebhookEvent[] = [
+  { id: "provider-webhook-seed-001", providerType: "crm", eventType: "mock_lead_status", receivedAt: "2026-05-04T14:00:00Z", mode: "mock", signaturePresent: false, signatureValid: false, normalizedEventStatus: "review_queued", reviewTaskCreated: true, dealMutationAllowed: false, dealMutated: false, rawPayloadStored: false, blockedReason: "" },
+  { id: "provider-webhook-seed-002", providerType: "sms", eventType: "live_like_delivery_status", receivedAt: "2026-05-04T14:05:00Z", mode: "live", signaturePresent: false, signatureValid: false, normalizedEventStatus: "blocked", reviewTaskCreated: false, dealMutationAllowed: false, dealMutated: false, rawPayloadStored: false, blockedReason: "unsigned_live_like_webhook_rejected" }
+];
+
 export const environmentReadinessChecks: EnvironmentReadinessCheck[] = [
   { id: "env-ready-001", category: "auth", checkName: "operator auth configured", required: true, passed: false, status: "missing", detail: "Production auth is not configured; private local mode remains the only safe mode.", remediation: "Add authenticated owner-only access before any production exposure.", blockedReasons: ["operator_auth_missing"], preventsProduction: true },
   { id: "env-ready-002", category: "env", checkName: "production environment variables configured", required: true, passed: false, status: "missing", detail: "Required production environment variables are not confirmed.", remediation: "Define production env values outside git and verify startup checks.", blockedReasons: ["production_env_missing"], preventsProduction: true },
@@ -3090,6 +3158,14 @@ export function getAuditExportPacket(exportId: string) {
   return auditExportPackets.find((packet) => packet.id === exportId);
 }
 
+export function getProviderRegistry(providerId: string) {
+  return providerRegistries.find((provider) => provider.id === providerId);
+}
+
+export function getProviderAttempts(providerId: string) {
+  return providerAttemptAudits.filter((attempt) => attempt.providerId === providerId);
+}
+
 export const revenueForecastByPeriod = [...revenueForecastRecords];
 export const pipelineProjectedMonthlyRevenue = revenueForecastRecords.reduce(
   (total, forecast) => total + forecast.projectedAssignmentFees,
@@ -3163,6 +3239,21 @@ export const productionReadinessBlockedReasons = [
 export const productionReady = productionReadinessBlockedReasons.length === 0;
 export const blockedProviderReadiness = providerSandboxReadinessChecks.filter(
   (check) => !check.providerCallsAllowed
+);
+export const blockedProviderRegistries = providerRegistries.filter(
+  (provider) => provider.readinessStatus !== "ready"
+);
+export const providerCredentialPosture = {
+  storedSecretValues: providerRegistries.filter((provider) => provider.rawSecretValueStored).length,
+  envOnlyReferences: providerRegistries.length,
+  missingCredentials: providerRegistries.filter((provider) => !provider.credentialPresent).length,
+  liveEnabled: providerRegistries.filter((provider) => provider.liveEnabled).length
+};
+export const blockedProviderAttempts = providerAttemptAudits.filter(
+  (attempt) => attempt.attemptStatus === "blocked"
+);
+export const providerWebhookReviewQueue = providerWebhookEvents.filter(
+  (event) => event.normalizedEventStatus === "review_queued"
 );
 export const auditExportsReady = auditExportPackets.filter(
   (packet) => packet.exportStatus === "ready_for_owner_review"

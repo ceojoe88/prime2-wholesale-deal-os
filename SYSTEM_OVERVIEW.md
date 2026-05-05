@@ -36,6 +36,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Real CSV lead import, lead QA, field-call outcome tracking, and prediction feedback
 - Controlled AI drafting, summarization, negotiation support, and briefing through a safety/cost/audit gateway
 - Background worker runtime for scheduled internal prep jobs, retries, idempotency, ledgers, and heartbeat monitoring
+- Provider sandbox and credential readiness checks for future integrations without storing secrets or making uncontrolled provider calls
 
 ## Command Hierarchy
 
@@ -127,7 +128,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V21
+## Phase Map V1-V22
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -191,6 +192,9 @@ Added a controlled intelligence layer for approved request types only: seller sc
 
 V21 Background Worker Runtime:
 Added a production-grade internal worker layer with queued jobs, scheduler cadence, retries/backoff, job ledgers, idempotency keys, heartbeat health, stuck-job detection, and Prime 2 routing. Supported jobs are internal prep only: lead scoring refresh, follow-up scheduling, daily briefing generation, buyer ranking refresh, QA checks, automation rule evaluation, field-testing summary, and forecast refresh. The worker cannot trigger live outreach, buyer blasts, contract execution, title submission, portal publishing, payment handling, or term changes.
+
+V22 Provider Sandbox Readiness Gate:
+Added provider registry records for OpenAI, email, SMS, CRM, skip-trace, storage, and webhook categories; mock/sandbox/live mode separation; env-only credential reference checks; masked provider responses; provider attempt audits; and webhook review records. No secret values are stored, no real provider calls are made by default, live readiness remains owner-gated, and webhook events cannot mutate deals automatically.
 
 ## Local Run Commands
 

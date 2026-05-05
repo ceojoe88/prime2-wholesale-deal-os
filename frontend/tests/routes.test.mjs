@@ -111,6 +111,10 @@ const requiredRouteFiles = [
   "src/app/dashboard/audit-exports/[exportId]/page.tsx",
   "src/app/dashboard/evidence-attachments/page.tsx",
   "src/app/dashboard/provider-readiness/page.tsx",
+  "src/app/dashboard/provider-readiness/[providerId]/page.tsx",
+  "src/app/dashboard/provider-readiness/attempts/page.tsx",
+  "src/app/dashboard/provider-readiness/webhooks/page.tsx",
+  "src/app/dashboard/provider-readiness/credentials/page.tsx",
   "src/app/dashboard/backups/page.tsx",
   "src/app/dashboard/offer-conversion/page.tsx",
   "src/app/dashboard/offer-conversion/[dealId]/page.tsx",
@@ -305,6 +309,29 @@ test("V20 and V21 pages expose no live execution controls", () => {
     "submit to title",
     "publish automatically",
     "provider calls\" value=\"1"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V22 provider readiness pages expose no unsafe live-provider controls", () => {
+  const files = [
+    "src/app/dashboard/provider-readiness/page.tsx",
+    "src/app/dashboard/provider-readiness/[providerId]/page.tsx",
+    "src/app/dashboard/provider-readiness/attempts/page.tsx",
+    "src/app/dashboard/provider-readiness/webhooks/page.tsx",
+    "src/app/dashboard/provider-readiness/credentials/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "bulk blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "raw values are stored"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

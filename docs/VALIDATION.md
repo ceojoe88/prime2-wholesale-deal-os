@@ -42,6 +42,7 @@ Expected coverage includes:
 - V19 CSV import preview, approved-row commit, dedupe, lead QA, call outcomes, do-not-contact blocking, field feedback, and scoring adjustment guardrails
 - V20 AI Gateway request allowlist, unsafe response blocking, template enforcement, token/cost tracking, audit logs, and no number overrides
 - V21 worker job creation, scheduler execution, retries, idempotency, failed-job logging, heartbeat health, and no live action paths
+- V22 provider registry default mock mode, env-only credential checks, masked responses, blocked live readiness, attempt audit records, idempotency, webhook review-only behavior, and unsigned live-like webhook rejection
 
 ## Frontend
 
@@ -62,6 +63,7 @@ Expected coverage includes:
 - Old overseer naming remains limited to the product title
 - V19 dashboard routes render and do not expose unsafe live-action buttons
 - V20/V21 dashboard routes render and expose no live execution controls
+- V22 provider readiness dashboard routes render and expose no unsafe live-provider controls
 
 ## Source Sweeps
 
@@ -118,6 +120,10 @@ Smoke check:
 - `/dashboard/worker`
 - `/dashboard/worker/jobs`
 - `/dashboard/worker/health`
+- `/dashboard/provider-readiness`
+- `/dashboard/provider-readiness/attempts`
+- `/dashboard/provider-readiness/webhooks`
+- `/dashboard/provider-readiness/credentials`
 - `/dashboard/production-readiness`
 - `/dashboard/backups`
 - `/buyer-portal`
@@ -153,6 +159,10 @@ Smoke check:
 - `/api/v1/worker/health`
 - `/api/v1/worker/jobs`
 - `/api/v1/worker/logs`
+- `/api/v1/provider-readiness`
+- `/api/v1/provider-readiness/attempts`
+- `/api/v1/provider-readiness/webhooks`
+- `/api/v1/provider-readiness/credentials`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -176,6 +186,8 @@ Before any hosted deployment:
 - Environment variables must be explicit.
 - Secrets must be outside the repository.
 - Provider sandbox checks must pass before any provider action.
+- V22 provider readiness must keep credential values outside the database and expose masked env reference names only.
+- Webhook receiver records must create review tasks only and never mutate deals automatically.
 - Audit exports must be sanitized.
 - Backup/export records must be metadata-safe unless a future encrypted storage design is added.
 - Legal/title review remains external.
