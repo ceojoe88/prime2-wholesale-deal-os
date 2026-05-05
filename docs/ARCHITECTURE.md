@@ -34,9 +34,19 @@ V12 adds near-autonomous internal execution. Prime 2 and its divisions can conti
 
 V13 adds a controlled auto-execution gate for very narrow approved repeatable actions. It does not loosen V5 or V12; it requires approved rules, approved templates, safety, dry-run receipts, owner approval where needed, live flags, provider readiness, one recipient, idempotency, and audit records before a low-risk single-message path can even mock-send.
 
+V14 adds buyer distribution acceleration. It ranks fast-close buyers, prepares draft-only buyer sequences, routes buyer responses, and keeps any controlled buyer message behind sanitized deal sheets, owner approval, V5/V13 gates, one-recipient limits, and no-bulk rules.
+
+V15 adds deterministic deal-flow optimization. It studies source-backed outcomes, detects explainable patterns, recommends market/source/script focus changes, scores agent performance, and logs scoring-weight changes without unsupported ROI or fake revenue claims.
+
+V16 adds revenue forecasting and market scaling. Forecasts are labeled estimates and must reference source records, probability inputs, buyer demand, market heat, verified/pending assignment fees, and owner-reviewed lead spend planning.
+
+V17 adds semi-autonomous operator mode. Prime 2 can run the internal scan-score-route-prepare-check-escalate-brief-log-optimize loop and queue approvals, but cannot bypass owner gates or perform high-risk real-world actions.
+
+V18 adds production readiness, audit export, evidence attachment metadata, backup/export metadata, provider sandbox checks, environment checks, and deployment hardening checks. It keeps public exposure blocked unless auth, env, secrets, provider, audit, backup, and hardening gates pass.
+
 ## Backend Modules
 
-- `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, matches, and compliance records.
+- `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, and backups.
 - `app/domain/scoring.py`: lead opportunity scoring and deal speed score.
 - `app/domain/profit_control.py`: MAO, max buyer purchase price, max seller offer, offer options, assignment spread, reasonableness scoring, and buyer margin flags.
 - `app/domain/buyer_matching.py`: draft-only buyer match scoring by area, price, property type, reliability, closing speed, and proof of funds.
@@ -555,56 +565,6 @@ Internal routes:
 - `/dashboard/auto-execution/dry-runs`
 - `/dashboard/auto-execution/attempts`
 - `/dashboard/auto-execution/audit`
-- `/dashboard/buyer-acceleration`
-- `/dashboard/buyer-acceleration/[dealId]`
-- `/dashboard/buyer-sequences`
-- `/dashboard/buyer-response-router`
-- `/dashboard/buyer-velocity`
-- `/dashboard/optimization`
-- `/dashboard/optimization/patterns`
-- `/dashboard/optimization/recommendations`
-- `/dashboard/optimization/agent-performance`
-- `/dashboard/optimization/lost-deals`
-- `/dashboard/optimization/source-quality`
-- `/dashboard/revenue-forecast`
-- `/dashboard/revenue-forecast/[forecastId]`
-- `/dashboard/market-scaling`
-- `/dashboard/lead-spend-planner`
-- `/dashboard/pipeline-value`
-- `/dashboard/operator-mode`
-- `/dashboard/operator-mode/approvals`
-- `/dashboard/operator-mode/exceptions`
-- `/dashboard/operator-mode/daily-report`
-- `/dashboard/operator-mode/system-trust`
-- `/dashboard/operator-mode/settings`
-- `/dashboard/production-readiness`
-- `/dashboard/audit-exports`
-- `/dashboard/audit-exports/[exportId]`
-- `/dashboard/evidence-attachments`
-- `/dashboard/provider-readiness`
-- `/dashboard/backups`
-- `/dashboard/buyer-acceleration`
-- `/dashboard/buyer-acceleration/[dealId]`
-- `/dashboard/buyer-sequences`
-- `/dashboard/buyer-response-router`
-- `/dashboard/buyer-velocity`
-- `/dashboard/optimization`
-- `/dashboard/optimization/patterns`
-- `/dashboard/optimization/recommendations`
-- `/dashboard/optimization/agent-performance`
-- `/dashboard/optimization/lost-deals`
-- `/dashboard/optimization/source-quality`
-- `/dashboard/revenue-forecast`
-- `/dashboard/revenue-forecast/[forecastId]`
-- `/dashboard/market-scaling`
-- `/dashboard/lead-spend-planner`
-- `/dashboard/pipeline-value`
-- `/dashboard/operator-mode`
-- `/dashboard/operator-mode/approvals`
-- `/dashboard/operator-mode/exceptions`
-- `/dashboard/operator-mode/daily-report`
-- `/dashboard/operator-mode/system-trust`
-- `/dashboard/operator-mode/settings`
 
 Auto-execution rule records store rule name, action type, source type, allowed recipient type, trigger, required conditions, approved template, autonomy level, live flag requirements, risk score, owner approval status, status, and blocked reasons.
 
@@ -636,6 +596,74 @@ Blocked V13 actions:
 - Any action without an approved rule and approved template
 
 Auto-execution attempts are one-recipient and one-source-record scoped. Idempotency prevents duplicate sends, and every attempt creates an audit record with outcome, blocked reasons, safety snapshot, provider-call status, and source record.
+
+## V14 Buyer Distribution Acceleration
+
+Internal routes:
+
+- `/dashboard/buyer-acceleration`
+- `/dashboard/buyer-acceleration/[dealId]`
+- `/dashboard/buyer-sequences`
+- `/dashboard/buyer-response-router`
+- `/dashboard/buyer-velocity`
+
+Buyer acceleration records connect a deal to a buyer ranking snapshot, top buyer list, POF status, reliability, buyer margin strength, distribution readiness, owner approval status, controlled-send status, and blocked reasons.
+
+Smart buyer sequences remain draft-only by default. They can prepare first buyer notice drafts, detail follow-ups, POF requests, viewing/access coordination notes, offer-intent follow-ups, and deadline reminders that avoid deceptive scarcity.
+
+The controlled buyer distribution gate allows a live buyer message only when the deal is buyer-visible, the deal sheet is sanitized, the buyer match is approved, POF status is acceptable or the message is only a POF request, compliance passed, V5/V13 gates passed, no bulk blast is attempted, and owner approval is recorded.
+
+Buyer response routing classifies buyer replies as interested, needs POF, wants access, asks repair details, submits offer intent, not interested, or follow-up later. Routing records recommend owner review and do not execute negotiation or contracts.
+
+## V15 Deal Flow Optimization And Learning
+
+Internal routes:
+
+- `/dashboard/optimization`
+- `/dashboard/optimization/patterns`
+- `/dashboard/optimization/recommendations`
+- `/dashboard/optimization/agent-performance`
+- `/dashboard/optimization/lost-deals`
+- `/dashboard/optimization/source-quality`
+
+Outcome learning records store lead source, market, seller type, buyer type, offer strategy, follow-up type, conversion result, projected and verified assignment fee, time to contract-ready, blockers, lost reason, source evidence IDs, and confidence score.
+
+Pattern detection identifies best lead types, zip codes, buyer profiles, offer strategies, weak seller scripts, stale follow-up patterns, POF bottlenecks, deals dying before contract-ready, and deals with strong 10K+ probability.
+
+Optimization recommendations are deterministic and explainable. They can suggest market focus, offer range adjustments, lead type priorities, follow-up timing, buyer segments, deal types to avoid, and script/template improvements. Unsupported revenue claims, unsupported ROI, fake profit claims, and unlogged scoring changes are blocked.
+
+## V16 Revenue Forecast And Market Scaling
+
+Internal routes:
+
+- `/dashboard/revenue-forecast`
+- `/dashboard/revenue-forecast/[forecastId]`
+- `/dashboard/market-scaling`
+- `/dashboard/lead-spend-planner`
+- `/dashboard/pipeline-value`
+
+Forecast records track period, projected assignment fees, verified assignment fees, probability-adjusted revenue, conservative/base/aggressive scenarios, deals at risk, expected close window, confidence level, source basis, and estimate labels.
+
+Deal probability uses seller readiness, buyer demand, underwriting confidence, compliance status, title/review readiness, blocker severity, buyer POF strength, and communication momentum. These probabilities are estimate-only and source-backed.
+
+Market scaling and lead spend recommendations use lead volume, hot lead percentage, buyer demand, average spread, conversion rate, title/compliance friction, competition risk, evidence basis, and break-even assignment targets. The planner cannot recommend unsupported spend or guaranteed ROI.
+
+## V17 Semi-Autonomous Operator Mode
+
+Internal routes:
+
+- `/dashboard/operator-mode`
+- `/dashboard/operator-mode/approvals`
+- `/dashboard/operator-mode/exceptions`
+- `/dashboard/operator-mode/daily-report`
+- `/dashboard/operator-mode/system-trust`
+- `/dashboard/operator-mode/settings`
+
+Operator mode settings support manual, assisted, near-autonomous, and semi-autonomous modes. The default remains assisted or near-autonomous; semi-autonomous mode requires owner enablement. Level 5 remains disabled.
+
+The semi-autonomous command loop runs scan, score, route, prepare, check gates, escalate, brief, wait for approvals, log outcomes, and optimize. It prepares internal work and queues real-world actions for owner approval, but it cannot execute contracts, submit title packets, send bulk campaigns, change seller or buyer terms, publish portal data without approval, handle payments, give legal advice, or guarantee closing/profit.
+
+The approval console aggregates seller follow-up live sends, buyer response live sends, offer packet prep, contract-ready status, title review packets, buyer distribution, portal visibility, forecast/spend recommendations, and automation rule activation. Execution stays blocked until each underlying gate passes.
 
 ## V18 Production Readiness
 
@@ -693,6 +721,11 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/buyer-priority`
 - `/dashboard/deal-distribution`
 - `/dashboard/deal-distribution/[distributionId]`
+- `/dashboard/buyer-acceleration`
+- `/dashboard/buyer-acceleration/[dealId]`
+- `/dashboard/buyer-sequences`
+- `/dashboard/buyer-response-router`
+- `/dashboard/buyer-velocity`
 - `/dashboard/offer-conversion`
 - `/dashboard/offer-conversion/[dealId]`
 - `/dashboard/negotiations`
@@ -713,6 +746,42 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/auto-execution/dry-runs`
 - `/dashboard/auto-execution/attempts`
 - `/dashboard/auto-execution/audit`
+- `/dashboard/optimization`
+- `/dashboard/optimization/patterns`
+- `/dashboard/optimization/recommendations`
+- `/dashboard/optimization/agent-performance`
+- `/dashboard/optimization/lost-deals`
+- `/dashboard/optimization/source-quality`
+- `/dashboard/revenue-forecast`
+- `/dashboard/revenue-forecast/[forecastId]`
+- `/dashboard/market-scaling`
+- `/dashboard/lead-spend-planner`
+- `/dashboard/pipeline-value`
+- `/dashboard/operator-mode`
+- `/dashboard/operator-mode/approvals`
+- `/dashboard/operator-mode/exceptions`
+- `/dashboard/operator-mode/daily-report`
+- `/dashboard/operator-mode/system-trust`
+- `/dashboard/operator-mode/settings`
+- `/dashboard/production-readiness`
+- `/dashboard/audit-exports`
+- `/dashboard/audit-exports/[exportId]`
+- `/dashboard/evidence-attachments`
+- `/dashboard/provider-readiness`
+- `/dashboard/backups`
+- `/dashboard/buyers`
+- `/dashboard/buyers/[buyerId]`
+- `/dashboard/buyer-matches`
+- `/dashboard/compliance`
+- `/dashboard/daily-briefing`
+
+Buyer-facing V2 routes are implemented under `frontend/src/app/buyer-portal`:
+
+- `/buyer-portal`
+- `/buyer-portal/deals`
+- `/buyer-portal/deals/[dealId]`
+- `/buyer-portal/profile`
+- `/buyer-portal/watchlist`
 
 Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
 
@@ -722,11 +791,6 @@ Seller-facing V6 routes are implemented under `frontend/src/app/seller-portal`:
 - `/seller-portal/timeline`
 - `/seller-portal/documents`
 - `/seller-portal/messages`
-- `/dashboard/buyers`
-- `/dashboard/buyers/[buyerId]`
-- `/dashboard/buyer-matches`
-- `/dashboard/compliance`
-- `/dashboard/daily-briefing`
 
 ## Guardrails
 

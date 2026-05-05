@@ -126,6 +126,15 @@ function walk(dir) {
   });
 }
 
+function routeToPageFile(href) {
+  const segments = href.split("/").filter(Boolean);
+  return join(root, "src", "app", ...segments, "page.tsx");
+}
+
+function relativeFromRoot(file) {
+  return file.slice(root.length + 1).replaceAll("\\", "/");
+}
+
 test("dashboard route files exist and render a page component", () => {
   for (const routeFile of requiredRouteFiles) {
     const absolute = join(root, routeFile);
@@ -141,6 +150,49 @@ test("operator-only frontend has no public signup or client portals", () => {
   const joined = files.map((file) => readFileSync(file, "utf8")).join("\n").toLowerCase();
   assert.equal(joined.includes("/signup"), false);
   assert.equal(joined.includes("client portal"), false);
+});
+
+test("dashboard navigation targets implemented page routes", () => {
+  const navigation = readFileSync(join(root, "src", "lib", "navigation.ts"), "utf8");
+  const hrefs = [...navigation.matchAll(/href: "([^"]+)"/g)].map((match) => match[1]);
+  assert.ok(hrefs.length > 40);
+  for (const href of hrefs) {
+    assert.equal(existsSync(routeToPageFile(href)), true, href);
+  }
+});
+
+test("dynamic detail route files guard missing ids with notFound", () => {
+  const detailFiles = walk(join(root, "src", "app")).filter((file) =>
+    file.endsWith("page.tsx") && file.includes("[")
+  );
+  assert.ok(detailFiles.length > 20);
+  for (const file of detailFiles) {
+    const source = readFileSync(file, "utf8");
+    assert.match(source, /notFound\(/, relativeFromRoot(file));
+    assert.match(source, /from "next\/navigation"/, relativeFromRoot(file));
+  }
+});
+
+test("Prime 2 identity is used internally and old overseer name is limited to product title", () => {
+  const sourceFiles = walk(join(root, "src")).filter((file) =>
+    [".ts", ".tsx"].some((extension) => file.endsWith(extension))
+  );
+  const oldNameFiles = sourceFiles
+    .filter((file) => readFileSync(file, "utf8").includes("Wholesale Prime"))
+    .map(relativeFromRoot);
+  assert.deepEqual(oldNameFiles, ["src/app/layout.tsx"]);
+
+  for (const routeFile of [
+    "src/app/dashboard/overseer/page.tsx",
+    "src/app/dashboard/operator-mode/page.tsx",
+    "src/app/dashboard/autonomy/page.tsx",
+    "src/app/dashboard/command-hierarchy/page.tsx",
+    "src/app/dashboard/daily-briefing/page.tsx",
+    "src/app/dashboard/autonomy/daily-briefing/page.tsx"
+  ]) {
+    const source = readFileSync(join(root, routeFile), "utf8");
+    assert.match(source, /Prime 2/, routeFile);
+  }
 });
 
 test("buyer portal route files avoid internal seller and profit logic labels", () => {
