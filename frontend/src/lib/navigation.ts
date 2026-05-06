@@ -47,6 +47,7 @@ export const dashboardRoutes = [
   { href: "/dashboard/operator-mode", label: "Operator Mode", icon: "Command" },
   { href: "/dashboard/production-readiness", label: "Production Readiness", icon: "ShieldCheck" },
   { href: "/dashboard/cloud-readiness", label: "Cloud Readiness", icon: "ShieldCheck" },
+  { href: "/dashboard/live-activation", label: "Live Activation", icon: "ShieldCheck" },
   { href: "/dashboard/audit-exports", label: "Audit Exports", icon: "ClipboardList" },
   { href: "/dashboard/provider-readiness", label: "Provider Readiness", icon: "ShieldCheck" },
   { href: "/dashboard/campaigns", label: "Campaign Brain", icon: "Command" },

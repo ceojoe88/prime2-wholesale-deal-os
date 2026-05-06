@@ -208,6 +208,17 @@ def generate_dry_run_receipt(session: Session, draft: CommunicationDraft) -> Com
     recipient = draft_recipient(draft)
     subject_body_hash = communication_hash(draft.subject, draft.draft_body)
     idempotency_key = idempotency_key_for(draft, recipient, subject_body_hash)
+    existing = (
+        session.query(CommunicationDryRunReceipt)
+        .filter(CommunicationDryRunReceipt.idempotency_key == idempotency_key)
+        .first()
+    )
+    if existing is not None:
+        draft.last_dry_run_receipt_id = existing.id
+        draft.status = "dry_run_ready" if safety["allowed"] else "blocked_safety"
+        session.flush()
+        return existing
+
     count = session.query(CommunicationDryRunReceipt).count() + 1
     receipt = CommunicationDryRunReceipt(
         id=f"dryrun-{count:03d}",

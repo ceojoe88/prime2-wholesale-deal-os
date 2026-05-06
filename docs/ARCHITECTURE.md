@@ -1015,6 +1015,53 @@ V29 safety boundary:
 - Public exposure remains blocked without private auth and restricted CORS.
 - Provider live flags default off and stay unavailable until later owner-approved activation gates.
 
+## V30 Controlled Live Provider Activation
+
+V30 adds `app.domains.live_activation`, the final one-action provider gate before any limited provider usage. The domain creates:
+
+- `LiveProviderActivation`
+- `LiveProviderActivationAttempt`
+- `LiveProviderBlockedAttempt`
+- `LiveProviderAuditEvent`
+
+Supported lanes:
+
+- OpenAI live request lane
+- Email live send lane
+- SMS sandbox/live eligibility lane
+- CRM sandbox/live eligibility lane
+- Storage sandbox/live eligibility lane
+
+Backend routes:
+
+- `/api/v1/live-activation`
+- `/api/v1/live-activation/{activationId}`
+- `/api/v1/live-activation/{activationId}/attempt`
+- `/api/v1/live-activation/readiness`
+- `/api/v1/live-activation/approvals`
+- `/api/v1/live-activation/attempts`
+- `/api/v1/live-activation/blocked`
+
+Frontend routes:
+
+- `/dashboard/live-activation`
+- `/dashboard/live-activation/[activationId]`
+- `/dashboard/live-activation/readiness`
+- `/dashboard/live-activation/approvals`
+- `/dashboard/live-activation/attempts`
+- `/dashboard/live-activation/blocked`
+
+The gate checks owner approval, dry-run receipt, dry-run hash, unchanged source hash, provider readiness, production cloud readiness, live flag status, idempotency key, one-action constraints, lane/action allowlist, SMS consent/DNC/opt-out posture, OpenAI safety/cost cap posture, and sanitized storage metadata.
+
+V30 safety boundary:
+
+- No bulk email/SMS, buyer blasts, campaign mass sends, contract execution, title submission, payment handling, legal advice, or owner approval bypass.
+- Worker runtime cannot trigger provider action without an owner-approved activation.
+- Campaign Brain cannot bulk execute through activation records.
+- Source changes after dry-run block activation.
+- Blocked attempts are audit records and never call providers.
+- Responses are sanitized and secrets are never exposed.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:

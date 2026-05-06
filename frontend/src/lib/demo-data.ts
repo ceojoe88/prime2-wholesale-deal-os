@@ -4964,3 +4964,90 @@ export const cloudReadinessBlockedReasons = Array.from(
     ...cloudBackupReadiness.blockedReasons
   ])
 );
+
+export type LiveProviderActivation = {
+  id: string;
+  providerName: string;
+  providerType: string;
+  laneType: string;
+  sourceDomain: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  allowedActionType: string;
+  activationMode: "sandbox" | "live";
+  ownerApprovalStatus: string;
+  readinessSnapshot: Record<string, unknown>;
+  safetySnapshot: Record<string, unknown>;
+  dryRunReceiptId: string;
+  dryRunHash: string;
+  currentSourceHash: string;
+  liveFlagStatus: string;
+  idempotencyKey: string;
+  activationStatus: string;
+  blockedReasons: string[];
+  consentStatus: string;
+  dncStatus: string;
+  optOutIncluded: boolean;
+  oneActionOnly: true;
+  bulkActionAllowed: false;
+  workerBypassAllowed: false;
+  campaignBulkAllowed: false;
+  providerCalled: false;
+};
+
+export type LiveProviderActivationAttempt = {
+  id: string;
+  activationId: string;
+  attemptStatus: string;
+  blockedReasons: string[];
+  idempotencyKey: string;
+  providerCalled: false;
+  liveActionExecuted: false;
+  duplicatePrevented: boolean;
+};
+
+export type LiveProviderBlockedAttempt = {
+  id: string;
+  activationId: string;
+  sourceDomain: string;
+  actionType: string;
+  reason: string;
+  providerCalled: false;
+  auditLogged: true;
+};
+
+export const liveProviderActivations: LiveProviderActivation[] = [
+  { id: "live-activation-openai-001", providerName: "OpenAI mock gateway", providerType: "openai", laneType: "openai_live_request", sourceDomain: "ai_gateway", sourceRecordType: "ai_request", sourceRecordId: "ai-request-001", allowedActionType: "openai_generation", activationMode: "live", ownerApprovalStatus: "approved", readinessSnapshot: { providerMode: "mock", ready: false }, safetySnapshot: { aiSafetyStatus: "passed", costCapStatus: "within_cap" }, dryRunReceiptId: "ai-audit-001", dryRunHash: "ai-request-001-hash", currentSourceHash: "ai-request-001-hash", liveFlagStatus: "off", idempotencyKey: "live:openai:ai-request-001", activationStatus: "blocked", blockedReasons: ["live_flag_required", "production_readiness_required"], consentStatus: "not_applicable", dncStatus: "clear", optOutIncluded: false, oneActionOnly: true, bulkActionAllowed: false, workerBypassAllowed: false, campaignBulkAllowed: false, providerCalled: false },
+  { id: "live-activation-email-001", providerName: "Email sandbox provider", providerType: "email", laneType: "email_live_send", sourceDomain: "communications", sourceRecordType: "communication_draft", sourceRecordId: "comm-draft-001", allowedActionType: "single_email_send", activationMode: "sandbox", ownerApprovalStatus: "pending_owner", readinessSnapshot: { providerMode: "sandbox", ready: false }, safetySnapshot: { communicationSafetyStatus: "passed" }, dryRunReceiptId: "comm-dry-run-001", dryRunHash: "comm-draft-001-hash", currentSourceHash: "comm-draft-001-hash", liveFlagStatus: "off", idempotencyKey: "live:email:comm-draft-001", activationStatus: "blocked", blockedReasons: ["owner_approval_required", "live_flag_required"], consentStatus: "not_applicable", dncStatus: "clear", optOutIncluded: false, oneActionOnly: true, bulkActionAllowed: false, workerBypassAllowed: false, campaignBulkAllowed: false, providerCalled: false },
+  { id: "live-activation-sms-001", providerName: "SMS provider placeholder", providerType: "sms", laneType: "sms_sandbox_live_eligibility", sourceDomain: "communications", sourceRecordType: "communication_draft", sourceRecordId: "comm-draft-002", allowedActionType: "single_sms_send", activationMode: "live", ownerApprovalStatus: "approved", readinessSnapshot: { providerMode: "live", ready: false }, safetySnapshot: { communicationSafetyStatus: "passed" }, dryRunReceiptId: "comm-dry-run-002", dryRunHash: "comm-draft-002-hash", currentSourceHash: "comm-draft-002-hash", liveFlagStatus: "enabled", idempotencyKey: "live:sms:comm-draft-002", activationStatus: "blocked", blockedReasons: ["sms_consent_required", "sms_opt_out_required"], consentStatus: "missing", dncStatus: "clear", optOutIncluded: false, oneActionOnly: true, bulkActionAllowed: false, workerBypassAllowed: false, campaignBulkAllowed: false, providerCalled: false },
+  { id: "live-activation-crm-001", providerName: "CRM sandbox placeholder", providerType: "crm", laneType: "crm_sandbox_live_eligibility", sourceDomain: "buyer_disposition", sourceRecordType: "buyer", sourceRecordId: "buyer-001", allowedActionType: "single_crm_sync", activationMode: "sandbox", ownerApprovalStatus: "approved", readinessSnapshot: { providerMode: "sandbox", ready: false }, safetySnapshot: { objectMappingExists: false }, dryRunReceiptId: "crm-dry-run-placeholder", dryRunHash: "crm-placeholder-hash", currentSourceHash: "crm-placeholder-hash", liveFlagStatus: "off", idempotencyKey: "live:crm:buyer-001", activationStatus: "blocked", blockedReasons: ["provider_not_registered", "live_flag_required"], consentStatus: "not_applicable", dncStatus: "clear", optOutIncluded: false, oneActionOnly: true, bulkActionAllowed: false, workerBypassAllowed: false, campaignBulkAllowed: false, providerCalled: false },
+  { id: "live-activation-storage-001", providerName: "Storage mock provider", providerType: "storage", laneType: "storage_sandbox_live_eligibility", sourceDomain: "document_intelligence", sourceRecordType: "document", sourceRecordId: "doc-intel-001", allowedActionType: "sanitized_storage_upload", activationMode: "sandbox", ownerApprovalStatus: "approved", readinessSnapshot: { providerMode: "mock", ready: false }, safetySnapshot: { sanitizedMetadata: true }, dryRunReceiptId: "storage-dry-run-placeholder", dryRunHash: "storage-doc-intel-001", currentSourceHash: "storage-doc-intel-001", liveFlagStatus: "off", idempotencyKey: "live:storage:doc-intel-001", activationStatus: "blocked", blockedReasons: ["live_flag_required", "production_readiness_required"], consentStatus: "not_applicable", dncStatus: "clear", optOutIncluded: false, oneActionOnly: true, bulkActionAllowed: false, workerBypassAllowed: false, campaignBulkAllowed: false, providerCalled: false }
+];
+
+export const liveProviderActivationAttempts: LiveProviderActivationAttempt[] = [
+  { id: "live-attempt-001", activationId: "live-activation-email-001", attemptStatus: "blocked", blockedReasons: ["owner_approval_required", "live_flag_required"], idempotencyKey: "live-attempt:email:001", providerCalled: false, liveActionExecuted: false, duplicatePrevented: false }
+];
+
+export const liveProviderBlockedAttempts: LiveProviderBlockedAttempt[] = [
+  { id: "live-blocked-001", activationId: "live-activation-sms-001", sourceDomain: "communications", actionType: "single_sms_send", reason: "sms_consent_required, sms_opt_out_required", providerCalled: false, auditLogged: true }
+];
+
+export function getLiveProviderActivation(activationId: string) {
+  return liveProviderActivations.find((activation) => activation.id === activationId);
+}
+
+export const blockedLiveProviderActivations = liveProviderActivations.filter(
+  (activation) => activation.activationStatus === "blocked"
+);
+export const readyLiveProviderActivations = liveProviderActivations.filter(
+  (activation) => activation.activationStatus === "approved_pending_provider"
+);
+export const liveActivationApprovalsNeeded = liveProviderActivations.filter(
+  (activation) => activation.ownerApprovalStatus !== "approved"
+);
+export const liveActivationSafetyCards = [
+  { label: "Ready lanes", value: String(readyLiveProviderActivations.length), detail: "All gates must pass first" },
+  { label: "Blocked lanes", value: String(blockedLiveProviderActivations.length), detail: "Fail-closed provider posture" },
+  { label: "Provider calls", value: "0", detail: "No network action in demo state" },
+  { label: "Bulk action", value: "off", detail: "One-action idempotency only" }
+];

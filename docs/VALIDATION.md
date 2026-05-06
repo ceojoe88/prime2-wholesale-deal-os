@@ -46,6 +46,7 @@ Expected coverage includes:
 - V23 call intelligence transcript/manual-note analysis, DNC outreach blocking, compliance escalation, objection extraction, draft-only responses, explainable score deltas, AI Gateway allowlist, deterministic fallback, and worker no-live-action behavior
 - V28 mobile operator overview, quick call outcome capture, DNC outreach blocking, offline draft idempotency, quick approval gate blocking, and note safety review
 - V29 production cloud readiness fail-closed behavior, masked secret posture, provider flags default off, backup metadata safety, and monitoring health summary
+- V30 controlled live provider activation owner approval, dry-run, provider/cloud readiness, unchanged source hash, idempotency, SMS consent/DNC/opt-out, AI safety/cost cap, worker/campaign bypass blocks, and audit logging
 
 ## Frontend
 
@@ -70,6 +71,7 @@ Expected coverage includes:
 - V23 call intelligence dashboard routes render and expose no live call or send controls
 - V28 mobile routes render and expose no unsafe field controls
 - V29 cloud readiness routes render and expose no deployment or secret controls
+- V30 live activation routes render and expose no bulk or bypass controls
 
 ## Source Sweeps
 
@@ -163,6 +165,11 @@ Smoke check:
 - `/dashboard/cloud-readiness/backups`
 - `/dashboard/cloud-readiness/monitoring`
 - `/dashboard/cloud-readiness/deployment-checklist`
+- `/dashboard/live-activation`
+- `/dashboard/live-activation/readiness`
+- `/dashboard/live-activation/approvals`
+- `/dashboard/live-activation/attempts`
+- `/dashboard/live-activation/blocked`
 - `/buyer-portal`
 - `/seller-portal`
 
@@ -238,6 +245,11 @@ Smoke check:
 - `/api/v1/cloud-readiness/security`
 - `/api/v1/cloud-readiness/backups`
 - `/api/v1/cloud-readiness/monitoring`
+- `/api/v1/live-activation`
+- `/api/v1/live-activation/readiness`
+- `/api/v1/live-activation/approvals`
+- `/api/v1/live-activation/attempts`
+- `/api/v1/live-activation/blocked`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -270,6 +282,7 @@ Before any hosted deployment:
 - Prime 2 memory must remain deterministic and source-cited; memory may inform recommendations but cannot invent facts, expose internal strategy to portals, auto-apply scoring changes, override compliance, or create unsupported claims.
 - Mobile operator mode must remain field capture and review only; quick approvals cannot bypass dry-run, safety, provider readiness, idempotency, audit, and owner gates.
 - Cloud readiness must fail closed for unsafe production posture; it can report masked readiness but cannot deploy the app or activate providers.
+- Live provider activation must remain one-action, source-linked, hash-verified, idempotent, audited, owner-approved, provider-ready, and production-ready before any provider lane can proceed.
 - Audit exports must be sanitized.
 - Backup/export records must be metadata-safe unless a future encrypted storage design is added.
 - Legal/title review remains external.

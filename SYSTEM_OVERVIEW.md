@@ -42,6 +42,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Controlled campaign planning, segmentation, sequence prep, activation gates, stop conditions, and performance tracking
 - Mobile operator mode for field-call queues, quick notes, DNC capture, approvals, buyer checks, document metadata, offline-safe drafts, and field briefings
 - Production cloud readiness for private deployment profiles, masked environment validation, backup/restore metadata, monitoring readiness, and fail-closed hosting checks
+- Controlled live provider activation records for one-action OpenAI, email, SMS, CRM, and storage lanes gated by safety, dry-runs, owner approval, provider readiness, cloud readiness, idempotency, and audit logs
 
 ## Command Hierarchy
 
@@ -133,7 +134,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V29
+## Phase Map V1-V30
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -222,6 +223,9 @@ Added `/mobile` field command routes plus a mobile operator API aggregation laye
 V29 Production Cloud Readiness:
 Added cloud deployment profiles, environment validation, security checks, backup/restore readiness metadata, monitoring snapshots, and `/api/v1/cloud-readiness` endpoints. The production profile fails closed when auth, env, CORS, database, frontend API, backup, provider flags, or secret posture are unsafe. V29 does not deploy the system or activate providers; it reports readiness only.
 
+V30 Controlled Live Provider Activation:
+Added provider activation records, attempts, blocked attempts, and audit events for OpenAI generation, single email, single SMS, CRM sync eligibility, and sanitized storage upload lanes. Every lane requires source linkage, dry-run hash verification, owner approval, live flag status, provider readiness, production cloud readiness, idempotency, one-action constraints, and sanitized audit responses. Bulk sends, buyer blasts, worker bypass, campaign bulk execution, legal/title/contract/payment actions, and source-changed-after-dry-run attempts remain blocked.
+
 ## Local Run Commands
 
 Backend setup:
@@ -248,6 +252,7 @@ Local URLs:
 - Frontend dashboard: http://localhost:3000/dashboard
 - Mobile operator mode: http://localhost:3000/mobile
 - Cloud readiness: http://localhost:3000/dashboard/cloud-readiness
+- Live activation: http://localhost:3000/dashboard/live-activation
 - Backend health: http://localhost:8000/health
 - Backend API root examples: http://localhost:8000/api/command-center and http://localhost:8000/api/system/rules
 - Buyer portal demo: http://localhost:3000/buyer-portal
@@ -306,6 +311,11 @@ Recommended route smoke checks:
 - `/dashboard/cloud-readiness/backups`
 - `/dashboard/cloud-readiness/monitoring`
 - `/dashboard/cloud-readiness/deployment-checklist`
+- `/dashboard/live-activation`
+- `/dashboard/live-activation/readiness`
+- `/dashboard/live-activation/approvals`
+- `/dashboard/live-activation/attempts`
+- `/dashboard/live-activation/blocked`
 - `/buyer-portal`
 - `/seller-portal`
 

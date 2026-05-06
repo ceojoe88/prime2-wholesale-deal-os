@@ -125,6 +125,12 @@ const requiredRouteFiles = [
   "src/app/dashboard/cloud-readiness/backups/page.tsx",
   "src/app/dashboard/cloud-readiness/monitoring/page.tsx",
   "src/app/dashboard/cloud-readiness/deployment-checklist/page.tsx",
+  "src/app/dashboard/live-activation/page.tsx",
+  "src/app/dashboard/live-activation/[activationId]/page.tsx",
+  "src/app/dashboard/live-activation/readiness/page.tsx",
+  "src/app/dashboard/live-activation/approvals/page.tsx",
+  "src/app/dashboard/live-activation/attempts/page.tsx",
+  "src/app/dashboard/live-activation/blocked/page.tsx",
   "src/app/dashboard/audit-exports/page.tsx",
   "src/app/dashboard/audit-exports/[exportId]/page.tsx",
   "src/app/dashboard/evidence-attachments/page.tsx",
@@ -571,6 +577,33 @@ test("V29 cloud readiness pages expose no deployment or secret controls", () => 
     "deploy now",
     "show secret",
     "secret value:"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V30 live activation pages expose no bulk or bypass controls", () => {
+  const files = [
+    "src/app/dashboard/live-activation/page.tsx",
+    "src/app/dashboard/live-activation/[activationId]/page.tsx",
+    "src/app/dashboard/live-activation/readiness/page.tsx",
+    "src/app/dashboard/live-activation/approvals/page.tsx",
+    "src/app/dashboard/live-activation/attempts/page.tsx",
+    "src/app/dashboard/live-activation/blocked/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "guarantee profit",
+    "bypass enabled",
+    "bulk enabled",
+    "provider called\" value=\"1"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

@@ -2968,3 +2968,83 @@ class CloudMonitoringSnapshot(TimestampMixin, Base):
     blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
     secrets_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
     live_provider_activation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class LiveProviderActivation(TimestampMixin, Base):
+    __tablename__ = "live_provider_activations"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    provider_id: Mapped[str | None] = mapped_column(ForeignKey("provider_registries.id"), nullable=True)
+    provider_name: Mapped[str] = mapped_column(String(140), default="")
+    provider_type: Mapped[str] = mapped_column(String(80), default="")
+    lane_type: Mapped[str] = mapped_column(String(100), default="")
+    source_domain: Mapped[str] = mapped_column(String(100), default="")
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    allowed_action_type: Mapped[str] = mapped_column(String(120), default="")
+    activation_mode: Mapped[str] = mapped_column(String(80), default="sandbox")
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending_owner")
+    readiness_snapshot: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    safety_snapshot: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    dry_run_receipt_id: Mapped[str] = mapped_column(String(120), default="")
+    dry_run_hash: Mapped[str] = mapped_column(String(128), default="")
+    current_source_hash: Mapped[str] = mapped_column(String(128), default="")
+    live_flag_status: Mapped[str] = mapped_column(String(80), default="off")
+    idempotency_key: Mapped[str] = mapped_column(String(180), unique=True, nullable=False)
+    activation_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    consent_status: Mapped[str] = mapped_column(String(80), default="not_applicable")
+    dnc_status: Mapped[str] = mapped_column(String(80), default="clear")
+    opt_out_included: Mapped[bool] = mapped_column(Boolean, default=False)
+    one_action_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    bulk_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    worker_bypass_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    campaign_bulk_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_advice_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    payment_handling_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    audit_event_created: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class LiveProviderActivationAttempt(TimestampMixin, Base):
+    __tablename__ = "live_provider_activation_attempts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    activation_id: Mapped[str | None] = mapped_column(ForeignKey("live_provider_activations.id"), nullable=True)
+    provider_attempt_id: Mapped[str] = mapped_column(String(120), default="")
+    attempt_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    idempotency_key: Mapped[str] = mapped_column(String(180), unique=True, nullable=False)
+    request_metadata_hash: Mapped[str] = mapped_column(String(128), default="")
+    response_summary: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_action_executed: Mapped[bool] = mapped_column(Boolean, default=False)
+    duplicate_prevented: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class LiveProviderBlockedAttempt(TimestampMixin, Base):
+    __tablename__ = "live_provider_blocked_attempts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    activation_id: Mapped[str | None] = mapped_column(ForeignKey("live_provider_activations.id"), nullable=True)
+    source_domain: Mapped[str] = mapped_column(String(100), default="")
+    action_type: Mapped[str] = mapped_column(String(120), default="")
+    reason: Mapped[str] = mapped_column(Text, default="")
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    audit_logged: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class LiveProviderAuditEvent(TimestampMixin, Base):
+    __tablename__ = "live_provider_audit_events"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    activation_id: Mapped[str | None] = mapped_column(ForeignKey("live_provider_activations.id"), nullable=True)
+    event_type: Mapped[str] = mapped_column(String(120), default="")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    safety_snapshot: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    readiness_snapshot: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    provider_response_sanitized: Mapped[bool] = mapped_column(Boolean, default=True)
+    secrets_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_action_executed: Mapped[bool] = mapped_column(Boolean, default=False)

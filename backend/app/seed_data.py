@@ -162,6 +162,10 @@ from app.models import (
     Lead,
     LeadSourceROIRecord,
     LearningSignal,
+    LiveProviderActivation,
+    LiveProviderActivationAttempt,
+    LiveProviderAuditEvent,
+    LiveProviderBlockedAttempt,
     MarketScalingScore,
     MarketProfile,
     MobileApprovalAttempt,
@@ -8376,6 +8380,234 @@ def build_cloud_monitoring_snapshot_records() -> list[dict[str, object]]:
     ]
 
 
+def build_live_provider_activation_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "live-activation-openai-001",
+            "provider_id": "provider-openai-mock",
+            "provider_name": "OpenAI mock gateway",
+            "provider_type": "openai",
+            "lane_type": "openai_live_request",
+            "source_domain": "ai_gateway",
+            "source_record_type": "ai_request",
+            "source_record_id": "ai-request-001",
+            "allowed_action_type": "openai_generation",
+            "activation_mode": "live",
+            "owner_approval_status": "approved",
+            "readiness_snapshot": {"provider_mode": "mock", "ready": False},
+            "safety_snapshot": {"ai_safety_status": "passed", "cost_cap_status": "within_cap"},
+            "dry_run_receipt_id": "ai-audit-001",
+            "dry_run_hash": "ai-request-001-hash",
+            "current_source_hash": "ai-request-001-hash",
+            "live_flag_status": "off",
+            "idempotency_key": "live:openai:ai-request-001",
+            "activation_status": "blocked",
+            "blocked_reasons": ["live_flag_required", "production_readiness_required"],
+            "consent_status": "not_applicable",
+            "dnc_status": "clear",
+            "opt_out_included": False,
+            "one_action_only": True,
+            "bulk_action_allowed": False,
+            "worker_bypass_allowed": False,
+            "campaign_bulk_allowed": False,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "provider_called": False,
+            "audit_event_created": True,
+        },
+        {
+            "id": "live-activation-email-001",
+            "provider_id": "provider-email-sandbox",
+            "provider_name": "Email sandbox provider",
+            "provider_type": "email",
+            "lane_type": "email_live_send",
+            "source_domain": "communications",
+            "source_record_type": "communication_draft",
+            "source_record_id": "comm-draft-001",
+            "allowed_action_type": "single_email_send",
+            "activation_mode": "sandbox",
+            "owner_approval_status": "pending_owner",
+            "readiness_snapshot": {"provider_mode": "sandbox", "ready": False},
+            "safety_snapshot": {"communication_safety_status": "passed"},
+            "dry_run_receipt_id": "comm-dry-run-001",
+            "dry_run_hash": "comm-draft-001-hash",
+            "current_source_hash": "comm-draft-001-hash",
+            "live_flag_status": "off",
+            "idempotency_key": "live:email:comm-draft-001",
+            "activation_status": "blocked",
+            "blocked_reasons": ["owner_approval_required", "live_flag_required"],
+            "consent_status": "not_applicable",
+            "dnc_status": "clear",
+            "opt_out_included": False,
+            "one_action_only": True,
+            "bulk_action_allowed": False,
+            "worker_bypass_allowed": False,
+            "campaign_bulk_allowed": False,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "provider_called": False,
+            "audit_event_created": True,
+        },
+        {
+            "id": "live-activation-sms-001",
+            "provider_id": "provider-sms-live",
+            "provider_name": "SMS provider live placeholder",
+            "provider_type": "sms",
+            "lane_type": "sms_sandbox_live_eligibility",
+            "source_domain": "communications",
+            "source_record_type": "communication_draft",
+            "source_record_id": "comm-draft-002",
+            "allowed_action_type": "single_sms_send",
+            "activation_mode": "live",
+            "owner_approval_status": "approved",
+            "readiness_snapshot": {"provider_mode": "live", "ready": False},
+            "safety_snapshot": {"communication_safety_status": "passed"},
+            "dry_run_receipt_id": "comm-dry-run-002",
+            "dry_run_hash": "comm-draft-002-hash",
+            "current_source_hash": "comm-draft-002-hash",
+            "live_flag_status": "enabled",
+            "idempotency_key": "live:sms:comm-draft-002",
+            "activation_status": "blocked",
+            "blocked_reasons": ["sms_consent_required", "sms_opt_out_required"],
+            "consent_status": "missing",
+            "dnc_status": "clear",
+            "opt_out_included": False,
+            "one_action_only": True,
+            "bulk_action_allowed": False,
+            "worker_bypass_allowed": False,
+            "campaign_bulk_allowed": False,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "provider_called": False,
+            "audit_event_created": True,
+        },
+        {
+            "id": "live-activation-crm-001",
+            "provider_id": None,
+            "provider_name": "CRM sandbox placeholder",
+            "provider_type": "crm",
+            "lane_type": "crm_sandbox_live_eligibility",
+            "source_domain": "buyer_disposition",
+            "source_record_type": "buyer",
+            "source_record_id": "buyer-001",
+            "allowed_action_type": "single_crm_sync",
+            "activation_mode": "sandbox",
+            "owner_approval_status": "approved",
+            "readiness_snapshot": {"provider_mode": "sandbox", "ready": False},
+            "safety_snapshot": {"object_mapping_exists": False},
+            "dry_run_receipt_id": "crm-dry-run-placeholder",
+            "dry_run_hash": "crm-placeholder-hash",
+            "current_source_hash": "crm-placeholder-hash",
+            "live_flag_status": "off",
+            "idempotency_key": "live:crm:buyer-001",
+            "activation_status": "blocked",
+            "blocked_reasons": ["provider_not_registered", "live_flag_required"],
+            "consent_status": "not_applicable",
+            "dnc_status": "clear",
+            "opt_out_included": False,
+            "one_action_only": True,
+            "bulk_action_allowed": False,
+            "worker_bypass_allowed": False,
+            "campaign_bulk_allowed": False,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "provider_called": False,
+            "audit_event_created": True,
+        },
+        {
+            "id": "live-activation-storage-001",
+            "provider_id": "provider-storage-mock",
+            "provider_name": "Storage mock provider",
+            "provider_type": "storage",
+            "lane_type": "storage_sandbox_live_eligibility",
+            "source_domain": "document_intelligence",
+            "source_record_type": "document",
+            "source_record_id": "doc-intel-001",
+            "allowed_action_type": "sanitized_storage_upload",
+            "activation_mode": "sandbox",
+            "owner_approval_status": "approved",
+            "readiness_snapshot": {"provider_mode": "mock", "ready": False},
+            "safety_snapshot": {"sanitized_metadata": True},
+            "dry_run_receipt_id": "storage-dry-run-placeholder",
+            "dry_run_hash": "storage-doc-intel-001",
+            "current_source_hash": "storage-doc-intel-001",
+            "live_flag_status": "off",
+            "idempotency_key": "live:storage:doc-intel-001",
+            "activation_status": "blocked",
+            "blocked_reasons": ["live_flag_required", "production_readiness_required"],
+            "consent_status": "not_applicable",
+            "dnc_status": "clear",
+            "opt_out_included": False,
+            "one_action_only": True,
+            "bulk_action_allowed": False,
+            "worker_bypass_allowed": False,
+            "campaign_bulk_allowed": False,
+            "legal_advice_allowed": False,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "provider_called": False,
+            "audit_event_created": True,
+        },
+    ]
+
+
+def build_live_provider_activation_attempt_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "live-attempt-001",
+            "activation_id": "live-activation-email-001",
+            "provider_attempt_id": "provider-attempt-001",
+            "attempt_status": "blocked",
+            "blocked_reasons": ["owner_approval_required", "live_flag_required"],
+            "idempotency_key": "live-attempt:email:001",
+            "request_metadata_hash": "seeded",
+            "response_summary": {"provider_called": False, "response_sanitized": True},
+            "provider_called": False,
+            "live_action_executed": False,
+            "duplicate_prevented": False,
+        }
+    ]
+
+
+def build_live_provider_blocked_attempt_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "live-blocked-001",
+            "activation_id": "live-activation-sms-001",
+            "source_domain": "communications",
+            "action_type": "single_sms_send",
+            "reason": "sms_consent_required, sms_opt_out_required",
+            "provider_called": False,
+            "audit_logged": True,
+        }
+    ]
+
+
+def build_live_provider_audit_event_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "live-audit-001",
+            "activation_id": "live-activation-email-001",
+            "event_type": "blocked",
+            "summary": "Seeded V30 blocked attempt recorded without provider execution.",
+            "safety_snapshot": {"one_action_only": True, "bulk_allowed": False},
+            "readiness_snapshot": {"provider_ready": False},
+            "provider_response_sanitized": True,
+            "secrets_exposed": False,
+            "live_action_executed": False,
+        }
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -8497,6 +8729,10 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "cloud_environment_checks": build_cloud_environment_check_records(),
         "cloud_backup_readiness_records": build_cloud_backup_readiness_records(),
         "cloud_monitoring_snapshots": build_cloud_monitoring_snapshot_records(),
+        "live_provider_activations": build_live_provider_activation_records(),
+        "live_provider_activation_attempts": build_live_provider_activation_attempt_records(),
+        "live_provider_blocked_attempts": build_live_provider_blocked_attempt_records(),
+        "live_provider_audit_events": build_live_provider_audit_event_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -8533,6 +8769,10 @@ def seed_database(session: Session) -> dict[str, int]:
         CloudBackupReadinessRecord,
         CloudEnvironmentCheck,
         CloudDeploymentProfile,
+        LiveProviderAuditEvent,
+        LiveProviderBlockedAttempt,
+        LiveProviderActivationAttempt,
+        LiveProviderActivation,
         CampaignPerformanceRecord,
         CampaignStopEvent,
         CampaignActivationAttempt,
@@ -8897,6 +9137,22 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         CloudMonitoringSnapshot(**row)
         for row in payload["cloud_monitoring_snapshots"]
+    )
+    session.add_all(
+        LiveProviderActivation(**row)
+        for row in payload["live_provider_activations"]
+    )
+    session.add_all(
+        LiveProviderActivationAttempt(**row)
+        for row in payload["live_provider_activation_attempts"]
+    )
+    session.add_all(
+        LiveProviderBlockedAttempt(**row)
+        for row in payload["live_provider_blocked_attempts"]
+    )
+    session.add_all(
+        LiveProviderAuditEvent(**row)
+        for row in payload["live_provider_audit_events"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

@@ -57,6 +57,7 @@ Implemented phases:
 - V27 Prime 2 memory and learning layer
 - V28 mobile operator mode
 - V29 production cloud readiness
+- V30 controlled live provider activation
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -147,6 +148,12 @@ Mobile mode is not a shortcut around the operating gates. Mobile notes and offli
 V29 adds private cloud readiness checks for deployment profiles, environment posture, security controls, backup/restore readiness, and monitoring readiness. The production profile fails closed when auth, env, CORS, database, frontend API base, backup target, provider flags, or secret references are not safe.
 
 This phase does not deploy the app and does not activate providers. It exposes masked readiness metadata only, keeps provider live flags off by default, requires private auth before public exposure, and keeps backups as safe metadata plus restore checklists until an encrypted storage design is added.
+
+## V30 Controlled Live Provider Activation
+
+V30 adds the final one-action provider activation gate for OpenAI, email, SMS, CRM, and storage lanes. Each activation records provider readiness, cloud readiness, safety snapshots, dry-run receipt, dry-run hash, current source hash, live flag status, owner approval, idempotency key, blocked reasons, attempts, blocked attempts, and audit events.
+
+This is still not a bulk sender or automation bypass. Worker jobs and campaign records cannot trigger provider action without an owner-approved activation. Campaign bulk paths stay blocked, SMS requires consent/DNC/opt-out checks, OpenAI requests remain safety/cost capped, storage requires sanitized metadata, and production readiness must be safe before any lane can move beyond blocked review.
 
 ## Safety Boundaries
 
@@ -240,6 +247,7 @@ Open:
 - Mobile operator mode: [http://localhost:3000/mobile](http://localhost:3000/mobile)
 - Production readiness: [http://localhost:3000/dashboard/production-readiness](http://localhost:3000/dashboard/production-readiness)
 - Cloud readiness: [http://localhost:3000/dashboard/cloud-readiness](http://localhost:3000/dashboard/cloud-readiness)
+- Live activation: [http://localhost:3000/dashboard/live-activation](http://localhost:3000/dashboard/live-activation)
 - Buyer portal demo: [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - Seller portal demo: [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)
 - Backend health: [http://localhost:8000/health](http://localhost:8000/health)
