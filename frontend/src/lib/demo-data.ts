@@ -4849,3 +4849,118 @@ export const mobileFieldBriefingCards = [
   { label: "Call queue", value: String(mobileCallQueue.length), detail: "Field-call planning only" },
   { label: "DNC records", value: String(doNotContactOutcomes.length), detail: "Outreach eligibility blocked" }
 ];
+
+export type CloudDeploymentProfile = {
+  id: string;
+  profileName: "local" | "staging" | "production";
+  readinessStatus: string;
+  blockedReasons: string[];
+  authRequired: boolean;
+  debugModeOffRequired: boolean;
+  databaseUrlRequired: boolean;
+  corsRestrictedRequired: boolean;
+  frontendApiBaseRequired: boolean;
+  providerLiveFlagsDefaultOff: boolean;
+};
+
+export type CloudEnvironmentCheck = {
+  id: string;
+  profileName: string;
+  category: string;
+  checkName: string;
+  required: boolean;
+  passed: boolean;
+  status: string;
+  detail: string;
+  remediation: string;
+  blockedReasons: string[];
+  secretValueExposed: false;
+  preventsProduction: boolean;
+};
+
+export type CloudBackupReadiness = {
+  id: string;
+  profileName: string;
+  backupTarget: string;
+  databaseBackupMetadata: Record<string, unknown>;
+  exportManifest: Record<string, unknown>;
+  restoreChecklist: string[];
+  status: string;
+  blockedReasons: string[];
+  rawSecretsIncluded: false;
+  safeMetadataOnly: true;
+};
+
+export type CloudMonitoringSnapshot = {
+  id: string;
+  profileName: string;
+  healthStatus: string;
+  readinessStatus: string;
+  workerHeartbeatStatus: string;
+  providerReadinessStatus: string;
+  aiCostCapStatus: string;
+  failedJobCount: number;
+  blockedActionCount: number;
+  readinessPassed: boolean;
+  blockedReasons: string[];
+  secretsExposed: false;
+  liveProviderActivationAllowed: false;
+};
+
+export const cloudDeploymentProfiles: CloudDeploymentProfile[] = [
+  { id: "cloud-profile-local", profileName: "local", readinessStatus: "ready", blockedReasons: [], authRequired: false, debugModeOffRequired: false, databaseUrlRequired: false, corsRestrictedRequired: false, frontendApiBaseRequired: false, providerLiveFlagsDefaultOff: true },
+  { id: "cloud-profile-staging", profileName: "staging", readinessStatus: "blocked", blockedReasons: ["auth_required", "cors_restricted", "frontend_api_base_configured"], authRequired: true, debugModeOffRequired: true, databaseUrlRequired: true, corsRestrictedRequired: true, frontendApiBaseRequired: true, providerLiveFlagsDefaultOff: true },
+  { id: "cloud-profile-production", profileName: "production", readinessStatus: "blocked", blockedReasons: ["auth_required", "database_url_configured", "cors_restricted"], authRequired: true, debugModeOffRequired: true, databaseUrlRequired: true, corsRestrictedRequired: true, frontendApiBaseRequired: true, providerLiveFlagsDefaultOff: true }
+];
+
+export const cloudEnvironmentChecks: CloudEnvironmentCheck[] = [
+  { id: "cloud-env-production-auth", profileName: "production", category: "security", checkName: "Auth required", required: true, passed: false, status: "blocked", detail: "Private auth checklist is not yet configured.", remediation: "Configure private owner authentication before hosting.", blockedReasons: ["auth_required"], secretValueExposed: false, preventsProduction: true },
+  { id: "cloud-env-production-debug", profileName: "production", category: "security", checkName: "Debug mode off", required: true, passed: true, status: "passed", detail: "Debug mode defaults off.", remediation: "Keep DEBUG=false.", blockedReasons: [], secretValueExposed: false, preventsProduction: false },
+  { id: "cloud-env-production-db", profileName: "production", category: "env", checkName: "Database URL configured", required: true, passed: false, status: "blocked", detail: "Production database URL must be configured by env reference.", remediation: "Set DATABASE_URL with private Postgres connection outside git.", blockedReasons: ["database_url_configured"], secretValueExposed: false, preventsProduction: true },
+  { id: "cloud-env-production-cors", profileName: "production", category: "security", checkName: "CORS restricted", required: true, passed: false, status: "blocked", detail: "Allowed origins must be explicit.", remediation: "Set ALLOWED_ORIGINS to private frontend origins.", blockedReasons: ["cors_restricted"], secretValueExposed: false, preventsProduction: true },
+  { id: "cloud-env-production-provider", profileName: "production", category: "provider", checkName: "Provider flags off", required: true, passed: true, status: "passed", detail: "Provider live flags default off.", remediation: "Keep off until V30 activation records exist.", blockedReasons: [], secretValueExposed: false, preventsProduction: false }
+];
+
+export const cloudBackupReadiness: CloudBackupReadiness = {
+  id: "cloud-backup-production",
+  profileName: "production",
+  backupTarget: "private_bucket_or_path_placeholder",
+  databaseBackupMetadata: { databaseUrlPresent: false, databaseUrlValue: "masked", safeMetadataOnly: true },
+  exportManifest: { included: ["schema_version", "safe_table_counts", "audit_packet_hashes"], excluded: ["raw_secret_values", "private_contact_values"] },
+  restoreChecklist: ["create isolated restore database", "run alembic upgrade head", "restore sanitized backup", "run validation suite"],
+  status: "ready_for_restore_test",
+  blockedReasons: [],
+  rawSecretsIncluded: false,
+  safeMetadataOnly: true
+};
+
+export const cloudMonitoringSnapshot: CloudMonitoringSnapshot = {
+  id: "cloud-monitoring-production",
+  profileName: "production",
+  healthStatus: "ok",
+  readinessStatus: "blocked",
+  workerHeartbeatStatus: "healthy",
+  providerReadinessStatus: "blocked",
+  aiCostCapStatus: "within_cap",
+  failedJobCount: failedWorkerJobs.length,
+  blockedActionCount: blockedAiRequests.length + campaignAttemptsBlocked.length,
+  readinessPassed: false,
+  blockedReasons: ["provider_readiness_blocked"],
+  secretsExposed: false,
+  liveProviderActivationAllowed: false
+};
+
+export const failedCloudEnvironmentChecks = cloudEnvironmentChecks.filter((check) => check.required && !check.passed);
+export const cloudProductionProfile = cloudDeploymentProfiles.find((profile) => profile.profileName === "production")!;
+export const cloudProductionReady =
+  cloudProductionProfile.readinessStatus === "ready" &&
+  failedCloudEnvironmentChecks.length === 0 &&
+  cloudMonitoringSnapshot.readinessPassed;
+export const cloudReadinessBlockedReasons = Array.from(
+  new Set([
+    ...cloudProductionProfile.blockedReasons,
+    ...failedCloudEnvironmentChecks.flatMap((check) => check.blockedReasons),
+    ...cloudMonitoringSnapshot.blockedReasons,
+    ...cloudBackupReadiness.blockedReasons
+  ])
+);

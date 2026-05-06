@@ -2899,3 +2899,72 @@ class MobileApprovalAttempt(TimestampMixin, Base):
     live_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
     audit_logged: Mapped[bool] = mapped_column(Boolean, default=True)
     high_risk_action: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class CloudDeploymentProfile(TimestampMixin, Base):
+    __tablename__ = "cloud_deployment_profiles"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    profile_name: Mapped[str] = mapped_column(String(80), unique=True, nullable=False)
+    auth_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    debug_mode_off_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    database_url_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    cors_restricted_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    frontend_api_base_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    worker_state_visible: Mapped[bool] = mapped_column(Boolean, default=True)
+    backup_readiness_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    log_configuration_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    provider_live_flags_default_off: Mapped[bool] = mapped_column(Boolean, default=True)
+    readiness_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class CloudEnvironmentCheck(TimestampMixin, Base):
+    __tablename__ = "cloud_environment_checks"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    profile_name: Mapped[str] = mapped_column(String(80), default="production")
+    category: Mapped[str] = mapped_column(String(80), default="")
+    check_name: Mapped[str] = mapped_column(String(160), default="")
+    required: Mapped[bool] = mapped_column(Boolean, default=True)
+    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    status: Mapped[str] = mapped_column(String(80), default="missing")
+    detail: Mapped[str] = mapped_column(Text, default="")
+    remediation: Mapped[str] = mapped_column(Text, default="")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    secret_value_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+    prevents_production: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class CloudBackupReadinessRecord(TimestampMixin, Base):
+    __tablename__ = "cloud_backup_readiness_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    profile_name: Mapped[str] = mapped_column(String(80), default="production")
+    backup_target: Mapped[str] = mapped_column(String(160), default="local_or_bucket_placeholder")
+    database_backup_metadata: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    export_manifest: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    restore_checklist: Mapped[list[str]] = mapped_column(JSON, default=list)
+    status: Mapped[str] = mapped_column(String(80), default="blocked")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    raw_secrets_included: Mapped[bool] = mapped_column(Boolean, default=False)
+    safe_metadata_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    restore_test_required: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class CloudMonitoringSnapshot(TimestampMixin, Base):
+    __tablename__ = "cloud_monitoring_snapshots"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    profile_name: Mapped[str] = mapped_column(String(80), default="production")
+    health_status: Mapped[str] = mapped_column(String(80), default="ok")
+    readiness_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    worker_heartbeat_status: Mapped[str] = mapped_column(String(80), default="unknown")
+    provider_readiness_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    ai_cost_cap_status: Mapped[str] = mapped_column(String(80), default="within_cap")
+    failed_job_count: Mapped[int] = mapped_column(Integer, default=0)
+    blocked_action_count: Mapped[int] = mapped_column(Integer, default=0)
+    readiness_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    secrets_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_provider_activation_allowed: Mapped[bool] = mapped_column(Boolean, default=False)

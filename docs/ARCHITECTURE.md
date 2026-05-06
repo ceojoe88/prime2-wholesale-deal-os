@@ -977,6 +977,44 @@ V28 safety boundary:
 - DNC marks create manual call outcome records and block outreach eligibility.
 - Buyer/document screens are internal operator snapshots and do not expose internal strategy externally.
 
+## V29 Production Cloud Readiness
+
+V29 adds `app.domains.cloud_readiness` and four new record types:
+
+- `CloudDeploymentProfile`
+- `CloudEnvironmentCheck`
+- `CloudBackupReadinessRecord`
+- `CloudMonitoringSnapshot`
+
+The domain validates local, staging, and production posture without performing deployment automation. Production readiness fails closed when private auth, debug-off posture, `DATABASE_URL`, restricted CORS, frontend API base, provider mode, provider live flags, worker mode, backup target, or secret-reference posture is unsafe.
+
+Backend routes:
+
+- `/api/v1/cloud-readiness/overview`
+- `/api/v1/cloud-readiness/env`
+- `/api/v1/cloud-readiness/security`
+- `/api/v1/cloud-readiness/backups`
+- `/api/v1/cloud-readiness/monitoring`
+
+Frontend routes:
+
+- `/dashboard/cloud-readiness`
+- `/dashboard/cloud-readiness/env`
+- `/dashboard/cloud-readiness/security`
+- `/dashboard/cloud-readiness/backups`
+- `/dashboard/cloud-readiness/monitoring`
+- `/dashboard/cloud-readiness/deployment-checklist`
+
+Backup readiness stores safe metadata, export manifests, restore checklists, and masked database posture only. Monitoring readiness summarizes backend health, readiness status, worker heartbeat, provider readiness, AI cost-cap posture, failed jobs, and blocked action counts.
+
+V29 safety boundary:
+
+- No actual deployment automation.
+- No provider live activation.
+- No raw secrets, passwords, tokens, or connection strings in API responses, frontend data, seed data, docs, or logs.
+- Public exposure remains blocked without private auth and restricted CORS.
+- Provider live flags default off and stay unavailable until later owner-approved activation gates.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:

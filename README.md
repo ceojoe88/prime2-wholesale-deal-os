@@ -56,6 +56,7 @@ Implemented phases:
 - V26 market data enrichment
 - V27 Prime 2 memory and learning layer
 - V28 mobile operator mode
+- V29 production cloud readiness
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -140,6 +141,12 @@ This is deterministic and auditable, not black-box ML. Memory cannot invent fact
 V28 adds a mobile-first field command surface under `/mobile`. The owner can review top money actions, top risk actions, call queues, approval queues, field briefings, buyers, documents, quick seller notes, buyer response notes, transcript paste placeholders, DNC marks, follow-up dates, and offline-safe draft captures.
 
 Mobile mode is not a shortcut around the operating gates. Mobile notes and offline drafts are review records only; quick approvals still require a source record, safety status, dry-run receipt, provider readiness, owner approval evidence, idempotency, and audit logging. The mobile layer cannot send outreach, execute contracts, publish portals, change terms, submit title packets, or provide legal guidance.
+
+## V29 Production Cloud Readiness
+
+V29 adds private cloud readiness checks for deployment profiles, environment posture, security controls, backup/restore readiness, and monitoring readiness. The production profile fails closed when auth, env, CORS, database, frontend API base, backup target, provider flags, or secret references are not safe.
+
+This phase does not deploy the app and does not activate providers. It exposes masked readiness metadata only, keeps provider live flags off by default, requires private auth before public exposure, and keeps backups as safe metadata plus restore checklists until an encrypted storage design is added.
 
 ## Safety Boundaries
 
@@ -232,6 +239,7 @@ Open:
 - Call intelligence: [http://localhost:3000/dashboard/call-intelligence](http://localhost:3000/dashboard/call-intelligence)
 - Mobile operator mode: [http://localhost:3000/mobile](http://localhost:3000/mobile)
 - Production readiness: [http://localhost:3000/dashboard/production-readiness](http://localhost:3000/dashboard/production-readiness)
+- Cloud readiness: [http://localhost:3000/dashboard/cloud-readiness](http://localhost:3000/dashboard/cloud-readiness)
 - Buyer portal demo: [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - Seller portal demo: [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)
 - Backend health: [http://localhost:8000/health](http://localhost:8000/health)

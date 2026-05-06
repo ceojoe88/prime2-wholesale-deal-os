@@ -9,6 +9,7 @@ from app.api.routes import router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
 from app.domains.campaign_brain.router import router as campaign_brain_v1_router
+from app.domains.cloud_readiness.router import router as cloud_readiness_v1_router
 from app.domains.document_intelligence.router import router as document_intelligence_v1_router
 from app.domains.market_enrichment.router import router as market_enrichment_v1_router
 from app.domains.mobile_operator.router import router as mobile_operator_v1_router
@@ -29,6 +30,7 @@ from app.models import (
     BuyerDealPublication,
     BuyerDemandProfile,
     CommunicationDraft,
+    CloudDeploymentProfile,
     ContractControl,
     ContractReadyState,
     DealProbabilityRecord,
@@ -111,6 +113,7 @@ async def lifespan(app: FastAPI):
                 or session.query(MarketProfile).count() == 0
                 or session.query(PrimeMemoryItem).count() == 0
                 or session.query(MobileOperatorNote).count() == 0
+                or session.query(CloudDeploymentProfile).count() == 0
             ):
                 seed_database(session)
     yield
@@ -138,6 +141,7 @@ app.include_router(campaign_brain_v1_router)
 app.include_router(market_enrichment_v1_router)
 app.include_router(prime_memory_v1_router)
 app.include_router(mobile_operator_v1_router)
+app.include_router(cloud_readiness_v1_router)
 
 
 @app.get("/health")

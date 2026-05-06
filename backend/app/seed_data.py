@@ -126,6 +126,10 @@ from app.models import (
     CallObjectionRecord,
     CallTranscriptInput,
     ClosingCoordinationChecklist,
+    CloudBackupReadinessRecord,
+    CloudDeploymentProfile,
+    CloudEnvironmentCheck,
+    CloudMonitoringSnapshot,
     ComplianceRecord,
     CommunicationApproval,
     CommunicationDraft,
@@ -8225,6 +8229,153 @@ def build_mobile_approval_attempt_records() -> list[dict[str, object]]:
     ]
 
 
+def build_cloud_deployment_profile_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "cloud-profile-local",
+            "profile_name": "local",
+            "auth_required": False,
+            "debug_mode_off_required": False,
+            "database_url_required": False,
+            "cors_restricted_required": False,
+            "frontend_api_base_required": False,
+            "worker_state_visible": True,
+            "backup_readiness_required": False,
+            "log_configuration_required": False,
+            "provider_live_flags_default_off": True,
+            "readiness_status": "ready",
+            "blocked_reasons": [],
+        },
+        {
+            "id": "cloud-profile-staging",
+            "profile_name": "staging",
+            "auth_required": True,
+            "debug_mode_off_required": True,
+            "database_url_required": True,
+            "cors_restricted_required": True,
+            "frontend_api_base_required": True,
+            "worker_state_visible": True,
+            "backup_readiness_required": True,
+            "log_configuration_required": True,
+            "provider_live_flags_default_off": True,
+            "readiness_status": "blocked",
+            "blocked_reasons": ["auth_required", "cors_restricted", "frontend_api_base_configured"],
+        },
+        {
+            "id": "cloud-profile-production",
+            "profile_name": "production",
+            "auth_required": True,
+            "debug_mode_off_required": True,
+            "database_url_required": True,
+            "cors_restricted_required": True,
+            "frontend_api_base_required": True,
+            "worker_state_visible": True,
+            "backup_readiness_required": True,
+            "log_configuration_required": True,
+            "provider_live_flags_default_off": True,
+            "readiness_status": "blocked",
+            "blocked_reasons": ["auth_required", "database_url_configured", "cors_restricted"],
+        },
+    ]
+
+
+def build_cloud_environment_check_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "cloud-env-production-auth",
+            "profile_name": "production",
+            "category": "security",
+            "check_name": "auth required",
+            "required": True,
+            "passed": False,
+            "status": "blocked",
+            "detail": "Private auth checklist is not yet configured for production.",
+            "remediation": "Set PRIME2_AUTH_REQUIRED=true and connect private auth before hosting.",
+            "blocked_reasons": ["auth_required"],
+            "secret_value_exposed": False,
+            "prevents_production": True,
+        },
+        {
+            "id": "cloud-env-production-debug",
+            "profile_name": "production",
+            "category": "security",
+            "check_name": "debug mode off",
+            "required": True,
+            "passed": True,
+            "status": "passed",
+            "detail": "DEBUG defaults off.",
+            "remediation": "Keep DEBUG=false.",
+            "blocked_reasons": [],
+            "secret_value_exposed": False,
+            "prevents_production": False,
+        },
+        {
+            "id": "cloud-env-production-secrets",
+            "profile_name": "production",
+            "category": "secrets",
+            "check_name": "secret references present",
+            "required": True,
+            "passed": False,
+            "status": "blocked",
+            "detail": "Secret references are env-only; production references still need configuration.",
+            "remediation": "Configure secret manager/env references without committing values.",
+            "blocked_reasons": ["secret_references_required"],
+            "secret_value_exposed": False,
+            "prevents_production": True,
+        },
+    ]
+
+
+def build_cloud_backup_readiness_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "cloud-backup-production",
+            "profile_name": "production",
+            "backup_target": "private_bucket_or_path_placeholder",
+            "database_backup_metadata": {
+                "database_url_present": False,
+                "database_url_value": "masked",
+                "safe_metadata_only": True,
+            },
+            "export_manifest": {
+                "included": ["schema_version", "safe_table_counts", "audit_packet_hashes"],
+                "excluded": ["raw_secret_values", "private_contact_values"],
+            },
+            "restore_checklist": [
+                "create isolated restore database",
+                "run alembic upgrade head",
+                "restore sanitized backup",
+                "run validation suite",
+            ],
+            "status": "ready_for_restore_test",
+            "blocked_reasons": [],
+            "raw_secrets_included": False,
+            "safe_metadata_only": True,
+            "restore_test_required": True,
+        }
+    ]
+
+
+def build_cloud_monitoring_snapshot_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "cloud-monitoring-production",
+            "profile_name": "production",
+            "health_status": "ok",
+            "readiness_status": "blocked",
+            "worker_heartbeat_status": "healthy",
+            "provider_readiness_status": "blocked",
+            "ai_cost_cap_status": "within_cap",
+            "failed_job_count": 0,
+            "blocked_action_count": 5,
+            "readiness_passed": False,
+            "blocked_reasons": ["provider_readiness_blocked"],
+            "secrets_exposed": False,
+            "live_provider_activation_allowed": False,
+        }
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -8342,6 +8493,10 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "mobile_operator_notes": build_mobile_operator_note_records(),
         "mobile_offline_drafts": build_mobile_offline_draft_records(),
         "mobile_approval_attempts": build_mobile_approval_attempt_records(),
+        "cloud_deployment_profiles": build_cloud_deployment_profile_records(),
+        "cloud_environment_checks": build_cloud_environment_check_records(),
+        "cloud_backup_readiness_records": build_cloud_backup_readiness_records(),
+        "cloud_monitoring_snapshots": build_cloud_monitoring_snapshot_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -8374,6 +8529,10 @@ def seed_database(session: Session) -> dict[str, int]:
         MobileApprovalAttempt,
         MobileOfflineDraft,
         MobileOperatorNote,
+        CloudMonitoringSnapshot,
+        CloudBackupReadinessRecord,
+        CloudEnvironmentCheck,
+        CloudDeploymentProfile,
         CampaignPerformanceRecord,
         CampaignStopEvent,
         CampaignActivationAttempt,
@@ -8723,6 +8882,21 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         MobileApprovalAttempt(**row)
         for row in payload["mobile_approval_attempts"]
+    )
+    session.add_all(
+        CloudDeploymentProfile(**row)
+        for row in payload["cloud_deployment_profiles"]
+    )
+    session.add_all(
+        CloudEnvironmentCheck(**row) for row in payload["cloud_environment_checks"]
+    )
+    session.add_all(
+        CloudBackupReadinessRecord(**row)
+        for row in payload["cloud_backup_readiness_records"]
+    )
+    session.add_all(
+        CloudMonitoringSnapshot(**row)
+        for row in payload["cloud_monitoring_snapshots"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

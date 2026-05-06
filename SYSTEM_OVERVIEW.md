@@ -41,6 +41,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Deal document intelligence for classification, metadata extraction, issue flags, review routing, and sanitized evidence links
 - Controlled campaign planning, segmentation, sequence prep, activation gates, stop conditions, and performance tracking
 - Mobile operator mode for field-call queues, quick notes, DNC capture, approvals, buyer checks, document metadata, offline-safe drafts, and field briefings
+- Production cloud readiness for private deployment profiles, masked environment validation, backup/restore metadata, monitoring readiness, and fail-closed hosting checks
 
 ## Command Hierarchy
 
@@ -132,7 +133,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V28
+## Phase Map V1-V29
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -218,6 +219,9 @@ Added source-cited memory items, learning signals, scoring weight recommendation
 V28 Mobile Operator Mode:
 Added `/mobile` field command routes plus a mobile operator API aggregation layer for top money actions, risk actions, call queue, lead/deal detail, approvals, field briefing, buyer snapshots, document metadata, mobile note capture, quick DNC mark, offline draft sync, and quick approval gate checks. Mobile mode captures and routes only; it cannot send outreach, execute contracts, publish portals, change terms, submit title packets, or bypass safety/dry-run/provider/idempotency gates.
 
+V29 Production Cloud Readiness:
+Added cloud deployment profiles, environment validation, security checks, backup/restore readiness metadata, monitoring snapshots, and `/api/v1/cloud-readiness` endpoints. The production profile fails closed when auth, env, CORS, database, frontend API, backup, provider flags, or secret posture are unsafe. V29 does not deploy the system or activate providers; it reports readiness only.
+
 ## Local Run Commands
 
 Backend setup:
@@ -243,6 +247,7 @@ Local URLs:
 
 - Frontend dashboard: http://localhost:3000/dashboard
 - Mobile operator mode: http://localhost:3000/mobile
+- Cloud readiness: http://localhost:3000/dashboard/cloud-readiness
 - Backend health: http://localhost:8000/health
 - Backend API root examples: http://localhost:8000/api/command-center and http://localhost:8000/api/system/rules
 - Buyer portal demo: http://localhost:3000/buyer-portal
@@ -295,6 +300,12 @@ Recommended route smoke checks:
 - `/mobile/today`
 - `/mobile/calls`
 - `/mobile/approvals`
+- `/dashboard/cloud-readiness`
+- `/dashboard/cloud-readiness/env`
+- `/dashboard/cloud-readiness/security`
+- `/dashboard/cloud-readiness/backups`
+- `/dashboard/cloud-readiness/monitoring`
+- `/dashboard/cloud-readiness/deployment-checklist`
 - `/buyer-portal`
 - `/seller-portal`
 

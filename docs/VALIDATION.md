@@ -45,6 +45,7 @@ Expected coverage includes:
 - V22 provider registry default mock mode, env-only credential checks, masked responses, blocked live readiness, attempt audit records, idempotency, webhook review-only behavior, and unsigned live-like webhook rejection
 - V23 call intelligence transcript/manual-note analysis, DNC outreach blocking, compliance escalation, objection extraction, draft-only responses, explainable score deltas, AI Gateway allowlist, deterministic fallback, and worker no-live-action behavior
 - V28 mobile operator overview, quick call outcome capture, DNC outreach blocking, offline draft idempotency, quick approval gate blocking, and note safety review
+- V29 production cloud readiness fail-closed behavior, masked secret posture, provider flags default off, backup metadata safety, and monitoring health summary
 
 ## Frontend
 
@@ -68,6 +69,7 @@ Expected coverage includes:
 - V22 provider readiness dashboard routes render and expose no unsafe live-provider controls
 - V23 call intelligence dashboard routes render and expose no live call or send controls
 - V28 mobile routes render and expose no unsafe field controls
+- V29 cloud readiness routes render and expose no deployment or secret controls
 
 ## Source Sweeps
 
@@ -155,6 +157,12 @@ Smoke check:
 - `/mobile/notes`
 - `/mobile/buyers`
 - `/mobile/documents`
+- `/dashboard/cloud-readiness`
+- `/dashboard/cloud-readiness/env`
+- `/dashboard/cloud-readiness/security`
+- `/dashboard/cloud-readiness/backups`
+- `/dashboard/cloud-readiness/monitoring`
+- `/dashboard/cloud-readiness/deployment-checklist`
 - `/buyer-portal`
 - `/seller-portal`
 
@@ -225,6 +233,11 @@ Smoke check:
 - `/api/v1/mobile/briefing`
 - `/api/v1/mobile/buyers`
 - `/api/v1/mobile/documents`
+- `/api/v1/cloud-readiness/overview`
+- `/api/v1/cloud-readiness/env`
+- `/api/v1/cloud-readiness/security`
+- `/api/v1/cloud-readiness/backups`
+- `/api/v1/cloud-readiness/monitoring`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -256,6 +269,7 @@ Before any hosted deployment:
 - Market enrichment must remain manual/import-data only; comp, rent, buyer activity, market heat, and lead source ROI outputs must be evidence-backed estimates with no paid API calls, invented ARV, or guaranteed ROI language.
 - Prime 2 memory must remain deterministic and source-cited; memory may inform recommendations but cannot invent facts, expose internal strategy to portals, auto-apply scoring changes, override compliance, or create unsupported claims.
 - Mobile operator mode must remain field capture and review only; quick approvals cannot bypass dry-run, safety, provider readiness, idempotency, audit, and owner gates.
+- Cloud readiness must fail closed for unsafe production posture; it can report masked readiness but cannot deploy the app or activate providers.
 - Audit exports must be sanitized.
 - Backup/export records must be metadata-safe unless a future encrypted storage design is added.
 - Legal/title review remains external.
