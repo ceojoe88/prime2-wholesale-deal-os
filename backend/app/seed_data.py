@@ -160,6 +160,9 @@ from app.models import (
     LearningSignal,
     MarketScalingScore,
     MarketProfile,
+    MobileApprovalAttempt,
+    MobileOfflineDraft,
+    MobileOperatorNote,
     NegotiationRecord,
     OperatorExceptionRecord,
     OperatorModeSetting,
@@ -8100,6 +8103,128 @@ def build_playbook_recommendation_records() -> list[dict[str, object]]:
     ]
 
 
+def build_mobile_operator_note_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "mobile-note-001",
+            "note_type": "seller_call_note",
+            "source_record_type": "lead",
+            "source_record_id": "lead-001",
+            "body": "Owner captured a field note for repair fatigue and timing clarity. Field capture only.",
+            "captured_by": "Owner",
+            "offline_created": False,
+            "sync_status": "synced",
+            "owner_review_status": "pending_review",
+            "safety_status": "safe_capture",
+            "blocked_reasons": [],
+            "action_executed": False,
+            "live_send_allowed": False,
+            "contract_execution_allowed": False,
+            "portal_publish_allowed": False,
+            "legal_guidance_allowed": False,
+        },
+        {
+            "id": "mobile-note-002",
+            "note_type": "document_photo_placeholder",
+            "source_record_type": "document",
+            "source_record_id": "doc-intel-001",
+            "body": "Photo/document metadata placeholder captured for later owner review.",
+            "captured_by": "Owner",
+            "offline_created": True,
+            "sync_status": "pending_sync",
+            "owner_review_status": "pending_review",
+            "safety_status": "field_capture_only",
+            "blocked_reasons": [],
+            "action_executed": False,
+            "live_send_allowed": False,
+            "contract_execution_allowed": False,
+            "portal_publish_allowed": False,
+            "legal_guidance_allowed": False,
+        },
+    ]
+
+
+def build_mobile_offline_draft_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "mobile-draft-001",
+            "draft_type": "quick_seller_note",
+            "source_record_type": "lead",
+            "source_record_id": "lead-003",
+            "payload": {
+                "note": "Seller asked for a later callback window.",
+                "follow_up_date": "2026-05-06",
+            },
+            "sync_status": "captured_for_owner_review",
+            "idempotency_key": "mobile:offline:lead-003:20260504",
+            "owner_review_status": "pending_review",
+            "action_executed": False,
+            "provider_called": False,
+            "live_send_allowed": False,
+            "bulk_send_allowed": False,
+            "contract_execution_allowed": False,
+            "portal_publish_allowed": False,
+        },
+        {
+            "id": "mobile-draft-002",
+            "draft_type": "buyer_response_note",
+            "source_record_type": "buyer",
+            "source_record_id": "buyer-001",
+            "payload": {"note": "Buyer asked for updated repair basis before intent review."},
+            "sync_status": "captured_for_owner_review",
+            "idempotency_key": "mobile:offline:buyer-001:20260504",
+            "owner_review_status": "pending_review",
+            "action_executed": False,
+            "provider_called": False,
+            "live_send_allowed": False,
+            "bulk_send_allowed": False,
+            "contract_execution_allowed": False,
+            "portal_publish_allowed": False,
+        },
+    ]
+
+
+def build_mobile_approval_attempt_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "mobile-approval-001",
+            "approval_type": "seller_follow_up_live_send",
+            "source_record_type": "communication_draft",
+            "source_record_id": "comm-draft-001",
+            "approval_status": "blocked",
+            "safety_status": "passed",
+            "dry_run_receipt_id": "",
+            "provider_readiness_status": "ready",
+            "idempotency_key": "mobile:approval:comm-draft-001:blocked",
+            "owner_approval_recorded": True,
+            "source_record_present": True,
+            "blocked_reasons": ["dry_run_receipt_required"],
+            "approved": False,
+            "live_action_allowed": False,
+            "audit_logged": True,
+            "high_risk_action": True,
+        },
+        {
+            "id": "mobile-approval-002",
+            "approval_type": "buyer_response_review",
+            "source_record_type": "owner_approval",
+            "source_record_id": "approval-002",
+            "approval_status": "ready_for_owner_review",
+            "safety_status": "passed",
+            "dry_run_receipt_id": "comm-dry-run-001",
+            "provider_readiness_status": "ready",
+            "idempotency_key": "mobile:approval:approval-002:review",
+            "owner_approval_recorded": True,
+            "source_record_present": True,
+            "blocked_reasons": [],
+            "approved": False,
+            "live_action_allowed": False,
+            "audit_logged": True,
+            "high_risk_action": True,
+        },
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -8214,6 +8339,9 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "learning_signals": build_learning_signal_records(),
         "scoring_weight_recommendations": build_scoring_weight_recommendation_records(),
         "playbook_recommendations": build_playbook_recommendation_records(),
+        "mobile_operator_notes": build_mobile_operator_note_records(),
+        "mobile_offline_drafts": build_mobile_offline_draft_records(),
+        "mobile_approval_attempts": build_mobile_approval_attempt_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -8243,6 +8371,9 @@ def seed_database(session: Session) -> dict[str, int]:
         ScoringWeightRecommendation,
         LearningSignal,
         PrimeMemoryItem,
+        MobileApprovalAttempt,
+        MobileOfflineDraft,
+        MobileOperatorNote,
         CampaignPerformanceRecord,
         CampaignStopEvent,
         CampaignActivationAttempt,
@@ -8582,6 +8713,16 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         PlaybookRecommendation(**row)
         for row in payload["playbook_recommendations"]
+    )
+    session.add_all(
+        MobileOperatorNote(**row) for row in payload["mobile_operator_notes"]
+    )
+    session.add_all(
+        MobileOfflineDraft(**row) for row in payload["mobile_offline_drafts"]
+    )
+    session.add_all(
+        MobileApprovalAttempt(**row)
+        for row in payload["mobile_approval_attempts"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

@@ -44,6 +44,7 @@ Expected coverage includes:
 - V21 worker job creation, scheduler execution, retries, idempotency, failed-job logging, heartbeat health, and no live action paths
 - V22 provider registry default mock mode, env-only credential checks, masked responses, blocked live readiness, attempt audit records, idempotency, webhook review-only behavior, and unsigned live-like webhook rejection
 - V23 call intelligence transcript/manual-note analysis, DNC outreach blocking, compliance escalation, objection extraction, draft-only responses, explainable score deltas, AI Gateway allowlist, deterministic fallback, and worker no-live-action behavior
+- V28 mobile operator overview, quick call outcome capture, DNC outreach blocking, offline draft idempotency, quick approval gate blocking, and note safety review
 
 ## Frontend
 
@@ -66,6 +67,7 @@ Expected coverage includes:
 - V20/V21 dashboard routes render and expose no live execution controls
 - V22 provider readiness dashboard routes render and expose no unsafe live-provider controls
 - V23 call intelligence dashboard routes render and expose no live call or send controls
+- V28 mobile routes render and expose no unsafe field controls
 
 ## Source Sweeps
 
@@ -143,6 +145,16 @@ Smoke check:
 - `/dashboard/playbook-recommendations`
 - `/dashboard/production-readiness`
 - `/dashboard/backups`
+- `/mobile`
+- `/mobile/today`
+- `/mobile/calls`
+- `/mobile/leads/lead-001`
+- `/mobile/deals/deal-001`
+- `/mobile/approvals`
+- `/mobile/briefing`
+- `/mobile/notes`
+- `/mobile/buyers`
+- `/mobile/documents`
 - `/buyer-portal`
 - `/seller-portal`
 
@@ -204,6 +216,15 @@ Smoke check:
 - `/api/v1/prime-memory/learning-signals`
 - `/api/v1/prime-memory/scoring-weight-recommendations`
 - `/api/v1/prime-memory/playbook-recommendations`
+- `/api/v1/mobile`
+- `/api/v1/mobile/today`
+- `/api/v1/mobile/calls`
+- `/api/v1/mobile/leads/lead-001`
+- `/api/v1/mobile/deals/deal-001`
+- `/api/v1/mobile/approvals`
+- `/api/v1/mobile/briefing`
+- `/api/v1/mobile/buyers`
+- `/api/v1/mobile/documents`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -234,6 +255,7 @@ Before any hosted deployment:
 - Campaign brain must remain draft/preview/governance-first; DNC and compliance exclusions, owner approval, caps, stop conditions, one-message event modeling, V5/V13/V22 gates, idempotency, and audit must remain required before any controlled live path.
 - Market enrichment must remain manual/import-data only; comp, rent, buyer activity, market heat, and lead source ROI outputs must be evidence-backed estimates with no paid API calls, invented ARV, or guaranteed ROI language.
 - Prime 2 memory must remain deterministic and source-cited; memory may inform recommendations but cannot invent facts, expose internal strategy to portals, auto-apply scoring changes, override compliance, or create unsupported claims.
+- Mobile operator mode must remain field capture and review only; quick approvals cannot bypass dry-run, safety, provider readiness, idempotency, audit, and owner gates.
 - Audit exports must be sanitized.
 - Backup/export records must be metadata-safe unless a future encrypted storage design is added.
 - Legal/title review remains external.

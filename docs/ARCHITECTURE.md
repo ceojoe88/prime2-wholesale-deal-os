@@ -936,6 +936,47 @@ V19 safety boundary:
 - Do-not-contact outcomes block future live outreach eligibility.
 - Owner remains final approver for real-world field actions.
 
+## V28 Mobile Operator Mode
+
+V28 adds a mobile-first field command layer that is intentionally thinner than the operator dashboard. The backend domain is `app.domains.mobile_operator` with models for `MobileOperatorNote`, `MobileOfflineDraft`, and `MobileApprovalAttempt`, plus a router at `/api/v1/mobile`.
+
+The mobile API aggregates:
+
+- Today actions
+- Call queue
+- Lead detail
+- Deal detail
+- Approval queue
+- Field briefing
+- Buyer snapshot
+- Document snapshot
+- Mobile note capture
+- Quick DNC mark
+- Offline draft sync placeholder
+- Quick approval gate check
+
+Mobile quick approvals are gate checks, not execution. They require source record presence, safety status, dry-run receipt, provider readiness, idempotency, and owner approval evidence before a record can be marked ready for owner review. Even then `live_action_allowed` remains false in mobile mode.
+
+V28 frontend routes:
+
+- `/mobile`
+- `/mobile/today`
+- `/mobile/calls`
+- `/mobile/leads/[leadId]`
+- `/mobile/deals/[dealId]`
+- `/mobile/approvals`
+- `/mobile/briefing`
+- `/mobile/notes`
+- `/mobile/buyers`
+- `/mobile/documents`
+
+V28 safety boundary:
+
+- No system calling, messaging, portal publishing, title packet submission, payment handling, legal advice, contract execution, or term changes from mobile mode.
+- Offline drafts are idempotent review records.
+- DNC marks create manual call outcome records and block outreach eligibility.
+- Buyer/document screens are internal operator snapshots and do not expose internal strategy externally.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:

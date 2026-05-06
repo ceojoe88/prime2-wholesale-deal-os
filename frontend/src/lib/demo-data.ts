@@ -4695,3 +4695,157 @@ export const approvedAiTemplates = aiTemplates.filter((template) => template.saf
 export const pendingWorkerJobs = workerJobs.filter((job) => job.status === "pending");
 export const failedWorkerJobs = workerJobs.filter((job) => job.status === "failed");
 export const completedWorkerJobs = workerJobs.filter((job) => job.status === "completed");
+
+export type MobileOperatorNote = {
+  id: string;
+  noteType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  body: string;
+  offlineCreated: boolean;
+  syncStatus: string;
+  ownerReviewStatus: string;
+  actionExecuted: false;
+  liveSendAllowed: false;
+  contractExecutionAllowed: false;
+  portalPublishAllowed: false;
+};
+
+export type MobileOfflineDraft = {
+  id: string;
+  draftType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  payload: Record<string, unknown>;
+  syncStatus: string;
+  idempotencyKey: string;
+  actionExecuted: false;
+  providerCalled: false;
+  liveSendAllowed: false;
+  bulkSendAllowed: false;
+  contractExecutionAllowed: false;
+  portalPublishAllowed: false;
+};
+
+export type MobileApprovalAttempt = {
+  id: string;
+  approvalType: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  approvalStatus: string;
+  safetyStatus: string;
+  dryRunReceiptId: string;
+  providerReadinessStatus: string;
+  idempotencyKey: string;
+  ownerApprovalRecorded: boolean;
+  blockedReasons: string[];
+  approved: false;
+  liveActionAllowed: false;
+  auditLogged: true;
+};
+
+export const mobileOperatorNotes: MobileOperatorNote[] = [
+  {
+    id: "mobile-note-001",
+    noteType: "seller_call_note",
+    sourceRecordType: "lead",
+    sourceRecordId: "lead-001",
+    body: "Repair fatigue and timeline clarity captured in the field for owner review.",
+    offlineCreated: false,
+    syncStatus: "synced",
+    ownerReviewStatus: "pending_review",
+    actionExecuted: false,
+    liveSendAllowed: false,
+    contractExecutionAllowed: false,
+    portalPublishAllowed: false
+  },
+  {
+    id: "mobile-note-002",
+    noteType: "document_photo_placeholder",
+    sourceRecordType: "document",
+    sourceRecordId: "doc-intel-001",
+    body: "Document/photo metadata placeholder captured offline for later evidence linkage.",
+    offlineCreated: true,
+    syncStatus: "pending_sync",
+    ownerReviewStatus: "pending_review",
+    actionExecuted: false,
+    liveSendAllowed: false,
+    contractExecutionAllowed: false,
+    portalPublishAllowed: false
+  }
+];
+
+export const mobileOfflineDrafts: MobileOfflineDraft[] = [
+  {
+    id: "mobile-draft-001",
+    draftType: "quick_seller_note",
+    sourceRecordType: "lead",
+    sourceRecordId: "lead-003",
+    payload: { note: "Seller asked for a later callback window.", followUpDate: "2026-05-06" },
+    syncStatus: "captured_for_owner_review",
+    idempotencyKey: "mobile:offline:lead-003:20260504",
+    actionExecuted: false,
+    providerCalled: false,
+    liveSendAllowed: false,
+    bulkSendAllowed: false,
+    contractExecutionAllowed: false,
+    portalPublishAllowed: false
+  }
+];
+
+export const mobileApprovalAttempts: MobileApprovalAttempt[] = [
+  {
+    id: "mobile-approval-001",
+    approvalType: "seller_follow_up_review",
+    sourceRecordType: "communication_draft",
+    sourceRecordId: "comm-draft-001",
+    approvalStatus: "blocked",
+    safetyStatus: "passed",
+    dryRunReceiptId: "",
+    providerReadinessStatus: "ready",
+    idempotencyKey: "mobile:approval:comm-draft-001:blocked",
+    ownerApprovalRecorded: true,
+    blockedReasons: ["dry_run_receipt_required"],
+    approved: false,
+    liveActionAllowed: false,
+    auditLogged: true
+  },
+  {
+    id: "mobile-approval-002",
+    approvalType: "buyer_response_review",
+    sourceRecordType: "owner_approval",
+    sourceRecordId: "approval-002",
+    approvalStatus: "ready_for_owner_review",
+    safetyStatus: "passed",
+    dryRunReceiptId: "comm-dry-run-001",
+    providerReadinessStatus: "ready",
+    idempotencyKey: "mobile:approval:approval-002:review",
+    ownerApprovalRecorded: true,
+    blockedReasons: [],
+    approved: false,
+    liveActionAllowed: false,
+    auditLogged: true
+  }
+];
+
+export const mobileMoneyActions = [...deals]
+  .sort((first, second) => second.projectedAssignmentFee - first.projectedAssignmentFee)
+  .slice(0, 5);
+export const mobileRiskActions = [...deals]
+  .sort((first, second) => second.riskScore - first.riskScore)
+  .slice(0, 5);
+export const mobileCallQueue = [...leads]
+  .filter((lead) => !doNotContactOutcomes.some((outcome) => outcome.leadId === lead.id))
+  .sort((first, second) => second.opportunityScore - first.opportunityScore)
+  .slice(0, 10);
+export const mobileApprovalQueue = pendingOwnerApprovals.slice(0, 8);
+export const mobileDocumentQueue = documentIntelligenceFiles.slice(0, 6);
+export const mobileBuyerQueue = [...buyers]
+  .sort((first, second) => second.reliabilityScore - first.reliabilityScore)
+  .slice(0, 8);
+export const mobileFieldBriefingCards = [
+  { label: "Money actions", value: String(mobileMoneyActions.length), detail: "Top assignment-fee reviews" },
+  { label: "Risk actions", value: String(mobileRiskActions.length), detail: "Highest review priority" },
+  { label: "Call queue", value: String(mobileCallQueue.length), detail: "Field-call planning only" },
+  { label: "DNC records", value: String(doNotContactOutcomes.length), detail: "Outreach eligibility blocked" }
+];

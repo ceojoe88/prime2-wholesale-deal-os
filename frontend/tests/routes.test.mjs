@@ -172,7 +172,17 @@ const requiredRouteFiles = [
   "src/app/seller-portal/property/page.tsx",
   "src/app/seller-portal/timeline/page.tsx",
   "src/app/seller-portal/documents/page.tsx",
-  "src/app/seller-portal/messages/page.tsx"
+  "src/app/seller-portal/messages/page.tsx",
+  "src/app/mobile/page.tsx",
+  "src/app/mobile/today/page.tsx",
+  "src/app/mobile/calls/page.tsx",
+  "src/app/mobile/leads/[leadId]/page.tsx",
+  "src/app/mobile/deals/[dealId]/page.tsx",
+  "src/app/mobile/approvals/page.tsx",
+  "src/app/mobile/briefing/page.tsx",
+  "src/app/mobile/notes/page.tsx",
+  "src/app/mobile/buyers/page.tsx",
+  "src/app/mobile/documents/page.tsx"
 ];
 
 function walk(dir) {
@@ -498,6 +508,36 @@ test("V27 Prime 2 memory pages expose no unsafe learning controls", () => {
     "guaranteed profit",
     "guaranteed roi",
     "expose internal strategy"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V28 mobile operator pages expose no unsafe field controls", () => {
+  const files = [
+    "src/app/mobile/page.tsx",
+    "src/app/mobile/today/page.tsx",
+    "src/app/mobile/calls/page.tsx",
+    "src/app/mobile/leads/[leadId]/page.tsx",
+    "src/app/mobile/deals/[dealId]/page.tsx",
+    "src/app/mobile/approvals/page.tsx",
+    "src/app/mobile/briefing/page.tsx",
+    "src/app/mobile/notes/page.tsx",
+    "src/app/mobile/buyers/page.tsx",
+    "src/app/mobile/documents/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "guarantee profit",
+    "legal advice",
+    "live send"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

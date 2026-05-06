@@ -2838,3 +2838,64 @@ class PlaybookRecommendation(TimestampMixin, Base):
     draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
     unsupported_claims_blocked: Mapped[bool] = mapped_column(Boolean, default=True)
     portal_exposure_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class MobileOperatorNote(TimestampMixin, Base):
+    __tablename__ = "mobile_operator_notes"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    note_type: Mapped[str] = mapped_column(String(100), default="field_note")
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    body: Mapped[str] = mapped_column(Text, default="")
+    captured_by: Mapped[str] = mapped_column(String(120), default="Owner")
+    offline_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    sync_status: Mapped[str] = mapped_column(String(80), default="synced")
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    safety_status: Mapped[str] = mapped_column(String(80), default="field_capture_only")
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    action_executed: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_guidance_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class MobileOfflineDraft(TimestampMixin, Base):
+    __tablename__ = "mobile_offline_drafts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    draft_type: Mapped[str] = mapped_column(String(100), default="field_note")
+    source_record_type: Mapped[str] = mapped_column(String(100), default="")
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    payload: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    sync_status: Mapped[str] = mapped_column(String(80), default="pending_sync")
+    idempotency_key: Mapped[str] = mapped_column(String(180), unique=True, nullable=False)
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    action_executed: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_called: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_send_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    portal_publish_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class MobileApprovalAttempt(TimestampMixin, Base):
+    __tablename__ = "mobile_approval_attempts"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    approval_type: Mapped[str] = mapped_column(String(120), default="")
+    source_record_type: Mapped[str] = mapped_column(String(120), default="")
+    source_record_id: Mapped[str] = mapped_column(String(120), default="")
+    approval_status: Mapped[str] = mapped_column(String(80), default="blocked")
+    safety_status: Mapped[str] = mapped_column(String(80), default="missing")
+    dry_run_receipt_id: Mapped[str] = mapped_column(String(120), default="")
+    provider_readiness_status: Mapped[str] = mapped_column(String(80), default="missing")
+    idempotency_key: Mapped[str] = mapped_column(String(180), unique=True, nullable=False)
+    owner_approval_recorded: Mapped[bool] = mapped_column(Boolean, default=False)
+    source_record_present: Mapped[bool] = mapped_column(Boolean, default=False)
+    blocked_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    audit_logged: Mapped[bool] = mapped_column(Boolean, default=True)
+    high_risk_action: Mapped[bool] = mapped_column(Boolean, default=True)

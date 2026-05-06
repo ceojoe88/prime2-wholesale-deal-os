@@ -55,6 +55,7 @@ Implemented phases:
 - V25 controlled campaign brain
 - V26 market data enrichment
 - V27 Prime 2 memory and learning layer
+- V28 mobile operator mode
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -133,6 +134,12 @@ V26 uses manual/imported data only. It does not call paid external APIs, invent 
 V27 adds source-cited Prime Memory items, learning signals, scoring weight recommendations, and playbook recommendations. Prime 2 can remember what worked, what failed, which markets and buyers performed, which document issues repeated, and which scripts or campaigns created momentum.
 
 This is deterministic and auditable, not black-box ML. Memory cannot invent facts, weaken compliance, expose internal strategy to portals, auto-apply scoring changes, or turn lessons into unsupported claims.
+
+## V28 Mobile Operator Mode
+
+V28 adds a mobile-first field command surface under `/mobile`. The owner can review top money actions, top risk actions, call queues, approval queues, field briefings, buyers, documents, quick seller notes, buyer response notes, transcript paste placeholders, DNC marks, follow-up dates, and offline-safe draft captures.
+
+Mobile mode is not a shortcut around the operating gates. Mobile notes and offline drafts are review records only; quick approvals still require a source record, safety status, dry-run receipt, provider readiness, owner approval evidence, idempotency, and audit logging. The mobile layer cannot send outreach, execute contracts, publish portals, change terms, submit title packets, or provide legal guidance.
 
 ## Safety Boundaries
 
@@ -223,6 +230,7 @@ Open:
 - Worker runtime: [http://localhost:3000/dashboard/worker](http://localhost:3000/dashboard/worker)
 - Provider readiness: [http://localhost:3000/dashboard/provider-readiness](http://localhost:3000/dashboard/provider-readiness)
 - Call intelligence: [http://localhost:3000/dashboard/call-intelligence](http://localhost:3000/dashboard/call-intelligence)
+- Mobile operator mode: [http://localhost:3000/mobile](http://localhost:3000/mobile)
 - Production readiness: [http://localhost:3000/dashboard/production-readiness](http://localhost:3000/dashboard/production-readiness)
 - Buyer portal demo: [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - Seller portal demo: [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)

@@ -40,6 +40,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Seller call intelligence from manual notes or pasted transcripts, including DNC detection, objections, quality scoring, and draft-only follow-up recommendations
 - Deal document intelligence for classification, metadata extraction, issue flags, review routing, and sanitized evidence links
 - Controlled campaign planning, segmentation, sequence prep, activation gates, stop conditions, and performance tracking
+- Mobile operator mode for field-call queues, quick notes, DNC capture, approvals, buyer checks, document metadata, offline-safe drafts, and field briefings
 
 ## Command Hierarchy
 
@@ -131,7 +132,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V27
+## Phase Map V1-V28
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -214,6 +215,9 @@ Added market profiles, comparable sale records, rent estimates, buyer activity s
 V27 Prime 2 Memory + Learning Layer:
 Added source-cited memory items, learning signals, scoring weight recommendations, and playbook recommendations. Prime 2 can remember winning scripts, weak lead sources, strong buyer profiles, high-spread markets, document issue patterns, campaign patterns, pricing adjustments, and compliance risk patterns. Scoring changes require owner approval, AI context uses approved memory as context only, and memory cannot invent facts, override compliance, expose internal strategy to portals, or create unsupported claims.
 
+V28 Mobile Operator Mode:
+Added `/mobile` field command routes plus a mobile operator API aggregation layer for top money actions, risk actions, call queue, lead/deal detail, approvals, field briefing, buyer snapshots, document metadata, mobile note capture, quick DNC mark, offline draft sync, and quick approval gate checks. Mobile mode captures and routes only; it cannot send outreach, execute contracts, publish portals, change terms, submit title packets, or bypass safety/dry-run/provider/idempotency gates.
+
 ## Local Run Commands
 
 Backend setup:
@@ -238,6 +242,7 @@ npm run dev
 Local URLs:
 
 - Frontend dashboard: http://localhost:3000/dashboard
+- Mobile operator mode: http://localhost:3000/mobile
 - Backend health: http://localhost:8000/health
 - Backend API root examples: http://localhost:8000/api/command-center and http://localhost:8000/api/system/rules
 - Buyer portal demo: http://localhost:3000/buyer-portal
@@ -286,6 +291,10 @@ Recommended route smoke checks:
 - `/dashboard/operator-mode`
 - `/dashboard/production-readiness`
 - `/dashboard/backups`
+- `/mobile`
+- `/mobile/today`
+- `/mobile/calls`
+- `/mobile/approvals`
 - `/buyer-portal`
 - `/seller-portal`
 
