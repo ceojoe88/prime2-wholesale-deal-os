@@ -9,6 +9,7 @@ import {
   doNotContactOutcomes,
   fieldTestingAccuracy,
   firstDealCandidates,
+  leadSourceRoiRecords,
   motivatedFieldOutcomes,
   pendingScoringAdjustments,
   predictionMisses
@@ -45,6 +46,14 @@ export default function FieldTestingPage() {
         <div className="record-list">
           {firstDealCandidates.map((candidate) => (
             <RecordCard key={candidate.id} title={candidate.importRowId ?? candidate.id} meta={`Import confidence ${candidate.importConfidence}`} right={<Pill>{candidate.recommendedNextAction}</Pill>} />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Lead Source ROI Feedback">
+        <div className="grid-three">
+          {leadSourceRoiRecords.map((record) => (
+            <RecordCard key={record.id} title={record.sourceName} meta={`${record.leadsImported} imported / ${record.motivatedSellers} motivated / ${record.notes}`} right={<Pill tone={record.roiConfidence >= 60 ? "green" : "gold"}>{record.roiConfidence}</Pill>} />
           ))}
         </div>
       </Section>

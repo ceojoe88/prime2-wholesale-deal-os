@@ -49,6 +49,8 @@ export const dashboardRoutes = [
   { href: "/dashboard/audit-exports", label: "Audit Exports", icon: "ClipboardList" },
   { href: "/dashboard/provider-readiness", label: "Provider Readiness", icon: "ShieldCheck" },
   { href: "/dashboard/campaigns", label: "Campaign Brain", icon: "Command" },
+  { href: "/dashboard/market-enrichment", label: "Market Enrichment", icon: "MapPinned" },
+  { href: "/dashboard/market-ranking", label: "Market Ranking", icon: "MapPinned" },
   { href: "/dashboard/backups", label: "Backups", icon: "FileCheck2" },
   { href: "/dashboard/offer-conversion", label: "Offer Conversion", icon: "FileCheck2" },
   { href: "/dashboard/negotiations", label: "Negotiations", icon: "ListChecks" },

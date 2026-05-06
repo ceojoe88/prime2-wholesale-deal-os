@@ -9,7 +9,8 @@ import {
   campaignApprovalsNeeded,
   campaignAttemptsBlocked,
   campaignDncExclusions,
-  campaignRuleRecords
+  campaignRuleRecords,
+  marketEnrichmentRanking
 } from "@/lib/demo-data";
 
 export default function CampaignsPage() {
@@ -41,6 +42,14 @@ export default function CampaignsPage() {
         </div>
       </Section>
 
+      <Section title="Market Priority Context">
+        <div className="grid-three">
+          {marketEnrichmentRanking.slice(0, 3).map((market) => (
+            <RecordCard key={market.marketId} title={market.zipCode} meta={`Campaign prep can prioritize this market when audience gates pass. Confidence ${market.confidenceScore}.`} right={<Pill tone={market.marketHeatScore >= 70 ? "green" : "gold"}>{market.marketHeatScore}</Pill>} />
+          ))}
+        </div>
+      </Section>
+
       <Section title="Work Areas">
         <div className="grid-three">
           <RecordCard title="New Draft" meta="Create planning record and preview only" right={<Link href="/dashboard/campaigns/new">Open</Link>} />
@@ -54,4 +63,3 @@ export default function CampaignsPage() {
     </div>
   );
 }
-

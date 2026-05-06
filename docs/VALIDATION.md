@@ -131,6 +131,12 @@ Smoke check:
 - `/dashboard/call-intelligence/objections`
 - `/dashboard/call-intelligence/follow-ups`
 - `/dashboard/call-intelligence/quality`
+- `/dashboard/market-enrichment`
+- `/dashboard/comps`
+- `/dashboard/rent-estimates`
+- `/dashboard/buyer-activity`
+- `/dashboard/lead-source-roi`
+- `/dashboard/market-ranking`
 - `/dashboard/production-readiness`
 - `/dashboard/backups`
 - `/buyer-portal`
@@ -183,6 +189,12 @@ Smoke check:
 - `/api/v1/campaigns/sequences`
 - `/api/v1/campaigns/approvals`
 - `/api/v1/campaigns/performance`
+- `/api/v1/market-enrichment`
+- `/api/v1/market-enrichment/comps`
+- `/api/v1/market-enrichment/rent-estimates`
+- `/api/v1/market-enrichment/buyer-activity`
+- `/api/v1/market-enrichment/lead-source-roi`
+- `/api/v1/market-enrichment/ranking`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -211,6 +223,7 @@ Before any hosted deployment:
 - Call intelligence must remain text-only and analysis-only; no audio recording, live calling, automatic seller response, or term changes.
 - Document intelligence must remain classification/extraction/review routing only; full text must stay out of external surfaces and no document should trigger contract execution, title delivery, or portal publishing.
 - Campaign brain must remain draft/preview/governance-first; DNC and compliance exclusions, owner approval, caps, stop conditions, one-message event modeling, V5/V13/V22 gates, idempotency, and audit must remain required before any controlled live path.
+- Market enrichment must remain manual/import-data only; comp, rent, buyer activity, market heat, and lead source ROI outputs must be evidence-backed estimates with no paid API calls, invented ARV, or guaranteed ROI language.
 - Audit exports must be sanitized.
 - Backup/export records must be metadata-safe unless a future encrypted storage design is added.
 - Legal/title review remains external.

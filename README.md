@@ -53,6 +53,7 @@ Implemented phases:
 - V23 call intelligence layer
 - V24 deal document intelligence
 - V25 controlled campaign brain
+- V26 market data enrichment
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -119,6 +120,12 @@ The layer flags missing fields, price mismatches, weak POF, unclear assignment l
 V25 adds campaign planning and governance for sellers, buyers, stale leads, appointment reminders, POF requests, and internal operator pushes. Campaigns default to draft, segment audiences with DNC/compliance/quality exclusions, prepare safe sequences, require owner approval and daily caps, and pause on replies, DNC, compliance risk, provider readiness failure, owner pause, or max attempts.
 
 This is not a mass outreach engine. Controlled activation is one-recipient/one-message-event based, audited, idempotent, capped, and any live path remains subordinate to V5 communication safety, V13 auto-execution rules/templates, V22 provider readiness, dry-runs, live flags, and owner approval.
+
+## V26 Market Data Enrichment
+
+V26 adds market profiles, comparable sale records, rent estimates, buyer activity snapshots, and lead source ROI records. Prime 2 can rank markets, improve ARV confidence from recent nearby comps, strengthen buyer-demand confidence from POF and velocity evidence, and label source ROI as estimate-only when cost or outcome evidence is incomplete.
+
+V26 uses manual/imported data only. It does not call paid external APIs, invent comps, invent ARV, guarantee ROI, or turn market ranking into automated spend or outreach.
 
 ## Safety Boundaries
 

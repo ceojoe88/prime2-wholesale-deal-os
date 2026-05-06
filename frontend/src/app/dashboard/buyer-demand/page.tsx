@@ -6,9 +6,9 @@ import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
   bestBuyersForHotDeals,
+  buyerActivitySnapshots,
   buyerDemandProfiles,
   buyerReadyDealsFromDemand,
-  distributionDraftsPendingApproval,
   fastCloseBuyerList,
   getBuyer,
   highestDemandZipCodes
@@ -26,7 +26,7 @@ export default function BuyerDemandPage() {
         <MetricCard label="Demand profiles" value={String(buyerDemandProfiles.length)} detail="Active cash buyer intelligence" />
         <MetricCard label="Fast-close buyers" value={String(fastCloseBuyerList.length)} detail="Verified POF and 10 days or faster" />
         <MetricCard label="Buyer-ready deals" value={String(buyerReadyDealsFromDemand.length)} detail="Strong demand and visible deal room" />
-        <MetricCard label="Draft approvals" value={String(distributionDraftsPendingApproval.length)} detail="No live send, owner review needed" />
+        <MetricCard label="Market snapshots" value={String(buyerActivitySnapshots.length)} detail="V26 demand confidence" />
       </div>
 
       <div className="grid-two">
@@ -55,6 +55,14 @@ export default function BuyerDemandPage() {
           </div>
         </Section>
       </div>
+
+      <Section title="Buyer Activity Snapshots">
+        <div className="grid-three">
+          {buyerActivitySnapshots.map((snapshot) => (
+            <RecordCard key={snapshot.id} title={snapshot.marketId} meta={`${snapshot.activeBuyerCount} active buyers / ${snapshot.pofVerifiedBuyerCount} POF verified`} right={<Pill tone={snapshot.demandConfidence >= 70 ? "green" : "gold"}>{snapshot.demandConfidence}</Pill>} />
+          ))}
+        </div>
+      </Section>
 
       <Section title="Buyer Demand Profiles">
         <table className="data-table">

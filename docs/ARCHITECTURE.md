@@ -58,6 +58,8 @@ V24 adds deal document intelligence. It classifies internal deal files, extracts
 
 V25 adds the controlled campaign brain. It segments sellers and buyers, previews audience exclusions, prepares safe sequence steps, gates controlled activation, records stop-condition events, and tracks performance without becoming a mass-send engine. Any live path remains subordinate to V5, V13, and V22 safety/readiness/approval/idempotency controls.
 
+V26 adds market data enrichment. It stores manual/imported market profiles, comparable sale records, rent estimates, buyer activity snapshots, and lead source ROI records so underwriting, buyer demand, forecasting, field testing, campaigns, and operator mode can reference market confidence without paid external API calls or invented numbers.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, backups, lead imports, lead QA, call outcomes, field feedback, and scoring adjustment suggestions.
@@ -77,6 +79,7 @@ V25 adds the controlled campaign brain. It segments sellers and buyers, previews
 - `app/domains/call_intelligence/*`: V23 text-only call intelligence extraction, DNC/legal risk detection, objection drafting, score-delta explanations, follow-up recommendations, AI Gateway allowlist integration, and worker-safe analysis jobs.
 - `app/domains/document_intelligence/*`: V24 document classification, deterministic field extraction, issue flagging, sanitized document responses, review routing, evidence linking, AI Gateway allowlist integration, and hard blocks against legal conclusions, executable contracts, title submission, and portal publishing.
 - `app/domains/campaign_brain/*`: V25 campaign planning, audience segmentation, sequence prep, activation gating, stop-condition handling, performance tracking, route sanitization, and hard blocks against uncontrolled outreach, bulk sending, deceptive scarcity, fake claims, and approval bypass.
+- `app/domains/market_enrichment/*`: V26 market profiles, comps, rent estimates, buyer activity snapshots, lead source ROI records, deterministic heat scoring, ARV confidence, demand confidence, source-quality gates, and sanitizers that label strategy outputs as estimate-only.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -321,6 +324,37 @@ Frontend routes:
 - `/dashboard/campaigns/performance`
 
 Campaign rules store campaign type, audience type, segment definition, approved template IDs, daily caps, per-recipient caps, send windows, cooldowns, stop conditions, DNC/compliance guard state, owner approval, live flag requirements, provider readiness requirements, safety status, and blocked reasons. Audience previews explicitly exclude DNC records, high-risk compliance records, missing consent where relevant, low-quality records, and weak-margin buyer-deal situations. Sequence steps are draft-only and safety-scanned. Activation attempts are idempotent, audit-like records that require owner approval, approved templates, audience preview approval, DNC and compliance guards, caps, stop conditions, one-message event modeling, and V5/V13/V22/provider/live-flag gates if a live path is requested.
+
+## V26 Market Data Enrichment
+
+Backend routes:
+
+- `/api/v1/market-enrichment`
+- `/api/v1/market-enrichment/{marketId}`
+- `/api/v1/market-enrichment/comps`
+- `/api/v1/market-enrichment/rent-estimates`
+- `/api/v1/market-enrichment/buyer-activity`
+- `/api/v1/market-enrichment/lead-source-roi`
+- `/api/v1/market-enrichment/ranking`
+
+Frontend routes:
+
+- `/dashboard/market-enrichment`
+- `/dashboard/market-enrichment/[marketId]`
+- `/dashboard/comps`
+- `/dashboard/comps/[compId]`
+- `/dashboard/rent-estimates`
+- `/dashboard/buyer-activity`
+- `/dashboard/lead-source-roi`
+- `/dashboard/market-ranking`
+
+Market profiles track city, state, zip, county, market type, median estimated value, days on market, buyer demand, investor activity, rental demand, title friction, competition, heat, confidence, and evidence basis.
+
+Comparable sale records track source, sale price, sale date, distance, condition, confidence, and adjustment notes. ARV confidence improves only when recent, nearby, source-backed comps exist; stale or missing comps lower confidence.
+
+Buyer activity snapshots track active buyers, verified POF buyers, fast-close buyers, average max price, response velocity, recent interest, and demand confidence. Lead source ROI records track imported leads, QA pass count, calls, motivated sellers, offer requests, contract-ready count, projected and verified assignment fees, cost placeholders, evidence basis, and confidence.
+
+V26 never invents comps, ARV, repairs, ROI, buyer demand, or profit claims, and it does not call paid external market APIs.
 
 ## V2 Buyer Portal
 

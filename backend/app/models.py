@@ -2675,3 +2675,95 @@ class CampaignPerformanceRecord(TimestampMixin, Base):
     roi_claims_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
     guaranteed_profit_language_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
     bulk_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class MarketProfile(TimestampMixin, Base):
+    __tablename__ = "market_profiles"
+
+    market_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    city: Mapped[str] = mapped_column(String(120), nullable=False)
+    state: Mapped[str] = mapped_column(String(40), nullable=False)
+    zip_code: Mapped[str] = mapped_column(String(20), nullable=False)
+    county: Mapped[str] = mapped_column(String(120), default="")
+    market_type: Mapped[str] = mapped_column(String(80), default="unknown")
+    median_estimated_value: Mapped[int] = mapped_column(Integer, default=0)
+    average_days_on_market: Mapped[int] = mapped_column(Integer, default=0)
+    buyer_demand_score: Mapped[float] = mapped_column(Float, default=0)
+    investor_activity_score: Mapped[float] = mapped_column(Float, default=0)
+    rental_demand_score: Mapped[float] = mapped_column(Float, default=0)
+    title_friction_score: Mapped[float] = mapped_column(Float, default=0)
+    competition_score: Mapped[float] = mapped_column(Float, default=0)
+    market_heat_score: Mapped[float] = mapped_column(Float, default=0)
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    evidence_basis: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class ComparableSaleRecord(TimestampMixin, Base):
+    __tablename__ = "comparable_sale_records"
+
+    comp_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    deal_id: Mapped[str | None] = mapped_column(ForeignKey("deals.id"), nullable=True)
+    market_id: Mapped[str] = mapped_column(ForeignKey("market_profiles.market_id"), nullable=False)
+    address_summary: Mapped[str] = mapped_column(String(220), default="")
+    property_type: Mapped[str] = mapped_column(String(80), default="")
+    beds: Mapped[int] = mapped_column(Integer, default=0)
+    baths: Mapped[float] = mapped_column(Float, default=0)
+    sqft: Mapped[int] = mapped_column(Integer, default=0)
+    sale_price: Mapped[int] = mapped_column(Integer, default=0)
+    sale_date: Mapped[str] = mapped_column(String(40), default="")
+    distance_miles: Mapped[float] = mapped_column(Float, default=0)
+    condition_notes: Mapped[str] = mapped_column(Text, default="")
+    source: Mapped[str] = mapped_column(String(120), default="manual")
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    adjustment_notes: Mapped[str] = mapped_column(Text, default="")
+
+
+class RentEstimateRecord(TimestampMixin, Base):
+    __tablename__ = "rent_estimate_records"
+
+    rent_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    market_id: Mapped[str] = mapped_column(ForeignKey("market_profiles.market_id"), nullable=False)
+    property_type: Mapped[str] = mapped_column(String(80), default="")
+    beds: Mapped[int] = mapped_column(Integer, default=0)
+    baths: Mapped[float] = mapped_column(Float, default=0)
+    estimated_rent: Mapped[int] = mapped_column(Integer, default=0)
+    rent_range_low: Mapped[int] = mapped_column(Integer, default=0)
+    rent_range_high: Mapped[int] = mapped_column(Integer, default=0)
+    source: Mapped[str] = mapped_column(String(120), default="manual")
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+
+
+class BuyerActivitySnapshot(TimestampMixin, Base):
+    __tablename__ = "buyer_activity_snapshots"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    market_id: Mapped[str] = mapped_column(ForeignKey("market_profiles.market_id"), nullable=False)
+    active_buyer_count: Mapped[int] = mapped_column(Integer, default=0)
+    pof_verified_buyer_count: Mapped[int] = mapped_column(Integer, default=0)
+    fast_close_buyer_count: Mapped[int] = mapped_column(Integer, default=0)
+    average_buyer_max_price: Mapped[int] = mapped_column(Integer, default=0)
+    buyer_response_velocity: Mapped[float] = mapped_column(Float, default=0)
+    recent_interest_count: Mapped[int] = mapped_column(Integer, default=0)
+    demand_confidence: Mapped[float] = mapped_column(Float, default=0)
+
+
+class LeadSourceROIRecord(TimestampMixin, Base):
+    __tablename__ = "lead_source_roi_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    source_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    market_id: Mapped[str] = mapped_column(ForeignKey("market_profiles.market_id"), nullable=False)
+    leads_imported: Mapped[int] = mapped_column(Integer, default=0)
+    qa_passed: Mapped[int] = mapped_column(Integer, default=0)
+    calls_made: Mapped[int] = mapped_column(Integer, default=0)
+    motivated_sellers: Mapped[int] = mapped_column(Integer, default=0)
+    offers_requested: Mapped[int] = mapped_column(Integer, default=0)
+    contract_ready_count: Mapped[int] = mapped_column(Integer, default=0)
+    projected_assignment_fees: Mapped[int] = mapped_column(Integer, default=0)
+    verified_assignment_fees: Mapped[int] = mapped_column(Integer, default=0)
+    cost_placeholder: Mapped[int] = mapped_column(Integer, default=0)
+    roi_confidence: Mapped[float] = mapped_column(Float, default=0)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    evidence_basis: Mapped[list[str]] = mapped_column(JSON, default=list)
+    estimate_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    guaranteed_roi_allowed: Mapped[bool] = mapped_column(Boolean, default=False)

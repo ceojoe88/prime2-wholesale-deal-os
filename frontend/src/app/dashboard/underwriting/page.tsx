@@ -1,7 +1,8 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
+import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
-import { deals, formatCurrency, getLead } from "@/lib/demo-data";
+import { arvConfidenceByDeal, deals, formatCurrency, getLead } from "@/lib/demo-data";
 
 export default function UnderwritingPage() {
   return (
@@ -38,6 +39,13 @@ export default function UnderwritingPage() {
             ))}
           </tbody>
         </table>
+      </Section>
+      <Section title="ARV Confidence From Comps">
+        <div className="grid-three">
+          {arvConfidenceByDeal.slice(0, 6).map((record) => (
+            <RecordCard key={record.dealId} title={record.dealId} meta={`${record.compCount} comp records / ${record.marketId}`} right={<Pill tone={record.arvConfidence >= 75 ? "green" : "gold"}>{record.arvConfidence}</Pill>} />
+          ))}
+        </div>
       </Section>
     </div>
   );

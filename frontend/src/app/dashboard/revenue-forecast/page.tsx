@@ -8,6 +8,7 @@ import {
   forecastSafetyCards,
   formatCurrency,
   likely10kDealProbabilities,
+  marketEnrichmentRanking,
   pipelineProbabilityAdjustedRevenue,
   pipelineProjectedMonthlyRevenue,
   pipelineRevenueAtRisk,
@@ -34,6 +35,14 @@ export default function RevenueForecastPage() {
         <div className="grid-three">
           {forecastSafetyCards.map((card) => (
             <RecordCard key={card.label} title={card.label} meta={card.detail} right={<Pill tone={card.label === "Revenue at risk" ? "gold" : "green"}>{card.value}</Pill>} />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Market Confidence Basis">
+        <div className="grid-three">
+          {marketEnrichmentRanking.slice(0, 3).map((market) => (
+            <RecordCard key={market.marketId} title={market.zipCode} meta={`${market.city} / confidence ${market.confidenceScore} / heat ${market.marketHeatScore}`} right={<Pill tone={market.confidenceScore >= 70 ? "green" : "gold"}>estimate</Pill>} />
           ))}
         </div>
       </Section>

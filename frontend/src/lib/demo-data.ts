@@ -3964,6 +3964,133 @@ export const campaignPerformanceRecords: CampaignPerformanceRecord[] = [
   { id: "campaign-performance-002", campaignId: "campaign-002", recipientsQueued: 1, messagesPrepared: 1, dryRunsPassed: 1, approvalsPending: 0, attemptsBlocked: 0, responsesReceived: 0, dncEvents: 0, conversionsToCall: 0, conversionsToAppointment: 0, conversionsToInterest: 1, campaignHealthScore: 82, roiClaimsAllowed: false, guaranteedProfitLanguageAllowed: false, bulkBlastAllowed: false }
 ];
 
+export type MarketProfile = {
+  marketId: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  county: string;
+  marketType: string;
+  medianEstimatedValue: number;
+  averageDaysOnMarket: number;
+  buyerDemandScore: number;
+  investorActivityScore: number;
+  rentalDemandScore: number;
+  titleFrictionScore: number;
+  competitionScore: number;
+  marketHeatScore: number;
+  confidenceScore: number;
+  evidenceBasis: string[];
+  estimateOnly: true;
+  guaranteedRoiAllowed: false;
+};
+
+export type ComparableSaleRecord = {
+  compId: string;
+  dealId: string | null;
+  marketId: string;
+  addressSummary: string;
+  propertyType: string;
+  beds: number;
+  baths: number;
+  sqft: number;
+  salePrice: number;
+  saleDate: string;
+  distanceMiles: number;
+  conditionNotes: string;
+  source: string;
+  confidenceScore: number;
+  adjustmentNotes: string;
+};
+
+export type RentEstimateRecord = {
+  rentId: string;
+  marketId: string;
+  propertyType: string;
+  beds: number;
+  baths: number;
+  estimatedRent: number;
+  rentRangeLow: number;
+  rentRangeHigh: number;
+  source: string;
+  confidenceScore: number;
+};
+
+export type BuyerActivitySnapshot = {
+  id: string;
+  marketId: string;
+  activeBuyerCount: number;
+  pofVerifiedBuyerCount: number;
+  fastCloseBuyerCount: number;
+  averageBuyerMaxPrice: number;
+  buyerResponseVelocity: number;
+  recentInterestCount: number;
+  demandConfidence: number;
+};
+
+export type LeadSourceRoiRecord = {
+  id: string;
+  sourceName: string;
+  marketId: string;
+  leadsImported: number;
+  qaPassed: number;
+  callsMade: number;
+  motivatedSellers: number;
+  offersRequested: number;
+  contractReadyCount: number;
+  projectedAssignmentFees: number;
+  verifiedAssignmentFees: number;
+  costPlaceholder: number;
+  roiConfidence: number;
+  notes: string;
+  evidenceBasis: string[];
+  estimateOnly: true;
+  guaranteedRoiAllowed: false;
+};
+
+export const marketProfiles: MarketProfile[] = [
+  { marketId: "market-75216", city: "Dallas", state: "TX", zipCode: "75216", county: "Dallas County", marketType: "investor-heavy infill", medianEstimatedValue: 214000, averageDaysOnMarket: 28, buyerDemandScore: 86, investorActivityScore: 88, rentalDemandScore: 79, titleFrictionScore: 28, competitionScore: 62, marketHeatScore: 80, confidenceScore: 82, evidenceBasis: ["lead-001", "deal-001", "buyer-priority-001", "comp-75216-001"], estimateOnly: true, guaranteedRoiAllowed: false },
+  { marketId: "market-75208", city: "Dallas", state: "TX", zipCode: "75208", county: "Dallas County", marketType: "mixed investor and retail", medianEstimatedValue: 285000, averageDaysOnMarket: 34, buyerDemandScore: 78, investorActivityScore: 74, rentalDemandScore: 82, titleFrictionScore: 35, competitionScore: 70, marketHeatScore: 65, confidenceScore: 56, evidenceBasis: ["lead-006", "lead-008", "deal-008"], estimateOnly: true, guaranteedRoiAllowed: false },
+  { marketId: "market-76104", city: "Fort Worth", state: "TX", zipCode: "76104", county: "Tarrant County", marketType: "field-test market", medianEstimatedValue: 162000, averageDaysOnMarket: 42, buyerDemandScore: 61, investorActivityScore: 67, rentalDemandScore: 71, titleFrictionScore: 46, competitionScore: 58, marketHeatScore: 52, confidenceScore: 41, evidenceBasis: ["lead-007", "lead-015", "lead-021"], estimateOnly: true, guaranteedRoiAllowed: false }
+];
+
+export const comparableSaleRecords: ComparableSaleRecord[] = [
+  { compId: "comp-75216-001", dealId: "deal-001", marketId: "market-75216", addressSummary: "Bonnie View nearby renovated 3/2", propertyType: "single_family", beds: 3, baths: 2, sqft: 1460, salePrice: 272000, saleDate: "2026-03-18", distanceMiles: 0.4, conditionNotes: "Renovated retail sale; supports ARV range but not exact value.", source: "manual_comp_log", confidenceScore: 88, adjustmentNotes: "Adjust down for smaller subject finish level." },
+  { compId: "comp-75216-002", dealId: "deal-002", marketId: "market-75216", addressSummary: "Ann Arbor investor resale", propertyType: "single_family", beds: 3, baths: 1.5, sqft: 1320, salePrice: 218000, saleDate: "2026-02-09", distanceMiles: 0.8, conditionNotes: "Comparable size with lighter updates.", source: "manual_comp_log", confidenceScore: 82, adjustmentNotes: "Supports deal-002 conservative ARV." },
+  { compId: "comp-75216-003", dealId: "deal-005", marketId: "market-75216", addressSummary: "Stella duplex sale", propertyType: "duplex", beds: 4, baths: 2, sqft: 2240, salePrice: 430000, saleDate: "2025-12-14", distanceMiles: 1.3, conditionNotes: "Duplex comp with rent-backed buyer demand.", source: "manual_comp_log", confidenceScore: 74, adjustmentNotes: "Use range, not a single-point ARV." },
+  { compId: "comp-75208-001", dealId: "deal-008", marketId: "market-75208", addressSummary: "West Dallas renovated bungalow", propertyType: "single_family", beds: 3, baths: 2, sqft: 1510, salePrice: 305000, saleDate: "2024-08-22", distanceMiles: 2.4, conditionNotes: "Older sale and farther distance; lowers confidence.", source: "manual_comp_log", confidenceScore: 58, adjustmentNotes: "Stale comp penalty applies." },
+  { compId: "comp-76104-001", dealId: "deal-007", marketId: "market-76104", addressSummary: "Near Southside smaller resale", propertyType: "single_family", beds: 2, baths: 1, sqft: 980, salePrice: 148000, saleDate: "2023-05-11", distanceMiles: 3.1, conditionNotes: "Stale and distance-heavy; research more before ARV lift.", source: "manual_comp_log", confidenceScore: 42, adjustmentNotes: "Confidence intentionally reduced." }
+];
+
+export const rentEstimateRecords: RentEstimateRecord[] = [
+  { rentId: "rent-75216-001", marketId: "market-75216", propertyType: "single_family", beds: 3, baths: 2, estimatedRent: 1850, rentRangeLow: 1700, rentRangeHigh: 1975, source: "manual_rent_survey", confidenceScore: 78 },
+  { rentId: "rent-75216-002", marketId: "market-75216", propertyType: "duplex", beds: 2, baths: 1, estimatedRent: 1425, rentRangeLow: 1325, rentRangeHigh: 1550, source: "manual_rent_survey", confidenceScore: 72 },
+  { rentId: "rent-75208-001", marketId: "market-75208", propertyType: "single_family", beds: 3, baths: 2, estimatedRent: 2150, rentRangeLow: 1950, rentRangeHigh: 2350, source: "manual_rent_survey", confidenceScore: 66 }
+];
+
+export const buyerActivitySnapshots: BuyerActivitySnapshot[] = [
+  { id: "buyer-activity-75216", marketId: "market-75216", activeBuyerCount: 7, pofVerifiedBuyerCount: 4, fastCloseBuyerCount: 3, averageBuyerMaxPrice: 238000, buyerResponseVelocity: 82, recentInterestCount: 5, demandConfidence: 78 },
+  { id: "buyer-activity-75208", marketId: "market-75208", activeBuyerCount: 4, pofVerifiedBuyerCount: 2, fastCloseBuyerCount: 1, averageBuyerMaxPrice: 255000, buyerResponseVelocity: 61, recentInterestCount: 2, demandConfidence: 56 },
+  { id: "buyer-activity-76104", marketId: "market-76104", activeBuyerCount: 2, pofVerifiedBuyerCount: 1, fastCloseBuyerCount: 0, averageBuyerMaxPrice: 155000, buyerResponseVelocity: 42, recentInterestCount: 1, demandConfidence: 39 }
+];
+
+export const leadSourceRoiRecords: LeadSourceRoiRecord[] = [
+  { id: "lead-source-roi-001", sourceName: "vacant", marketId: "market-75216", leadsImported: 8, qaPassed: 7, callsMade: 5, motivatedSellers: 3, offersRequested: 2, contractReadyCount: 1, projectedAssignmentFees: 30000, verifiedAssignmentFees: 0, costPlaceholder: 0, roiConfidence: 65, notes: "Cost missing, so ROI remains estimate-only; source quality is evidence-backed.", evidenceBasis: ["lead-import-001", "call-outcome-001", "deal-001"], estimateOnly: true, guaranteedRoiAllowed: false },
+  { id: "lead-source-roi-002", sourceName: "probate", marketId: "market-75208", leadsImported: 4, qaPassed: 2, callsMade: 2, motivatedSellers: 1, offersRequested: 1, contractReadyCount: 0, projectedAssignmentFees: 12000, verifiedAssignmentFees: 0, costPlaceholder: 0, roiConfidence: 36, notes: "Authority and compliance friction reduce confidence.", evidenceBasis: ["lead-008", "call-intel-002"], estimateOnly: true, guaranteedRoiAllowed: false },
+  { id: "lead-source-roi-003", sourceName: "pre-foreclosure", marketId: "market-76104", leadsImported: 3, qaPassed: 2, callsMade: 1, motivatedSellers: 1, offersRequested: 0, contractReadyCount: 0, projectedAssignmentFees: 0, verifiedAssignmentFees: 0, costPlaceholder: 0, roiConfidence: 28, notes: "Early field-test market; needs more evidence before spend recommendation.", evidenceBasis: ["lead-007", "lead-021"], estimateOnly: true, guaranteedRoiAllowed: false }
+];
+
+export const marketEnrichmentRanking = [...marketProfiles].sort((a, b) => b.marketHeatScore - a.marketHeatScore);
+export const weakMarketWarnings = marketProfiles.filter((market) => market.confidenceScore < 55 || market.marketHeatScore < 55);
+export const topMarketProfiles = marketEnrichmentRanking.slice(0, 2);
+export const arvConfidenceByDeal = deals.map((deal) => {
+  const lead = getLead(deal.leadId);
+  const market = marketProfiles.find((item) => item.zipCode === lead?.zipCode);
+  const compCount = comparableSaleRecords.filter((comp) => comp.marketId === market?.marketId).length;
+  const arvConfidence = Math.min(95, Math.round((market?.confidenceScore ?? 35) + compCount * 5));
+  return { dealId: deal.id, marketId: market?.marketId ?? "unmapped", compCount, arvConfidence };
+});
+
 export const predictionFeedbackRecords: PredictionFeedbackRecord[] = [
   {
     id: "feedback-001",

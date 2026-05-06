@@ -131,7 +131,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V25
+## Phase Map V1-V26
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -207,6 +207,9 @@ Added internal document intelligence files, classification results, extracted do
 
 V25 Controlled Campaign Brain:
 Added campaign rule records, audience previews, sequence steps, activation attempts, stop events, and performance records. Campaigns default to draft, exclude DNC/high-risk records, require approved templates, owner approval, caps, stop conditions, audience approval, V5/V13/V22 gates for any live path, one-recipient events, idempotency, and audit. It cannot run uncontrolled outreach, mass sends, deceptive scarcity, fake claims, or approval bypass.
+
+V26 Market Data Enrichment:
+Added market profiles, comparable sale records, rent estimates, buyer activity snapshots, and lead source ROI records. Prime 2 can improve ARV confidence from comp count, recency, distance, and market confidence; improve buyer-demand confidence from POF strength, fast-close depth, response velocity, and recent interest; and rank markets with evidence-backed heat scoring. V26 is manual/import-data only and cannot invent comps, invent ARV, guarantee ROI, call paid external APIs, or auto-scale spend/outreach.
 
 ## Local Run Commands
 

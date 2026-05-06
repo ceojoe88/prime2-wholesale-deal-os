@@ -134,6 +134,14 @@ const requiredRouteFiles = [
   "src/app/dashboard/campaigns/sequences/page.tsx",
   "src/app/dashboard/campaigns/approvals/page.tsx",
   "src/app/dashboard/campaigns/performance/page.tsx",
+  "src/app/dashboard/market-enrichment/page.tsx",
+  "src/app/dashboard/market-enrichment/[marketId]/page.tsx",
+  "src/app/dashboard/comps/page.tsx",
+  "src/app/dashboard/comps/[compId]/page.tsx",
+  "src/app/dashboard/rent-estimates/page.tsx",
+  "src/app/dashboard/buyer-activity/page.tsx",
+  "src/app/dashboard/lead-source-roi/page.tsx",
+  "src/app/dashboard/market-ranking/page.tsx",
   "src/app/dashboard/backups/page.tsx",
   "src/app/dashboard/offer-conversion/page.tsx",
   "src/app/dashboard/offer-conversion/[dealId]/page.tsx",
@@ -427,6 +435,35 @@ test("V25 campaign brain pages expose no bulk or uncontrolled send controls", ()
     "publish automatically",
     "guaranteed profit",
     "this will sell today"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V26 market enrichment pages expose no unsupported market claims", () => {
+  const files = [
+    "src/app/dashboard/market-enrichment/page.tsx",
+    "src/app/dashboard/market-enrichment/[marketId]/page.tsx",
+    "src/app/dashboard/comps/page.tsx",
+    "src/app/dashboard/comps/[compId]/page.tsx",
+    "src/app/dashboard/rent-estimates/page.tsx",
+    "src/app/dashboard/buyer-activity/page.tsx",
+    "src/app/dashboard/lead-source-roi/page.tsx",
+    "src/app/dashboard/market-ranking/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "bulk blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "guaranteed roi",
+    "guaranteed profit",
+    "fake comps",
+    "paid api"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

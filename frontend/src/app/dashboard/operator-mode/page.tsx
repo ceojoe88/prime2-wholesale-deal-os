@@ -12,11 +12,13 @@ import {
   firstDealCandidates,
   latestOperatorDailyReport,
   lowConfidenceQaReviews,
+  marketEnrichmentRanking,
   operatorExceptionsOpen,
   operatorHardBoundaryCards,
   predictionMisses,
   pendingOwnerApprovals,
-  semiAutonomousCommandLoopRuns
+  semiAutonomousCommandLoopRuns,
+  weakMarketWarnings
 } from "@/lib/demo-data";
 
 export default function OperatorModePage() {
@@ -40,6 +42,15 @@ export default function OperatorModePage() {
           <RecordCard title="Real lead QA" meta={`${lowConfidenceQaReviews.length} low-confidence or blocked records need review`} right={<Pill tone="gold">review</Pill>} />
           <RecordCard title="First-deal candidates" meta={`${firstDealCandidates.length} imported records are ready for owner-reviewed field work`} right={<Pill tone="green">queue</Pill>} />
           <RecordCard title="Prediction accuracy" meta={`${predictionMisses.length} misses need scoring review`} right={<Pill tone={predictionMisses.length ? "gold" : "green"}>{fieldTestingAccuracy}%</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="Market Intelligence Queue">
+        <div className="grid-three">
+          {marketEnrichmentRanking.slice(0, 2).map((market) => (
+            <RecordCard key={market.marketId} title={`Top market ${market.zipCode}`} meta={`Heat ${market.marketHeatScore} with confidence ${market.confidenceScore}`} right={<Pill tone="green">focus</Pill>} />
+          ))}
+          <RecordCard title="Weak-market warnings" meta={`${weakMarketWarnings.length} market records need more evidence before scaling`} right={<Pill tone={weakMarketWarnings.length ? "gold" : "green"}>review</Pill>} />
         </div>
       </Section>
 

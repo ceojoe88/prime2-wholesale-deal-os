@@ -9,6 +9,11 @@ from app.domain.autonomy import (
     sync_automation_rule,
 )
 from app.domains.ai_gateway.ai_safety import scan_ai_text
+from app.domains.market_enrichment.scoring import (
+    buyer_activity_demand_confidence,
+    lead_source_roi_gate,
+    sync_market_profile,
+)
 from app.domains.provider_readiness.readiness import provider_readiness
 from app.domains.worker_runtime.worker import worker_safety_guard
 from app.domain.auto_execution import (
@@ -95,6 +100,7 @@ from app.models import (
     BackupExportRecord,
     Buyer,
     BuyerAccelerationRecord,
+    BuyerActivitySnapshot,
     BuyerDealPriority,
     BuyerDealPublication,
     BuyerDemandProfile,
@@ -119,6 +125,7 @@ from app.models import (
     CommunicationDraft,
     CommunicationDryRunReceipt,
     CommunicationSendAttempt,
+    ComparableSaleRecord,
     ContractControl,
     ContractReadyState,
     DailyCommandBriefing,
@@ -143,7 +150,9 @@ from app.models import (
     LeadQualityReview,
     LeadSpendPlan,
     Lead,
+    LeadSourceROIRecord,
     MarketScalingScore,
+    MarketProfile,
     NegotiationRecord,
     OperatorExceptionRecord,
     OperatorModeSetting,
@@ -159,6 +168,7 @@ from app.models import (
     ProviderWebhookEvent,
     ReviewPacketPrep,
     RevenueForecastRecord,
+    RentEstimateRecord,
     SellerInteraction,
     SellerSignalExtraction,
     SellerOfferPublication,
@@ -7580,6 +7590,296 @@ def build_campaign_performance_records() -> list[dict[str, object]]:
     ]
 
 
+def build_market_profile_records() -> list[dict[str, object]]:
+    return [
+        {
+            "market_id": "market-75216",
+            "city": "Dallas",
+            "state": "TX",
+            "zip_code": "75216",
+            "county": "Dallas County",
+            "market_type": "investor-heavy infill",
+            "median_estimated_value": 214000,
+            "average_days_on_market": 28,
+            "buyer_demand_score": 86,
+            "investor_activity_score": 88,
+            "rental_demand_score": 79,
+            "title_friction_score": 28,
+            "competition_score": 62,
+            "market_heat_score": 0,
+            "confidence_score": 76,
+            "evidence_basis": ["lead-001", "deal-001", "buyer-priority-001", "comp-75216-001"],
+        },
+        {
+            "market_id": "market-75208",
+            "city": "Dallas",
+            "state": "TX",
+            "zip_code": "75208",
+            "county": "Dallas County",
+            "market_type": "mixed investor and retail",
+            "median_estimated_value": 285000,
+            "average_days_on_market": 34,
+            "buyer_demand_score": 78,
+            "investor_activity_score": 74,
+            "rental_demand_score": 82,
+            "title_friction_score": 35,
+            "competition_score": 70,
+            "market_heat_score": 0,
+            "confidence_score": 64,
+            "evidence_basis": ["lead-006", "lead-008", "deal-008"],
+        },
+        {
+            "market_id": "market-76104",
+            "city": "Fort Worth",
+            "state": "TX",
+            "zip_code": "76104",
+            "county": "Tarrant County",
+            "market_type": "field-test market",
+            "median_estimated_value": 162000,
+            "average_days_on_market": 42,
+            "buyer_demand_score": 61,
+            "investor_activity_score": 67,
+            "rental_demand_score": 71,
+            "title_friction_score": 46,
+            "competition_score": 58,
+            "market_heat_score": 0,
+            "confidence_score": 48,
+            "evidence_basis": ["lead-007", "lead-015", "lead-021"],
+        },
+    ]
+
+
+def build_comparable_sale_records() -> list[dict[str, object]]:
+    return [
+        {
+            "comp_id": "comp-75216-001",
+            "deal_id": "deal-001",
+            "market_id": "market-75216",
+            "address_summary": "Bonnie View nearby renovated 3/2",
+            "property_type": "single_family",
+            "beds": 3,
+            "baths": 2,
+            "sqft": 1460,
+            "sale_price": 272000,
+            "sale_date": "2026-03-18",
+            "distance_miles": 0.4,
+            "condition_notes": "Renovated retail sale; supports ARV range but not exact value.",
+            "source": "manual_comp_log",
+            "confidence_score": 88,
+            "adjustment_notes": "Adjust down for smaller subject finish level.",
+        },
+        {
+            "comp_id": "comp-75216-002",
+            "deal_id": "deal-002",
+            "market_id": "market-75216",
+            "address_summary": "Ann Arbor investor resale",
+            "property_type": "single_family",
+            "beds": 3,
+            "baths": 1.5,
+            "sqft": 1320,
+            "sale_price": 218000,
+            "sale_date": "2026-02-09",
+            "distance_miles": 0.8,
+            "condition_notes": "Comparable size with lighter updates.",
+            "source": "manual_comp_log",
+            "confidence_score": 82,
+            "adjustment_notes": "Supports deal-002 conservative ARV.",
+        },
+        {
+            "comp_id": "comp-75216-003",
+            "deal_id": "deal-005",
+            "market_id": "market-75216",
+            "address_summary": "Stella duplex sale",
+            "property_type": "duplex",
+            "beds": 4,
+            "baths": 2,
+            "sqft": 2240,
+            "sale_price": 430000,
+            "sale_date": "2025-12-14",
+            "distance_miles": 1.3,
+            "condition_notes": "Duplex comp with rent-backed buyer demand.",
+            "source": "manual_comp_log",
+            "confidence_score": 74,
+            "adjustment_notes": "Use range, not a single-point ARV.",
+        },
+        {
+            "comp_id": "comp-75208-001",
+            "deal_id": "deal-008",
+            "market_id": "market-75208",
+            "address_summary": "West Dallas renovated bungalow",
+            "property_type": "single_family",
+            "beds": 3,
+            "baths": 2,
+            "sqft": 1510,
+            "sale_price": 305000,
+            "sale_date": "2024-08-22",
+            "distance_miles": 2.4,
+            "condition_notes": "Older sale and farther distance; lowers confidence.",
+            "source": "manual_comp_log",
+            "confidence_score": 58,
+            "adjustment_notes": "Stale comp penalty applies.",
+        },
+        {
+            "comp_id": "comp-76104-001",
+            "deal_id": "deal-007",
+            "market_id": "market-76104",
+            "address_summary": "Near Southside smaller resale",
+            "property_type": "single_family",
+            "beds": 2,
+            "baths": 1,
+            "sqft": 980,
+            "sale_price": 148000,
+            "sale_date": "2023-05-11",
+            "distance_miles": 3.1,
+            "condition_notes": "Stale and distance-heavy; research more before ARV lift.",
+            "source": "manual_comp_log",
+            "confidence_score": 42,
+            "adjustment_notes": "Confidence intentionally reduced.",
+        },
+    ]
+
+
+def build_rent_estimate_records() -> list[dict[str, object]]:
+    return [
+        {
+            "rent_id": "rent-75216-001",
+            "market_id": "market-75216",
+            "property_type": "single_family",
+            "beds": 3,
+            "baths": 2,
+            "estimated_rent": 1850,
+            "rent_range_low": 1700,
+            "rent_range_high": 1975,
+            "source": "manual_rent_survey",
+            "confidence_score": 78,
+        },
+        {
+            "rent_id": "rent-75216-002",
+            "market_id": "market-75216",
+            "property_type": "duplex",
+            "beds": 2,
+            "baths": 1,
+            "estimated_rent": 1425,
+            "rent_range_low": 1325,
+            "rent_range_high": 1550,
+            "source": "manual_rent_survey",
+            "confidence_score": 72,
+        },
+        {
+            "rent_id": "rent-75208-001",
+            "market_id": "market-75208",
+            "property_type": "single_family",
+            "beds": 3,
+            "baths": 2,
+            "estimated_rent": 2150,
+            "rent_range_low": 1950,
+            "rent_range_high": 2350,
+            "source": "manual_rent_survey",
+            "confidence_score": 66,
+        },
+    ]
+
+
+def build_buyer_activity_snapshot_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "buyer-activity-75216",
+            "market_id": "market-75216",
+            "active_buyer_count": 7,
+            "pof_verified_buyer_count": 4,
+            "fast_close_buyer_count": 3,
+            "average_buyer_max_price": 238000,
+            "buyer_response_velocity": 82,
+            "recent_interest_count": 5,
+            "demand_confidence": 0,
+        },
+        {
+            "id": "buyer-activity-75208",
+            "market_id": "market-75208",
+            "active_buyer_count": 4,
+            "pof_verified_buyer_count": 2,
+            "fast_close_buyer_count": 1,
+            "average_buyer_max_price": 255000,
+            "buyer_response_velocity": 61,
+            "recent_interest_count": 2,
+            "demand_confidence": 0,
+        },
+        {
+            "id": "buyer-activity-76104",
+            "market_id": "market-76104",
+            "active_buyer_count": 2,
+            "pof_verified_buyer_count": 1,
+            "fast_close_buyer_count": 0,
+            "average_buyer_max_price": 155000,
+            "buyer_response_velocity": 42,
+            "recent_interest_count": 1,
+            "demand_confidence": 0,
+        },
+    ]
+
+
+def build_lead_source_roi_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "lead-source-roi-001",
+            "source_name": "vacant",
+            "market_id": "market-75216",
+            "leads_imported": 8,
+            "qa_passed": 7,
+            "calls_made": 5,
+            "motivated_sellers": 3,
+            "offers_requested": 2,
+            "contract_ready_count": 1,
+            "projected_assignment_fees": 30000,
+            "verified_assignment_fees": 0,
+            "cost_placeholder": 0,
+            "roi_confidence": 0,
+            "notes": "Cost missing, so ROI remains estimate-only; source quality is evidence-backed.",
+            "evidence_basis": ["lead-import-001", "call-outcome-001", "deal-001"],
+            "estimate_only": True,
+            "guaranteed_roi_allowed": False,
+        },
+        {
+            "id": "lead-source-roi-002",
+            "source_name": "probate",
+            "market_id": "market-75208",
+            "leads_imported": 4,
+            "qa_passed": 2,
+            "calls_made": 2,
+            "motivated_sellers": 1,
+            "offers_requested": 1,
+            "contract_ready_count": 0,
+            "projected_assignment_fees": 12000,
+            "verified_assignment_fees": 0,
+            "cost_placeholder": 0,
+            "roi_confidence": 0,
+            "notes": "Authority and compliance friction reduce confidence.",
+            "evidence_basis": ["lead-008", "call-intel-002"],
+            "estimate_only": True,
+            "guaranteed_roi_allowed": False,
+        },
+        {
+            "id": "lead-source-roi-003",
+            "source_name": "pre-foreclosure",
+            "market_id": "market-76104",
+            "leads_imported": 3,
+            "qa_passed": 2,
+            "calls_made": 1,
+            "motivated_sellers": 1,
+            "offers_requested": 0,
+            "contract_ready_count": 0,
+            "projected_assignment_fees": 0,
+            "verified_assignment_fees": 0,
+            "cost_placeholder": 0,
+            "roi_confidence": 0,
+            "notes": "Early field-test market; needs more evidence before spend recommendation.",
+            "evidence_basis": ["lead-007", "lead-021"],
+            "estimate_only": True,
+            "guaranteed_roi_allowed": False,
+        },
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -7685,6 +7985,11 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "campaign_activation_attempts": build_campaign_activation_attempt_records(),
         "campaign_stop_events": build_campaign_stop_event_records(),
         "campaign_performance_records": build_campaign_performance_records(),
+        "market_profiles": build_market_profile_records(),
+        "comparable_sale_records": build_comparable_sale_records(),
+        "rent_estimate_records": build_rent_estimate_records(),
+        "buyer_activity_snapshots": build_buyer_activity_snapshot_records(),
+        "lead_source_roi_records": build_lead_source_roi_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -7705,6 +8010,11 @@ def seed_database(session: Session) -> dict[str, int]:
         WorkerHeartbeat,
         WorkerJobLog,
         WorkerJob,
+        LeadSourceROIRecord,
+        BuyerActivitySnapshot,
+        RentEstimateRecord,
+        ComparableSaleRecord,
+        MarketProfile,
         CampaignPerformanceRecord,
         CampaignStopEvent,
         CampaignActivationAttempt,
@@ -8024,6 +8334,17 @@ def seed_database(session: Session) -> dict[str, int]:
         CampaignPerformanceRecord(**row)
         for row in payload["campaign_performance_records"]
     )
+    session.add_all(MarketProfile(**row) for row in payload["market_profiles"])
+    session.add_all(
+        ComparableSaleRecord(**row) for row in payload["comparable_sale_records"]
+    )
+    session.add_all(RentEstimateRecord(**row) for row in payload["rent_estimate_records"])
+    session.add_all(
+        BuyerActivitySnapshot(**row) for row in payload["buyer_activity_snapshots"]
+    )
+    session.add_all(
+        LeadSourceROIRecord(**row) for row in payload["lead_source_roi_records"]
+    )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]
     )
@@ -8104,6 +8425,29 @@ def seed_database(session: Session) -> dict[str, int]:
         calculate_deal_probability(probability)
     for market in session.query(MarketScalingScore).all():
         calculate_market_scaling(market)
+    for snapshot in session.query(BuyerActivitySnapshot).all():
+        snapshot.demand_confidence = buyer_activity_demand_confidence(snapshot)
+    for roi_record in session.query(LeadSourceROIRecord).all():
+        lead_source_roi_gate(roi_record)
+    for profile in session.query(MarketProfile).all():
+        market_deals = (
+            session.query(Deal)
+            .join(Lead, Deal.lead_id == Lead.id)
+            .filter(Lead.zip_code == profile.zip_code)
+            .all()
+        )
+        average_spread = (
+            sum(deal.projected_assignment_fee for deal in market_deals) / len(market_deals)
+            if market_deals
+            else 0
+        )
+        sync_market_profile(
+            profile,
+            comps=session.query(ComparableSaleRecord).filter_by(market_id=profile.market_id).all(),
+            buyer_snapshot=session.query(BuyerActivitySnapshot).filter_by(market_id=profile.market_id).first(),
+            lead_source_records=session.query(LeadSourceROIRecord).filter_by(market_id=profile.market_id).all(),
+            average_spread=average_spread,
+        )
     for plan in session.query(LeadSpendPlan).all():
         validate_lead_spend_plan(plan)
     for setting in session.query(OperatorModeSetting).all():
