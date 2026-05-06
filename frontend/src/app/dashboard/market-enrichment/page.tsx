@@ -9,6 +9,7 @@ import {
   comparableSaleRecords,
   marketEnrichmentRanking,
   marketProfiles,
+  primeMemoryItems,
   rentEstimateRecords,
   weakMarketWarnings
 } from "@/lib/demo-data";
@@ -51,6 +52,14 @@ export default function MarketEnrichmentPage() {
           <RecordCard title="Lead source ROI" meta="Estimate-only source quality" right={<Link href="/dashboard/lead-source-roi">Open</Link>} />
           <RecordCard title="Market ranking" meta="Heat and weak-market warnings" right={<Link href="/dashboard/market-ranking">Open</Link>} />
           <RecordCard title="Boundary" meta="No paid external data calls in this phase" right={<Pill tone="gold">manual</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="Memory Signals">
+        <div className="grid-three">
+          {primeMemoryItems.filter((memory) => ["high_spread_market", "weak_market"].includes(memory.memoryType)).map((memory) => (
+            <RecordCard key={memory.memoryId} title={memory.memoryType} meta={memory.summary} right={<Pill tone={memory.confidenceScore >= 80 ? "green" : "gold"}>{memory.confidenceScore}</Pill>} />
+          ))}
         </div>
       </Section>
     </div>

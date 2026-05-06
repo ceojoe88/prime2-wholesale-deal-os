@@ -13,6 +13,7 @@ import {
   getBuyer,
   getDeal,
   getLead,
+  primeMemoryItems,
   tenKDealsWithStrongBuyerDemand
 } from "@/lib/demo-data";
 
@@ -88,6 +89,14 @@ export default function BuyerPriorityPage() {
               })}
           </tbody>
         </table>
+      </Section>
+
+      <Section title="Repeat Buyer Memory">
+        <div className="grid-three">
+          {primeMemoryItems.filter((memory) => memory.impactArea === "buyer_disposition").map((memory) => (
+            <RecordCard key={memory.memoryId} title={memory.memoryType} meta={memory.summary} right={<Pill tone="green">{memory.confidenceScore}</Pill>} />
+          ))}
+        </div>
       </Section>
     </div>
   );

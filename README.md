@@ -54,6 +54,7 @@ Implemented phases:
 - V24 deal document intelligence
 - V25 controlled campaign brain
 - V26 market data enrichment
+- V27 Prime 2 memory and learning layer
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -126,6 +127,12 @@ This is not a mass outreach engine. Controlled activation is one-recipient/one-m
 V26 adds market profiles, comparable sale records, rent estimates, buyer activity snapshots, and lead source ROI records. Prime 2 can rank markets, improve ARV confidence from recent nearby comps, strengthen buyer-demand confidence from POF and velocity evidence, and label source ROI as estimate-only when cost or outcome evidence is incomplete.
 
 V26 uses manual/imported data only. It does not call paid external APIs, invent comps, invent ARV, guarantee ROI, or turn market ranking into automated spend or outreach.
+
+## V27 Prime 2 Memory + Learning Layer
+
+V27 adds source-cited Prime Memory items, learning signals, scoring weight recommendations, and playbook recommendations. Prime 2 can remember what worked, what failed, which markets and buyers performed, which document issues repeated, and which scripts or campaigns created momentum.
+
+This is deterministic and auditable, not black-box ML. Memory cannot invent facts, weaken compliance, expose internal strategy to portals, auto-apply scoring changes, or turn lessons into unsupported claims.
 
 ## Safety Boundaries
 

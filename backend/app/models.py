@@ -2767,3 +2767,74 @@ class LeadSourceROIRecord(TimestampMixin, Base):
     evidence_basis: Mapped[list[str]] = mapped_column(JSON, default=list)
     estimate_only: Mapped[bool] = mapped_column(Boolean, default=True)
     guaranteed_roi_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class PrimeMemoryItem(TimestampMixin, Base):
+    __tablename__ = "prime_memory_items"
+
+    memory_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    memory_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_domain: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_record_id: Mapped[str] = mapped_column(String(120), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, default="")
+    evidence_basis: Mapped[list[str]] = mapped_column(JSON, default=list)
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    impact_area: Mapped[str] = mapped_column(String(100), default="")
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    status: Mapped[str] = mapped_column(String(80), default="active")
+    owner_approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    internal_strategy: Mapped[str] = mapped_column(Text, default="")
+    unsupported_claims_blocked: Mapped[bool] = mapped_column(Boolean, default=True)
+    portal_exposure_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class LearningSignal(TimestampMixin, Base):
+    __tablename__ = "learning_signals"
+
+    signal_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    signal_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_domain: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_record_id: Mapped[str] = mapped_column(String(120), nullable=False)
+    predicted_value: Mapped[str] = mapped_column(String(160), default="")
+    actual_value: Mapped[str] = mapped_column(String(160), default="")
+    variance: Mapped[float] = mapped_column(Float, default=0)
+    confidence: Mapped[float] = mapped_column(Float, default=0)
+    explanation: Mapped[str] = mapped_column(Text, default="")
+    recommended_adjustment: Mapped[str] = mapped_column(Text, default="")
+    owner_review_status: Mapped[str] = mapped_column(String(80), default="pending_review")
+    evidence_basis: Mapped[list[str]] = mapped_column(JSON, default=list)
+    auto_applied: Mapped[bool] = mapped_column(Boolean, default=False)
+    unsupported_claims_blocked: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ScoringWeightRecommendation(TimestampMixin, Base):
+    __tablename__ = "scoring_weight_recommendations"
+
+    recommendation_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    scoring_area: Mapped[str] = mapped_column(String(100), nullable=False)
+    current_weight: Mapped[float] = mapped_column(Float, default=0)
+    suggested_weight: Mapped[float] = mapped_column(Float, default=0)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    evidence_count: Mapped[int] = mapped_column(Integer, default=0)
+    expected_impact: Mapped[str] = mapped_column(Text, default="")
+    risk_status: Mapped[str] = mapped_column(String(80), default="review")
+    owner_approval_status: Mapped[str] = mapped_column(String(80), default="pending")
+    source_signal_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    explainable: Mapped[bool] = mapped_column(Boolean, default=True)
+    auto_apply_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class PlaybookRecommendation(TimestampMixin, Base):
+    __tablename__ = "playbook_recommendations"
+
+    playbook_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    playbook_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    target_context: Mapped[str] = mapped_column(String(160), default="")
+    recommendation: Mapped[str] = mapped_column(Text, default="")
+    evidence_basis: Mapped[list[str]] = mapped_column(JSON, default=list)
+    confidence_score: Mapped[float] = mapped_column(Float, default=0)
+    status: Mapped[str] = mapped_column(String(80), default="draft")
+    owner_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    draft_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    unsupported_claims_blocked: Mapped[bool] = mapped_column(Boolean, default=True)
+    portal_exposure_allowed: Mapped[bool] = mapped_column(Boolean, default=False)

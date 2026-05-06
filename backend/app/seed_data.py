@@ -14,6 +14,12 @@ from app.domains.market_enrichment.scoring import (
     lead_source_roi_gate,
     sync_market_profile,
 )
+from app.domains.prime_memory.learning import (
+    playbook_from_evidence,
+    scoring_recommendation_gate,
+    sync_learning_signal,
+    validate_memory_item,
+)
 from app.domains.provider_readiness.readiness import provider_readiness
 from app.domains.worker_runtime.worker import worker_safety_guard
 from app.domain.auto_execution import (
@@ -151,6 +157,7 @@ from app.models import (
     LeadSpendPlan,
     Lead,
     LeadSourceROIRecord,
+    LearningSignal,
     MarketScalingScore,
     MarketProfile,
     NegotiationRecord,
@@ -161,11 +168,13 @@ from app.models import (
     OptimizationRecommendation,
     OutcomeLearningRecord,
     OwnerApprovalItem,
+    PlaybookRecommendation,
     PredictionFeedbackRecord,
     ProviderSandboxReadinessCheck,
     ProviderAttemptAudit,
     ProviderRegistry,
     ProviderWebhookEvent,
+    PrimeMemoryItem,
     ReviewPacketPrep,
     RevenueForecastRecord,
     RentEstimateRecord,
@@ -176,6 +185,7 @@ from app.models import (
     SchedulerRun,
     ScoringAdjustmentSuggestion,
     ScoringWeightChange,
+    ScoringWeightRecommendation,
     SemiAutonomousCommandLoopRun,
     TitleHandoffPacket,
     TitleReviewCoordination,
@@ -7880,6 +7890,216 @@ def build_lead_source_roi_records() -> list[dict[str, object]]:
     ]
 
 
+def build_prime_memory_item_records() -> list[dict[str, object]]:
+    return [
+        {
+            "memory_id": "memory-001",
+            "memory_type": "winning_seller_script",
+            "source_domain": "call_intelligence",
+            "source_record_id": "call-intel-001",
+            "summary": "Empathy-first repair-backed offer explanations performed best with hot vacant sellers.",
+            "evidence_basis": ["call-intel-001", "call-outcome-001", "offer-packet-001"],
+            "confidence_score": 88,
+            "impact_area": "seller_acquisition",
+            "status": "approved",
+            "owner_approved": True,
+            "internal_strategy": "Use repair basis and flexible-close language; do not add pressure or legal interpretation.",
+            "unsupported_claims_blocked": True,
+            "portal_exposure_allowed": False,
+        },
+        {
+            "memory_id": "memory-002",
+            "memory_type": "low_quality_lead_source",
+            "source_domain": "field_testing",
+            "source_record_id": "lead-source-roi-003",
+            "summary": "Fort Worth pre-foreclosure sample needs more QA before increasing attention.",
+            "evidence_basis": ["lead-007", "lead-021", "lead-source-roi-003"],
+            "confidence_score": 54,
+            "impact_area": "lead_qa",
+            "status": "active",
+            "owner_approved": False,
+            "internal_strategy": "Warn owner to research more before raising spend or call priority.",
+            "unsupported_claims_blocked": True,
+            "portal_exposure_allowed": False,
+        },
+        {
+            "memory_id": "memory-003",
+            "memory_type": "high_spread_market",
+            "source_domain": "market_enrichment",
+            "source_record_id": "market-75216",
+            "summary": "75216 has the strongest current blend of buyer demand, comp support, and 10K+ spread evidence.",
+            "evidence_basis": ["market-75216", "deal-001", "deal-002", "lead-source-roi-001"],
+            "confidence_score": 84,
+            "impact_area": "market_focus",
+            "status": "approved",
+            "owner_approved": True,
+            "internal_strategy": "Prioritize 75216 when comps and seller readiness remain current.",
+            "unsupported_claims_blocked": True,
+            "portal_exposure_allowed": False,
+        },
+        {
+            "memory_id": "memory-004",
+            "memory_type": "document_issue_pattern",
+            "source_domain": "document_intelligence",
+            "source_record_id": "doc-issue-003",
+            "summary": "Assignment language gaps are recurring blockers before assignment readiness.",
+            "evidence_basis": ["doc-issue-001", "doc-issue-003", "title-review-001"],
+            "confidence_score": 79,
+            "impact_area": "compliance",
+            "status": "approved",
+            "owner_approved": True,
+            "internal_strategy": "Route unclear assignment language to external title/attorney review reminder early.",
+            "unsupported_claims_blocked": True,
+            "portal_exposure_allowed": False,
+        },
+        {
+            "memory_id": "memory-005",
+            "memory_type": "campaign_performance_pattern",
+            "source_domain": "campaign_brain",
+            "source_record_id": "campaign-performance-002",
+            "summary": "Single-buyer POF request prep performs best when buyer is already matched and deal sheet is sanitized.",
+            "evidence_basis": ["campaign-performance-002", "buyer-activity-75216", "buyer-priority-001"],
+            "confidence_score": 82,
+            "impact_area": "buyer_disposition",
+            "status": "approved",
+            "owner_approved": True,
+            "internal_strategy": "Use approved buyer response playbook only after deal visibility and provider gates pass.",
+            "unsupported_claims_blocked": True,
+            "portal_exposure_allowed": False,
+        },
+    ]
+
+
+def build_learning_signal_records() -> list[dict[str, object]]:
+    return [
+        {
+            "signal_id": "learning-signal-001",
+            "signal_type": "predicted_motivation_vs_actual",
+            "source_domain": "field_testing",
+            "source_record_id": "feedback-001",
+            "predicted_value": "high motivation",
+            "actual_value": "motivated",
+            "variance": 8,
+            "confidence": 92,
+            "explanation": "Prime 2 predicted high motivation and the seller call outcome confirmed motivation.",
+            "recommended_adjustment": "Keep motivation weight stable for vacant high-equity leads.",
+            "owner_review_status": "pending_review",
+            "evidence_basis": ["feedback-001", "call-outcome-001"],
+            "auto_applied": False,
+            "unsupported_claims_blocked": True,
+        },
+        {
+            "signal_id": "learning-signal-002",
+            "signal_type": "buyer_velocity_prediction",
+            "source_domain": "buyer_disposition",
+            "source_record_id": "buyer-velocity-001",
+            "predicted_value": "fast buyer",
+            "actual_value": "fast buyer",
+            "variance": 0,
+            "confidence": 90,
+            "explanation": "Verified POF and close history matched buyer response velocity.",
+            "recommended_adjustment": "Keep POF and closing speed highly weighted for buyer ranking.",
+            "owner_review_status": "pending_review",
+            "evidence_basis": ["buyer-velocity-001", "buyer-activity-75216"],
+            "auto_applied": False,
+            "unsupported_claims_blocked": True,
+        },
+        {
+            "signal_id": "learning-signal-003",
+            "signal_type": "document_blocker_variance",
+            "source_domain": "document_intelligence",
+            "source_record_id": "doc-issue-003",
+            "predicted_value": "assignment ready",
+            "actual_value": "assignment language review",
+            "variance": 56,
+            "confidence": 68,
+            "explanation": "Document review found assignment language missing after readiness appeared strong.",
+            "recommended_adjustment": "Raise document issue weight before assignment readiness.",
+            "owner_review_status": "pending_review",
+            "evidence_basis": ["doc-issue-003", "assignment-readiness-003"],
+            "auto_applied": False,
+            "unsupported_claims_blocked": True,
+        },
+    ]
+
+
+def build_scoring_weight_recommendation_records() -> list[dict[str, object]]:
+    return [
+        {
+            "recommendation_id": "weight-rec-001",
+            "scoring_area": "lead_source_quality",
+            "current_weight": 0.10,
+            "suggested_weight": 0.12,
+            "reason": "Vacant and high-equity source evidence outperformed weak pre-foreclosure sample in field testing.",
+            "evidence_count": 3,
+            "expected_impact": "Improve first-deal candidate prioritization while keeping owner review required.",
+            "risk_status": "low",
+            "owner_approval_status": "pending",
+            "source_signal_ids": ["learning-signal-001", "learning-signal-002"],
+            "explainable": True,
+            "auto_apply_allowed": False,
+        },
+        {
+            "recommendation_id": "weight-rec-002",
+            "scoring_area": "document_readiness",
+            "current_weight": 0.08,
+            "suggested_weight": 0.11,
+            "reason": "Document issue patterns blocked assignment readiness after buyer demand looked strong.",
+            "evidence_count": 2,
+            "expected_impact": "Surface external review reminders earlier for contract-ready deals.",
+            "risk_status": "medium",
+            "owner_approval_status": "pending",
+            "source_signal_ids": ["learning-signal-003"],
+            "explainable": True,
+            "auto_apply_allowed": False,
+        },
+    ]
+
+
+def build_playbook_recommendation_records() -> list[dict[str, object]]:
+    return [
+        {
+            "playbook_id": "playbook-001",
+            "playbook_type": "seller_offer_explanation",
+            "target_context": "hot vacant seller with repair-backed offer",
+            "recommendation": "Use empathy, ask for timeline confirmation, explain repairs and as-is convenience, then draft a soft next step.",
+            "evidence_basis": ["memory-001", "call-intel-001", "offer-packet-001"],
+            "confidence_score": 86,
+            "status": "approved",
+            "owner_review_required": True,
+            "draft_only": True,
+            "unsupported_claims_blocked": True,
+            "portal_exposure_allowed": False,
+        },
+        {
+            "playbook_id": "playbook-002",
+            "playbook_type": "buyer_pof_follow_up",
+            "target_context": "matched buyer with sanitized deal sheet and POF gap",
+            "recommendation": "Prepare one-buyer POF clarification draft tied to the source deal sheet and avoid scarcity claims.",
+            "evidence_basis": ["memory-005", "campaign-performance-002", "buyer-activity-75216"],
+            "confidence_score": 82,
+            "status": "approved",
+            "owner_review_required": True,
+            "draft_only": True,
+            "unsupported_claims_blocked": True,
+            "portal_exposure_allowed": False,
+        },
+        {
+            "playbook_id": "playbook-003",
+            "playbook_type": "document_review",
+            "target_context": "assignment language unclear",
+            "recommendation": "Route document to owner review and external title/attorney reminder before assignment readiness.",
+            "evidence_basis": ["memory-004", "doc-issue-003"],
+            "confidence_score": 78,
+            "status": "active",
+            "owner_review_required": True,
+            "draft_only": True,
+            "unsupported_claims_blocked": True,
+            "portal_exposure_allowed": False,
+        },
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -7990,6 +8210,10 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "rent_estimate_records": build_rent_estimate_records(),
         "buyer_activity_snapshots": build_buyer_activity_snapshot_records(),
         "lead_source_roi_records": build_lead_source_roi_records(),
+        "prime_memory_items": build_prime_memory_item_records(),
+        "learning_signals": build_learning_signal_records(),
+        "scoring_weight_recommendations": build_scoring_weight_recommendation_records(),
+        "playbook_recommendations": build_playbook_recommendation_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -8015,6 +8239,10 @@ def seed_database(session: Session) -> dict[str, int]:
         RentEstimateRecord,
         ComparableSaleRecord,
         MarketProfile,
+        PlaybookRecommendation,
+        ScoringWeightRecommendation,
+        LearningSignal,
+        PrimeMemoryItem,
         CampaignPerformanceRecord,
         CampaignStopEvent,
         CampaignActivationAttempt,
@@ -8345,6 +8573,16 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         LeadSourceROIRecord(**row) for row in payload["lead_source_roi_records"]
     )
+    session.add_all(PrimeMemoryItem(**row) for row in payload["prime_memory_items"])
+    session.add_all(LearningSignal(**row) for row in payload["learning_signals"])
+    session.add_all(
+        ScoringWeightRecommendation(**row)
+        for row in payload["scoring_weight_recommendations"]
+    )
+    session.add_all(
+        PlaybookRecommendation(**row)
+        for row in payload["playbook_recommendations"]
+    )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]
     )
@@ -8448,6 +8686,14 @@ def seed_database(session: Session) -> dict[str, int]:
             lead_source_records=session.query(LeadSourceROIRecord).filter_by(market_id=profile.market_id).all(),
             average_spread=average_spread,
         )
+    for memory in session.query(PrimeMemoryItem).all():
+        validate_memory_item(memory)
+    for signal in session.query(LearningSignal).all():
+        sync_learning_signal(signal)
+    for recommendation in session.query(ScoringWeightRecommendation).all():
+        scoring_recommendation_gate(recommendation)
+    for playbook in session.query(PlaybookRecommendation).all():
+        playbook_from_evidence(playbook)
     for plan in session.query(LeadSpendPlan).all():
         validate_lead_spend_plan(plan)
     for setting in session.query(OperatorModeSetting).all():

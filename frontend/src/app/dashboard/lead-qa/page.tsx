@@ -7,6 +7,7 @@ import {
   callPriorityQaReviews,
   leadQualityReviews,
   lowConfidenceQaReviews,
+  primeMemoryItems,
   researchMoreQaReviews
 } from "@/lib/demo-data";
 
@@ -43,6 +44,14 @@ export default function LeadQaPage() {
         <div className="grid-three">
           {lowConfidenceQaReviews.map((review) => (
             <RecordCard key={review.id} title={review.id} meta={review.blockedReasons.join(", ") || "low confidence / research needed"} right={<Pill tone="red">review</Pill>} />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Source Quality Memory">
+        <div className="grid-three">
+          {primeMemoryItems.filter((memory) => memory.impactArea === "lead_qa").map((memory) => (
+            <RecordCard key={memory.memoryId} title={memory.memoryType} meta={memory.summary} right={<Pill tone="gold">review</Pill>} />
           ))}
         </div>
       </Section>

@@ -10,7 +10,8 @@ import {
   campaignAttemptsBlocked,
   campaignDncExclusions,
   campaignRuleRecords,
-  marketEnrichmentRanking
+  marketEnrichmentRanking,
+  playbookRecommendations
 } from "@/lib/demo-data";
 
 export default function CampaignsPage() {
@@ -46,6 +47,14 @@ export default function CampaignsPage() {
         <div className="grid-three">
           {marketEnrichmentRanking.slice(0, 3).map((market) => (
             <RecordCard key={market.marketId} title={market.zipCode} meta={`Campaign prep can prioritize this market when audience gates pass. Confidence ${market.confidenceScore}.`} right={<Pill tone={market.marketHeatScore >= 70 ? "green" : "gold"}>{market.marketHeatScore}</Pill>} />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Approved Playbook Context">
+        <div className="grid-three">
+          {playbookRecommendations.filter((playbook) => playbook.status === "approved").slice(0, 3).map((playbook) => (
+            <RecordCard key={playbook.playbookId} title={playbook.playbookType} meta={playbook.targetContext} right={<Pill tone="green">draft</Pill>} />
           ))}
         </div>
       </Section>

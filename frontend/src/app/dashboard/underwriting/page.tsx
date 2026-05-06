@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
-import { arvConfidenceByDeal, deals, formatCurrency, getLead } from "@/lib/demo-data";
+import { arvConfidenceByDeal, deals, formatCurrency, getLead, learningSignals } from "@/lib/demo-data";
 
 export default function UnderwritingPage() {
   return (
@@ -44,6 +44,13 @@ export default function UnderwritingPage() {
         <div className="grid-three">
           {arvConfidenceByDeal.slice(0, 6).map((record) => (
             <RecordCard key={record.dealId} title={record.dealId} meta={`${record.compCount} comp records / ${record.marketId}`} right={<Pill tone={record.arvConfidence >= 75 ? "green" : "gold"}>{record.arvConfidence}</Pill>} />
+          ))}
+        </div>
+      </Section>
+      <Section title="Similar Deal Warnings">
+        <div className="grid-three">
+          {learningSignals.filter((signal) => signal.signalType.includes("document") || signal.signalType.includes("buyer")).map((signal) => (
+            <RecordCard key={signal.signalId} title={signal.signalType} meta={`${signal.explanation} Adjustment: ${signal.recommendedAdjustment}`} right={<Pill tone={signal.variance >= 50 ? "gold" : "green"}>{signal.variance}</Pill>} />
           ))}
         </div>
       </Section>

@@ -18,6 +18,7 @@ import {
   predictionMisses,
   pendingOwnerApprovals,
   semiAutonomousCommandLoopRuns,
+  topLearningInsights,
   weakMarketWarnings
 } from "@/lib/demo-data";
 
@@ -51,6 +52,14 @@ export default function OperatorModePage() {
             <RecordCard key={market.marketId} title={`Top market ${market.zipCode}`} meta={`Heat ${market.marketHeatScore} with confidence ${market.confidenceScore}`} right={<Pill tone="green">focus</Pill>} />
           ))}
           <RecordCard title="Weak-market warnings" meta={`${weakMarketWarnings.length} market records need more evidence before scaling`} right={<Pill tone={weakMarketWarnings.length ? "gold" : "green"}>review</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="Prime 2 Memory Insights">
+        <div className="grid-three">
+          {topLearningInsights.slice(0, 3).map((memory) => (
+            <RecordCard key={memory.memoryId} title={memory.memoryType} meta={memory.summary} right={<Pill tone="green">{memory.confidenceScore}</Pill>} />
+          ))}
         </div>
       </Section>
 

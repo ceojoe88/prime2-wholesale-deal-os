@@ -60,6 +60,8 @@ V25 adds the controlled campaign brain. It segments sellers and buyers, previews
 
 V26 adds market data enrichment. It stores manual/imported market profiles, comparable sale records, rent estimates, buyer activity snapshots, and lead source ROI records so underwriting, buyer demand, forecasting, field testing, campaigns, and operator mode can reference market confidence without paid external API calls or invented numbers.
 
+V27 adds Prime 2 memory and learning. It stores source-cited memory items, learning signals, scoring weight recommendations, and playbook recommendations so Prime 2 can adapt strategy from outcomes without black-box scoring, unsupported claims, or owner approval bypass.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, backups, lead imports, lead QA, call outcomes, field feedback, and scoring adjustment suggestions.
@@ -80,6 +82,7 @@ V26 adds market data enrichment. It stores manual/imported market profiles, comp
 - `app/domains/document_intelligence/*`: V24 document classification, deterministic field extraction, issue flagging, sanitized document responses, review routing, evidence linking, AI Gateway allowlist integration, and hard blocks against legal conclusions, executable contracts, title submission, and portal publishing.
 - `app/domains/campaign_brain/*`: V25 campaign planning, audience segmentation, sequence prep, activation gating, stop-condition handling, performance tracking, route sanitization, and hard blocks against uncontrolled outreach, bulk sending, deceptive scarcity, fake claims, and approval bypass.
 - `app/domains/market_enrichment/*`: V26 market profiles, comps, rent estimates, buyer activity snapshots, lead source ROI records, deterministic heat scoring, ARV confidence, demand confidence, source-quality gates, and sanitizers that label strategy outputs as estimate-only.
+- `app/domains/prime_memory/*`: V27 source-cited memory items, learning signals, scoring weight recommendations, playbook recommendations, approved AI context projection, external sanitization, and guards against unsupported claims, auto-applied scoring, compliance overrides, and portal strategy exposure.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -355,6 +358,32 @@ Comparable sale records track source, sale price, sale date, distance, condition
 Buyer activity snapshots track active buyers, verified POF buyers, fast-close buyers, average max price, response velocity, recent interest, and demand confidence. Lead source ROI records track imported leads, QA pass count, calls, motivated sellers, offer requests, contract-ready count, projected and verified assignment fees, cost placeholders, evidence basis, and confidence.
 
 V26 never invents comps, ARV, repairs, ROI, buyer demand, or profit claims, and it does not call paid external market APIs.
+
+## V27 Prime 2 Memory + Learning Layer
+
+Backend routes:
+
+- `/api/v1/prime-memory`
+- `/api/v1/prime-memory/{memoryId}`
+- `/api/v1/prime-memory/patterns`
+- `/api/v1/prime-memory/learning-signals`
+- `/api/v1/prime-memory/scoring-weight-recommendations`
+- `/api/v1/prime-memory/playbook-recommendations`
+
+Frontend routes:
+
+- `/dashboard/prime-memory`
+- `/dashboard/prime-memory/[memoryId]`
+- `/dashboard/prime-memory/patterns`
+- `/dashboard/learning-signals`
+- `/dashboard/scoring-weight-recommendations`
+- `/dashboard/playbook-recommendations`
+
+Memory items store memory type, source domain, source record ID, summary, evidence basis, confidence, impact area, status, owner approval, and internal-only strategy notes. External projections hide internal strategy and source IDs.
+
+Learning signals compare predicted values against actual outcomes with variance, confidence, explanation, recommended adjustment, owner review status, and evidence basis. Scoring weight recommendations are explainable and queued for owner review; they are never auto-applied.
+
+Playbook recommendations turn approved memory into draft-only recommendations for sellers, buyers, documents, campaigns, and market focus. AI Gateway integration may use approved memory as context only and cannot convert memory into unsupported claims or compliance overrides.
 
 ## V2 Buyer Portal
 

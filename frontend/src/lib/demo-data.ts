@@ -4091,6 +4091,103 @@ export const arvConfidenceByDeal = deals.map((deal) => {
   return { dealId: deal.id, marketId: market?.marketId ?? "unmapped", compCount, arvConfidence };
 });
 
+export type PrimeMemoryItem = {
+  memoryId: string;
+  memoryType: string;
+  sourceDomain: string;
+  sourceRecordId: string;
+  summary: string;
+  evidenceBasis: string[];
+  confidenceScore: number;
+  impactArea: string;
+  status: string;
+  ownerApproved: boolean;
+  internalStrategyHidden: true;
+  unsupportedClaimsBlocked: true;
+  portalExposureAllowed: false;
+};
+
+export type LearningSignal = {
+  signalId: string;
+  signalType: string;
+  sourceDomain: string;
+  sourceRecordId: string;
+  predictedValue: string;
+  actualValue: string;
+  variance: number;
+  confidence: number;
+  explanation: string;
+  recommendedAdjustment: string;
+  ownerReviewStatus: string;
+  evidenceBasis: string[];
+  autoApplied: false;
+  unsupportedClaimsBlocked: true;
+};
+
+export type ScoringWeightRecommendation = {
+  recommendationId: string;
+  scoringArea: string;
+  currentWeight: number;
+  suggestedWeight: number;
+  reason: string;
+  evidenceCount: number;
+  expectedImpact: string;
+  riskStatus: string;
+  ownerApprovalStatus: string;
+  sourceSignalIds: string[];
+  explainable: true;
+  autoApplyAllowed: false;
+};
+
+export type PlaybookRecommendation = {
+  playbookId: string;
+  playbookType: string;
+  targetContext: string;
+  recommendation: string;
+  evidenceBasis: string[];
+  confidenceScore: number;
+  status: string;
+  ownerReviewRequired: true;
+  draftOnly: true;
+  unsupportedClaimsBlocked: true;
+  portalExposureAllowed: false;
+};
+
+export const primeMemoryItems: PrimeMemoryItem[] = [
+  { memoryId: "memory-001", memoryType: "winning_seller_script", sourceDomain: "call_intelligence", sourceRecordId: "call-intel-001", summary: "Empathy-first repair-backed offer explanations performed best with hot vacant sellers.", evidenceBasis: ["call-intel-001", "call-outcome-001", "offer-packet-001"], confidenceScore: 88, impactArea: "seller_acquisition", status: "approved", ownerApproved: true, internalStrategyHidden: true, unsupportedClaimsBlocked: true, portalExposureAllowed: false },
+  { memoryId: "memory-002", memoryType: "low_quality_lead_source", sourceDomain: "field_testing", sourceRecordId: "lead-source-roi-003", summary: "Fort Worth pre-foreclosure sample needs more QA before increasing attention.", evidenceBasis: ["lead-007", "lead-021", "lead-source-roi-003"], confidenceScore: 54, impactArea: "lead_qa", status: "active", ownerApproved: false, internalStrategyHidden: true, unsupportedClaimsBlocked: true, portalExposureAllowed: false },
+  { memoryId: "memory-003", memoryType: "high_spread_market", sourceDomain: "market_enrichment", sourceRecordId: "market-75216", summary: "75216 has the strongest current blend of buyer demand, comp support, and 10K+ spread evidence.", evidenceBasis: ["market-75216", "deal-001", "deal-002", "lead-source-roi-001"], confidenceScore: 84, impactArea: "market_focus", status: "approved", ownerApproved: true, internalStrategyHidden: true, unsupportedClaimsBlocked: true, portalExposureAllowed: false },
+  { memoryId: "memory-004", memoryType: "document_issue_pattern", sourceDomain: "document_intelligence", sourceRecordId: "doc-issue-003", summary: "Assignment language gaps are recurring blockers before assignment readiness.", evidenceBasis: ["doc-issue-001", "doc-issue-003", "title-review-001"], confidenceScore: 79, impactArea: "compliance", status: "approved", ownerApproved: true, internalStrategyHidden: true, unsupportedClaimsBlocked: true, portalExposureAllowed: false },
+  { memoryId: "memory-005", memoryType: "campaign_performance_pattern", sourceDomain: "campaign_brain", sourceRecordId: "campaign-performance-002", summary: "Single-buyer POF request prep performs best when buyer is already matched and deal sheet is sanitized.", evidenceBasis: ["campaign-performance-002", "buyer-activity-75216", "buyer-priority-001"], confidenceScore: 82, impactArea: "buyer_disposition", status: "approved", ownerApproved: true, internalStrategyHidden: true, unsupportedClaimsBlocked: true, portalExposureAllowed: false }
+];
+
+export const learningSignals: LearningSignal[] = [
+  { signalId: "learning-signal-001", signalType: "predicted_motivation_vs_actual", sourceDomain: "field_testing", sourceRecordId: "feedback-001", predictedValue: "high motivation", actualValue: "motivated", variance: 8, confidence: 92, explanation: "Prime 2 predicted high motivation and the seller call outcome confirmed motivation.", recommendedAdjustment: "Keep motivation weight stable for vacant high-equity leads.", ownerReviewStatus: "pending_review", evidenceBasis: ["feedback-001", "call-outcome-001"], autoApplied: false, unsupportedClaimsBlocked: true },
+  { signalId: "learning-signal-002", signalType: "buyer_velocity_prediction", sourceDomain: "buyer_disposition", sourceRecordId: "buyer-velocity-001", predictedValue: "fast buyer", actualValue: "fast buyer", variance: 0, confidence: 90, explanation: "Verified POF and close history matched buyer response velocity.", recommendedAdjustment: "Keep POF and closing speed highly weighted for buyer ranking.", ownerReviewStatus: "pending_review", evidenceBasis: ["buyer-velocity-001", "buyer-activity-75216"], autoApplied: false, unsupportedClaimsBlocked: true },
+  { signalId: "learning-signal-003", signalType: "document_blocker_variance", sourceDomain: "document_intelligence", sourceRecordId: "doc-issue-003", predictedValue: "assignment ready", actualValue: "assignment language review", variance: 56, confidence: 68, explanation: "Document review found assignment language missing after readiness appeared strong.", recommendedAdjustment: "Raise document issue weight before assignment readiness.", ownerReviewStatus: "pending_review", evidenceBasis: ["doc-issue-003", "assignment-readiness-003"], autoApplied: false, unsupportedClaimsBlocked: true }
+];
+
+export const scoringWeightRecommendations: ScoringWeightRecommendation[] = [
+  { recommendationId: "weight-rec-001", scoringArea: "lead_source_quality", currentWeight: 0.1, suggestedWeight: 0.12, reason: "Vacant and high-equity source evidence outperformed weak pre-foreclosure sample in field testing.", evidenceCount: 3, expectedImpact: "Improve first-deal candidate prioritization while keeping owner review required.", riskStatus: "low", ownerApprovalStatus: "pending", sourceSignalIds: ["learning-signal-001", "learning-signal-002"], explainable: true, autoApplyAllowed: false },
+  { recommendationId: "weight-rec-002", scoringArea: "document_readiness", currentWeight: 0.08, suggestedWeight: 0.11, reason: "Document issue patterns blocked assignment readiness after buyer demand looked strong.", evidenceCount: 2, expectedImpact: "Surface external review reminders earlier for contract-ready deals.", riskStatus: "medium", ownerApprovalStatus: "pending", sourceSignalIds: ["learning-signal-003"], explainable: true, autoApplyAllowed: false }
+];
+
+export const playbookRecommendations: PlaybookRecommendation[] = [
+  { playbookId: "playbook-001", playbookType: "seller_offer_explanation", targetContext: "hot vacant seller with repair-backed offer", recommendation: "Use empathy, ask for timeline confirmation, explain repairs and as-is convenience, then draft a soft next step.", evidenceBasis: ["memory-001", "call-intel-001", "offer-packet-001"], confidenceScore: 86, status: "approved", ownerReviewRequired: true, draftOnly: true, unsupportedClaimsBlocked: true, portalExposureAllowed: false },
+  { playbookId: "playbook-002", playbookType: "buyer_pof_follow_up", targetContext: "matched buyer with sanitized deal sheet and POF gap", recommendation: "Prepare one-buyer POF clarification draft tied to the source deal sheet and avoid scarcity claims.", evidenceBasis: ["memory-005", "campaign-performance-002", "buyer-activity-75216"], confidenceScore: 82, status: "approved", ownerReviewRequired: true, draftOnly: true, unsupportedClaimsBlocked: true, portalExposureAllowed: false },
+  { playbookId: "playbook-003", playbookType: "document_review", targetContext: "assignment language unclear", recommendation: "Route document to owner review and external title/attorney reminder before assignment readiness.", evidenceBasis: ["memory-004", "doc-issue-003"], confidenceScore: 78, status: "active", ownerReviewRequired: true, draftOnly: true, unsupportedClaimsBlocked: true, portalExposureAllowed: false }
+];
+
+export const approvedPrimeMemoryContext = primeMemoryItems.filter((memory) => memory.status === "approved" && memory.ownerApproved);
+export const topLearningInsights = [...approvedPrimeMemoryContext].sort((a, b) => b.confidenceScore - a.confidenceScore).slice(0, 5);
+export const primeMemoryPatterns = {
+  winningScripts: primeMemoryItems.filter((memory) => memory.memoryType === "winning_seller_script").length,
+  weakSources: primeMemoryItems.filter((memory) => memory.memoryType === "low_quality_lead_source").length,
+  highSpreadMarkets: primeMemoryItems.filter((memory) => memory.memoryType === "high_spread_market").length,
+  documentIssuePatterns: primeMemoryItems.filter((memory) => memory.memoryType === "document_issue_pattern").length,
+  campaignPatterns: primeMemoryItems.filter((memory) => memory.memoryType === "campaign_performance_pattern").length
+};
+
 export const predictionFeedbackRecords: PredictionFeedbackRecord[] = [
   {
     id: "feedback-001",

@@ -142,6 +142,12 @@ const requiredRouteFiles = [
   "src/app/dashboard/buyer-activity/page.tsx",
   "src/app/dashboard/lead-source-roi/page.tsx",
   "src/app/dashboard/market-ranking/page.tsx",
+  "src/app/dashboard/prime-memory/page.tsx",
+  "src/app/dashboard/prime-memory/[memoryId]/page.tsx",
+  "src/app/dashboard/prime-memory/patterns/page.tsx",
+  "src/app/dashboard/learning-signals/page.tsx",
+  "src/app/dashboard/scoring-weight-recommendations/page.tsx",
+  "src/app/dashboard/playbook-recommendations/page.tsx",
   "src/app/dashboard/backups/page.tsx",
   "src/app/dashboard/offer-conversion/page.tsx",
   "src/app/dashboard/offer-conversion/[dealId]/page.tsx",
@@ -464,6 +470,34 @@ test("V26 market enrichment pages expose no unsupported market claims", () => {
     "guaranteed profit",
     "fake comps",
     "paid api"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V27 Prime 2 memory pages expose no unsafe learning controls", () => {
+  const files = [
+    "src/app/dashboard/prime-memory/page.tsx",
+    "src/app/dashboard/prime-memory/[memoryId]/page.tsx",
+    "src/app/dashboard/prime-memory/patterns/page.tsx",
+    "src/app/dashboard/learning-signals/page.tsx",
+    "src/app/dashboard/scoring-weight-recommendations/page.tsx",
+    "src/app/dashboard/playbook-recommendations/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "bulk blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "auto-apply",
+    "override compliance",
+    "guaranteed profit",
+    "guaranteed roi",
+    "expose internal strategy"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

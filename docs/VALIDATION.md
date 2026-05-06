@@ -137,6 +137,10 @@ Smoke check:
 - `/dashboard/buyer-activity`
 - `/dashboard/lead-source-roi`
 - `/dashboard/market-ranking`
+- `/dashboard/prime-memory`
+- `/dashboard/learning-signals`
+- `/dashboard/scoring-weight-recommendations`
+- `/dashboard/playbook-recommendations`
 - `/dashboard/production-readiness`
 - `/dashboard/backups`
 - `/buyer-portal`
@@ -195,6 +199,11 @@ Smoke check:
 - `/api/v1/market-enrichment/buyer-activity`
 - `/api/v1/market-enrichment/lead-source-roi`
 - `/api/v1/market-enrichment/ranking`
+- `/api/v1/prime-memory`
+- `/api/v1/prime-memory/patterns`
+- `/api/v1/prime-memory/learning-signals`
+- `/api/v1/prime-memory/scoring-weight-recommendations`
+- `/api/v1/prime-memory/playbook-recommendations`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -224,6 +233,7 @@ Before any hosted deployment:
 - Document intelligence must remain classification/extraction/review routing only; full text must stay out of external surfaces and no document should trigger contract execution, title delivery, or portal publishing.
 - Campaign brain must remain draft/preview/governance-first; DNC and compliance exclusions, owner approval, caps, stop conditions, one-message event modeling, V5/V13/V22 gates, idempotency, and audit must remain required before any controlled live path.
 - Market enrichment must remain manual/import-data only; comp, rent, buyer activity, market heat, and lead source ROI outputs must be evidence-backed estimates with no paid API calls, invented ARV, or guaranteed ROI language.
+- Prime 2 memory must remain deterministic and source-cited; memory may inform recommendations but cannot invent facts, expose internal strategy to portals, auto-apply scoring changes, override compliance, or create unsupported claims.
 - Audit exports must be sanitized.
 - Backup/export records must be metadata-safe unless a future encrypted storage design is added.
 - Legal/title review remains external.
