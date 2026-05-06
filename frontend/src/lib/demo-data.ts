@@ -5051,3 +5051,206 @@ export const liveActivationSafetyCards = [
   { label: "Provider calls", value: "0", detail: "No network action in demo state" },
   { label: "Bulk action", value: "off", detail: "One-action idempotency only" }
 ];
+
+export type RealDealExecutionBatch = {
+  id: string;
+  batchName: string;
+  leadImportBatchId: string;
+  marketZipFocus: string[];
+  targetAssignmentFee: number;
+  batchStatus: string;
+  leadsReviewed: number;
+  callsCompleted: number;
+  motivatedSellers: number;
+  offersPrepared: number;
+  offersAccepted: number;
+  buyerMatches: number;
+  contractReadyCount: number;
+  projectedAssignmentFees: number;
+  verifiedAssignmentFees: number;
+  ownerNotes: string;
+  blockers: string[];
+  nextBestAction: string;
+};
+
+export const firstDealExecutionBatch: RealDealExecutionBatch = {
+  id: "execution-batch-001",
+  batchName: "First 10-lead field execution loop",
+  leadImportBatchId: "lead-import-001",
+  marketZipFocus: ["75216", "75149"],
+  targetAssignmentFee: 10000,
+  batchStatus: "calling",
+  leadsReviewed: leadImportRows.length,
+  callsCompleted: fieldCallOutcomes.length,
+  motivatedSellers: fieldCallOutcomes.filter((outcome) =>
+    ["motivated", "offer_requested", "appointment_set"].includes(outcome.contactResult)
+  ).length,
+  offersPrepared: offerPackets.length,
+  offersAccepted: contractReadyStates.filter((state) => state.sellerLikelyToSign).length,
+  buyerMatches: buyerDealPriorities.length,
+  contractReadyCount: contractReadyStates.filter((state) => state.contractReady).length,
+  projectedAssignmentFees: deals.reduce((total, deal) => total + deal.projectedAssignmentFee, 0),
+  verifiedAssignmentFees: assignmentFeeAttributions
+    .filter((fee) => fee.verificationStatus === "verified")
+    .reduce((total, fee) => total + fee.projectedAssignmentFee, 0),
+  ownerNotes: "Prime 2 is tracking the first real deal loop from import through evidence review.",
+  blockers: ["buyer_validation_needed", "assignment_fee_evidence_needed"],
+  nextBestAction: "Call the highest QA seller row, then move evidence-backed deals to owner offer review."
+};
+
+export const firstDealTopImportedLeads = leadImportRows
+  .map((row) => {
+    const qa = leadQualityReviews.find((review) => review.importRowId === row.id);
+    return {
+      id: row.id,
+      ownerName: row.ownerName,
+      property: `${row.propertyAddress}, ${row.propertyCity}, ${row.propertyState} ${row.propertyZip}`,
+      leadSource: row.leadSource,
+      rowStatus: row.rowStatus,
+      qaScore: qa?.dataQualityScore ?? 0,
+      contactabilityScore: qa?.contactabilityScore ?? 0,
+      recommendedNextAction: qa?.recommendedNextAction ?? "research_more",
+      blockedReasons: [...row.blockedReasons, ...(qa?.blockedReasons ?? [])],
+      liveOutreachAllowed: false
+    };
+  })
+  .sort((first, second) => second.qaScore - first.qaScore);
+
+export const firstDealCallPriorityLeads = firstDealTopImportedLeads
+  .filter((row) => row.recommendedNextAction === "call_priority")
+  .slice(0, 3);
+
+export const firstDealCallChecklist = [
+  "Verify owner identity",
+  "Verify property address",
+  "Confirm occupancy",
+  "Ask motivation reason",
+  "Ask timeline",
+  "Ask property condition",
+  "Ask asking price",
+  "Ask decision maker status",
+  "Ask mortgage/title issue",
+  "Set next step",
+  "Log DNC if requested"
+];
+
+export const firstDealOfferBoard = deals.map((deal) => {
+  const lead = getLead(deal.leadId);
+  const packet = offerPackets.find((item) => item.dealId === deal.id);
+  const blockedReasons = [
+    ...(deal.projectedAssignmentFee < firstDealExecutionBatch.targetAssignmentFee ? ["target_assignment_fee_not_met"] : []),
+    ...(deal.buyerMargin < deal.buyerDesiredProfit ? ["buyer_margin_not_protected"] : []),
+    ...(packet?.blockedReasons ?? [])
+  ];
+  return {
+    deal,
+    lead,
+    packet,
+    decisionStatus: blockedReasons.length ? "needs_data" : "ready_for_owner_review",
+    blockedReasons,
+    buyerMarginImpact: deal.maxBuyerPurchasePrice - deal.buyerPurchasePrice,
+    prime2Recommendation: blockedReasons.length
+      ? "Research missing data or revise numbers before owner offer review."
+      : "Ready for owner review of the standard offer option."
+  };
+});
+
+export const firstDealBuyerValidation = deals.map((deal) => {
+  const priority = getBuyerDealPrioritiesForDeal(deal.id)[0];
+  const buyer = priority ? getBuyer(priority.buyerId) : undefined;
+  const blockedReasons = [
+    ...(!priority ? ["no_buyer_demand"] : []),
+    ...(priority && priority.buyerMarginStrength < 70 ? ["weak_buyer_margin"] : []),
+    ...(buyer && buyer.proofOfFundsStatus !== "verified" ? ["pof_request_unresolved"] : []),
+    ...(buyer && buyer.reliabilityScore < 70 ? ["buyer_reliability_low"] : []),
+    ...(buyer && buyer.maxPurchasePrice < deal.buyerPurchasePrice ? ["buyer_price_below_needed_spread"] : [])
+  ];
+  return {
+    deal,
+    buyer,
+    priority,
+    validated: blockedReasons.length === 0,
+    blockedReasons,
+    buyerInterestStatus: buyerInterests.find((interest) => interest.dealId === deal.id)?.interestStatus ?? "missing"
+  };
+});
+
+export const firstDealContractReadyChecklist = contractReadyStates.map((state) => ({
+  state,
+  deal: getDeal(state.dealId),
+  checklist: {
+    sellerMotivationConfirmed: state.sellerReadinessHigh,
+    sellerTermsSoftAccepted: state.sellerLikelyToSign,
+    underwritingComplete: state.underwritingComplete,
+    buyerDemandValidated: state.buyerDemandConfirmed,
+    offerApproved: state.ownerApprovalRecorded,
+    compliancePassed: state.compliancePassed,
+    assignmentReadinessChecked: state.profitControlValidated,
+    externalReviewPrepAvailable: state.readyForExternalDrafting,
+    ownerApprovalComplete: state.ownerApprovalRecorded
+  },
+  blockedReasons: state.blockedReasons,
+  externalProcessOnly: true
+}));
+
+export const firstDealEvidenceRecords = deals.map((deal) => {
+  const attribution = assignmentFeeAttributions.find((fee) => fee.dealId === deal.id);
+  const blockedReasons = [
+    ...(!attribution ? ["assignment_fee_attribution_missing"] : []),
+    ...(attribution && attribution.projectedAssignmentFee < attribution.targetAssignmentFee ? ["unsupported_10k_opportunity"] : []),
+    ...(attribution && !attribution.sourceRecordsPresent ? ["source_records_missing"] : []),
+    ...(deal.arv <= 0 || deal.repairs <= 0 ? ["underwriting_source_missing"] : [])
+  ];
+  return {
+    deal,
+    attribution,
+    projectedAssignmentFee: attribution?.projectedAssignmentFee ?? deal.projectedAssignmentFee,
+    buyerMargin: attribution?.buyerMargin ?? deal.buyerMargin,
+    evidenceSourceRecords: attribution?.attributionBasis ?? [],
+    confidenceScore: attribution?.confidenceScore ?? deal.confidenceScore,
+    blockedReasons,
+    evidenceSupported: blockedReasons.length === 0,
+    clientFacingClaimAllowed: false
+  };
+});
+
+export const firstDealReport = {
+  leadsImported: leadImportRows.length,
+  leadsQaPassed: leadQualityReviews.filter((review) => review.blockedReasons.length === 0).length,
+  callsAttempted: fieldCallOutcomes.length,
+  sellersReached: fieldCallOutcomes.filter((outcome) =>
+    ["spoke_to_owner", "motivated", "offer_requested", "appointment_set"].includes(outcome.contactResult)
+  ).length,
+  motivatedSellers: firstDealExecutionBatch.motivatedSellers,
+  offersPrepared: firstDealExecutionBatch.offersPrepared,
+  offersPresented: firstDealOfferBoard.filter((offer) => offer.decisionStatus !== "needs_data").length,
+  buyerMatches: firstDealExecutionBatch.buyerMatches,
+  contractReadyCandidates: firstDealExecutionBatch.contractReadyCount,
+  projectedAssignmentFees: firstDealExecutionBatch.projectedAssignmentFees,
+  predictionMisses: learningSignals.filter((signal) => signal.variance > 20),
+  scoringLessons: [
+    "Keep call priority tied to QA and contactability evidence.",
+    "Require buyer validation before owner offer decisions.",
+    "Do not treat projected spread as supported without source records."
+  ],
+  nextBatchRecommendations: [
+    "Run one 10-lead batch in the strongest zip focus.",
+    "Log every call outcome before changing scoring weights.",
+    "Move only evidence-supported opportunities into owner review."
+  ]
+};
+
+export const firstDealCoachCards = [
+  { title: "Call this seller next", detail: "Use the highest QA call-priority row.", tone: "green" as const },
+  { title: "Research before calling", detail: "Rows with contact or valuation gaps stay in research.", tone: "gold" as const },
+  { title: "Need buyer validation", detail: "POF, price fit, and reliability must clear before contract-ready review.", tone: "gold" as const },
+  { title: "Potential 10K spread needs proof", detail: "Evidence records must support source numbers before owner review.", tone: "gold" as const },
+  { title: "Ready for owner decision", detail: "Prime 2 recommends review only; owner controls real-world action.", tone: "green" as const }
+];
+
+export const firstDealSafetyCards = [
+  { label: "Live outreach", value: "off", detail: "Owner-run calls and gated provider paths only" },
+  { label: "Bulk messaging", value: "off", detail: "No batch sends from cockpit" },
+  { label: "Contract action", value: "off", detail: "External professional process only" },
+  { label: "Title handoff", value: "prep", detail: "Packet prep and reminders only" }
+];

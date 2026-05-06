@@ -186,6 +186,7 @@ from app.models import (
     ProviderRegistry,
     ProviderWebhookEvent,
     PrimeMemoryItem,
+    RealDealExecutionBatch,
     ReviewPacketPrep,
     RevenueForecastRecord,
     RentEstimateRecord,
@@ -8608,6 +8609,44 @@ def build_live_provider_audit_event_records() -> list[dict[str, object]]:
     ]
 
 
+def build_real_deal_execution_batch_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "execution-batch-001",
+            "batch_name": "First 10-lead field execution loop",
+            "lead_import_batch_id": "lead-import-001",
+            "market_zip_focus": ["75216", "75149"],
+            "target_assignment_fee": 10000,
+            "batch_status": "calling",
+            "leads_reviewed": 4,
+            "calls_completed": 3,
+            "motivated_sellers": 2,
+            "offers_prepared": 5,
+            "offers_accepted": 2,
+            "buyer_matches": 3,
+            "contract_ready_count": 1,
+            "projected_assignment_fees": 65000,
+            "verified_assignment_fees": 0,
+            "owner_notes": "Use V31 to run the first real deal loop from import through evidence review.",
+            "next_best_action": "Call the highest QA lead, then move evidence-backed deals to owner offer review.",
+            "blockers": ["buyer_validation_needed", "assignment_fee_evidence_needed"],
+            "safety_notes": [
+                "Prime 2 recommends and tracks; owner executes real-world calls and approvals.",
+                "No contract, title, payment, or live provider action is executed from this cockpit.",
+            ],
+            "owner_approval_required": True,
+            "live_outreach_allowed": False,
+            "bulk_blast_allowed": False,
+            "contract_execution_allowed": False,
+            "title_submission_allowed": False,
+            "payment_handling_allowed": False,
+            "legal_guidance_allowed": False,
+            "guaranteed_profit_claim_allowed": False,
+            "owner_executes_real_world_actions": True,
+        }
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -8733,6 +8772,7 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "live_provider_activation_attempts": build_live_provider_activation_attempt_records(),
         "live_provider_blocked_attempts": build_live_provider_blocked_attempt_records(),
         "live_provider_audit_events": build_live_provider_audit_event_records(),
+        "real_deal_execution_batches": build_real_deal_execution_batch_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -8773,6 +8813,7 @@ def seed_database(session: Session) -> dict[str, int]:
         LiveProviderBlockedAttempt,
         LiveProviderActivationAttempt,
         LiveProviderActivation,
+        RealDealExecutionBatch,
         CampaignPerformanceRecord,
         CampaignStopEvent,
         CampaignActivationAttempt,
@@ -9153,6 +9194,10 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         LiveProviderAuditEvent(**row)
         for row in payload["live_provider_audit_events"]
+    )
+    session.add_all(
+        RealDealExecutionBatch(**row)
+        for row in payload["real_deal_execution_batches"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

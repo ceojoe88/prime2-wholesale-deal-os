@@ -9,6 +9,13 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const requiredRouteFiles = [
   "src/app/dashboard/page.tsx",
   "src/app/dashboard/command-center/page.tsx",
+  "src/app/dashboard/first-deal-cockpit/page.tsx",
+  "src/app/dashboard/first-deal-cockpit/calls/page.tsx",
+  "src/app/dashboard/first-deal-cockpit/offers/page.tsx",
+  "src/app/dashboard/first-deal-cockpit/buyer-validation/page.tsx",
+  "src/app/dashboard/first-deal-cockpit/contract-ready/page.tsx",
+  "src/app/dashboard/first-deal-cockpit/evidence/page.tsx",
+  "src/app/dashboard/first-deal-cockpit/report/page.tsx",
   "src/app/dashboard/autonomy/page.tsx",
   "src/app/dashboard/autonomy/rules/page.tsx",
   "src/app/dashboard/autonomy/runs/page.tsx",
@@ -604,6 +611,34 @@ test("V30 live activation pages expose no bulk or bypass controls", () => {
     "bypass enabled",
     "bulk enabled",
     "provider called\" value=\"1"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("V31 first deal cockpit pages expose no unsafe execution controls", () => {
+  const files = [
+    "src/app/dashboard/first-deal-cockpit/page.tsx",
+    "src/app/dashboard/first-deal-cockpit/calls/page.tsx",
+    "src/app/dashboard/first-deal-cockpit/offers/page.tsx",
+    "src/app/dashboard/first-deal-cockpit/buyer-validation/page.tsx",
+    "src/app/dashboard/first-deal-cockpit/contract-ready/page.tsx",
+    "src/app/dashboard/first-deal-cockpit/evidence/page.tsx",
+    "src/app/dashboard/first-deal-cockpit/report/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "blast",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "publish automatically",
+    "guarantee profit",
+    "legal advice",
+    "live send",
+    "buyer is guaranteed"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

@@ -43,6 +43,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Mobile operator mode for field-call queues, quick notes, DNC capture, approvals, buyer checks, document metadata, offline-safe drafts, and field briefings
 - Production cloud readiness for private deployment profiles, masked environment validation, backup/restore metadata, monitoring readiness, and fail-closed hosting checks
 - Controlled live provider activation records for one-action OpenAI, email, SMS, CRM, and storage lanes gated by safety, dry-runs, owner approval, provider readiness, cloud readiness, idempotency, and audit logs
+- First Deal Cockpit execution guidance for real lead batches, QA, seller calls, offer decisions, buyer validation, contract-ready prep, assignment-fee evidence, and field-test reports
 
 ## Command Hierarchy
 
@@ -134,7 +135,7 @@ Controlled provider/action stack:
 
 Default provider mode remains mock/dry-run. No real provider secrets are required or committed.
 
-## Phase Map V1-V30
+## Phase Map V1-V31
 
 V1 Private Operator Deal OS:
 Established the single-owner dashboard, divisions, managers, expert agents, lead scoring, underwriting, profit control, buyer matching, compliance checklists, seed data, and private-mode safety rules.
@@ -226,6 +227,9 @@ Added cloud deployment profiles, environment validation, security checks, backup
 V30 Controlled Live Provider Activation:
 Added provider activation records, attempts, blocked attempts, and audit events for OpenAI generation, single email, single SMS, CRM sync eligibility, and sanitized storage upload lanes. Every lane requires source linkage, dry-run hash verification, owner approval, live flag status, provider readiness, production cloud readiness, idempotency, one-action constraints, and sanitized audit responses. Bulk sends, buyer blasts, worker bypass, campaign bulk execution, legal/title/contract/payment actions, and source-changed-after-dry-run attempts remain blocked.
 
+V31 Real Deal Execution Pack:
+Added the First Deal Cockpit for the first real wholesale execution loop: imported real leads, QA, prioritized calls, manual call outcomes, underwriting, offer decisioning, buyer validation, contract-ready readiness, title/attorney review prep, assignment-fee evidence, field-test reporting, and Prime 2 execution coaching. V31 is guidance and tracking only; the owner still performs and approves real-world action, and the cockpit cannot send outreach, execute contracts, submit title packets, handle payments, publish portals, or provide legal guidance.
+
 ## Local Run Commands
 
 Backend setup:
@@ -253,6 +257,7 @@ Local URLs:
 - Mobile operator mode: http://localhost:3000/mobile
 - Cloud readiness: http://localhost:3000/dashboard/cloud-readiness
 - Live activation: http://localhost:3000/dashboard/live-activation
+- First Deal Cockpit: http://localhost:3000/dashboard/first-deal-cockpit
 - Backend health: http://localhost:8000/health
 - Backend API root examples: http://localhost:8000/api/command-center and http://localhost:8000/api/system/rules
 - Buyer portal demo: http://localhost:3000/buyer-portal
@@ -316,6 +321,13 @@ Recommended route smoke checks:
 - `/dashboard/live-activation/approvals`
 - `/dashboard/live-activation/attempts`
 - `/dashboard/live-activation/blocked`
+- `/dashboard/first-deal-cockpit`
+- `/dashboard/first-deal-cockpit/calls`
+- `/dashboard/first-deal-cockpit/offers`
+- `/dashboard/first-deal-cockpit/buyer-validation`
+- `/dashboard/first-deal-cockpit/contract-ready`
+- `/dashboard/first-deal-cockpit/evidence`
+- `/dashboard/first-deal-cockpit/report`
 - `/buyer-portal`
 - `/seller-portal`
 

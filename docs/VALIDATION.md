@@ -47,6 +47,7 @@ Expected coverage includes:
 - V28 mobile operator overview, quick call outcome capture, DNC outreach blocking, offline draft idempotency, quick approval gate blocking, and note safety review
 - V29 production cloud readiness fail-closed behavior, masked secret posture, provider flags default off, backup metadata safety, and monitoring health summary
 - V30 controlled live provider activation owner approval, dry-run, provider/cloud readiness, unchanged source hash, idempotency, SMS consent/DNC/opt-out, AI safety/cost cap, worker/campaign bypass blocks, and audit logging
+- V31 real deal execution batch creation, status transitions, call checklist generation, offer decision calculations, buyer validation gate, contract-ready checklist, assignment-fee evidence validation, field-test report learning signals, execution coach recommendations, and no live/legal/title/payment action paths
 
 ## Frontend
 
@@ -72,6 +73,7 @@ Expected coverage includes:
 - V28 mobile routes render and expose no unsafe field controls
 - V29 cloud readiness routes render and expose no deployment or secret controls
 - V30 live activation routes render and expose no bulk or bypass controls
+- V31 first deal cockpit routes render and expose no unsafe call/send/contract/title/payment controls
 
 ## Source Sweeps
 
@@ -170,6 +172,13 @@ Smoke check:
 - `/dashboard/live-activation/approvals`
 - `/dashboard/live-activation/attempts`
 - `/dashboard/live-activation/blocked`
+- `/dashboard/first-deal-cockpit`
+- `/dashboard/first-deal-cockpit/calls`
+- `/dashboard/first-deal-cockpit/offers`
+- `/dashboard/first-deal-cockpit/buyer-validation`
+- `/dashboard/first-deal-cockpit/contract-ready`
+- `/dashboard/first-deal-cockpit/evidence`
+- `/dashboard/first-deal-cockpit/report`
 - `/buyer-portal`
 - `/seller-portal`
 
@@ -250,6 +259,13 @@ Smoke check:
 - `/api/v1/live-activation/approvals`
 - `/api/v1/live-activation/attempts`
 - `/api/v1/live-activation/blocked`
+- `/api/v1/real-deal-execution`
+- `/api/v1/real-deal-execution/calls`
+- `/api/v1/real-deal-execution/offers`
+- `/api/v1/real-deal-execution/buyer-validation`
+- `/api/v1/real-deal-execution/contract-ready`
+- `/api/v1/real-deal-execution/evidence`
+- `/api/v1/real-deal-execution/report`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -264,6 +280,20 @@ Before using real lead data:
 - Confirm do-not-contact call outcomes block future live outreach eligibility.
 - Confirm prediction feedback produces deterministic, explainable scoring suggestions.
 - Confirm owner review remains required before applying scoring adjustments or taking field action.
+
+## V31 First Deal Execution Checklist
+
+Before using the cockpit with a real batch:
+
+- Confirm imported leads were previewed, QA checked, and committed intentionally.
+- Confirm the top call queue is guidance-only and does not expose live call, SMS, or email controls.
+- Confirm DNC call outcomes block future outreach eligibility.
+- Confirm offer decisions use source-backed ARV, repair, buyer-cost, buyer-profit, seller-ask, and target assignment-fee inputs.
+- Confirm buyer validation blocks weak margin, weak demand, missing POF, low reliability, and price-below-spread cases.
+- Confirm contract-ready remains an internal readiness status for external attorney/title process only.
+- Confirm assignment-fee evidence blocks unsupported 10K+ claims and invented seller/buyer numbers.
+- Confirm batch reports create advisory learning signals only and do not auto-apply scoring changes.
+- Confirm owner approval remains required before any real-world action.
 
 ## Production Readiness Gates
 

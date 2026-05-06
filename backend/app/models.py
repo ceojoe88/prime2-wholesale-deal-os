@@ -3048,3 +3048,38 @@ class LiveProviderAuditEvent(TimestampMixin, Base):
     provider_response_sanitized: Mapped[bool] = mapped_column(Boolean, default=True)
     secrets_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
     live_action_executed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class RealDealExecutionBatch(TimestampMixin, Base):
+    __tablename__ = "real_deal_execution_batches"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    batch_name: Mapped[str] = mapped_column(String(160), default="")
+    lead_import_batch_id: Mapped[str | None] = mapped_column(
+        ForeignKey("lead_import_batches.id"), nullable=True
+    )
+    market_zip_focus: Mapped[list[str]] = mapped_column(JSON, default=list)
+    target_assignment_fee: Mapped[int] = mapped_column(Integer, default=10_000)
+    batch_status: Mapped[str] = mapped_column(String(80), default="draft")
+    leads_reviewed: Mapped[int] = mapped_column(Integer, default=0)
+    calls_completed: Mapped[int] = mapped_column(Integer, default=0)
+    motivated_sellers: Mapped[int] = mapped_column(Integer, default=0)
+    offers_prepared: Mapped[int] = mapped_column(Integer, default=0)
+    offers_accepted: Mapped[int] = mapped_column(Integer, default=0)
+    buyer_matches: Mapped[int] = mapped_column(Integer, default=0)
+    contract_ready_count: Mapped[int] = mapped_column(Integer, default=0)
+    projected_assignment_fees: Mapped[int] = mapped_column(Integer, default=0)
+    verified_assignment_fees: Mapped[int] = mapped_column(Integer, default=0)
+    owner_notes: Mapped[str] = mapped_column(Text, default="")
+    next_best_action: Mapped[str] = mapped_column(Text, default="")
+    blockers: Mapped[list[str]] = mapped_column(JSON, default=list)
+    safety_notes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    owner_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
+    live_outreach_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    bulk_blast_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_execution_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    title_submission_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    payment_handling_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_guidance_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    guaranteed_profit_claim_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    owner_executes_real_world_actions: Mapped[bool] = mapped_column(Boolean, default=True)

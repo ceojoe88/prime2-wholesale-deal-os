@@ -62,6 +62,8 @@ V26 adds market data enrichment. It stores manual/imported market profiles, comp
 
 V27 adds Prime 2 memory and learning. It stores source-cited memory items, learning signals, scoring weight recommendations, and playbook recommendations so Prime 2 can adapt strategy from outcomes without black-box scoring, unsupported claims, or owner approval bypass.
 
+V31 adds the real deal execution pack. It gives Prime 2 a First Deal Cockpit for the first real wholesale loop: real lead batches, QA, manual seller calls, underwriting, offer decisioning, buyer validation, contract-ready readiness, title/attorney prep, assignment-fee evidence, field-test reporting, and execution coaching. It is guidance and tracking only; it cannot contact sellers or buyers, execute contracts, submit title packets, handle payments, or bypass owner approval.
+
 ## Backend Modules
 
 - `app/models.py`: SQLAlchemy persistence models for divisions, agents, leads, deals, buyers, portals, communications, contract control, title/review coordination, deal rooms, evidence, assignment fees, automation, optimization, forecasting, operator mode, production readiness, audit exports, attachments, backups, lead imports, lead QA, call outcomes, field feedback, and scoring adjustment suggestions.
@@ -83,6 +85,7 @@ V27 adds Prime 2 memory and learning. It stores source-cited memory items, learn
 - `app/domains/campaign_brain/*`: V25 campaign planning, audience segmentation, sequence prep, activation gating, stop-condition handling, performance tracking, route sanitization, and hard blocks against uncontrolled outreach, bulk sending, deceptive scarcity, fake claims, and approval bypass.
 - `app/domains/market_enrichment/*`: V26 market profiles, comps, rent estimates, buyer activity snapshots, lead source ROI records, deterministic heat scoring, ARV confidence, demand confidence, source-quality gates, and sanitizers that label strategy outputs as estimate-only.
 - `app/domains/prime_memory/*`: V27 source-cited memory items, learning signals, scoring weight recommendations, playbook recommendations, approved AI context projection, external sanitization, and guards against unsupported claims, auto-applied scoring, compliance overrides, and portal strategy exposure.
+- `app/domains/real_deal_execution/*`: V31 first deal execution cockpit with batch records, status workflow, call checklist generation, offer decision scoring, buyer validation gates, contract-ready gates, assignment-fee evidence checks, field-test reports, learning-signal creation, sanitization, and hard blocks against live outreach, legal/title/payment/contract execution, and unsupported 10K+ claims.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -1062,6 +1065,49 @@ V30 safety boundary:
 - Blocked attempts are audit records and never call providers.
 - Responses are sanitized and secrets are never exposed.
 
+## V31 Real Deal Execution Pack
+
+V31 adds `app.domains.real_deal_execution`, the First Deal Cockpit execution layer. The domain creates one real lead execution batch model and assembles live internal boards from existing V19 lead import, lead QA, call outcome, deal, offer packet, buyer match, assignment-fee, and memory records.
+
+Core backend functions:
+
+- Track execution batches with market/zip focus, target assignment fee, batch status, reviewed leads, completed calls, motivated sellers, prepared offers, buyer matches, contract-ready count, projected/verified assignment fees, owner notes, blockers, and safety flags.
+- Generate a guided seller call checklist for manual operator calls.
+- Build the offer decision board with ARV, repairs, buyer costs, buyer desired profit, buyer max price, max seller offer, seller asking price, conservative/standard/aggressive offer options, buyer-margin impact, seller reasonableness notes, Prime 2 recommendation, and owner approval status.
+- Gate buyer validation on buyer demand, POF status, reliability, buyer max price fit, margin strength, and interest status.
+- Gate contract-ready recommendations on seller motivation, accepted or soft-accepted terms, underwriting, buyer demand, offer approval, compliance, assignment readiness, title/attorney prep availability, and owner approval.
+- Validate assignment-fee evidence from source records and block unsupported 10K+ claims, fake buyer price, fake seller acceptance, invented ARV/repair data, and guarantee language.
+- Generate a batch field-test report and advisory Prime 2 learning signal without auto-applying scoring changes.
+
+Backend routes:
+
+- `/api/v1/real-deal-execution`
+- `/api/v1/real-deal-execution/batches`
+- `/api/v1/real-deal-execution/batches/{batch_id}/status`
+- `/api/v1/real-deal-execution/calls`
+- `/api/v1/real-deal-execution/offers`
+- `/api/v1/real-deal-execution/buyer-validation`
+- `/api/v1/real-deal-execution/contract-ready`
+- `/api/v1/real-deal-execution/evidence`
+- `/api/v1/real-deal-execution/report`
+
+Frontend routes:
+
+- `/dashboard/first-deal-cockpit`
+- `/dashboard/first-deal-cockpit/calls`
+- `/dashboard/first-deal-cockpit/offers`
+- `/dashboard/first-deal-cockpit/buyer-validation`
+- `/dashboard/first-deal-cockpit/contract-ready`
+- `/dashboard/first-deal-cockpit/evidence`
+- `/dashboard/first-deal-cockpit/report`
+
+V31 safety boundary:
+
+- The cockpit does not make calls, send messages, publish portals, execute contracts, submit title packets, handle payments, provide legal guidance, or create guaranteed fee/profit claims.
+- Contract-ready remains an internal readiness mark for external attorney/title process.
+- Mobile call queues and cockpit call queues are manual capture and guidance only.
+- Prime 2 execution coach recommendations are advisory and cannot override owner approval, compliance, buyer margin protection, evidence requirements, or existing V5/V13/V22/V30 gates.
+
 ## Frontend Routes
 
 All requested dashboard routes are implemented under `frontend/src/app/dashboard`, including dynamic detail pages:
@@ -1172,6 +1218,13 @@ All requested dashboard routes are implemented under `frontend/src/app/dashboard
 - `/dashboard/evidence-attachments`
 - `/dashboard/provider-readiness`
 - `/dashboard/backups`
+- `/dashboard/first-deal-cockpit`
+- `/dashboard/first-deal-cockpit/calls`
+- `/dashboard/first-deal-cockpit/offers`
+- `/dashboard/first-deal-cockpit/buyer-validation`
+- `/dashboard/first-deal-cockpit/contract-ready`
+- `/dashboard/first-deal-cockpit/evidence`
+- `/dashboard/first-deal-cockpit/report`
 - `/dashboard/buyers`
 - `/dashboard/buyers/[buyerId]`
 - `/dashboard/buyer-matches`
@@ -1242,6 +1295,8 @@ V17 exception: semi-autonomous operator mode can run the internal scan-score-rou
 V18 exception: production readiness records can prepare approval UX summaries, sanitized audit export packets, evidence attachment metadata, backup/export metadata, provider sandbox checks, environment checks, and deployment hardening checklists. They cannot make real provider calls unless sandbox-ready and explicitly gated, expose the system publicly without an auth checklist, commit secrets, include raw private seller/buyer data in unsafe exports, provide legal advice, or convert audit/backup records into live transmissions.
 
 V19 exception: real lead import and field testing can preview CSV rows, commit approved rows once, score lead QA, record manual call outcomes, block do-not-contact eligibility, and suggest explainable scoring adjustments from field feedback. It cannot auto-contact imported leads, create bulk outreach, publish imported rows to portals, invent valuation/profit inputs, guarantee deals, execute contracts, submit to title, collect payments, or apply scoring changes without owner review.
+
+V31 exception: the real deal execution cockpit can organize a first batch, prioritize calls, show offer decisions, validate buyers, mark internal contract-ready readiness, prepare title/attorney handoff reminders, track assignment-fee evidence, and generate advisory field-test learning signals. It cannot call, text, email, blast, publish portals, execute contracts, submit to title, handle payments, provide legal guidance, invent numbers, guarantee fees, or bypass owner approval.
 
 Allowed:
 

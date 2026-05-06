@@ -16,6 +16,7 @@ from app.domains.market_enrichment.router import router as market_enrichment_v1_
 from app.domains.mobile_operator.router import router as mobile_operator_v1_router
 from app.domains.prime_memory.router import router as prime_memory_v1_router
 from app.domains.provider_readiness.router import router as provider_readiness_v1_router
+from app.domains.real_deal_execution.router import router as real_deal_execution_v1_router
 from app.models import (
     AIRequestLog,
     AITemplate,
@@ -46,6 +47,7 @@ from app.models import (
     ProviderSandboxReadinessCheck,
     ProviderRegistry,
     PrimeMemoryItem,
+    RealDealExecutionBatch,
     LeadSpendPlan,
     MarketScalingScore,
     OfferPacket,
@@ -117,6 +119,7 @@ async def lifespan(app: FastAPI):
                 or session.query(MobileOperatorNote).count() == 0
                 or session.query(CloudDeploymentProfile).count() == 0
                 or session.query(LiveProviderActivation).count() == 0
+                or session.query(RealDealExecutionBatch).count() == 0
             ):
                 seed_database(session)
     yield
@@ -146,6 +149,7 @@ app.include_router(prime_memory_v1_router)
 app.include_router(mobile_operator_v1_router)
 app.include_router(cloud_readiness_v1_router)
 app.include_router(live_activation_v1_router)
+app.include_router(real_deal_execution_v1_router)
 
 
 @app.get("/health")

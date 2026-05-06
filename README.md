@@ -17,6 +17,7 @@ The useful outcome is speed with guardrails:
 - Prepare seller and buyer communications as drafts.
 - Coordinate controlled buyer/seller portal views without leaking internal strategy.
 - Keep legal, title, payment, live outreach, and high-risk actions gated.
+- Guide the first real wholesale loop from imported leads through QA, seller calls, underwriting, offer decisions, buyer validation, contract-ready prep, title/attorney review prep, assignment-fee evidence, and field-test reporting.
 
 ## Prime 2 Identity
 
@@ -58,6 +59,7 @@ Implemented phases:
 - V28 mobile operator mode
 - V29 production cloud readiness
 - V30 controlled live provider activation
+- V31 real deal execution pack and first deal cockpit
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -70,6 +72,7 @@ Backend:
 - Seed/demo data for divisions, managers, agents, leads, buyers, deals, portals, evidence, forecasts, automation, audit exports, production readiness, real lead imports, QA, call outcomes, and field feedback
 - Deterministic domain modules for scoring, underwriting, profit control, portals, communication gates, automation, optimization, forecasting, readiness checks, CSV import QA, field-call outcome tracking, prediction feedback, controlled AI drafting/summarization, and background worker jobs
 - Tests for safety gates, formulas, route coverage, portal sanitizers, automation blocks, evidence attribution, production readiness, seed integrity, real CSV import, lead QA, call outcomes, field-testing guardrails, AI Gateway safety/cost/audit controls, and worker runtime idempotency/retry/heartbeat behavior
+- V31 real deal execution services for batch tracking, call checklists, offer decisioning, buyer validation, contract-ready gates, evidence validation, field-test reporting, and Prime 2 execution coaching
 
 Frontend:
 
@@ -154,6 +157,12 @@ This phase does not deploy the app and does not activate providers. It exposes m
 V30 adds the final one-action provider activation gate for OpenAI, email, SMS, CRM, and storage lanes. Each activation records provider readiness, cloud readiness, safety snapshots, dry-run receipt, dry-run hash, current source hash, live flag status, owner approval, idempotency key, blocked reasons, attempts, blocked attempts, and audit events.
 
 This is still not a bulk sender or automation bypass. Worker jobs and campaign records cannot trigger provider action without an owner-approved activation. Campaign bulk paths stay blocked, SMS requires consent/DNC/opt-out checks, OpenAI requests remain safety/cost capped, storage requires sanitized metadata, and production readiness must be safe before any lane can move beyond blocked review.
+
+## V31 Real Deal Execution Pack
+
+V31 adds the First Deal Cockpit, a guided internal execution board for the first real wholesale deal loop. It connects real lead batches, QA, call priority, manual seller call outcomes, underwriting, offer owner decisions, buyer validation, contract-ready readiness, title/attorney handoff prep, assignment-fee evidence, and field-test reporting.
+
+This is not a new live-action layer. The cockpit gives Prime 2 a way to recommend the next step, show blockers, validate buyer margin, block unsupported 10K+ claims, and create advisory learning signals after a batch. The owner still performs and approves real-world action, and the cockpit cannot send outreach, execute contracts, submit title packets, handle payments, or provide legal guidance.
 
 ## Safety Boundaries
 
@@ -248,6 +257,7 @@ Open:
 - Production readiness: [http://localhost:3000/dashboard/production-readiness](http://localhost:3000/dashboard/production-readiness)
 - Cloud readiness: [http://localhost:3000/dashboard/cloud-readiness](http://localhost:3000/dashboard/cloud-readiness)
 - Live activation: [http://localhost:3000/dashboard/live-activation](http://localhost:3000/dashboard/live-activation)
+- First Deal Cockpit: [http://localhost:3000/dashboard/first-deal-cockpit](http://localhost:3000/dashboard/first-deal-cockpit)
 - Buyer portal demo: [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - Seller portal demo: [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)
 - Backend health: [http://localhost:8000/health](http://localhost:8000/health)
