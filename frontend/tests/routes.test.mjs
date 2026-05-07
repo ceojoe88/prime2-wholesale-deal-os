@@ -9,6 +9,12 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const requiredRouteFiles = [
   "src/app/dashboard/page.tsx",
   "src/app/dashboard/command-center/page.tsx",
+  "src/app/dashboard/client-command/page.tsx",
+  "src/app/dashboard/client-command/workspaces/page.tsx",
+  "src/app/dashboard/client-command/leads/page.tsx",
+  "src/app/dashboard/client-command/leads/[leadId]/page.tsx",
+  "src/app/dashboard/client-command/hot-leads/page.tsx",
+  "src/app/dashboard/client-command/next-actions/page.tsx",
   "src/app/dashboard/first-deal-cockpit/page.tsx",
   "src/app/dashboard/first-deal-cockpit/calls/page.tsx",
   "src/app/dashboard/first-deal-cockpit/offers/page.tsx",
@@ -639,6 +645,38 @@ test("V31 first deal cockpit pages expose no unsafe execution controls", () => {
     "legal advice",
     "live send",
     "buyer is guaranteed"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP1 and CP2 client command pages expose no dangerous client controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/workspaces/page.tsx",
+    "src/app/dashboard/client-command/leads/page.tsx",
+    "src/app/dashboard/client-command/leads/[leadId]/page.tsx",
+    "src/app/dashboard/client-command/hot-leads/page.tsx",
+    "src/app/dashboard/client-command/next-actions/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send sms",
+    "send email",
+    "auto call",
+    "voice call",
+    "skip trace provider",
+    "dnc check provider",
+    "stripe charge",
+    "charge card",
+    "send contract",
+    "e-signature send",
+    "legal advice",
+    "guaranteed roi",
+    "guaranteed profit",
+    "raw_provider_payload",
+    "internal_prime_governance"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

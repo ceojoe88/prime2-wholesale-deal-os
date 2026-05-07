@@ -125,6 +125,14 @@ from app.models import (
     CallIntelligenceSession,
     CallObjectionRecord,
     CallTranscriptInput,
+    ClientLeadDivisionEvent,
+    ClientLeadIntelligenceScore,
+    ClientLeadMissingDataItem,
+    ClientLeadNextBestAction,
+    ClientLeadProfile,
+    ClientWorkspace,
+    ClientWorkspaceMember,
+    ClientWorkspaceRole,
     ClosingCoordinationChecklist,
     CloudBackupReadinessRecord,
     CloudDeploymentProfile,
@@ -8647,6 +8655,488 @@ def build_real_deal_execution_batch_records() -> list[dict[str, object]]:
     ]
 
 
+CLIENT_COMMAND_PERMISSIONS = [
+    "client_command.view",
+    "client_command.manage",
+    "client_command.leads_view",
+    "client_command.leads_manage",
+    "client_command.reports_view",
+    "client_command.admin",
+]
+
+
+def build_client_workspace_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-workspace-001",
+            "workspace_name": "Acme Investor Command",
+            "client_name": "Acme Property Buyers",
+            "workspace_status": "active",
+            "workspace_type": "investor_command",
+            "market_focus": ["Dallas TX", "Fort Worth TX"],
+            "allowed_permissions": CLIENT_COMMAND_PERMISSIONS,
+            "safety_rules": [
+                "No outbound provider actions in CP1/CP2.",
+                "No internal Prime governance or raw provider payload exposure.",
+                "Lead intelligence is deterministic and client-safe.",
+            ],
+            "onboarding_notes": "Client workspace foundation seeded for safe command-center review.",
+            "internal_prime_governance_visible": False,
+            "raw_provider_payload_exposure_allowed": False,
+            "admin_only_controls_visible": False,
+            "live_outreach_enabled": False,
+            "billing_enabled": False,
+            "contract_esign_enabled": False,
+        },
+        {
+            "id": "client-workspace-002",
+            "workspace_name": "Oakline Investor Desk",
+            "client_name": "Oakline Holdings",
+            "workspace_status": "active",
+            "workspace_type": "investor_command",
+            "market_focus": ["Arlington TX"],
+            "allowed_permissions": [
+                "client_command.view",
+                "client_command.leads_view",
+                "client_command.reports_view",
+            ],
+            "safety_rules": [
+                "No outbound provider actions in CP1/CP2.",
+                "Workspace data remains tenant-isolated.",
+            ],
+            "onboarding_notes": "Second workspace used to validate tenant isolation.",
+            "internal_prime_governance_visible": False,
+            "raw_provider_payload_exposure_allowed": False,
+            "admin_only_controls_visible": False,
+            "live_outreach_enabled": False,
+            "billing_enabled": False,
+            "contract_esign_enabled": False,
+        },
+    ]
+
+
+def build_client_workspace_role_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-role-001-admin",
+            "workspace_id": "client-workspace-001",
+            "role_name": "Client Command Admin",
+            "role_key": "client_admin",
+            "permissions": CLIENT_COMMAND_PERMISSIONS,
+            "tenant_safe": True,
+            "client_visible": True,
+            "can_view_internal_governance": False,
+            "can_view_raw_provider_payloads": False,
+            "can_use_admin_controls": False,
+        },
+        {
+            "id": "client-role-001-analyst",
+            "workspace_id": "client-workspace-001",
+            "role_name": "Lead Intelligence Analyst",
+            "role_key": "lead_analyst",
+            "permissions": [
+                "client_command.view",
+                "client_command.leads_view",
+                "client_command.reports_view",
+            ],
+            "tenant_safe": True,
+            "client_visible": True,
+            "can_view_internal_governance": False,
+            "can_view_raw_provider_payloads": False,
+            "can_use_admin_controls": False,
+        },
+        {
+            "id": "client-role-002-analyst",
+            "workspace_id": "client-workspace-002",
+            "role_name": "Workspace Analyst",
+            "role_key": "lead_analyst",
+            "permissions": [
+                "client_command.view",
+                "client_command.leads_view",
+                "client_command.reports_view",
+            ],
+            "tenant_safe": True,
+            "client_visible": True,
+            "can_view_internal_governance": False,
+            "can_view_raw_provider_payloads": False,
+            "can_use_admin_controls": False,
+        },
+    ]
+
+
+def build_client_workspace_member_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-member-001-owner",
+            "workspace_id": "client-workspace-001",
+            "role_id": "client-role-001-admin",
+            "member_name": "Acme Owner",
+            "member_email": "owner@acme.example",
+            "member_status": "active",
+            "permission_overrides": [],
+            "tenant_safe": True,
+            "client_workspace_safe": True,
+        },
+        {
+            "id": "client-member-001-analyst",
+            "workspace_id": "client-workspace-001",
+            "role_id": "client-role-001-analyst",
+            "member_name": "Acme Analyst",
+            "member_email": "analyst@acme.example",
+            "member_status": "active",
+            "permission_overrides": [],
+            "tenant_safe": True,
+            "client_workspace_safe": True,
+        },
+        {
+            "id": "client-member-002-analyst",
+            "workspace_id": "client-workspace-002",
+            "role_id": "client-role-002-analyst",
+            "member_name": "Oakline Analyst",
+            "member_email": "analyst@oakline.example",
+            "member_status": "active",
+            "permission_overrides": [],
+            "tenant_safe": True,
+            "client_workspace_safe": True,
+        },
+    ]
+
+
+def build_client_lead_profile_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-lead-001",
+            "workspace_id": "client-workspace-001",
+            "display_name": "South Dallas absentee owner",
+            "property_address_summary": "Dallas, TX 75216",
+            "property_city": "Dallas",
+            "property_state": "TX",
+            "property_zip": "75216",
+            "property_type": "single_family",
+            "beds": 3,
+            "baths": 2,
+            "sqft": 1420,
+            "estimated_value": 238000,
+            "estimated_equity": 132000,
+            "estimated_equity_percent": 55,
+            "lead_source": "county_records",
+            "lead_type": "absentee_owner",
+            "lead_status": "new",
+            "motivation_signals": ["absentee_owner", "tired_landlord", "deferred_maintenance"],
+            "distress_signals": ["vacant_signal", "code_violation_note"],
+            "contact_channels_present": ["phone", "mailing_address"],
+            "timeline_days": 21,
+            "asking_price": 155000,
+            "data_confidence": 78,
+            "client_notes": "Client-safe lead profile with high equity and multiple distress indicators.",
+            "internal_prime_governance_notes": "Hidden Prime governance note for sanitizer tests.",
+            "raw_provider_payload": {"provider": "mock", "raw": "hidden"},
+            "dnc_flag": False,
+            "legal_question_flag": False,
+            "outbound_provider_action_allowed": False,
+            "raw_provider_payload_exposed": False,
+        },
+        {
+            "id": "client-lead-002",
+            "workspace_id": "client-workspace-001",
+            "display_name": "Fort Worth inherited property",
+            "property_address_summary": "Fort Worth, TX 76104",
+            "property_city": "Fort Worth",
+            "property_state": "TX",
+            "property_zip": "76104",
+            "property_type": "single_family",
+            "beds": 2,
+            "baths": 1,
+            "sqft": 980,
+            "estimated_value": 184000,
+            "estimated_equity": 96000,
+            "estimated_equity_percent": 52,
+            "lead_source": "probate_list",
+            "lead_type": "inherited",
+            "lead_status": "research",
+            "motivation_signals": ["inherited", "out_of_area_owner"],
+            "distress_signals": ["property_condition_unknown"],
+            "contact_channels_present": ["email"],
+            "timeline_days": 45,
+            "asking_price": 0,
+            "data_confidence": 64,
+            "client_notes": "Needs asking price and phone before readiness improves.",
+            "internal_prime_governance_notes": "Hidden Prime governance note for sanitizer tests.",
+            "raw_provider_payload": {"provider": "mock", "raw": "hidden"},
+            "dnc_flag": False,
+            "legal_question_flag": False,
+            "outbound_provider_action_allowed": False,
+            "raw_provider_payload_exposed": False,
+        },
+        {
+            "id": "client-lead-003",
+            "workspace_id": "client-workspace-001",
+            "display_name": "Incomplete vacant lead",
+            "property_address_summary": "",
+            "property_city": "Dallas",
+            "property_state": "TX",
+            "property_zip": "",
+            "property_type": "",
+            "beds": 0,
+            "baths": 0,
+            "sqft": 0,
+            "estimated_value": 0,
+            "estimated_equity": 0,
+            "estimated_equity_percent": 0,
+            "lead_source": "driving_for_dollars",
+            "lead_type": "vacant",
+            "lead_status": "needs_research",
+            "motivation_signals": [],
+            "distress_signals": ["vacant_signal"],
+            "contact_channels_present": [],
+            "timeline_days": 90,
+            "asking_price": 0,
+            "data_confidence": 36,
+            "client_notes": "Low-readiness lead retained for missing-data workflow.",
+            "internal_prime_governance_notes": "Hidden Prime governance note for sanitizer tests.",
+            "raw_provider_payload": {"provider": "mock", "raw": "hidden"},
+            "dnc_flag": False,
+            "legal_question_flag": False,
+            "outbound_provider_action_allowed": False,
+            "raw_provider_payload_exposed": False,
+        },
+        {
+            "id": "client-lead-004",
+            "workspace_id": "client-workspace-002",
+            "display_name": "Oakline Arlington owner",
+            "property_address_summary": "Arlington, TX 76010",
+            "property_city": "Arlington",
+            "property_state": "TX",
+            "property_zip": "76010",
+            "property_type": "single_family",
+            "beds": 3,
+            "baths": 1.5,
+            "sqft": 1210,
+            "estimated_value": 210000,
+            "estimated_equity": 80000,
+            "estimated_equity_percent": 38,
+            "lead_source": "county_records",
+            "lead_type": "high_equity",
+            "lead_status": "new",
+            "motivation_signals": ["high_equity"],
+            "distress_signals": [],
+            "contact_channels_present": ["phone"],
+            "timeline_days": 70,
+            "asking_price": 0,
+            "data_confidence": 58,
+            "client_notes": "Separate tenant record for isolation tests.",
+            "internal_prime_governance_notes": "Hidden Prime governance note for sanitizer tests.",
+            "raw_provider_payload": {"provider": "mock", "raw": "hidden"},
+            "dnc_flag": False,
+            "legal_question_flag": False,
+            "outbound_provider_action_allowed": False,
+            "raw_provider_payload_exposed": False,
+        },
+    ]
+
+
+def build_client_lead_intelligence_score_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-score-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "motivation_score": 79,
+            "urgency_score": 86,
+            "equity_signal_score": 75,
+            "distress_signal_score": 52,
+            "contactability_score": 80,
+            "deal_probability_score": 75,
+            "missing_data_score": 100,
+            "final_priority_score": 80,
+            "recommended_next_action": "owner_review_hot_lead",
+            "reason_summary": "3 motivation signals; 2 distress signals; 55% estimated equity; 0 missing data items",
+            "confidence_level": "high",
+            "requires_human_review": True,
+            "score_version": "cp2.v1",
+            "raw_risk_logic": {"client_hidden": True},
+            "client_safe": True,
+        },
+        {
+            "id": "client-score-002",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-002",
+            "motivation_score": 61,
+            "urgency_score": 62,
+            "equity_signal_score": 72,
+            "distress_signal_score": 36,
+            "contactability_score": 50,
+            "deal_probability_score": 58,
+            "missing_data_score": 87,
+            "final_priority_score": 63,
+            "recommended_next_action": "research_and_prepare_call_plan",
+            "reason_summary": "2 motivation signals; 1 distress signal; 52% estimated equity; 1 missing data item",
+            "confidence_level": "medium",
+            "requires_human_review": False,
+            "score_version": "cp2.v1",
+            "raw_risk_logic": {"client_hidden": True},
+            "client_safe": True,
+        },
+        {
+            "id": "client-score-003",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "motivation_score": 25,
+            "urgency_score": 17,
+            "equity_signal_score": 0,
+            "distress_signal_score": 36,
+            "contactability_score": 20,
+            "deal_probability_score": 20,
+            "missing_data_score": 0,
+            "final_priority_score": 16,
+            "recommended_next_action": "complete_missing_data",
+            "reason_summary": "0 motivation signals; 1 distress signal; 0% estimated equity; 7 missing data items",
+            "confidence_level": "low",
+            "requires_human_review": True,
+            "score_version": "cp2.v1",
+            "raw_risk_logic": {"client_hidden": True},
+            "client_safe": True,
+        },
+        {
+            "id": "client-score-004",
+            "workspace_id": "client-workspace-002",
+            "lead_id": "client-lead-004",
+            "motivation_score": 43,
+            "urgency_score": 37,
+            "equity_signal_score": 38,
+            "distress_signal_score": 20,
+            "contactability_score": 50,
+            "deal_probability_score": 39,
+            "missing_data_score": 100,
+            "final_priority_score": 50,
+            "recommended_next_action": "nurture_or_skip_for_now",
+            "reason_summary": "1 motivation signal; 0 distress signals; 38% estimated equity; 0 missing data items",
+            "confidence_level": "medium",
+            "requires_human_review": False,
+            "score_version": "cp2.v1",
+            "raw_risk_logic": {"client_hidden": True},
+            "client_safe": True,
+        },
+    ]
+
+
+def build_client_lead_next_best_action_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-action-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "action_type": "owner_review_hot_lead",
+            "action_label": "Review hot lead with client-safe notes",
+            "reason": "High priority score with strong equity and contactability.",
+            "priority": 80,
+            "status": "owner_review",
+            "confidence_level": "high",
+            "requires_human_review": True,
+            "outbound_action_allowed": False,
+            "provider_action_allowed": False,
+            "client_safe": True,
+        },
+        {
+            "id": "client-action-002",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-002",
+            "action_type": "research_and_prepare_call_plan",
+            "action_label": "Research and prepare a call plan",
+            "reason": "Moderate score; complete price and phone context before action.",
+            "priority": 63,
+            "status": "open",
+            "confidence_level": "medium",
+            "requires_human_review": False,
+            "outbound_action_allowed": False,
+            "provider_action_allowed": False,
+            "client_safe": True,
+        },
+        {
+            "id": "client-action-003",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "action_type": "complete_missing_data",
+            "action_label": "Complete missing lead data",
+            "reason": "Missing address, valuation, equity, and contactability data.",
+            "priority": 16,
+            "status": "open",
+            "confidence_level": "low",
+            "requires_human_review": True,
+            "outbound_action_allowed": False,
+            "provider_action_allowed": False,
+            "client_safe": True,
+        },
+    ]
+
+
+def build_client_lead_missing_data_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-missing-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-002",
+            "field_name": "asking_price",
+            "reason": "Asking price is needed before offer-readiness can be assessed.",
+            "severity": "medium",
+            "resolution_status": "open",
+            "blocks_readiness": False,
+            "client_safe": True,
+        },
+        {
+            "id": "client-missing-002",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "field_name": "property_address_summary",
+            "reason": "Property address is required for client-safe lead readiness.",
+            "severity": "high",
+            "resolution_status": "open",
+            "blocks_readiness": True,
+            "client_safe": True,
+        },
+        {
+            "id": "client-missing-003",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "field_name": "contact_channels_present",
+            "reason": "Contactability data is missing; no provider lookup is performed in CP1/CP2.",
+            "severity": "high",
+            "resolution_status": "open",
+            "blocks_readiness": True,
+            "client_safe": True,
+        },
+    ]
+
+
+def build_client_lead_division_event_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-event-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "division_name": "Lead Intelligence Division",
+            "manager_status": "human_review",
+            "event_type": "lead_intelligence_score",
+            "event_summary": "Lead Intelligence Manager scored priority 80 with high confidence.",
+            "safe_for_client": True,
+            "internal_prime_governance_visible": False,
+            "raw_provider_payload_exposed": False,
+        },
+        {
+            "id": "client-event-002",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "division_name": "Lead Intelligence Division",
+            "manager_status": "missing_data",
+            "event_type": "missing_data_review",
+            "event_summary": "Missing data lowers readiness and blocks provider-free next actions.",
+            "safe_for_client": True,
+            "internal_prime_governance_visible": False,
+            "raw_provider_payload_exposed": False,
+        },
+    ]
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -8773,6 +9263,14 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "live_provider_blocked_attempts": build_live_provider_blocked_attempt_records(),
         "live_provider_audit_events": build_live_provider_audit_event_records(),
         "real_deal_execution_batches": build_real_deal_execution_batch_records(),
+        "client_workspaces": build_client_workspace_records(),
+        "client_workspace_roles": build_client_workspace_role_records(),
+        "client_workspace_members": build_client_workspace_member_records(),
+        "client_lead_profiles": build_client_lead_profile_records(),
+        "client_lead_intelligence_scores": build_client_lead_intelligence_score_records(),
+        "client_lead_next_best_actions": build_client_lead_next_best_action_records(),
+        "client_lead_missing_data_items": build_client_lead_missing_data_records(),
+        "client_lead_division_events": build_client_lead_division_event_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -8814,6 +9312,14 @@ def seed_database(session: Session) -> dict[str, int]:
         LiveProviderActivationAttempt,
         LiveProviderActivation,
         RealDealExecutionBatch,
+        ClientLeadDivisionEvent,
+        ClientLeadMissingDataItem,
+        ClientLeadNextBestAction,
+        ClientLeadIntelligenceScore,
+        ClientLeadProfile,
+        ClientWorkspaceMember,
+        ClientWorkspaceRole,
+        ClientWorkspace,
         CampaignPerformanceRecord,
         CampaignStopEvent,
         CampaignActivationAttempt,
@@ -9198,6 +9704,32 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         RealDealExecutionBatch(**row)
         for row in payload["real_deal_execution_batches"]
+    )
+    session.add_all(ClientWorkspace(**row) for row in payload["client_workspaces"])
+    session.add_all(
+        ClientWorkspaceRole(**row) for row in payload["client_workspace_roles"]
+    )
+    session.add_all(
+        ClientWorkspaceMember(**row) for row in payload["client_workspace_members"]
+    )
+    session.add_all(
+        ClientLeadProfile(**row) for row in payload["client_lead_profiles"]
+    )
+    session.add_all(
+        ClientLeadIntelligenceScore(**row)
+        for row in payload["client_lead_intelligence_scores"]
+    )
+    session.add_all(
+        ClientLeadNextBestAction(**row)
+        for row in payload["client_lead_next_best_actions"]
+    )
+    session.add_all(
+        ClientLeadMissingDataItem(**row)
+        for row in payload["client_lead_missing_data_items"]
+    )
+    session.add_all(
+        ClientLeadDivisionEvent(**row)
+        for row in payload["client_lead_division_events"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

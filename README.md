@@ -18,6 +18,7 @@ The useful outcome is speed with guardrails:
 - Coordinate controlled buyer/seller portal views without leaking internal strategy.
 - Keep legal, title, payment, live outreach, and high-risk actions gated.
 - Guide the first real wholesale loop from imported leads through QA, seller calls, underwriting, offer decisions, buyer validation, contract-ready prep, title/attorney review prep, assignment-fee evidence, and field-test reporting.
+- Provide a client-safe investor command workspace foundation with Lead Intelligence scoring while hiding internal Prime governance, provider payloads, secrets, billing, e-signature, and admin-only controls.
 
 ## Prime 2 Identity
 
@@ -60,6 +61,8 @@ Implemented phases:
 - V29 production cloud readiness
 - V30 controlled live provider activation
 - V31 real deal execution pack and first deal cockpit
+- CP1 client workspace foundation
+- CP2 lead intelligence division
 - Prime 2 overseer rebrand
 
 ## Core Capabilities

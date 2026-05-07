@@ -3083,3 +3083,157 @@ class RealDealExecutionBatch(TimestampMixin, Base):
     legal_guidance_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
     guaranteed_profit_claim_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
     owner_executes_real_world_actions: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientWorkspace(TimestampMixin, Base):
+    __tablename__ = "client_workspaces"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    workspace_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    client_name: Mapped[str] = mapped_column(String(160), default="")
+    workspace_status: Mapped[str] = mapped_column(String(80), default="active")
+    workspace_type: Mapped[str] = mapped_column(String(80), default="investor_command")
+    market_focus: Mapped[list[str]] = mapped_column(JSON, default=list)
+    allowed_permissions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    safety_rules: Mapped[list[str]] = mapped_column(JSON, default=list)
+    onboarding_notes: Mapped[str] = mapped_column(Text, default="")
+    internal_prime_governance_visible: Mapped[bool] = mapped_column(Boolean, default=False)
+    raw_provider_payload_exposure_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    admin_only_controls_visible: Mapped[bool] = mapped_column(Boolean, default=False)
+    live_outreach_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    billing_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    contract_esign_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ClientWorkspaceRole(TimestampMixin, Base):
+    __tablename__ = "client_workspace_roles"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    role_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    role_key: Mapped[str] = mapped_column(String(80), default="viewer")
+    permissions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    tenant_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_visible: Mapped[bool] = mapped_column(Boolean, default=True)
+    can_view_internal_governance: Mapped[bool] = mapped_column(Boolean, default=False)
+    can_view_raw_provider_payloads: Mapped[bool] = mapped_column(Boolean, default=False)
+    can_use_admin_controls: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ClientWorkspaceMember(TimestampMixin, Base):
+    __tablename__ = "client_workspace_members"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    role_id: Mapped[str] = mapped_column(ForeignKey("client_workspace_roles.id"), nullable=False)
+    member_name: Mapped[str] = mapped_column(String(160), default="")
+    member_email: Mapped[str] = mapped_column(String(160), default="")
+    member_status: Mapped[str] = mapped_column(String(80), default="active")
+    permission_overrides: Mapped[list[str]] = mapped_column(JSON, default=list)
+    tenant_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_workspace_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientLeadProfile(TimestampMixin, Base):
+    __tablename__ = "client_lead_profiles"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(160), default="")
+    property_address_summary: Mapped[str] = mapped_column(String(220), default="")
+    property_city: Mapped[str] = mapped_column(String(120), default="")
+    property_state: Mapped[str] = mapped_column(String(20), default="")
+    property_zip: Mapped[str] = mapped_column(String(20), default="")
+    property_type: Mapped[str] = mapped_column(String(80), default="")
+    beds: Mapped[int] = mapped_column(Integer, default=0)
+    baths: Mapped[float] = mapped_column(Float, default=0)
+    sqft: Mapped[int] = mapped_column(Integer, default=0)
+    estimated_value: Mapped[int] = mapped_column(Integer, default=0)
+    estimated_equity: Mapped[int] = mapped_column(Integer, default=0)
+    estimated_equity_percent: Mapped[int] = mapped_column(Integer, default=0)
+    lead_source: Mapped[str] = mapped_column(String(120), default="")
+    lead_type: Mapped[str] = mapped_column(String(120), default="")
+    lead_status: Mapped[str] = mapped_column(String(80), default="new")
+    motivation_signals: Mapped[list[str]] = mapped_column(JSON, default=list)
+    distress_signals: Mapped[list[str]] = mapped_column(JSON, default=list)
+    contact_channels_present: Mapped[list[str]] = mapped_column(JSON, default=list)
+    timeline_days: Mapped[int] = mapped_column(Integer, default=90)
+    asking_price: Mapped[int] = mapped_column(Integer, default=0)
+    data_confidence: Mapped[int] = mapped_column(Integer, default=60)
+    client_notes: Mapped[str] = mapped_column(Text, default="")
+    internal_prime_governance_notes: Mapped[str] = mapped_column(Text, default="")
+    raw_provider_payload: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    dnc_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_question_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    outbound_provider_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    raw_provider_payload_exposed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ClientLeadIntelligenceScore(TimestampMixin, Base):
+    __tablename__ = "client_lead_intelligence_scores"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=False)
+    motivation_score: Mapped[int] = mapped_column(Integer, default=0)
+    urgency_score: Mapped[int] = mapped_column(Integer, default=0)
+    equity_signal_score: Mapped[int] = mapped_column(Integer, default=0)
+    distress_signal_score: Mapped[int] = mapped_column(Integer, default=0)
+    contactability_score: Mapped[int] = mapped_column(Integer, default=0)
+    deal_probability_score: Mapped[int] = mapped_column(Integer, default=0)
+    missing_data_score: Mapped[int] = mapped_column(Integer, default=0)
+    final_priority_score: Mapped[int] = mapped_column(Integer, default=0)
+    recommended_next_action: Mapped[str] = mapped_column(String(120), default="research_more")
+    reason_summary: Mapped[str] = mapped_column(Text, default="")
+    confidence_level: Mapped[str] = mapped_column(String(80), default="medium")
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=True)
+    score_version: Mapped[str] = mapped_column(String(40), default="cp2.v1")
+    raw_risk_logic: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientLeadNextBestAction(TimestampMixin, Base):
+    __tablename__ = "client_lead_next_best_actions"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=False)
+    action_type: Mapped[str] = mapped_column(String(120), default="research_more")
+    action_label: Mapped[str] = mapped_column(String(180), default="")
+    reason: Mapped[str] = mapped_column(Text, default="")
+    priority: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(80), default="open")
+    confidence_level: Mapped[str] = mapped_column(String(80), default="medium")
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=True)
+    outbound_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_action_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientLeadMissingDataItem(TimestampMixin, Base):
+    __tablename__ = "client_lead_missing_data_items"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=False)
+    field_name: Mapped[str] = mapped_column(String(120), default="")
+    reason: Mapped[str] = mapped_column(Text, default="")
+    severity: Mapped[str] = mapped_column(String(80), default="medium")
+    resolution_status: Mapped[str] = mapped_column(String(80), default="open")
+    blocks_readiness: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientLeadDivisionEvent(TimestampMixin, Base):
+    __tablename__ = "client_lead_division_events"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=False)
+    division_name: Mapped[str] = mapped_column(String(140), default="Lead Intelligence Division")
+    manager_status: Mapped[str] = mapped_column(String(120), default="queued")
+    event_type: Mapped[str] = mapped_column(String(120), default="score_refresh")
+    event_summary: Mapped[str] = mapped_column(Text, default="")
+    safe_for_client: Mapped[bool] = mapped_column(Boolean, default=True)
+    internal_prime_governance_visible: Mapped[bool] = mapped_column(Boolean, default=False)
+    raw_provider_payload_exposed: Mapped[bool] = mapped_column(Boolean, default=False)

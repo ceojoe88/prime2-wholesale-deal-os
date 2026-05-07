@@ -48,6 +48,8 @@ Expected coverage includes:
 - V29 production cloud readiness fail-closed behavior, masked secret posture, provider flags default off, backup metadata safety, and monitoring health summary
 - V30 controlled live provider activation owner approval, dry-run, provider/cloud readiness, unchanged source hash, idempotency, SMS consent/DNC/opt-out, AI safety/cost cap, worker/campaign bypass blocks, and audit logging
 - V31 real deal execution batch creation, status transitions, call checklist generation, offer decision calculations, buyer validation gate, contract-ready checklist, assignment-fee evidence validation, field-test report learning signals, execution coach recommendations, and no live/legal/title/payment action paths
+- CP1 validation lane `client_command_workspace_cp1`: workspace/member/role tenant isolation, scoped client permissions, sanitized workspace responses, and no client access to internal Prime governance or raw provider payloads
+- CP2 validation lane `lead_intelligence_division_cp2`: deterministic lead scoring, missing-data readiness reduction, hot-board ranking, next-action recommendations, and no outbound provider actions
 
 ## Frontend
 
@@ -74,6 +76,7 @@ Expected coverage includes:
 - V29 cloud readiness routes render and expose no deployment or secret controls
 - V30 live activation routes render and expose no bulk or bypass controls
 - V31 first deal cockpit routes render and expose no unsafe call/send/contract/title/payment controls
+- CP1/CP2 client command routes render and expose no dangerous send/call/provider/billing/contract controls
 
 ## Source Sweeps
 
@@ -179,6 +182,11 @@ Smoke check:
 - `/dashboard/first-deal-cockpit/contract-ready`
 - `/dashboard/first-deal-cockpit/evidence`
 - `/dashboard/first-deal-cockpit/report`
+- `/dashboard/client-command`
+- `/dashboard/client-command/workspaces`
+- `/dashboard/client-command/leads`
+- `/dashboard/client-command/hot-leads`
+- `/dashboard/client-command/next-actions`
 - `/buyer-portal`
 - `/seller-portal`
 
@@ -266,6 +274,13 @@ Smoke check:
 - `/api/v1/real-deal-execution/contract-ready`
 - `/api/v1/real-deal-execution/evidence`
 - `/api/v1/real-deal-execution/report`
+- `/api/v1/client-command/workspaces`
+- `/api/v1/client-command/workspaces/client-workspace-001`
+- `/api/v1/client-command/workspaces/client-workspace-001/leads`
+- `/api/v1/client-command/leads/client-lead-001`
+- `/api/v1/client-command/leads/client-lead-001/score`
+- `/api/v1/client-command/leads/hot-board`
+- `/api/v1/client-command/leads/next-actions`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist

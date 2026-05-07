@@ -5254,3 +5254,407 @@ export const firstDealSafetyCards = [
   { label: "Contract action", value: "off", detail: "External professional process only" },
   { label: "Title handoff", value: "prep", detail: "Packet prep and reminders only" }
 ];
+
+export type ClientWorkspace = {
+  id: string;
+  workspaceName: string;
+  clientName: string;
+  workspaceStatus: string;
+  marketFocus: string[];
+  allowedPermissions: string[];
+  liveOutreachEnabled: boolean;
+  billingEnabled: boolean;
+  contractEsignEnabled: boolean;
+};
+
+export type ClientLeadProfile = {
+  id: string;
+  workspaceId: string;
+  displayName: string;
+  propertyAddressSummary: string;
+  propertyCity: string;
+  propertyState: string;
+  propertyZip: string;
+  propertyType: string;
+  estimatedValue: number;
+  estimatedEquity: number;
+  estimatedEquityPercent: number;
+  leadSource: string;
+  leadType: string;
+  motivationSignals: string[];
+  distressSignals: string[];
+  contactChannelsPresent: string[];
+  dataConfidence: number;
+  dncFlag: boolean;
+};
+
+export type ClientLeadScore = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  motivationScore: number;
+  urgencyScore: number;
+  equitySignalScore: number;
+  distressSignalScore: number;
+  contactabilityScore: number;
+  dealProbabilityScore: number;
+  missingDataScore: number;
+  finalPriorityScore: number;
+  recommendedNextAction: string;
+  reasonSummary: string;
+  confidenceLevel: "low" | "medium" | "high";
+  requiresHumanReview: boolean;
+};
+
+export type ClientLeadMissingDataItem = {
+  id: string;
+  leadId: string;
+  fieldName: string;
+  reason: string;
+  severity: "low" | "medium" | "high";
+  resolutionStatus: string;
+  blocksReadiness: boolean;
+};
+
+export type ClientLeadNextBestAction = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  actionType: string;
+  actionLabel: string;
+  reason: string;
+  priority: number;
+  status: string;
+  confidenceLevel: "low" | "medium" | "high";
+  requiresHumanReview: boolean;
+  outboundActionAllowed: boolean;
+  providerActionAllowed: boolean;
+};
+
+export type ClientLeadDivisionEvent = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  divisionName: string;
+  managerStatus: string;
+  eventType: string;
+  eventSummary: string;
+  safeForClient: boolean;
+};
+
+export const clientCommandPermissions = [
+  "client_command.view",
+  "client_command.manage",
+  "client_command.leads_view",
+  "client_command.leads_manage",
+  "client_command.reports_view",
+  "client_command.admin"
+];
+
+export const clientCommandSafetyCards = [
+  { label: "SMS", value: "off", detail: "No outbound provider action in CP1/CP2" },
+  { label: "Email", value: "off", detail: "No outbound provider action in CP1/CP2" },
+  { label: "Voice", value: "off", detail: "Manual client workflow only" },
+  { label: "Skip trace", value: "off", detail: "No external enrichment provider call" },
+  { label: "Billing", value: "off", detail: "No charges or payment handling" },
+  { label: "E-sign", value: "off", detail: "No document execution lane" }
+];
+
+export const clientWorkspaces: ClientWorkspace[] = [
+  {
+    id: "client-workspace-001",
+    workspaceName: "Acme Investor Command",
+    clientName: "Acme Property Buyers",
+    workspaceStatus: "active",
+    marketFocus: ["Dallas TX", "Fort Worth TX"],
+    allowedPermissions: clientCommandPermissions,
+    liveOutreachEnabled: false,
+    billingEnabled: false,
+    contractEsignEnabled: false
+  },
+  {
+    id: "client-workspace-002",
+    workspaceName: "Oakline Investor Desk",
+    clientName: "Oakline Holdings",
+    workspaceStatus: "active",
+    marketFocus: ["Arlington TX"],
+    allowedPermissions: ["client_command.view", "client_command.leads_view", "client_command.reports_view"],
+    liveOutreachEnabled: false,
+    billingEnabled: false,
+    contractEsignEnabled: false
+  }
+];
+
+export const clientLeadProfiles: ClientLeadProfile[] = [
+  {
+    id: "client-lead-001",
+    workspaceId: "client-workspace-001",
+    displayName: "South Dallas absentee owner",
+    propertyAddressSummary: "Dallas, TX 75216",
+    propertyCity: "Dallas",
+    propertyState: "TX",
+    propertyZip: "75216",
+    propertyType: "single_family",
+    estimatedValue: 238000,
+    estimatedEquity: 132000,
+    estimatedEquityPercent: 55,
+    leadSource: "county_records",
+    leadType: "absentee_owner",
+    motivationSignals: ["absentee_owner", "tired_landlord", "deferred_maintenance"],
+    distressSignals: ["vacant_signal", "code_violation_note"],
+    contactChannelsPresent: ["phone", "mailing_address"],
+    dataConfidence: 78,
+    dncFlag: false
+  },
+  {
+    id: "client-lead-002",
+    workspaceId: "client-workspace-001",
+    displayName: "Fort Worth inherited property",
+    propertyAddressSummary: "Fort Worth, TX 76104",
+    propertyCity: "Fort Worth",
+    propertyState: "TX",
+    propertyZip: "76104",
+    propertyType: "single_family",
+    estimatedValue: 184000,
+    estimatedEquity: 96000,
+    estimatedEquityPercent: 52,
+    leadSource: "probate_list",
+    leadType: "inherited",
+    motivationSignals: ["inherited", "out_of_area_owner"],
+    distressSignals: ["property_condition_unknown"],
+    contactChannelsPresent: ["email"],
+    dataConfidence: 64,
+    dncFlag: false
+  },
+  {
+    id: "client-lead-003",
+    workspaceId: "client-workspace-001",
+    displayName: "Incomplete vacant lead",
+    propertyAddressSummary: "",
+    propertyCity: "Dallas",
+    propertyState: "TX",
+    propertyZip: "",
+    propertyType: "",
+    estimatedValue: 0,
+    estimatedEquity: 0,
+    estimatedEquityPercent: 0,
+    leadSource: "driving_for_dollars",
+    leadType: "vacant",
+    motivationSignals: [],
+    distressSignals: ["vacant_signal"],
+    contactChannelsPresent: [],
+    dataConfidence: 36,
+    dncFlag: false
+  },
+  {
+    id: "client-lead-004",
+    workspaceId: "client-workspace-002",
+    displayName: "Oakline Arlington owner",
+    propertyAddressSummary: "Arlington, TX 76010",
+    propertyCity: "Arlington",
+    propertyState: "TX",
+    propertyZip: "76010",
+    propertyType: "single_family",
+    estimatedValue: 210000,
+    estimatedEquity: 80000,
+    estimatedEquityPercent: 38,
+    leadSource: "county_records",
+    leadType: "high_equity",
+    motivationSignals: ["high_equity"],
+    distressSignals: [],
+    contactChannelsPresent: ["phone"],
+    dataConfidence: 58,
+    dncFlag: false
+  }
+];
+
+export const clientLeadScores: ClientLeadScore[] = [
+  {
+    id: "client-score-001",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-001",
+    motivationScore: 79,
+    urgencyScore: 86,
+    equitySignalScore: 75,
+    distressSignalScore: 52,
+    contactabilityScore: 80,
+    dealProbabilityScore: 75,
+    missingDataScore: 100,
+    finalPriorityScore: 80,
+    recommendedNextAction: "owner_review_hot_lead",
+    reasonSummary: "3 motivation signals; 2 distress signals; 55% estimated equity; 0 missing data items",
+    confidenceLevel: "high",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-score-002",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-002",
+    motivationScore: 61,
+    urgencyScore: 62,
+    equitySignalScore: 72,
+    distressSignalScore: 36,
+    contactabilityScore: 50,
+    dealProbabilityScore: 58,
+    missingDataScore: 87,
+    finalPriorityScore: 63,
+    recommendedNextAction: "research_and_prepare_call_plan",
+    reasonSummary: "2 motivation signals; 1 distress signal; 52% estimated equity; 1 missing data item",
+    confidenceLevel: "medium",
+    requiresHumanReview: false
+  },
+  {
+    id: "client-score-003",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-003",
+    motivationScore: 25,
+    urgencyScore: 17,
+    equitySignalScore: 0,
+    distressSignalScore: 36,
+    contactabilityScore: 20,
+    dealProbabilityScore: 20,
+    missingDataScore: 0,
+    finalPriorityScore: 16,
+    recommendedNextAction: "complete_missing_data",
+    reasonSummary: "0 motivation signals; 1 distress signal; 0% estimated equity; 7 missing data items",
+    confidenceLevel: "low",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-score-004",
+    workspaceId: "client-workspace-002",
+    leadId: "client-lead-004",
+    motivationScore: 43,
+    urgencyScore: 37,
+    equitySignalScore: 38,
+    distressSignalScore: 20,
+    contactabilityScore: 50,
+    dealProbabilityScore: 39,
+    missingDataScore: 100,
+    finalPriorityScore: 50,
+    recommendedNextAction: "nurture_or_skip_for_now",
+    reasonSummary: "1 motivation signal; 0 distress signals; 38% estimated equity; 0 missing data items",
+    confidenceLevel: "medium",
+    requiresHumanReview: false
+  }
+];
+
+export const clientLeadMissingDataItems: ClientLeadMissingDataItem[] = [
+  {
+    id: "client-missing-001",
+    leadId: "client-lead-002",
+    fieldName: "asking_price",
+    reason: "Asking price is needed before offer-readiness can be assessed.",
+    severity: "medium",
+    resolutionStatus: "open",
+    blocksReadiness: false
+  },
+  {
+    id: "client-missing-002",
+    leadId: "client-lead-003",
+    fieldName: "property_address_summary",
+    reason: "Property address is required for client-safe lead readiness.",
+    severity: "high",
+    resolutionStatus: "open",
+    blocksReadiness: true
+  },
+  {
+    id: "client-missing-003",
+    leadId: "client-lead-003",
+    fieldName: "contact_channels_present",
+    reason: "Contactability data is missing; no provider lookup is performed in CP1/CP2.",
+    severity: "high",
+    resolutionStatus: "open",
+    blocksReadiness: true
+  }
+];
+
+export const clientLeadNextBestActions: ClientLeadNextBestAction[] = [
+  {
+    id: "client-action-001",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-001",
+    actionType: "owner_review_hot_lead",
+    actionLabel: "Review hot lead with client-safe notes",
+    reason: "High priority score with strong equity and contactability.",
+    priority: 80,
+    status: "owner_review",
+    confidenceLevel: "high",
+    requiresHumanReview: true,
+    outboundActionAllowed: false,
+    providerActionAllowed: false
+  },
+  {
+    id: "client-action-002",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-002",
+    actionType: "research_and_prepare_call_plan",
+    actionLabel: "Research and prepare a call plan",
+    reason: "Moderate score; complete price and phone context before action.",
+    priority: 63,
+    status: "open",
+    confidenceLevel: "medium",
+    requiresHumanReview: false,
+    outboundActionAllowed: false,
+    providerActionAllowed: false
+  },
+  {
+    id: "client-action-003",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-003",
+    actionType: "complete_missing_data",
+    actionLabel: "Complete missing lead data",
+    reason: "Missing address, valuation, equity, and contactability data.",
+    priority: 16,
+    status: "open",
+    confidenceLevel: "low",
+    requiresHumanReview: true,
+    outboundActionAllowed: false,
+    providerActionAllowed: false
+  }
+];
+
+export const clientLeadDivisionEvents: ClientLeadDivisionEvent[] = [
+  {
+    id: "client-event-001",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-001",
+    divisionName: "Lead Intelligence Division",
+    managerStatus: "human_review",
+    eventType: "lead_intelligence_score",
+    eventSummary: "Lead Intelligence Manager scored priority 80 with high confidence.",
+    safeForClient: true
+  },
+  {
+    id: "client-event-002",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-003",
+    divisionName: "Lead Intelligence Division",
+    managerStatus: "missing_data",
+    eventType: "missing_data_review",
+    eventSummary: "Missing data lowers readiness and blocks provider-free next actions.",
+    safeForClient: true
+  }
+];
+
+export const clientLeadCards = clientLeadProfiles.map((lead) => {
+  const score = clientLeadScores.find((item) => item.leadId === lead.id)!;
+  return {
+    lead,
+    score,
+    missingData: clientLeadMissingDataItems.filter((item) => item.leadId === lead.id),
+    nextAction: clientLeadNextBestActions.find((item) => item.leadId === lead.id)
+  };
+});
+
+export const clientHotLeadCards = clientLeadCards
+  .filter((card) => card.score.finalPriorityScore >= 70)
+  .sort((a, b) => b.score.finalPriorityScore - a.score.finalPriorityScore);
+
+export function getClientLead(leadId: string) {
+  return clientLeadProfiles.find((lead) => lead.id === leadId);
+}
+
+export function getClientLeadScore(leadId: string) {
+  return clientLeadScores.find((score) => score.leadId === leadId);
+}
