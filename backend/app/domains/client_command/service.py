@@ -19,6 +19,14 @@ from app.domains.client_command.sanitizer import (
     acquisition_event_public,
     action_public,
     appointment_readiness_public,
+    buyer_buy_box_public,
+    buyer_confidence_public,
+    buyer_demand_evidence_public,
+    buyer_outreach_draft_public,
+    buyer_profile_public,
+    deal_buyer_match_public,
+    disposition_event_public,
+    disposition_readiness_public,
     evidence_item_public,
     evidence_packet_public,
     event_public,
@@ -48,6 +56,11 @@ from app.models import (
     ClientWorkspaceMember,
     ClientWorkspaceRole,
     ClientAcquisitionBrief,
+    ClientBuyerBuyBox,
+    ClientBuyerConfidenceScore,
+    ClientBuyerDemandEvidence,
+    ClientBuyerOutreachDraft,
+    ClientBuyerProfile,
     ClientSellerQuestionPlan,
     ClientSellerQuestion,
     ClientObjectionResponseDraft,
@@ -56,6 +69,9 @@ from app.models import (
     ClientAcquisitionDivisionEvent,
     ClientDealEvidencePacket,
     ClientDealEvidenceItem,
+    ClientDealBuyerMatch,
+    ClientDispositionDivisionEvent,
+    ClientDispositionReadinessGate,
     ClientUnderwritingReview,
     ClientOfferScenario,
     ClientOfferReadinessGate,
@@ -150,6 +166,9 @@ def lead_detail(session: Session, lead_id: str, workspace_id: str | None = None)
     packet = ensure_evidence_packet(session, lead)
     review = ensure_underwriting_review(session, lead, packet)
     gate = ensure_offer_readiness(session, lead, packet, review)
+    buyer_matches = ensure_buyer_matches(session, lead)
+    disposition_gate = ensure_disposition_readiness(session, lead)
+    outreach_drafts = ensure_buyer_outreach_drafts(session, lead)
     return {
         "lead": lead_public(lead),
         "score": score_public(score),
@@ -201,6 +220,19 @@ def lead_detail(session: Session, lead_id: str, workspace_id: str | None = None)
             "division_events": [
                 underwriting_event_public(event)
                 for event in _underwriting_events(session, lead.workspace_id, lead.id)
+            ],
+        },
+        "disposition": {
+            "buyer_matches": [deal_buyer_match_public(match) for match in buyer_matches],
+            "buyer_demand_evidence": [
+                buyer_demand_evidence_public(item)
+                for item in _buyer_demand_evidence(session, lead.workspace_id, lead.id)
+            ],
+            "disposition_readiness": disposition_readiness_public(disposition_gate),
+            "buyer_outreach_drafts": [buyer_outreach_draft_public(draft) for draft in outreach_drafts],
+            "division_events": [
+                disposition_event_public(event)
+                for event in _disposition_events(session, lead.workspace_id, lead.id)
             ],
         },
         "safety": client_command_safety_rules(),
@@ -512,6 +544,265 @@ def underwriting_needs_human_review(session: Session, workspace_id: str | None =
     return {
         "workspace_id": workspace_id,
         "needs_human_review": [offer_readiness_public(gate) for gate in gates],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_buyer_profile(
+    session: Session,
+    workspace_id: str,
+    values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    values = values or {}
+    buyer = ClientBuyerProfile(
+        id=f"client-buyer-{uuid4().hex[:10]}",
+        workspace_id=workspace_id,
+        buyer_name=str(values.get("buyer_name") or "Manual Buyer"),
+        buyer_company=values.get("buyer_company") if values.get("buyer_company") else None,
+        buyer_type=str(values.get("buyer_type") or "unknown"),
+        primary_market=str(values.get("primary_market") or ""),
+        target_zip_codes=list(values.get("target_zip_codes") or []),
+        preferred_property_types=list(values.get("preferred_property_types") or []),
+        min_price=values.get("min_price") if values.get("min_price") is not None else None,
+        max_price=values.get("max_price") if values.get("max_price") is not None else None,
+        rehab_tolerance=str(values.get("rehab_tolerance") or "unknown"),
+        close_speed=str(values.get("close_speed") or "unknown"),
+        funding_status=str(values.get("funding_status") or "unknown"),
+        proof_of_funds_status=str(values.get("proof_of_funds_status") or "missing"),
+        communication_preference=str(values.get("communication_preference") or "unknown"),
+        active_status=str(values.get("active_status") or "needs_review"),
+        notes_summary=str(values.get("notes_summary") or ""),
+        client_safe_summary="Client-entered buyer profile only; no provider lookup occurred.",
+    )
+    session.add(buyer)
+    session.flush()
+    return {"buyer": buyer_profile_public(buyer), "safety": client_command_safety_rules()}
+
+
+def workspace_buyers(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    buyers = (
+        session.query(ClientBuyerProfile)
+        .filter(ClientBuyerProfile.workspace_id == workspace_id)
+        .order_by(ClientBuyerProfile.buyer_name)
+        .all()
+    )
+    return {
+        "workspace_id": workspace_id,
+        "buyers": [
+            {
+                "buyer": buyer_profile_public(buyer),
+                "confidence": buyer_confidence_public(ensure_buyer_confidence(session, buyer)),
+                "buy_boxes": [
+                    buyer_buy_box_public(box)
+                    for box in _buyer_buy_boxes(session, buyer.workspace_id, buyer.id)
+                ],
+            }
+            for buyer in buyers
+        ],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def buyer_detail(session: Session, buyer_id: str, workspace_id: str | None = None) -> dict[str, object]:
+    buyer = _buyer_or_404(session, buyer_id, workspace_id)
+    return {
+        "buyer": buyer_profile_public(buyer),
+        "confidence": buyer_confidence_public(ensure_buyer_confidence(session, buyer)),
+        "buy_boxes": [
+            buyer_buy_box_public(box)
+            for box in _buyer_buy_boxes(session, buyer.workspace_id, buyer.id)
+        ],
+        "matches": [
+            deal_buyer_match_public(match)
+            for match in _buyer_matches_for_buyer(session, buyer.workspace_id, buyer.id)
+        ],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def buyer_confidence_for_buyer(
+    session: Session,
+    buyer_id: str,
+    workspace_id: str | None = None,
+    refresh: bool = False,
+) -> dict[str, object]:
+    buyer = _buyer_or_404(session, buyer_id, workspace_id)
+    score = ensure_buyer_confidence(session, buyer, refresh=refresh)
+    return {
+        "buyer": buyer_profile_public(buyer),
+        "confidence": buyer_confidence_public(score),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_buyer_buy_box(
+    session: Session,
+    buyer_id: str,
+    values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    buyer = _buyer_or_404(session, buyer_id)
+    values = values or {}
+    buy_box = ClientBuyerBuyBox(
+        id=f"client-buy-box-{uuid4().hex[:10]}",
+        workspace_id=buyer.workspace_id,
+        buyer_id=buyer.id,
+        market=str(values.get("market") or buyer.primary_market),
+        zip_codes=list(values.get("zip_codes") or buyer.target_zip_codes or []),
+        property_types=list(values.get("property_types") or buyer.preferred_property_types or []),
+        min_beds=values.get("min_beds") if values.get("min_beds") is not None else None,
+        min_baths=values.get("min_baths") if values.get("min_baths") is not None else None,
+        min_sqft=values.get("min_sqft") if values.get("min_sqft") is not None else None,
+        max_purchase_price=values.get("max_purchase_price") if values.get("max_purchase_price") is not None else buyer.max_price,
+        min_purchase_price=values.get("min_purchase_price") if values.get("min_purchase_price") is not None else buyer.min_price,
+        rehab_level=str(values.get("rehab_level") or buyer.rehab_tolerance or "unknown"),
+        occupancy_preference=str(values.get("occupancy_preference") or "unknown"),
+        deal_type_preference=str(values.get("deal_type_preference") or "unknown"),
+        notes_summary=str(values.get("notes_summary") or ""),
+        client_safe=True,
+    )
+    session.add(buy_box)
+    session.flush()
+    ensure_buyer_confidence(session, buyer, refresh=True)
+    return {"buy_box": buyer_buy_box_public(buy_box), "safety": client_command_safety_rules()}
+
+
+def buyer_buy_boxes_for_buyer(session: Session, buyer_id: str, workspace_id: str | None = None) -> dict[str, object]:
+    buyer = _buyer_or_404(session, buyer_id, workspace_id)
+    return {
+        "buyer": buyer_profile_public(buyer),
+        "buy_boxes": [buyer_buy_box_public(box) for box in _buyer_buy_boxes(session, buyer.workspace_id, buyer.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def buyer_matches_for_lead(
+    session: Session,
+    lead_id: str,
+    workspace_id: str | None = None,
+    refresh: bool = False,
+) -> dict[str, object]:
+    lead = _lead_or_404(session, lead_id, workspace_id)
+    matches = ensure_buyer_matches(session, lead, refresh=refresh)
+    return {
+        "lead": lead_public(lead),
+        "buyer_matches": [deal_buyer_match_public(match) for match in matches],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def disposition_matches(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientDealBuyerMatch)
+    if workspace_id:
+        query = query.filter(ClientDealBuyerMatch.workspace_id == workspace_id)
+    matches = query.order_by(desc(ClientDealBuyerMatch.match_score)).all()
+    return {"workspace_id": workspace_id, "matches": [deal_buyer_match_public(match) for match in matches], "safety": client_command_safety_rules()}
+
+
+def disposition_strong_matches(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientDealBuyerMatch).filter(ClientDealBuyerMatch.match_status == "strong_match")
+    if workspace_id:
+        query = query.filter(ClientDealBuyerMatch.workspace_id == workspace_id)
+    matches = query.order_by(desc(ClientDealBuyerMatch.match_score)).all()
+    return {"workspace_id": workspace_id, "strong_matches": [deal_buyer_match_public(match) for match in matches], "safety": client_command_safety_rules()}
+
+
+def disposition_needs_review(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientDispositionReadinessGate).filter(ClientDispositionReadinessGate.requires_human_review.is_(True))
+    if workspace_id:
+        query = query.filter(ClientDispositionReadinessGate.workspace_id == workspace_id)
+    gates = query.order_by(ClientDispositionReadinessGate.readiness_score).all()
+    return {"workspace_id": workspace_id, "needs_review": [disposition_readiness_public(gate) for gate in gates], "safety": client_command_safety_rules()}
+
+
+def create_buyer_demand_evidence(
+    session: Session,
+    lead_id: str,
+    values: dict[str, object] | None = None,
+    workspace_id: str | None = None,
+) -> dict[str, object]:
+    lead = _lead_or_404(session, lead_id, workspace_id)
+    values = values or {}
+    buyer_id = values.get("buyer_id") if values.get("buyer_id") else None
+    if buyer_id:
+        _buyer_or_404(session, str(buyer_id), lead.workspace_id)
+    evidence = ClientBuyerDemandEvidence(
+        id=f"client-buyer-demand-{uuid4().hex[:10]}",
+        workspace_id=lead.workspace_id,
+        lead_id=lead.id,
+        buyer_id=str(buyer_id) if buyer_id else None,
+        evidence_type=str(values.get("evidence_type") or "manual_client_note"),
+        evidence_summary=str(values.get("evidence_summary") or "Manual buyer demand evidence added for review."),
+        source_type=str(values.get("source_type") or "manual"),
+        confidence_level=str(values.get("confidence_level") or "medium"),
+        client_safe=True,
+        internal_notes="Hidden manual evidence note.",
+    )
+    session.add(evidence)
+    session.flush()
+    ensure_disposition_readiness(session, lead, refresh=True)
+    return {"buyer_demand_evidence": buyer_demand_evidence_public(evidence), "safety": client_command_safety_rules()}
+
+
+def buyer_demand_evidence_for_lead(session: Session, lead_id: str, workspace_id: str | None = None) -> dict[str, object]:
+    lead = _lead_or_404(session, lead_id, workspace_id)
+    return {
+        "lead": lead_public(lead),
+        "buyer_demand_evidence": [
+            buyer_demand_evidence_public(evidence)
+            for evidence in _buyer_demand_evidence(session, lead.workspace_id, lead.id)
+        ],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def disposition_readiness_for_lead(
+    session: Session,
+    lead_id: str,
+    workspace_id: str | None = None,
+    refresh: bool = False,
+) -> dict[str, object]:
+    lead = _lead_or_404(session, lead_id, workspace_id)
+    gate = ensure_disposition_readiness(session, lead, refresh=refresh)
+    return {
+        "lead": lead_public(lead),
+        "disposition_readiness": disposition_readiness_public(gate),
+        "decision_support_only": True,
+        "safety": client_command_safety_rules(),
+    }
+
+
+def disposition_ready_review(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientDispositionReadinessGate).filter(ClientDispositionReadinessGate.readiness_status == "ready_for_client_review")
+    if workspace_id:
+        query = query.filter(ClientDispositionReadinessGate.workspace_id == workspace_id)
+    gates = query.order_by(desc(ClientDispositionReadinessGate.readiness_score)).all()
+    return {"workspace_id": workspace_id, "ready_review": [disposition_readiness_public(gate) for gate in gates], "safety": client_command_safety_rules()}
+
+
+def disposition_blocked(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientDispositionReadinessGate).filter(ClientDispositionReadinessGate.readiness_status.in_(["blocked", "buyer_demand_missing", "buyer_match_needed", "offer_readiness_blocked", "not_ready"]))
+    if workspace_id:
+        query = query.filter(ClientDispositionReadinessGate.workspace_id == workspace_id)
+    gates = query.order_by(ClientDispositionReadinessGate.readiness_score).all()
+    return {"workspace_id": workspace_id, "blocked": [disposition_readiness_public(gate) for gate in gates], "safety": client_command_safety_rules()}
+
+
+def buyer_outreach_drafts_for_lead(
+    session: Session,
+    lead_id: str,
+    workspace_id: str | None = None,
+    refresh: bool = False,
+    values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    lead = _lead_or_404(session, lead_id, workspace_id)
+    drafts = ensure_buyer_outreach_drafts(session, lead, refresh=refresh, values=values)
+    return {
+        "lead": lead_public(lead),
+        "buyer_outreach_drafts": [buyer_outreach_draft_public(draft) for draft in drafts],
+        "buyer_contacted": False,
+        "campaign_started": False,
         "safety": client_command_safety_rules(),
     }
 
@@ -947,6 +1238,228 @@ def ensure_offer_readiness(
         _ensure_underwriting_event(session, lead, "offer_readiness", f"Underwriting Manager set offer readiness to {gate.readiness_status}.")
         session.flush()
     return gate
+
+
+def ensure_buyer_confidence(
+    session: Session,
+    buyer: ClientBuyerProfile,
+    refresh: bool = False,
+) -> ClientBuyerConfidenceScore:
+    score = (
+        session.query(ClientBuyerConfidenceScore)
+        .filter(ClientBuyerConfidenceScore.buyer_id == buyer.id)
+        .first()
+    )
+    if score is None:
+        score = ClientBuyerConfidenceScore(
+            id=f"client-buyer-confidence-{uuid4().hex[:10]}",
+            workspace_id=buyer.workspace_id,
+            buyer_id=buyer.id,
+        )
+        session.add(score)
+    if refresh or not score.confidence_score:
+        boxes = _buyer_buy_boxes(session, buyer.workspace_id, buyer.id)
+        funding = 90 if buyer.proof_of_funds_status == "verified" else 72 if buyer.funding_status in {"verified", "stated"} else 35
+        buy_box_clarity = 30
+        if buyer.target_zip_codes:
+            buy_box_clarity += 18
+        if buyer.preferred_property_types:
+            buy_box_clarity += 14
+        if buyer.max_price:
+            buy_box_clarity += 18
+        if buyer.rehab_tolerance != "unknown":
+            buy_box_clarity += 10
+        if boxes:
+            buy_box_clarity += 10
+        responsiveness = {"fast": 82, "standard": 65, "slow": 42}.get(buyer.close_speed, 35)
+        historical = 70 if buyer.active_status == "active" else 45 if buyer.active_status == "needs_review" else 20
+        confidence = int(round((funding + min(100, buy_box_clarity) + responsiveness + historical) / 4))
+        if buyer.active_status == "inactive":
+            confidence = min(confidence, 45)
+        score.confidence_score = max(0, min(100, confidence))
+        score.responsiveness_score = responsiveness
+        score.funding_confidence_score = funding
+        score.buy_box_clarity_score = min(100, buy_box_clarity)
+        score.historical_interest_score = historical
+        score.overall_grade = _buyer_grade(score.confidence_score)
+        score.requires_human_review = score.confidence_score < 70 or buyer.proof_of_funds_status in {"missing", "unknown", "unverified"}
+        score.reason_summary = (
+            f"Funding {buyer.funding_status}/{buyer.proof_of_funds_status}; "
+            f"{len(buyer.target_zip_codes or [])} target zips; {len(boxes)} buy boxes; close speed {buyer.close_speed}."
+        )
+        session.flush()
+    return score
+
+
+def ensure_buyer_matches(
+    session: Session,
+    lead: ClientLeadProfile,
+    refresh: bool = False,
+) -> list[ClientDealBuyerMatch]:
+    buyers = (
+        session.query(ClientBuyerProfile)
+        .filter(ClientBuyerProfile.workspace_id == lead.workspace_id)
+        .order_by(ClientBuyerProfile.buyer_name)
+        .all()
+    )
+    if refresh:
+        session.query(ClientDealBuyerMatch).filter(ClientDealBuyerMatch.lead_id == lead.id).delete(synchronize_session=False)
+    existing = {
+        match.buyer_id: match
+        for match in session.query(ClientDealBuyerMatch).filter(ClientDealBuyerMatch.lead_id == lead.id).all()
+    }
+    packet = ensure_evidence_packet(session, lead)
+    review = ensure_underwriting_review(session, lead, packet)
+    offer_gate = ensure_offer_readiness(session, lead, packet, review)
+    for buyer in buyers:
+        buy_boxes = _buyer_buy_boxes(session, buyer.workspace_id, buyer.id)
+        confidence = ensure_buyer_confidence(session, buyer)
+        best = _best_buy_box_match(lead, review, buyer, buy_boxes, confidence.confidence_score)
+        match = existing.get(buyer.id)
+        if match is None:
+            match = ClientDealBuyerMatch(
+                id=f"client-buyer-match-{uuid4().hex[:10]}",
+                workspace_id=lead.workspace_id,
+                lead_id=lead.id,
+                buyer_id=buyer.id,
+            )
+            session.add(match)
+        match.buy_box_id = best["buy_box_id"]
+        match.match_score = best["match_score"]
+        match.match_status = best["match_status"]
+        match.matched_reasons = best["matched_reasons"]
+        match.mismatch_reasons = best["mismatch_reasons"]
+        match.price_fit_status = best["price_fit_status"]
+        match.market_fit_status = best["market_fit_status"]
+        match.property_type_fit_status = best["property_type_fit_status"]
+        match.rehab_fit_status = best["rehab_fit_status"]
+        match.funding_confidence_snapshot = confidence.funding_confidence_score
+        match.buyer_confidence_snapshot = confidence.confidence_score
+        match.requires_human_review = best["match_status"] != "strong_match" or confidence.requires_human_review
+        match.recommended_next_step = (
+            "Review this buyer manually as a CP5 fit candidate."
+            if match.match_status in {"strong_match", "possible_match"}
+            else "Keep buyer out of disposition readiness until fit improves."
+        )
+        match.client_safe_summary = "Client-safe deterministic buyer fit only; no buyer has been contacted."
+    _ensure_disposition_event(session, lead, None, "buyer_matching", "Disposition Manager refreshed deterministic buyer matches.")
+    if offer_gate.readiness_status != "ready_for_client_review":
+        _ensure_disposition_event(session, lead, None, "offer_gate_block", "Disposition Manager blocked buyer readiness because CP4 offer readiness is not clear.")
+    session.flush()
+    return (
+        session.query(ClientDealBuyerMatch)
+        .filter(ClientDealBuyerMatch.workspace_id == lead.workspace_id, ClientDealBuyerMatch.lead_id == lead.id)
+        .order_by(desc(ClientDealBuyerMatch.match_score))
+        .all()
+    )
+
+
+def ensure_disposition_readiness(
+    session: Session,
+    lead: ClientLeadProfile,
+    refresh: bool = False,
+) -> ClientDispositionReadinessGate:
+    gate = (
+        session.query(ClientDispositionReadinessGate)
+        .filter(ClientDispositionReadinessGate.lead_id == lead.id)
+        .first()
+    )
+    if gate is None:
+        gate = ClientDispositionReadinessGate(
+            id=f"client-disposition-gate-{uuid4().hex[:10]}",
+            workspace_id=lead.workspace_id,
+            lead_id=lead.id,
+        )
+        session.add(gate)
+    if refresh or not gate.recommended_next_step:
+        packet = ensure_evidence_packet(session, lead)
+        review = ensure_underwriting_review(session, lead, packet)
+        offer_gate = ensure_offer_readiness(session, lead, packet, review)
+        matches = ensure_buyer_matches(session, lead)
+        evidence = _buyer_demand_evidence(session, lead.workspace_id, lead.id)
+        possible_matches = [match for match in matches if match.match_status in {"strong_match", "possible_match"}]
+        strong_matches = [match for match in matches if match.match_status == "strong_match"]
+        block_reasons: list[str] = []
+        risk_flags: list[str] = []
+        if offer_gate.readiness_status != "ready_for_client_review":
+            block_reasons.append("offer_readiness_blocked")
+        if not matches:
+            block_reasons.append("buyer_match_needed")
+        if not possible_matches:
+            block_reasons.append("strong_or_possible_buyer_match_missing")
+        if not evidence and not strong_matches:
+            block_reasons.append("buyer_demand_evidence_missing")
+        if packet.evidence_status == "missing_evidence" or review.max_allowable_offer is None:
+            block_reasons.append("critical_evidence_missing")
+        if any(match.requires_human_review for match in possible_matches):
+            risk_flags.append("buyer_match_human_review")
+        gate.buyer_match_count = len(matches)
+        gate.strong_buyer_match_count = len(strong_matches)
+        gate.buyer_demand_evidence_count = len(evidence)
+        gate.block_reasons = sorted(set(block_reasons))
+        gate.risk_flags = sorted(set(risk_flags))
+        gate.readiness_score = max(0, min(100, 100 - len(gate.block_reasons) * 22 - len(gate.risk_flags) * 10))
+        if "offer_readiness_blocked" in gate.block_reasons:
+            gate.readiness_status = "offer_readiness_blocked"
+        elif "buyer_demand_evidence_missing" in gate.block_reasons:
+            gate.readiness_status = "buyer_demand_missing"
+        elif "buyer_match_needed" in gate.block_reasons or "strong_or_possible_buyer_match_missing" in gate.block_reasons:
+            gate.readiness_status = "buyer_match_needed"
+        elif gate.block_reasons:
+            gate.readiness_status = "blocked"
+        else:
+            gate.readiness_status = "ready_for_client_review"
+        gate.can_prepare_buyer_outreach = gate.readiness_status == "ready_for_client_review"
+        gate.no_buyer_contacted = True
+        gate.no_campaign_started = True
+        gate.no_contract_generated = True
+        gate.requires_human_review = True
+        gate.recommended_next_step = (
+            "Review matched buyers and manual-only buyer preview draft."
+            if gate.can_prepare_buyer_outreach
+            else "Resolve CP4, buyer match, or buyer demand evidence blockers before disposition review."
+        )
+        gate.client_safe_summary = "Decision support only; no campaign, contract, or buyer outreach has been sent."
+        _ensure_disposition_event(session, lead, None, "disposition_readiness", f"Disposition Manager set readiness to {gate.readiness_status}.")
+        session.flush()
+    return gate
+
+
+def ensure_buyer_outreach_drafts(
+    session: Session,
+    lead: ClientLeadProfile,
+    refresh: bool = False,
+    values: dict[str, object] | None = None,
+) -> list[ClientBuyerOutreachDraft]:
+    if refresh:
+        session.query(ClientBuyerOutreachDraft).filter(ClientBuyerOutreachDraft.lead_id == lead.id).delete(synchronize_session=False)
+    drafts = _buyer_outreach_drafts(session, lead.workspace_id, lead.id)
+    if not drafts:
+        matches = ensure_buyer_matches(session, lead)
+        top_match = next((match for match in matches if match.match_status in {"strong_match", "possible_match"}), None)
+        body = (
+            f"Manual preview note for {lead.property_city or 'the market'} {lead.property_zip or ''}: "
+            "share only client-safe property type, high-level price context, and ask whether the buyer wants manual review."
+        )
+        draft = ClientBuyerOutreachDraft(
+            id=f"client-buyer-draft-{uuid4().hex[:10]}",
+            workspace_id=lead.workspace_id,
+            lead_id=lead.id,
+            buyer_id=str((values or {}).get("buyer_id") or (top_match.buyer_id if top_match else "")) or None,
+            draft_type=str((values or {}).get("draft_type") or "deal_preview"),
+            draft_body=body,
+            purpose=str((values or {}).get("purpose") or "manual buyer preview"),
+            risk_level="low" if top_match else "medium",
+            approval_status="draft_only",
+            manual_use_only=True,
+            no_live_send=True,
+            no_blast=True,
+            unsafe_language_flag=False,
+        )
+        session.add(draft)
+        _ensure_disposition_event(session, lead, draft.buyer_id, "buyer_outreach_draft", "Disposition Manager prepared a manual-use buyer draft.")
+        session.flush()
+    return _buyer_outreach_drafts(session, lead.workspace_id, lead.id)
 
 
 def require_member_permission(
@@ -1402,6 +1915,20 @@ def _lead_or_404(
     return lead
 
 
+def _buyer_or_404(
+    session: Session,
+    buyer_id: str,
+    workspace_id: str | None = None,
+) -> ClientBuyerProfile:
+    query = session.query(ClientBuyerProfile).filter(ClientBuyerProfile.id == buyer_id)
+    if workspace_id is not None:
+        query = query.filter(ClientBuyerProfile.workspace_id == workspace_id)
+    buyer = query.first()
+    if buyer is None:
+        raise ValueError(f"Client buyer not found in requested workspace: {buyer_id}")
+    return buyer
+
+
 def _scores_for_workspace(session: Session, workspace_id: str) -> list[ClientLeadIntelligenceScore]:
     return (
         session.query(ClientLeadIntelligenceScore)
@@ -1574,6 +2101,229 @@ def _underwriting_events(
         .order_by(desc(ClientUnderwritingDivisionEvent.created_at))
         .all()
     )
+
+
+def _buyer_buy_boxes(session: Session, workspace_id: str, buyer_id: str) -> list[ClientBuyerBuyBox]:
+    return (
+        session.query(ClientBuyerBuyBox)
+        .filter(ClientBuyerBuyBox.workspace_id == workspace_id, ClientBuyerBuyBox.buyer_id == buyer_id)
+        .order_by(ClientBuyerBuyBox.market, ClientBuyerBuyBox.id)
+        .all()
+    )
+
+
+def _buyer_matches_for_buyer(session: Session, workspace_id: str, buyer_id: str) -> list[ClientDealBuyerMatch]:
+    return (
+        session.query(ClientDealBuyerMatch)
+        .filter(ClientDealBuyerMatch.workspace_id == workspace_id, ClientDealBuyerMatch.buyer_id == buyer_id)
+        .order_by(desc(ClientDealBuyerMatch.match_score))
+        .all()
+    )
+
+
+def _buyer_demand_evidence(session: Session, workspace_id: str, lead_id: str) -> list[ClientBuyerDemandEvidence]:
+    return (
+        session.query(ClientBuyerDemandEvidence)
+        .filter(ClientBuyerDemandEvidence.workspace_id == workspace_id, ClientBuyerDemandEvidence.lead_id == lead_id)
+        .order_by(desc(ClientBuyerDemandEvidence.created_at))
+        .all()
+    )
+
+
+def _buyer_outreach_drafts(session: Session, workspace_id: str, lead_id: str) -> list[ClientBuyerOutreachDraft]:
+    return (
+        session.query(ClientBuyerOutreachDraft)
+        .filter(ClientBuyerOutreachDraft.workspace_id == workspace_id, ClientBuyerOutreachDraft.lead_id == lead_id)
+        .order_by(desc(ClientBuyerOutreachDraft.created_at))
+        .all()
+    )
+
+
+def _disposition_events(
+    session: Session,
+    workspace_id: str,
+    lead_id: str,
+) -> list[ClientDispositionDivisionEvent]:
+    return (
+        session.query(ClientDispositionDivisionEvent)
+        .filter(ClientDispositionDivisionEvent.workspace_id == workspace_id, ClientDispositionDivisionEvent.lead_id == lead_id)
+        .order_by(desc(ClientDispositionDivisionEvent.created_at))
+        .all()
+    )
+
+
+def _buyer_grade(score: int) -> str:
+    if score >= 85:
+        return "A"
+    if score >= 70:
+        return "B"
+    if score >= 55:
+        return "C"
+    if score >= 40:
+        return "D"
+    return "Review"
+
+
+def _rehab_level(review: ClientUnderwritingReview) -> str:
+    repairs = review.repair_estimate or 0
+    if repairs >= 65000:
+        return "heavy"
+    if repairs >= 30000:
+        return "medium"
+    if repairs > 0:
+        return "light"
+    return "unknown"
+
+
+def _best_buy_box_match(
+    lead: ClientLeadProfile,
+    review: ClientUnderwritingReview,
+    buyer: ClientBuyerProfile,
+    buy_boxes: list[ClientBuyerBuyBox],
+    buyer_confidence: int,
+) -> dict[str, object]:
+    boxes = buy_boxes or [
+        ClientBuyerBuyBox(
+            id="",
+            workspace_id=buyer.workspace_id,
+            buyer_id=buyer.id,
+            market=buyer.primary_market,
+            zip_codes=buyer.target_zip_codes or [],
+            property_types=buyer.preferred_property_types or [],
+            min_purchase_price=buyer.min_price,
+            max_purchase_price=buyer.max_price,
+            rehab_level=buyer.rehab_tolerance,
+        )
+    ]
+    best: dict[str, object] | None = None
+    for box in boxes:
+        score = 0
+        matched: list[str] = []
+        mismatches: list[str] = []
+        market_fit = "unknown"
+        if lead.property_zip and lead.property_zip in (box.zip_codes or []):
+            score += 25
+            matched.append("zip_match")
+            market_fit = "fits"
+        elif lead.property_city and (lead.property_city.lower() in (box.market or buyer.primary_market or "").lower()):
+            score += 16
+            matched.append("market_match")
+            market_fit = "partial"
+        else:
+            mismatches.append("market_or_zip_not_in_buy_box")
+            market_fit = "missing"
+        property_fit = "unknown"
+        if lead.property_type and lead.property_type in (box.property_types or []):
+            score += 18
+            matched.append("property_type_match")
+            property_fit = "fits"
+        elif box.property_types:
+            mismatches.append("property_type_not_preferred")
+            property_fit = "partial"
+        else:
+            mismatches.append("property_type_preference_missing")
+            property_fit = "missing"
+        price = review.standard_offer or review.max_allowable_offer
+        price_fit = "unknown"
+        if price is not None and box.max_purchase_price is not None:
+            if (box.min_purchase_price is None or price >= box.min_purchase_price) and price <= box.max_purchase_price:
+                score += 22
+                matched.append("price_range_fit")
+                price_fit = "fits"
+            elif price <= int(box.max_purchase_price * 1.08):
+                score += 12
+                matched.append("price_close_to_buy_box")
+                price_fit = "close"
+            else:
+                mismatches.append("price_above_buy_box")
+                price_fit = "too_high"
+        else:
+            mismatches.append("price_range_missing")
+        rehab = _rehab_level(review)
+        rehab_fit = "unknown"
+        allowed_rehab = box.rehab_level or buyer.rehab_tolerance
+        if allowed_rehab in {"any", rehab}:
+            score += 15
+            matched.append("rehab_fit")
+            rehab_fit = "fits"
+        elif allowed_rehab == "heavy" and rehab in {"medium", "light"}:
+            score += 12
+            matched.append("rehab_within_tolerance")
+            rehab_fit = "partial"
+        elif allowed_rehab in {"medium", "heavy"} and rehab == "light":
+            score += 10
+            matched.append("rehab_below_tolerance")
+            rehab_fit = "partial"
+        else:
+            mismatches.append("rehab_tolerance_mismatch")
+            rehab_fit = "missing" if allowed_rehab == "unknown" else "partial"
+        if buyer.proof_of_funds_status == "verified":
+            score += 10
+            matched.append("proof_of_funds_verified")
+        elif buyer.funding_status == "stated":
+            score += 5
+            matched.append("funding_stated")
+        else:
+            mismatches.append("funding_or_pof_unclear")
+        if not buy_boxes:
+            mismatches.append("buyer_buy_box_missing")
+        score += min(10, int((buyer_confidence or 0) / 10))
+        score = max(0, min(100, score))
+        status = "strong_match" if score >= 90 else "possible_match" if score >= 70 else "needs_review" if score >= 40 else "weak_match"
+        candidate = {
+            "buy_box_id": box.id or None,
+            "match_score": score,
+            "match_status": status,
+            "matched_reasons": matched,
+            "mismatch_reasons": mismatches,
+            "price_fit_status": price_fit,
+            "market_fit_status": market_fit,
+            "property_type_fit_status": property_fit,
+            "rehab_fit_status": rehab_fit,
+        }
+        if best is None or score > int(best["match_score"]):
+            best = candidate
+    return best or {
+        "buy_box_id": None,
+        "match_score": 0,
+        "match_status": "blocked",
+        "matched_reasons": [],
+        "mismatch_reasons": ["buyer_buy_box_missing"],
+        "price_fit_status": "unknown",
+        "market_fit_status": "unknown",
+        "property_type_fit_status": "unknown",
+        "rehab_fit_status": "unknown",
+    }
+
+
+def _ensure_disposition_event(
+    session: Session,
+    lead: ClientLeadProfile,
+    buyer_id: str | None,
+    event_type: str,
+    summary: str,
+) -> None:
+    event = (
+        session.query(ClientDispositionDivisionEvent)
+        .filter(
+            ClientDispositionDivisionEvent.lead_id == lead.id,
+            ClientDispositionDivisionEvent.buyer_id == buyer_id,
+            ClientDispositionDivisionEvent.event_type == event_type,
+        )
+        .first()
+    )
+    if event is None:
+        event = ClientDispositionDivisionEvent(
+            id=f"client-disposition-event-{uuid4().hex[:10]}",
+            workspace_id=lead.workspace_id,
+            lead_id=lead.id,
+            buyer_id=buyer_id,
+            event_type=event_type,
+        )
+        session.add(event)
+    event.event_summary = summary
+    event.manager_name = "Disposition Manager"
+    event.client_visible = True
 
 
 def _sync_missing_items(

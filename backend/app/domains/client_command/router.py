@@ -10,6 +10,21 @@ from app.domains.client_command.service import (
     acquisition_briefs,
     acquisition_needs_review,
     appointment_readiness_for_lead,
+    buyer_buy_boxes_for_buyer,
+    buyer_confidence_for_buyer,
+    buyer_demand_evidence_for_lead,
+    buyer_detail,
+    buyer_matches_for_lead,
+    buyer_outreach_drafts_for_lead,
+    create_buyer_buy_box,
+    create_buyer_demand_evidence,
+    create_buyer_profile,
+    disposition_blocked,
+    disposition_matches,
+    disposition_needs_review,
+    disposition_readiness_for_lead,
+    disposition_ready_review,
+    disposition_strong_matches,
     evidence_items_for_lead,
     evidence_packet_for_lead,
     follow_up_drafts_for_lead,
@@ -29,6 +44,13 @@ from app.domains.client_command.service import (
     underwriting_ready_review,
     underwriting_review_for_lead,
     workspace_detail,
+    workspace_buyers,
+)
+from app.domains.client_command.schemas import (
+    ClientBuyerBuyBoxCreate,
+    ClientBuyerDemandEvidenceCreate,
+    ClientBuyerOutreachDraftCreate,
+    ClientBuyerProfileCreate,
 )
 
 
@@ -375,6 +397,241 @@ def list_underwriting_needs_human_review(
     session: Session = Depends(get_session),
 ) -> dict[str, object]:
     return underwriting_needs_human_review(session, workspace_id)
+
+
+@router.post("/workspaces/{workspace_id}/buyers")
+def create_workspace_buyer(
+    workspace_id: str,
+    payload: ClientBuyerProfileCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_buyer_profile(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/buyers")
+def list_workspace_buyers(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return workspace_buyers(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/buyers/{buyer_id}")
+def get_buyer_detail(
+    buyer_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return buyer_detail(session, buyer_id, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/buyers/{buyer_id}/confidence-score")
+def create_buyer_confidence(
+    buyer_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = buyer_confidence_for_buyer(session, buyer_id, workspace_id, refresh=True)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/buyers/{buyer_id}/confidence-score")
+def get_buyer_confidence(
+    buyer_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return buyer_confidence_for_buyer(session, buyer_id, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/buyers/{buyer_id}/buy-boxes")
+def create_buy_box(
+    buyer_id: str,
+    payload: ClientBuyerBuyBoxCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_buyer_buy_box(session, buyer_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/buyers/{buyer_id}/buy-boxes")
+def get_buy_boxes(
+    buyer_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return buyer_buy_boxes_for_buyer(session, buyer_id, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/leads/{lead_id}/buyer-matches")
+def create_buyer_matches(
+    lead_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = buyer_matches_for_lead(session, lead_id, workspace_id, refresh=True)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/leads/{lead_id}/buyer-matches")
+def get_buyer_matches(
+    lead_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return buyer_matches_for_lead(session, lead_id, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/disposition/matches")
+def list_disposition_matches(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return disposition_matches(session, workspace_id)
+
+
+@router.get("/disposition/strong-matches")
+def list_disposition_strong_matches(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return disposition_strong_matches(session, workspace_id)
+
+
+@router.get("/disposition/needs-review")
+def list_disposition_needs_review(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return disposition_needs_review(session, workspace_id)
+
+
+@router.post("/leads/{lead_id}/buyer-demand-evidence")
+def create_lead_buyer_demand_evidence(
+    lead_id: str,
+    payload: ClientBuyerDemandEvidenceCreate,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_buyer_demand_evidence(session, lead_id, payload.model_dump(), workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/leads/{lead_id}/buyer-demand-evidence")
+def get_lead_buyer_demand_evidence(
+    lead_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return buyer_demand_evidence_for_lead(session, lead_id, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/leads/{lead_id}/disposition-readiness")
+def create_disposition_readiness(
+    lead_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = disposition_readiness_for_lead(session, lead_id, workspace_id, refresh=True)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/leads/{lead_id}/disposition-readiness")
+def get_disposition_readiness(
+    lead_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return disposition_readiness_for_lead(session, lead_id, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/disposition/ready-review")
+def list_disposition_ready_review(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return disposition_ready_review(session, workspace_id)
+
+
+@router.get("/disposition/blocked")
+def list_disposition_blocked(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return disposition_blocked(session, workspace_id)
+
+
+@router.post("/leads/{lead_id}/buyer-outreach-drafts")
+def create_lead_buyer_outreach_drafts(
+    lead_id: str,
+    payload: ClientBuyerOutreachDraftCreate,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = buyer_outreach_drafts_for_lead(session, lead_id, workspace_id, refresh=True, values=payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/leads/{lead_id}/buyer-outreach-drafts")
+def get_lead_buyer_outreach_drafts(
+    lead_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return buyer_outreach_drafts_for_lead(session, lead_id, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/leads/{lead_id}/score")

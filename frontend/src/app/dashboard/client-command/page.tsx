@@ -9,6 +9,9 @@ import {
   clientCommandSafetyCards,
   clientAcquisitionBriefs,
   clientAppointmentReadinessReviews,
+  clientBuyerProfiles,
+  clientDealBuyerMatches,
+  clientDispositionReadinessGates,
   clientDealEvidencePackets,
   clientLeadCards,
   clientLeadDivisionEvents,
@@ -21,6 +24,10 @@ import {
 export default function ClientCommandPage() {
   const acquisitionReviewCount = clientAppointmentReadinessReviews.filter((review) => review.requiresHumanReview).length;
   const blockedOffers = clientOfferReadinessGates.filter((gate) => gate.readinessStatus !== "ready_for_client_review").length;
+  const strongMatches = clientDealBuyerMatches.filter((match) => match.matchStatus === "strong_match").length;
+  const dispositionReady = clientDispositionReadinessGates.filter((gate) => gate.readinessStatus === "ready_for_client_review").length;
+  const dispositionBlocked = clientDispositionReadinessGates.filter((gate) => gate.readinessStatus !== "ready_for_client_review").length;
+  const buyerDemandNeeded = clientDispositionReadinessGates.filter((gate) => gate.blockReasons.includes("buyer_demand_evidence_missing")).length;
   return (
     <div className="page">
       <PageHeader
@@ -35,6 +42,15 @@ export default function ClientCommandPage() {
         <MetricCard label="Acquisition briefs" value={String(clientAcquisitionBriefs.length)} detail={`${acquisitionReviewCount} need review`} />
         <MetricCard label="Offer readiness" value={String(clientOfferReadinessGates.length)} detail={`${blockedOffers} blocked by evidence or review`} />
       </div>
+
+      <Section title="CP5 Disposition Panel">
+        <div className="metric-grid">
+          <MetricCard label="Buyer profiles" value={String(clientBuyerProfiles.length)} detail="Client-safe demo buyers" />
+          <MetricCard label="Strong matches" value={String(strongMatches)} detail="Deterministic buy box fit" />
+          <MetricCard label="Disposition ready" value={String(dispositionReady)} detail="Manual review only" />
+          <MetricCard label="Blocked disposition" value={String(dispositionBlocked)} detail={`${buyerDemandNeeded} need buyer demand evidence`} />
+        </div>
+      </Section>
 
       <Section title="Memphis Demo Scenario">
         <div className="record-list">
@@ -67,7 +83,8 @@ export default function ClientCommandPage() {
           <div className="record-list">
             <RecordCard title="Lead Intelligence Division" meta="Scores motivation, urgency, equity, distress, contactability, probability, and missing data." right={<Pill tone="green">active</Pill>} />
             <RecordCard title="Acquisition Manager" meta="Builds seller conversation briefs, question plans, manual drafts, and appointment readiness." right={<Pill tone="green">CP3</Pill>} />
-            <RecordCard title="Underwriting Manager" meta="Checks evidence, ARV, repairs, MAO, scenarios, and offer readiness." right={<Pill tone="green">CP4</Pill>} />
+          <RecordCard title="Underwriting Manager" meta="Checks evidence, ARV, repairs, MAO, scenarios, and offer readiness." right={<Pill tone="green">CP4</Pill>} />
+            <RecordCard title="Disposition Manager" meta="Ranks buyer fit, buy box evidence, and disposition readiness without buyer contact." right={<Pill tone="green">CP5</Pill>} />
             <RecordCard title="Client Workspace Guard" meta="Tenant-safe roles, client permissions, and sanitized workspace responses." right={<Pill tone="green">safe</Pill>} />
             <RecordCard title="Provider Boundary Guard" meta="No outbound provider actions or raw payload exposure in CP1-CP4." right={<Pill tone="red">locked</Pill>} />
           </div>
@@ -89,6 +106,7 @@ export default function ClientCommandPage() {
           <RecordCard title="Next Actions" meta={`${clientLeadNextBestActions.length} client-safe recommendations`} right={<Link href="/dashboard/client-command/next-actions">Open</Link>} />
           <RecordCard title="Acquisition" meta="Briefs, question plans, and review queue" right={<Link href="/dashboard/client-command/acquisition">Open</Link>} />
           <RecordCard title="Underwriting" meta={`${clientDealEvidencePackets.length} evidence packets`} right={<Link href="/dashboard/client-command/underwriting">Open</Link>} />
+          <RecordCard title="Disposition" meta="Buyer matching and disposition readiness" right={<Link href="/dashboard/client-command/disposition">Open</Link>} />
           <RecordCard title="Permissions" meta={`${clientCommandPermissions.length} scoped permissions`} right={<Pill tone="gold">CP1</Pill>} />
           <RecordCard title="Lead Division" meta="Deterministic scoring" right={<Pill tone="gold">CP2</Pill>} />
         </div>

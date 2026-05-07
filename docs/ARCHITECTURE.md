@@ -64,7 +64,7 @@ V27 adds Prime 2 memory and learning. It stores source-cited memory items, learn
 
 V31 adds the real deal execution pack. It gives Prime 2 a First Deal Cockpit for the first real wholesale loop: real lead batches, QA, manual seller calls, underwriting, offer decisioning, buyer validation, contract-ready readiness, title/attorney prep, assignment-fee evidence, field-test reporting, and execution coaching. It is guidance and tracking only; it cannot contact sellers or buyers, execute contracts, submit title packets, handle payments, or bypass owner approval.
 
-CP1 through CP4 add the first customer-facing Prime2 Client Command OS layer. CP1 introduces tenant-safe client workspaces, roles, members, and scoped client permissions. CP2 introduces a client-safe Lead Intelligence Division that scores motivation, urgency, equity, distress, contactability, deal probability, missing data, and final priority. CP3 adds Acquisition Manager prep for seller briefs, question plans, manual drafts, and appointment readiness. CP4 adds Underwriting Manager evidence packets, transparent MAO math, offer scenarios, and readiness gates. Client Command never exposes internal Prime governance, raw provider payloads, admin-only controls, live provider actions, legal guidance, or execution controls.
+CP1 through CP5 add the first customer-facing Prime2 Client Command OS layer. CP1 introduces tenant-safe client workspaces, roles, members, and scoped client permissions. CP2 introduces a client-safe Lead Intelligence Division that scores motivation, urgency, equity, distress, contactability, deal probability, missing data, and final priority. CP3 adds Acquisition Manager prep for seller briefs, question plans, manual drafts, and appointment readiness. CP4 adds Underwriting Manager evidence packets, transparent MAO math, offer scenarios, and readiness gates. CP5 adds Disposition Manager buyer profiles, buy boxes, confidence scores, deal-to-buyer matching, buyer demand evidence, disposition readiness gates, and manual-only buyer drafts. Client Command never exposes internal Prime governance, raw provider payloads, admin-only controls, live provider actions, legal guidance, or execution controls.
 
 ## Backend Modules
 
@@ -88,7 +88,7 @@ CP1 through CP4 add the first customer-facing Prime2 Client Command OS layer. CP
 - `app/domains/market_enrichment/*`: V26 market profiles, comps, rent estimates, buyer activity snapshots, lead source ROI records, deterministic heat scoring, ARV confidence, demand confidence, source-quality gates, and sanitizers that label strategy outputs as estimate-only.
 - `app/domains/prime_memory/*`: V27 source-cited memory items, learning signals, scoring weight recommendations, playbook recommendations, approved AI context projection, external sanitization, and guards against unsupported claims, auto-applied scoring, compliance overrides, and portal strategy exposure.
 - `app/domains/real_deal_execution/*`: V31 first deal execution cockpit with batch records, status workflow, call checklist generation, offer decision scoring, buyer validation gates, contract-ready gates, assignment-fee evidence checks, field-test reports, learning-signal creation, sanitization, and hard blocks against live outreach, legal/title/payment/contract execution, and unsupported 10K+ claims.
-- `app/domains/client_command/*`: CP1-CP4 client-facing command foundation with workspace/member/role permissions, client lead profiles, deterministic Lead Intelligence scoring, acquisition prep, question plans, manual draft queues, appointment readiness, evidence packets, underwriting reviews, offer scenarios, offer readiness gates, division events, sanitizers, and safety guards against provider calls, billing, e-signature, legal guidance, fake ROI, internal governance exposure, raw provider payload exposure, external property data pulls, provider sync, and autonomous fulfillment.
+- `app/domains/client_command/*`: CP1-CP5 client-facing command foundation with workspace/member/role permissions, client lead profiles, deterministic Lead Intelligence scoring, acquisition prep, question plans, manual draft queues, appointment readiness, evidence packets, underwriting reviews, offer scenarios, offer readiness gates, buyer profiles, buy boxes, buyer confidence scores, deal-to-buyer matches, buyer demand evidence, disposition readiness gates, division events, sanitizers, and safety guards against provider calls, billing, e-signature, legal guidance, fake ROI, internal governance exposure, raw provider payload exposure, external property data pulls, buyer scraping, provider sync, campaigns, and autonomous fulfillment.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -1109,9 +1109,9 @@ V31 safety boundary:
 - The cockpit does not make calls, send messages, publish portals, execute contracts, submit title packets, handle payments, provide legal guidance, or create guaranteed fee/profit claims.
 - Contract-ready remains an internal readiness mark for external attorney/title process.
 
-## Client Command CP3 + CP4
+## Client Command CP3 + CP5
 
-CP3 and CP4 extend `app.domains.client_command` instead of creating a separate customer system.
+CP3, CP4, and CP5 extend `app.domains.client_command` instead of creating a separate customer system.
 
 Backend additions:
 
@@ -1128,6 +1128,14 @@ Backend additions:
 - `ClientOfferScenario`
 - `ClientOfferReadinessGate`
 - `ClientUnderwritingDivisionEvent`
+- `ClientBuyerProfile`
+- `ClientBuyerBuyBox`
+- `ClientBuyerConfidenceScore`
+- `ClientDealBuyerMatch`
+- `ClientBuyerDemandEvidence`
+- `ClientDispositionReadinessGate`
+- `ClientBuyerOutreachDraft`
+- `ClientDispositionDivisionEvent`
 
 API additions:
 
@@ -1145,6 +1153,19 @@ API additions:
 - `/api/v1/client-command/underwriting/ready-review`
 - `/api/v1/client-command/underwriting/blocked`
 - `/api/v1/client-command/underwriting/needs-human-review`
+- `/api/v1/client-command/workspaces/{workspace_id}/buyers`
+- `/api/v1/client-command/buyers/{buyer_id}`
+- `/api/v1/client-command/buyers/{buyer_id}/confidence-score`
+- `/api/v1/client-command/buyers/{buyer_id}/buy-boxes`
+- `/api/v1/client-command/leads/{lead_id}/buyer-matches`
+- `/api/v1/client-command/disposition/matches`
+- `/api/v1/client-command/disposition/strong-matches`
+- `/api/v1/client-command/disposition/needs-review`
+- `/api/v1/client-command/leads/{lead_id}/buyer-demand-evidence`
+- `/api/v1/client-command/leads/{lead_id}/disposition-readiness`
+- `/api/v1/client-command/disposition/ready-review`
+- `/api/v1/client-command/disposition/blocked`
+- `/api/v1/client-command/leads/{lead_id}/buyer-outreach-drafts`
 
 Frontend additions:
 
@@ -1154,15 +1175,22 @@ Frontend additions:
 - `/dashboard/client-command/underwriting`
 - `/dashboard/client-command/underwriting/ready-review`
 - `/dashboard/client-command/underwriting/blocked`
+- `/dashboard/client-command/disposition`
+- `/dashboard/client-command/disposition/buyers`
+- `/dashboard/client-command/disposition/buyers/[buyerId]`
+- `/dashboard/client-command/disposition/matches`
+- `/dashboard/client-command/disposition/ready-review`
+- `/dashboard/client-command/disposition/blocked`
+- `/dashboard/client-command/disposition/needs-review`
 
-CP3 consumes CP2 lead scores and missing-data records. It does not replace CP2 scoring. CP4 consumes lead profile, CP2 score/missing data, manual/demo underwriting inputs, and evidence records. It does not claim live comp accuracy, title accuracy, tax accuracy, ARV accuracy, or guaranteed profit.
+CP3 consumes CP2 lead scores and missing-data records. It does not replace CP2 scoring. CP4 consumes lead profile, CP2 score/missing data, manual/demo underwriting inputs, and evidence records. CP5 consumes lead profile, CP2 signals, CP4 evidence/underwriting/offer readiness, buyer profiles, buy boxes, and buyer demand evidence. These layers do not claim live comp accuracy, title accuracy, tax accuracy, ARV accuracy, buyer purchase certainty, assignment fees, or guaranteed profit.
 
-CP3/CP4 safety boundary:
+CP3/CP4/CP5 safety boundary:
 
 - Drafts are manual-use only.
-- Underwriting is decision support only.
+- Underwriting and disposition readiness are decision support only.
 - No outbound provider actions occur.
-- No offers, contracts, messages, provider syncs, payments, skip tracing, DNC provider checks, title calls, tax calls, MLS calls, or legal guidance occur.
+- No offers, contracts, messages, campaigns, buyer contact, buyer scraping, provider syncs, payments, skip tracing, DNC provider checks, title calls, tax calls, MLS calls, or legal guidance occur.
 - Sanitizers hide internal notes, raw provider payloads, audit internals, provider config, secrets, legal conclusions, hidden policy logic, and unsafe execution fields.
 - Mobile call queues and cockpit call queues are manual capture and guidance only.
 - Prime 2 execution coach recommendations are advisory and cannot override owner approval, compliance, buyer margin protection, evidence requirements, or existing V5/V13/V22/V30 gates.

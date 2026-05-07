@@ -52,6 +52,7 @@ Expected coverage includes:
 - CP2 validation lane `lead_intelligence_division_cp2`: deterministic lead scoring, missing-data readiness reduction, hot-board ranking, next-action recommendations, and no outbound provider actions
 - CP3 validation lane `client_command_acquisition_cp3`: deterministic acquisition briefs, missing-data-driven question plans, manual-use follow-up drafts, appointment readiness blocks, client-safe sanitizer, and no outbound provider actions
 - CP4 validation lane `client_command_underwriting_cp4`: evidence packet isolation, missing evidence tracking, ARV/repair blocks, transparent MAO/scenario math, offer readiness gates, no offer/contract execution, and sanitized evidence items
+- CP5 validation lane `client_command_disposition_cp5`: buyer profile workspace isolation, deterministic buyer confidence, buy box scoping, deal-to-buyer matching, disposition readiness gates, manual-only buyer drafts, Memphis scenario states, no buyer contact, no campaign, and no provider actions
 
 ## Frontend
 
@@ -78,8 +79,9 @@ Expected coverage includes:
 - V29 cloud readiness routes render and expose no deployment or secret controls
 - V30 live activation routes render and expose no bulk or bypass controls
 - V31 first deal cockpit routes render and expose no unsafe call/send/contract/title/payment controls
-- CP1-CP4 client command routes render and expose no dangerous send/call/provider/billing/contract controls
+- CP1-CP5 client command routes render and expose no dangerous send/call/provider/billing/contract/campaign controls
 - CP3/CP4 client command routes render and expose no forbidden send/call/provider/billing/contract/payment controls
+- CP5 client command routes render and expose no forbidden buyer outreach, campaign, provider, billing, contract, payment, or sync controls
 
 ## Source Sweeps
 

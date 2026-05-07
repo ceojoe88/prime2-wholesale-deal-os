@@ -21,6 +21,13 @@ const requiredRouteFiles = [
   "src/app/dashboard/client-command/underwriting/page.tsx",
   "src/app/dashboard/client-command/underwriting/ready-review/page.tsx",
   "src/app/dashboard/client-command/underwriting/blocked/page.tsx",
+  "src/app/dashboard/client-command/disposition/page.tsx",
+  "src/app/dashboard/client-command/disposition/buyers/page.tsx",
+  "src/app/dashboard/client-command/disposition/buyers/[buyerId]/page.tsx",
+  "src/app/dashboard/client-command/disposition/matches/page.tsx",
+  "src/app/dashboard/client-command/disposition/ready-review/page.tsx",
+  "src/app/dashboard/client-command/disposition/blocked/page.tsx",
+  "src/app/dashboard/client-command/disposition/needs-review/page.tsx",
   "src/app/dashboard/first-deal-cockpit/page.tsx",
   "src/app/dashboard/first-deal-cockpit/calls/page.tsx",
   "src/app/dashboard/first-deal-cockpit/offers/page.tsx",
@@ -747,6 +754,72 @@ test("CP3 and CP4 client command pages expose no forbidden client controls", () 
     "guaranteed profit",
     "raw_provider_payload",
     "internal_prime_governance"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP5 client command pages render Disposition Manager and manual buyer boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/disposition/page.tsx",
+    "src/app/dashboard/client-command/disposition/buyers/page.tsx",
+    "src/app/dashboard/client-command/disposition/buyers/[buyerId]/page.tsx",
+    "src/app/dashboard/client-command/disposition/matches/page.tsx",
+    "src/app/dashboard/client-command/disposition/ready-review/page.tsx",
+    "src/app/dashboard/client-command/disposition/blocked/page.tsx",
+    "src/app/dashboard/client-command/disposition/needs-review/page.tsx",
+    "src/app/dashboard/client-command/leads/[leadId]/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Disposition Manager/);
+  assert.match(joined, /Buyer Match Summary/);
+  assert.match(joined, /Buyer Demand Evidence/);
+  assert.match(joined, /Memphis Demo Scenario/);
+  assert.match(joined, /Manual use only .* no buyer has been contacted\./);
+  assert.match(joined, /Decision support only .* no campaign, contract, or buyer outreach has been sent\./);
+});
+
+test("CP5 client command pages expose no forbidden buyer execution controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/leads/page.tsx",
+    "src/app/dashboard/client-command/leads/[leadId]/page.tsx",
+    "src/app/dashboard/client-command/disposition/page.tsx",
+    "src/app/dashboard/client-command/disposition/buyers/page.tsx",
+    "src/app/dashboard/client-command/disposition/buyers/[buyerId]/page.tsx",
+    "src/app/dashboard/client-command/disposition/matches/page.tsx",
+    "src/app/dashboard/client-command/disposition/ready-review/page.tsx",
+    "src/app/dashboard/client-command/disposition/blocked/page.tsx",
+    "src/app/dashboard/client-command/disposition/needs-review/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send sms",
+    "send email",
+    "call now",
+    "auto dial",
+    "start campaign",
+    "blast buyers",
+    "pull buyer list",
+    "scrape buyers",
+    "pull skip trace",
+    "check dnc live",
+    "pull live comps",
+    "generate contract",
+    "send offer",
+    "e-sign",
+    "charge",
+    "invoice",
+    "activate",
+    "sync to provider",
+    "dispatch agent",
+    "execute",
+    "contact buyer",
+    "market deal",
+    "launch campaign",
+    "send deal"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

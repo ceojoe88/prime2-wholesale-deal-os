@@ -44,7 +44,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Production cloud readiness for private deployment profiles, masked environment validation, backup/restore metadata, monitoring readiness, and fail-closed hosting checks
 - Controlled live provider activation records for one-action OpenAI, email, SMS, CRM, and storage lanes gated by safety, dry-runs, owner approval, provider readiness, cloud readiness, idempotency, and audit logs
 - First Deal Cockpit execution guidance for real lead batches, QA, seller calls, offer decisions, buyer validation, contract-ready prep, assignment-fee evidence, and field-test reports
-- Client Command OS workspace, lead intelligence, acquisition prep, and underwriting decision-support layers that hide internal Prime governance and provider internals
+- Client Command OS workspace, lead intelligence, acquisition prep, underwriting decision-support, buyer matching, and disposition readiness layers that hide internal Prime governance and provider internals
 
 ## Command Hierarchy
 
@@ -242,6 +242,9 @@ Added Acquisition Manager briefs, seller question plans, objection response draf
 
 CP4 Underwriting + Deal Evidence:
 Added deal evidence packets, evidence items, underwriting reviews, offer scenarios, offer readiness gates, and Underwriting Manager events. CP4 is decision support only; no provider data pulls, offers, contracts, title submissions, payments, legal advice, or profit guarantees are created.
+
+CP5 Buyer Matching + Disposition Readiness:
+Added buyer profiles, buy boxes, buyer confidence scoring, deterministic deal-to-buyer matching, buyer demand evidence, disposition readiness gates, manual-only buyer outreach drafts, and Disposition Manager events. CP5 is non-live; no buyer is contacted, no campaign starts, no provider calls occur, and no buyer purchase/profit/assignment result is guaranteed.
 
 ## Local Run Commands
 

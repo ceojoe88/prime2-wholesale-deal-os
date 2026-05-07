@@ -4,6 +4,7 @@ export const dashboardRoutes = [
   { href: "/dashboard/client-command", label: "Client Command", icon: "Building2" },
   { href: "/dashboard/client-command/acquisition", label: "Client Acquisition", icon: "PhoneCall" },
   { href: "/dashboard/client-command/underwriting", label: "Client Underwriting", icon: "Calculator" },
+  { href: "/dashboard/client-command/disposition", label: "Client Disposition", icon: "Handshake" },
   { href: "/dashboard/first-deal-cockpit", label: "First Deal Cockpit", icon: "ClipboardList" },
   { href: "/dashboard/autonomy", label: "Autonomy", icon: "Command" },
   { href: "/dashboard/auto-execution", label: "Auto Execution", icon: "TimerReset" },

@@ -6,8 +6,16 @@ from app.models import (
     ClientAcquisitionBrief,
     ClientAcquisitionDivisionEvent,
     ClientAppointmentReadinessReview,
+    ClientBuyerBuyBox,
+    ClientBuyerConfidenceScore,
+    ClientBuyerDemandEvidence,
+    ClientBuyerOutreachDraft,
+    ClientBuyerProfile,
     ClientDealEvidenceItem,
     ClientDealEvidencePacket,
+    ClientDealBuyerMatch,
+    ClientDispositionDivisionEvent,
+    ClientDispositionReadinessGate,
     ClientFollowUpDraft,
     ClientLeadDivisionEvent,
     ClientLeadIntelligenceScore,
@@ -192,6 +200,60 @@ def offer_readiness_public(gate: ClientOfferReadinessGate) -> dict[str, Any]:
 
 
 def underwriting_event_public(event: ClientUnderwritingDivisionEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def buyer_profile_public(buyer: ClientBuyerProfile) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(buyer))
+    data["client_safe"] = True
+    return data
+
+
+def buyer_buy_box_public(buy_box: ClientBuyerBuyBox) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(buy_box))
+    data["client_safe"] = True
+    return data
+
+
+def buyer_confidence_public(score: ClientBuyerConfidenceScore) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(score))
+    data["client_safe"] = True
+    return data
+
+
+def deal_buyer_match_public(match: ClientDealBuyerMatch) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(match))
+    data["client_safe"] = True
+    return data
+
+
+def buyer_demand_evidence_public(evidence: ClientBuyerDemandEvidence) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(evidence))
+    data["client_safe"] = True
+    return data
+
+
+def disposition_readiness_public(gate: ClientDispositionReadinessGate) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(gate))
+    data["no_buyer_contacted"] = True
+    data["no_campaign_started"] = True
+    data["no_contract_generated"] = True
+    data["client_safe"] = True
+    return data
+
+
+def buyer_outreach_draft_public(draft: ClientBuyerOutreachDraft) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(draft))
+    data["manual_use_only"] = True
+    data["no_live_send"] = True
+    data["no_blast"] = True
+    data["client_safe"] = True
+    return data
+
+
+def disposition_event_public(event: ClientDispositionDivisionEvent) -> dict[str, Any]:
     data = strip_forbidden(model_to_dict(event))
     data["client_visible"] = True
     return data

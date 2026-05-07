@@ -6201,6 +6201,126 @@ export type ClientDivisionEvent = {
   clientVisible: boolean;
 };
 
+export type ClientBuyerProfile = {
+  id: string;
+  workspaceId: string;
+  buyerName: string;
+  buyerCompany: string | null;
+  buyerType: "landlord" | "flipper" | "hedge_fund" | "wholesaler" | "agent_buyer" | "unknown";
+  primaryMarket: string;
+  targetZipCodes: string[];
+  preferredPropertyTypes: string[];
+  minPrice: number | null;
+  maxPrice: number | null;
+  rehabTolerance: "light" | "medium" | "heavy" | "unknown";
+  closeSpeed: "fast" | "standard" | "slow" | "unknown";
+  fundingStatus: "verified" | "stated" | "unknown" | "unverified";
+  proofOfFundsStatus: "verified" | "requested" | "missing" | "not_applicable";
+  communicationPreference: "call" | "sms" | "email" | "unknown";
+  activeStatus: "active" | "inactive" | "needs_review";
+  notesSummary: string;
+  clientSafeSummary: string;
+};
+
+export type ClientBuyerBuyBox = {
+  id: string;
+  workspaceId: string;
+  buyerId: string;
+  market: string;
+  zipCodes: string[];
+  propertyTypes: string[];
+  maxPurchasePrice: number | null;
+  minPurchasePrice: number | null;
+  rehabLevel: "light" | "medium" | "heavy" | "any" | "unknown";
+  occupancyPreference: "vacant" | "occupied" | "either" | "unknown";
+  dealTypePreference: "rental" | "flip" | "wholetail" | "creative" | "unknown";
+  notesSummary: string;
+  clientSafe: boolean;
+};
+
+export type ClientBuyerConfidenceScore = {
+  id: string;
+  workspaceId: string;
+  buyerId: string;
+  confidenceScore: number;
+  responsivenessScore: number;
+  fundingConfidenceScore: number;
+  buyBoxClarityScore: number;
+  historicalInterestScore: number;
+  overallGrade: "A" | "B" | "C" | "D" | "Review";
+  reasonSummary: string;
+  requiresHumanReview: boolean;
+};
+
+export type ClientDealBuyerMatch = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  buyerId: string;
+  buyBoxId: string | null;
+  matchScore: number;
+  matchStatus: "strong_match" | "possible_match" | "weak_match" | "blocked" | "needs_review";
+  matchedReasons: string[];
+  mismatchReasons: string[];
+  priceFitStatus: "fits" | "close" | "too_high" | "too_low" | "unknown";
+  marketFitStatus: "fits" | "partial" | "missing" | "unknown";
+  propertyTypeFitStatus: "fits" | "partial" | "missing" | "unknown";
+  rehabFitStatus: "fits" | "partial" | "missing" | "unknown";
+  fundingConfidenceSnapshot: number;
+  buyerConfidenceSnapshot: number;
+  recommendedNextStep: string;
+  clientSafeSummary: string;
+  requiresHumanReview: boolean;
+};
+
+export type ClientBuyerDemandEvidence = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  buyerId: string | null;
+  evidenceType: string;
+  evidenceSummary: string;
+  sourceType: string;
+  confidenceLevel: "low" | "medium" | "high";
+  clientSafe: boolean;
+};
+
+export type ClientDispositionReadinessGate = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  readinessStatus: "not_ready" | "buyer_demand_missing" | "buyer_match_needed" | "offer_readiness_blocked" | "ready_for_client_review" | "blocked";
+  readinessScore: number;
+  buyerMatchCount: number;
+  strongBuyerMatchCount: number;
+  buyerDemandEvidenceCount: number;
+  blockReasons: string[];
+  riskFlags: string[];
+  recommendedNextStep: string;
+  canPrepareBuyerOutreach: boolean;
+  noBuyerContacted: boolean;
+  noCampaignStarted: boolean;
+  noContractGenerated: boolean;
+  requiresHumanReview: boolean;
+  clientSafeSummary: string;
+};
+
+export type ClientBuyerOutreachDraft = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  buyerId: string | null;
+  draftType: "buyer_interest_check" | "deal_preview" | "call_note" | "email_draft" | "sms_draft";
+  draftBody: string;
+  purpose: string;
+  riskLevel: "low" | "medium" | "high";
+  approvalStatus: "draft_only" | "needs_review" | "approved_for_manual_use";
+  manualUseOnly: boolean;
+  noLiveSend: boolean;
+  noBlast: boolean;
+  unsafeLanguageFlag: boolean;
+};
+
 export const clientAcquisitionBriefs: ClientAcquisitionBrief[] = [
   {
     id: "client-acq-brief-001",
@@ -7074,6 +7194,447 @@ clientAcquisitionDivisionEvents.push({
   managerName: "Acquisition Manager",
   clientVisible: true
 });
+
+export const clientBuyerProfiles: ClientBuyerProfile[] = [
+  {
+    id: "client-buyer-memphis-landlord",
+    workspaceId: "client-workspace-003",
+    buyerName: "Memphis rental landlord",
+    buyerCompany: "Delta Door Rentals",
+    buyerType: "landlord",
+    primaryMarket: "Memphis",
+    targetZipCodes: ["38106", "38118"],
+    preferredPropertyTypes: ["single_family"],
+    minPrice: 40000,
+    maxPrice: 125000,
+    rehabTolerance: "medium",
+    closeSpeed: "standard",
+    fundingStatus: "stated",
+    proofOfFundsStatus: "requested",
+    communicationPreference: "email",
+    activeStatus: "active",
+    notesSummary: "Demo/local buyer profile for rentals only.",
+    clientSafeSummary: "Client-entered demo buyer profile; no buyer has been contacted."
+  },
+  {
+    id: "client-buyer-memphis-flipper",
+    workspaceId: "client-workspace-003",
+    buyerName: "Memphis fix-and-flip buyer",
+    buyerCompany: "Bluff City Rehabs",
+    buyerType: "flipper",
+    primaryMarket: "Memphis",
+    targetZipCodes: ["38118"],
+    preferredPropertyTypes: ["single_family"],
+    minPrice: 50000,
+    maxPrice: 115000,
+    rehabTolerance: "heavy",
+    closeSpeed: "fast",
+    fundingStatus: "verified",
+    proofOfFundsStatus: "verified",
+    communicationPreference: "call",
+    activeStatus: "active",
+    notesSummary: "Demo/local buyer with heavy rehab tolerance.",
+    clientSafeSummary: "Client-entered demo buyer profile; no buyer has been contacted."
+  },
+  {
+    id: "client-buyer-memphis-hedge",
+    workspaceId: "client-workspace-003",
+    buyerName: "Out-of-market hedge buyer",
+    buyerCompany: "Riverbend Capital",
+    buyerType: "hedge_fund",
+    primaryMarket: "Memphis",
+    targetZipCodes: ["38116"],
+    preferredPropertyTypes: ["single_family"],
+    minPrice: 70000,
+    maxPrice: 85000,
+    rehabTolerance: "light",
+    closeSpeed: "slow",
+    fundingStatus: "unknown",
+    proofOfFundsStatus: "missing",
+    communicationPreference: "unknown",
+    activeStatus: "needs_review",
+    notesSummary: "Demo buyer with narrow buy box and partial fit.",
+    clientSafeSummary: "Client-entered demo buyer profile; no buyer has been contacted."
+  },
+  {
+    id: "client-buyer-memphis-review",
+    workspaceId: "client-workspace-003",
+    buyerName: "Needs-review buyer",
+    buyerCompany: null,
+    buyerType: "unknown",
+    primaryMarket: "Memphis",
+    targetZipCodes: [],
+    preferredPropertyTypes: [],
+    minPrice: null,
+    maxPrice: null,
+    rehabTolerance: "unknown",
+    closeSpeed: "unknown",
+    fundingStatus: "unknown",
+    proofOfFundsStatus: "missing",
+    communicationPreference: "unknown",
+    activeStatus: "needs_review",
+    notesSummary: "Unclear buy box intentionally lowers confidence.",
+    clientSafeSummary: "Client-entered demo buyer profile; no buyer has been contacted."
+  }
+];
+
+export const clientBuyerBuyBoxes: ClientBuyerBuyBox[] = [
+  {
+    id: "client-buy-box-memphis-landlord",
+    workspaceId: "client-workspace-003",
+    buyerId: "client-buyer-memphis-landlord",
+    market: "Memphis",
+    zipCodes: ["38106", "38118"],
+    propertyTypes: ["single_family"],
+    maxPurchasePrice: 125000,
+    minPurchasePrice: 40000,
+    rehabLevel: "medium",
+    occupancyPreference: "either",
+    dealTypePreference: "rental",
+    notesSummary: "Rental buy box for vacant or occupied single-family assets.",
+    clientSafe: true
+  },
+  {
+    id: "client-buy-box-memphis-flipper",
+    workspaceId: "client-workspace-003",
+    buyerId: "client-buyer-memphis-flipper",
+    market: "Memphis",
+    zipCodes: ["38118"],
+    propertyTypes: ["single_family"],
+    maxPurchasePrice: 115000,
+    minPurchasePrice: 50000,
+    rehabLevel: "heavy",
+    occupancyPreference: "vacant",
+    dealTypePreference: "flip",
+    notesSummary: "Vacant-heavy-rehab flip buy box.",
+    clientSafe: true
+  },
+  {
+    id: "client-buy-box-memphis-hedge",
+    workspaceId: "client-workspace-003",
+    buyerId: "client-buyer-memphis-hedge",
+    market: "Memphis",
+    zipCodes: ["38116"],
+    propertyTypes: ["single_family"],
+    maxPurchasePrice: 85000,
+    minPurchasePrice: 70000,
+    rehabLevel: "light",
+    occupancyPreference: "either",
+    dealTypePreference: "rental",
+    notesSummary: "Narrow out-of-market hedge buy box.",
+    clientSafe: true
+  }
+];
+
+export const clientBuyerConfidenceScores: ClientBuyerConfidenceScore[] = [
+  {
+    id: "client-buyer-confidence-memphis-landlord",
+    workspaceId: "client-workspace-003",
+    buyerId: "client-buyer-memphis-landlord",
+    confidenceScore: 76,
+    responsivenessScore: 65,
+    fundingConfidenceScore: 72,
+    buyBoxClarityScore: 90,
+    historicalInterestScore: 70,
+    overallGrade: "B",
+    reasonSummary: "Stated funding, requested POF, clear Memphis rental buy box.",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-buyer-confidence-memphis-flipper",
+    workspaceId: "client-workspace-003",
+    buyerId: "client-buyer-memphis-flipper",
+    confidenceScore: 88,
+    responsivenessScore: 82,
+    fundingConfidenceScore: 90,
+    buyBoxClarityScore: 90,
+    historicalInterestScore: 70,
+    overallGrade: "A",
+    reasonSummary: "Verified POF, fast close speed, and clear heavy-rehab buy box.",
+    requiresHumanReview: false
+  },
+  {
+    id: "client-buyer-confidence-memphis-hedge",
+    workspaceId: "client-workspace-003",
+    buyerId: "client-buyer-memphis-hedge",
+    confidenceScore: 44,
+    responsivenessScore: 42,
+    fundingConfidenceScore: 35,
+    buyBoxClarityScore: 70,
+    historicalInterestScore: 45,
+    overallGrade: "D",
+    reasonSummary: "Narrow buy box with missing POF and unknown funding.",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-buyer-confidence-memphis-review",
+    workspaceId: "client-workspace-003",
+    buyerId: "client-buyer-memphis-review",
+    confidenceScore: 34,
+    responsivenessScore: 35,
+    fundingConfidenceScore: 35,
+    buyBoxClarityScore: 30,
+    historicalInterestScore: 45,
+    overallGrade: "Review",
+    reasonSummary: "Unclear buy box and unknown funding require review.",
+    requiresHumanReview: true
+  }
+];
+
+export const clientDealBuyerMatches: ClientDealBuyerMatch[] = [
+  {
+    id: "client-buyer-match-memphis-005-landlord",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    buyerId: "client-buyer-memphis-landlord",
+    buyBoxId: "client-buy-box-memphis-landlord",
+    matchScore: 92,
+    matchStatus: "strong_match",
+    matchedReasons: ["zip_match", "property_type_match", "price_range_fit", "rehab_fit", "funding_stated"],
+    mismatchReasons: [],
+    priceFitStatus: "fits",
+    marketFitStatus: "fits",
+    propertyTypeFitStatus: "fits",
+    rehabFitStatus: "fits",
+    fundingConfidenceSnapshot: 72,
+    buyerConfidenceSnapshot: 76,
+    recommendedNextStep: "Review this buyer manually as a CP5 fit candidate.",
+    clientSafeSummary: "Client-safe deterministic buyer fit only; no buyer has been contacted.",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-buyer-match-memphis-005-flipper",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    buyerId: "client-buyer-memphis-flipper",
+    buyBoxId: "client-buy-box-memphis-flipper",
+    matchScore: 96,
+    matchStatus: "strong_match",
+    matchedReasons: ["zip_match", "property_type_match", "price_range_fit", "rehab_within_tolerance", "proof_of_funds_verified"],
+    mismatchReasons: [],
+    priceFitStatus: "fits",
+    marketFitStatus: "fits",
+    propertyTypeFitStatus: "fits",
+    rehabFitStatus: "partial",
+    fundingConfidenceSnapshot: 90,
+    buyerConfidenceSnapshot: 88,
+    recommendedNextStep: "Review this buyer manually as a CP5 fit candidate.",
+    clientSafeSummary: "Client-safe deterministic buyer fit only; no buyer has been contacted.",
+    requiresHumanReview: false
+  },
+  {
+    id: "client-buyer-match-memphis-003-hedge",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-003",
+    buyerId: "client-buyer-memphis-hedge",
+    buyBoxId: "client-buy-box-memphis-hedge",
+    matchScore: 57,
+    matchStatus: "needs_review",
+    matchedReasons: ["zip_match", "property_type_match"],
+    mismatchReasons: ["price_above_buy_box", "rehab_tolerance_mismatch", "funding_or_pof_unclear"],
+    priceFitStatus: "too_high",
+    marketFitStatus: "fits",
+    propertyTypeFitStatus: "fits",
+    rehabFitStatus: "partial",
+    fundingConfidenceSnapshot: 35,
+    buyerConfidenceSnapshot: 44,
+    recommendedNextStep: "Keep buyer out of disposition readiness until fit improves.",
+    clientSafeSummary: "Client-safe deterministic buyer fit only; no buyer has been contacted.",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-buyer-match-memphis-005-review",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    buyerId: "client-buyer-memphis-review",
+    buyBoxId: null,
+    matchScore: 22,
+    matchStatus: "weak_match",
+    matchedReasons: [],
+    mismatchReasons: ["buyer_buy_box_missing", "funding_or_pof_unclear"],
+    priceFitStatus: "unknown",
+    marketFitStatus: "unknown",
+    propertyTypeFitStatus: "unknown",
+    rehabFitStatus: "unknown",
+    fundingConfidenceSnapshot: 35,
+    buyerConfidenceSnapshot: 34,
+    recommendedNextStep: "Do not use this buyer until buy box and funding are clarified.",
+    clientSafeSummary: "Client-safe deterministic buyer fit only; no buyer has been contacted.",
+    requiresHumanReview: true
+  }
+];
+
+export const clientBuyerDemandEvidence: ClientBuyerDemandEvidence[] = [
+  {
+    id: "client-buyer-demand-memphis-005-landlord",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    buyerId: "client-buyer-memphis-landlord",
+    evidenceType: "buy_box_match",
+    evidenceSummary: "Landlord buy box matches 38118, rental strategy, and price range.",
+    sourceType: "system_generated",
+    confidenceLevel: "high",
+    clientSafe: true
+  },
+  {
+    id: "client-buyer-demand-memphis-005-flipper",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    buyerId: "client-buyer-memphis-flipper",
+    evidenceType: "proof_of_funds_note",
+    evidenceSummary: "Fix-and-flip buyer has verified POF status in demo data.",
+    sourceType: "system_generated",
+    confidenceLevel: "high",
+    clientSafe: true
+  }
+];
+
+export const clientDispositionReadinessGates: ClientDispositionReadinessGate[] = [
+  {
+    id: "client-disposition-gate-memphis-001",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-001",
+    readinessStatus: "buyer_match_needed",
+    readinessScore: 54,
+    buyerMatchCount: 0,
+    strongBuyerMatchCount: 0,
+    buyerDemandEvidenceCount: 0,
+    blockReasons: ["buyer_match_needed", "buyer_demand_evidence_missing"],
+    riskFlags: ["acquisition_ready_not_disposition_ready"],
+    recommendedNextStep: "Lead 1 is acquisition ready, but buyer matching is not complete.",
+    canPrepareBuyerOutreach: false,
+    noBuyerContacted: true,
+    noCampaignStarted: true,
+    noContractGenerated: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Decision support only; no campaign, contract, or buyer outreach has been sent."
+  },
+  {
+    id: "client-disposition-gate-memphis-002",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-002",
+    readinessStatus: "offer_readiness_blocked",
+    readinessScore: 20,
+    buyerMatchCount: 0,
+    strongBuyerMatchCount: 0,
+    buyerDemandEvidenceCount: 0,
+    blockReasons: ["offer_readiness_blocked", "critical_evidence_missing"],
+    riskFlags: ["missing_arv_repair_evidence"],
+    recommendedNextStep: "Lead 2 needs ARV and repair evidence before disposition review.",
+    canPrepareBuyerOutreach: false,
+    noBuyerContacted: true,
+    noCampaignStarted: true,
+    noContractGenerated: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Decision support only; no campaign, contract, or buyer outreach has been sent."
+  },
+  {
+    id: "client-disposition-gate-memphis-003",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-003",
+    readinessStatus: "buyer_demand_missing",
+    readinessScore: 48,
+    buyerMatchCount: 1,
+    strongBuyerMatchCount: 0,
+    buyerDemandEvidenceCount: 0,
+    blockReasons: ["buyer_demand_evidence_missing", "strong_or_possible_buyer_match_missing"],
+    riskFlags: ["buyer_demand_gap"],
+    recommendedNextStep: "Lead 3 is underwriting ready, but buyer demand is not verified.",
+    canPrepareBuyerOutreach: false,
+    noBuyerContacted: true,
+    noCampaignStarted: true,
+    noContractGenerated: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Decision support only; no campaign, contract, or buyer outreach has been sent."
+  },
+  {
+    id: "client-disposition-gate-memphis-004",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-004",
+    readinessStatus: "offer_readiness_blocked",
+    readinessScore: 12,
+    buyerMatchCount: 0,
+    strongBuyerMatchCount: 0,
+    buyerDemandEvidenceCount: 0,
+    blockReasons: ["offer_readiness_blocked", "thin_offer_margin"],
+    riskFlags: ["margin_warning"],
+    recommendedNextStep: "Lead 4 stays blocked because the offer margin is too thin.",
+    canPrepareBuyerOutreach: false,
+    noBuyerContacted: true,
+    noCampaignStarted: true,
+    noContractGenerated: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Decision support only; no campaign, contract, or buyer outreach has been sent."
+  },
+  {
+    id: "client-disposition-gate-memphis-005",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    readinessStatus: "ready_for_client_review",
+    readinessScore: 94,
+    buyerMatchCount: 3,
+    strongBuyerMatchCount: 2,
+    buyerDemandEvidenceCount: 2,
+    blockReasons: [],
+    riskFlags: ["manual_review_required"],
+    recommendedNextStep: "Lead 5 is ready for manual CP5 buyer matching review.",
+    canPrepareBuyerOutreach: true,
+    noBuyerContacted: true,
+    noCampaignStarted: true,
+    noContractGenerated: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Decision support only; no campaign, contract, or buyer outreach has been sent."
+  }
+];
+
+export const clientBuyerOutreachDrafts: ClientBuyerOutreachDraft[] = [
+  {
+    id: "client-buyer-draft-memphis-005",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    buyerId: "client-buyer-memphis-flipper",
+    draftType: "deal_preview",
+    draftBody: "Manual preview note: Memphis 38118 single-family opportunity, decision-support numbers only, ask whether the buyer wants manual review.",
+    purpose: "manual buyer preview",
+    riskLevel: "low",
+    approvalStatus: "draft_only",
+    manualUseOnly: true,
+    noLiveSend: true,
+    noBlast: true,
+    unsafeLanguageFlag: false
+  }
+];
+
+export const clientDispositionDivisionEvents: ClientDivisionEvent[] = [
+  {
+    id: "client-disposition-event-memphis-003",
+    leadId: "client-lead-memphis-003",
+    eventType: "buyer_demand_gap",
+    eventSummary: "Disposition Manager marked Lead 3 as missing buyer demand.",
+    managerName: "Disposition Manager",
+    clientVisible: true
+  },
+  {
+    id: "client-disposition-event-memphis-005",
+    leadId: "client-lead-memphis-005",
+    eventType: "ready_for_client_review",
+    eventSummary: "Disposition Manager found strong buyer matches for Lead 5.",
+    managerName: "Disposition Manager",
+    clientVisible: true
+  }
+];
+
+export function getClientBuyer(buyerId: string) {
+  return clientBuyerProfiles.find((buyer) => buyer.id === buyerId);
+}
+
+export function getClientBuyerConfidence(buyerId: string) {
+  return clientBuyerConfidenceScores.find((score) => score.buyerId === buyerId);
+}
+
+export function getClientDispositionReadiness(leadId: string) {
+  return clientDispositionReadinessGates.find((gate) => gate.leadId === leadId);
+}
 
 export function getClientAcquisitionBrief(leadId: string) {
   return clientAcquisitionBriefs.find((brief) => brief.leadId === leadId);

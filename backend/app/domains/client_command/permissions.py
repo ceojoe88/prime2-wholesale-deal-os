@@ -14,6 +14,12 @@ CLIENT_COMMAND_PERMISSIONS = {
     "client_command.underwriting_view",
     "client_command.underwriting_manage",
     "client_command.offer_review",
+    "client_command.disposition_view",
+    "client_command.disposition_manage",
+    "client_command.buyers_view",
+    "client_command.buyers_manage",
+    "client_command.buyer_matching_view",
+    "client_command.buyer_matching_manage",
     "client_command.admin",
 }
 

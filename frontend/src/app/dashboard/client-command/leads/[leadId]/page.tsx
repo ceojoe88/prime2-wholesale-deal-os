@@ -13,6 +13,10 @@ import {
   clientAcquisitionDivisionEvents,
   clientDealEvidenceItems,
   clientFollowUpDrafts,
+  clientBuyerDemandEvidence,
+  clientBuyerOutreachDrafts,
+  clientDealBuyerMatches,
+  clientDispositionDivisionEvents,
   clientObjectionResponseDrafts,
   clientOfferScenarios,
   clientSellerQuestions,
@@ -21,6 +25,9 @@ import {
   getClientAcquisitionBrief,
   getClientAppointmentReadiness,
   getClientEvidencePacket,
+  getClientBuyer,
+  getClientBuyerConfidence,
+  getClientDispositionReadiness,
   getClientLead,
   getClientLeadScore,
   getClientOfferReadiness,
@@ -54,6 +61,11 @@ export default function ClientLeadDetailPage({ params }: { params: { leadId: str
   const offerReadiness = getClientOfferReadiness(lead.id);
   const scenarios = underwritingReview ? clientOfferScenarios.filter((item) => item.underwritingReviewId === underwritingReview.id) : [];
   const underwritingEvents = clientUnderwritingDivisionEvents.filter((item) => item.leadId === lead.id);
+  const buyerMatches = clientDealBuyerMatches.filter((item) => item.leadId === lead.id);
+  const buyerDemandEvidence = clientBuyerDemandEvidence.filter((item) => item.leadId === lead.id);
+  const dispositionReadiness = getClientDispositionReadiness(lead.id);
+  const buyerOutreachDrafts = clientBuyerOutreachDrafts.filter((item) => item.leadId === lead.id);
+  const dispositionEvents = clientDispositionDivisionEvents.filter((item) => item.leadId === lead.id);
 
   return (
     <div className="page">
@@ -228,6 +240,91 @@ export default function ClientLeadDetailPage({ params }: { params: { leadId: str
         </div>
       </Section>
 
+      <Section title="Disposition Manager">
+        <div className="grid-two">
+          <RecordCard
+            title="Buyer Match Summary"
+            meta={`${buyerMatches.length} buyer match records and ${buyerDemandEvidence.length} buyer demand evidence notes`}
+            right={<Pill tone={buyerMatches.some((match) => match.matchStatus === "strong_match") ? "green" : "gold"}>{buyerMatches.filter((match) => match.matchStatus === "strong_match").length} strong</Pill>}
+          >
+            <p>Client-safe buyer fit only. CP5 does not reach buyers automatically, create automated campaigns, or prepare legal documents.</p>
+            <div className="tag-row">
+              <Pill tone="green">Client-Safe</Pill>
+              <Pill tone="gold">No Buyer Contacted</Pill>
+              <Pill tone="gold">No Campaign Started</Pill>
+            </div>
+          </RecordCard>
+          <RecordCard
+            title="Disposition Readiness Gate"
+            meta={dispositionReadiness?.recommendedNextStep ?? "Check Disposition Readiness after CP4 offer readiness and buyer demand evidence."}
+            right={<Pill tone={dispositionReadiness?.readinessStatus === "ready_for_client_review" ? "green" : "red"}>{dispositionReadiness?.readinessStatus ?? "not_ready"}</Pill>}
+          >
+            <p>Decision support only — no campaign, contract, or buyer outreach has been sent.</p>
+            <div className="tag-row">
+              {dispositionReadiness?.requiresHumanReview ? <Pill tone="gold">Human Review Needed</Pill> : null}
+              {(dispositionReadiness?.blockReasons ?? []).map((item) => (
+                <Pill key={item} tone="red">{item}</Pill>
+              ))}
+            </div>
+          </RecordCard>
+        </div>
+      </Section>
+
+      <div className="grid-two">
+        <Section title="Top Buyer Matches">
+          <div className="record-list">
+            {buyerMatches.length === 0 ? (
+              <RecordCard title="No buyer matches yet" meta="Run buyer matching after CP4 offer readiness and buyer profiles are available." right={<Pill tone="gold">buyer match needed</Pill>} />
+            ) : (
+              buyerMatches.map((match) => {
+                const buyer = getClientBuyer(match.buyerId);
+                const confidence = getClientBuyerConfidence(match.buyerId);
+                return (
+                  <RecordCard key={match.id} title={buyer?.buyerName ?? match.buyerId} meta={match.clientSafeSummary} right={<Pill tone={match.matchStatus === "strong_match" ? "green" : match.matchStatus === "possible_match" ? "gold" : "red"}>{match.matchScore}</Pill>}>
+                    <div className="tag-row">
+                      <Pill tone="green">{match.matchStatus}</Pill>
+                      <Pill tone="gold">Buyer Confidence {confidence?.confidenceScore ?? match.buyerConfidenceSnapshot}</Pill>
+                      {match.mismatchReasons.map((reason) => (
+                        <Pill key={reason} tone="red">{reason}</Pill>
+                      ))}
+                    </div>
+                  </RecordCard>
+                );
+              })
+            )}
+          </div>
+        </Section>
+        <Section title="Buyer Demand Evidence">
+          <div className="record-list">
+            {buyerDemandEvidence.length === 0 ? (
+              <RecordCard title="Buyer demand evidence missing" meta="Add manual buyer demand evidence or a buyer buy box match before disposition readiness can improve." right={<Pill tone="red">missing</Pill>} />
+            ) : (
+              buyerDemandEvidence.map((item) => (
+                <RecordCard key={item.id} title={item.evidenceType} meta={item.evidenceSummary} right={<Pill tone="green">{item.confidenceLevel}</Pill>} />
+              ))
+            )}
+          </div>
+        </Section>
+      </div>
+
+      <Section title="Manual Buyer Outreach Draft">
+        <div className="record-list">
+          {buyerOutreachDrafts.length === 0 ? (
+            <RecordCard title="No manual buyer draft" meta="Create Manual Buyer Draft only after disposition readiness is safe for client review." right={<Pill tone="gold">manual only</Pill>} />
+          ) : (
+            buyerOutreachDrafts.map((draft) => (
+              <RecordCard key={draft.id} title={draft.purpose} meta={draft.draftBody} right={<Pill tone="gold">Manual Use Only</Pill>}>
+                <p>Manual use only — no buyer has been contacted.</p>
+                <div className="tag-row">
+                  <Pill tone={draft.noLiveSend ? "green" : "red"}>{draft.noLiveSend ? "no live send" : "blocked"}</Pill>
+                  <Pill tone={draft.noBlast ? "green" : "red"}>{draft.noBlast ? "single-recipient only" : "blocked"}</Pill>
+                </div>
+              </RecordCard>
+            ))
+          )}
+        </div>
+      </Section>
+
       <div className="grid-two">
         <Section title="Acquisition Division Events">
           <div className="record-list">
@@ -244,6 +341,17 @@ export default function ClientLeadDetailPage({ params }: { params: { leadId: str
           </div>
         </Section>
       </div>
+      <Section title="Disposition Division Events">
+        <div className="record-list">
+          {dispositionEvents.length === 0 ? (
+            <RecordCard title="No disposition events yet" meta="Disposition Manager events will appear after buyer matching or readiness review." right={<Pill tone="gold">pending</Pill>} />
+          ) : (
+            dispositionEvents.map((event) => (
+              <RecordCard key={event.id} title={event.managerName} meta={event.eventSummary} right={<Pill tone="green">{event.eventType}</Pill>} />
+            ))
+          )}
+        </div>
+      </Section>
     </div>
   );
 }
