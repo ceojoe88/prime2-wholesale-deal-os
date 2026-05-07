@@ -1106,6 +1106,29 @@ def _appointment_missing_requirements(
 
 
 def _default_evidence_items(lead: ClientLeadProfile) -> list[dict[str, object]]:
+    if lead.id.startswith("client-lead-memphis-"):
+        if lead.id == "client-lead-memphis-002":
+            return [
+                {
+                    "item_type": "seller_note",
+                    "item_summary": "High seller motivation is present, but ARV and repair evidence are still missing.",
+                    "source_type": "manual",
+                    "confidence_level": "medium",
+                    "client_safe": True,
+                    "internal_notes": "Memphis demo: keep evidence gap visible.",
+                }
+            ]
+        return [
+            {
+                "item_type": item_type,
+                "item_summary": "Memphis demo manual evidence item; no external provider call occurred.",
+                "source_type": "manual",
+                "confidence_level": "medium" if lead.id in {"client-lead-memphis-003", "client-lead-memphis-004"} else "high",
+                "client_safe": True,
+                "internal_notes": "Memphis demo support note.",
+            }
+            for item_type in ["seller_note", "repair_note", "comp_note", "occupancy_note", "title_note"]
+        ]
     if lead.id == "client-lead-001":
         return [
             {
@@ -1234,6 +1257,30 @@ def _manual_underwriting_inputs(lead: ClientLeadProfile) -> dict[str, int | None
             "repair_estimate": 120000,
             "holding_cost_estimate": 8000,
             "desired_assignment_fee": 10000,
+        },
+        "client-lead-memphis-001": {
+            "arv_estimate": 165000,
+            "repair_estimate": 32000,
+            "holding_cost_estimate": 6000,
+            "desired_assignment_fee": 10000,
+        },
+        "client-lead-memphis-003": {
+            "arv_estimate": 210000,
+            "repair_estimate": 36000,
+            "holding_cost_estimate": 7000,
+            "desired_assignment_fee": 10000,
+        },
+        "client-lead-memphis-004": {
+            "arv_estimate": 135000,
+            "repair_estimate": 76000,
+            "holding_cost_estimate": 7000,
+            "desired_assignment_fee": 10000,
+        },
+        "client-lead-memphis-005": {
+            "arv_estimate": 240000,
+            "repair_estimate": 50000,
+            "holding_cost_estimate": 9000,
+            "desired_assignment_fee": 15000,
         },
     }
     return inputs.get(
@@ -1625,5 +1672,10 @@ def _action_label(action_type: str) -> str:
         "owner_review_hot_lead": "Review hot lead with client-safe notes",
         "research_and_prepare_call_plan": "Research and prepare a call plan",
         "nurture_or_skip_for_now": "Nurture or skip for now",
+        "manual_acquisition_ready": "Use acquisition brief for manual seller prep",
+        "collect_repair_arv_evidence": "Collect repair and ARV evidence",
+        "validate_buyer_demand_before_matching": "Validate buyer demand before matching",
+        "hold_due_to_thin_offer_margin": "Hold until margin improves or evidence changes",
+        "ready_for_buyer_matching_cp5": "Ready for buyer matching review",
     }
     return labels.get(action_type, "Review next best action")

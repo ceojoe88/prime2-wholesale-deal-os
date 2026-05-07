@@ -702,6 +702,7 @@ test("CP3 and CP4 client command pages render managers and preserve manual bound
   const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
   assert.match(joined, /Acquisition Manager/);
   assert.match(joined, /Underwriting Manager/);
+  assert.match(joined, /Memphis Demo Scenario/);
   assert.match(joined, /Manual use only — no message has been sent\./);
   assert.match(joined, /Decision support only — no contract or offer has been sent\./);
 });

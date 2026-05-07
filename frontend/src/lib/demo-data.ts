@@ -5642,6 +5642,379 @@ export const clientLeadDivisionEvents: ClientLeadDivisionEvent[] = [
   }
 ];
 
+export const clientMemphisScenarioCards: Array<{
+  leadId: string;
+  label: string;
+  summary: string;
+  status: string;
+  tone: "green" | "gold" | "red";
+}> = [
+  {
+    leadId: "client-lead-memphis-001",
+    label: "Lead 1: Hot motivated seller",
+    summary: "Enough data for acquisition prep and appointment readiness.",
+    status: "acquisition ready",
+    tone: "green"
+  },
+  {
+    leadId: "client-lead-memphis-002",
+    label: "Lead 2: Motivation high, evidence missing",
+    summary: "Repair and ARV evidence are missing, so underwriting stays guarded.",
+    status: "evidence gap",
+    tone: "gold"
+  },
+  {
+    leadId: "client-lead-memphis-003",
+    label: "Lead 3: Underwriting ready",
+    summary: "Numbers are ready for review, but buyer demand is not validated yet.",
+    status: "buyer demand gap",
+    tone: "gold"
+  },
+  {
+    leadId: "client-lead-memphis-004",
+    label: "Lead 4: Margin blocked",
+    summary: "Current repair and price assumptions make the offer margin too thin.",
+    status: "blocked",
+    tone: "red"
+  },
+  {
+    leadId: "client-lead-memphis-005",
+    label: "Lead 5: Buyer matching ready",
+    summary: "Acquisition and underwriting support are ready for the future CP5 loop.",
+    status: "CP5 ready",
+    tone: "green"
+  }
+];
+
+clientWorkspaces.push({
+  id: "client-workspace-003",
+  workspaceName: "Memphis Virtual Wholesale Operator",
+  clientName: "Memphis Virtual Wholesale Operator",
+  workspaceStatus: "active",
+  marketFocus: ["Memphis TN", "Shelby County TN"],
+  allowedPermissions: clientCommandPermissions,
+  liveOutreachEnabled: false,
+  billingEnabled: false,
+  contractEsignEnabled: false
+});
+
+clientLeadProfiles.push(
+  {
+    id: "client-lead-memphis-001",
+    workspaceId: "client-workspace-003",
+    displayName: "Memphis Lead 1 - hot motivated seller",
+    propertyAddressSummary: "Memphis, TN 38106",
+    propertyCity: "Memphis",
+    propertyState: "TN",
+    propertyZip: "38106",
+    propertyType: "single_family",
+    estimatedValue: 165000,
+    estimatedEquity: 95000,
+    estimatedEquityPercent: 58,
+    leadSource: "demo_field_batch",
+    leadType: "vacant_absentee",
+    motivationSignals: ["vacant", "absentee_owner", "needs_fast_resolution"],
+    distressSignals: ["vacant_signal", "deferred_maintenance"],
+    contactChannelsPresent: ["phone", "email"],
+    dataConfidence: 82,
+    dncFlag: false
+  },
+  {
+    id: "client-lead-memphis-002",
+    workspaceId: "client-workspace-003",
+    displayName: "Memphis Lead 2 - high motivation, evidence gaps",
+    propertyAddressSummary: "Memphis, TN 38111",
+    propertyCity: "Memphis",
+    propertyState: "TN",
+    propertyZip: "38111",
+    propertyType: "single_family",
+    estimatedValue: 178000,
+    estimatedEquity: 111000,
+    estimatedEquityPercent: 62,
+    leadSource: "demo_probate_batch",
+    leadType: "inherited",
+    motivationSignals: ["inherited", "out_of_area_owner", "offer_requested"],
+    distressSignals: ["condition_unknown", "tax_question"],
+    contactChannelsPresent: ["phone"],
+    dataConfidence: 76,
+    dncFlag: false
+  },
+  {
+    id: "client-lead-memphis-003",
+    workspaceId: "client-workspace-003",
+    displayName: "Memphis Lead 3 - underwriting ready, buyer demand gap",
+    propertyAddressSummary: "Memphis, TN 38116",
+    propertyCity: "Memphis",
+    propertyState: "TN",
+    propertyZip: "38116",
+    propertyType: "single_family",
+    estimatedValue: 210000,
+    estimatedEquity: 120000,
+    estimatedEquityPercent: 57,
+    leadSource: "demo_absentee_batch",
+    leadType: "high_equity",
+    motivationSignals: ["high_equity", "timeline_driven"],
+    distressSignals: ["deferred_maintenance"],
+    contactChannelsPresent: ["phone", "mailing_address"],
+    dataConfidence: 80,
+    dncFlag: false
+  },
+  {
+    id: "client-lead-memphis-004",
+    workspaceId: "client-workspace-003",
+    displayName: "Memphis Lead 4 - blocked thin margin",
+    propertyAddressSummary: "Memphis, TN 38127",
+    propertyCity: "Memphis",
+    propertyState: "TN",
+    propertyZip: "38127",
+    propertyType: "single_family",
+    estimatedValue: 135000,
+    estimatedEquity: 45000,
+    estimatedEquityPercent: 33,
+    leadSource: "demo_code_violation_batch",
+    leadType: "code_violation",
+    motivationSignals: ["code_violation", "repairs_overwhelming"],
+    distressSignals: ["major_repairs", "code_violation_note"],
+    contactChannelsPresent: ["phone"],
+    dataConfidence: 72,
+    dncFlag: false
+  },
+  {
+    id: "client-lead-memphis-005",
+    workspaceId: "client-workspace-003",
+    displayName: "Memphis Lead 5 - buyer matching ready",
+    propertyAddressSummary: "Memphis, TN 38118",
+    propertyCity: "Memphis",
+    propertyState: "TN",
+    propertyZip: "38118",
+    propertyType: "single_family",
+    estimatedValue: 240000,
+    estimatedEquity: 150000,
+    estimatedEquityPercent: 63,
+    leadSource: "demo_tired_landlord_batch",
+    leadType: "tired_landlord",
+    motivationSignals: ["tired_landlord", "vacant", "timeline_driven"],
+    distressSignals: ["deferred_maintenance", "vacant_signal"],
+    contactChannelsPresent: ["phone", "email"],
+    dataConfidence: 84,
+    dncFlag: false
+  }
+);
+
+clientLeadScores.push(
+  {
+    id: "client-score-memphis-001",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-001",
+    motivationScore: 88,
+    urgencyScore: 90,
+    equitySignalScore: 82,
+    distressSignalScore: 64,
+    contactabilityScore: 90,
+    dealProbabilityScore: 86,
+    missingDataScore: 100,
+    finalPriorityScore: 88,
+    recommendedNextAction: "manual_acquisition_ready",
+    reasonSummary: "Hot motivated seller with contactability, timeline, asking price, and condition context.",
+    confidenceLevel: "high",
+    requiresHumanReview: false
+  },
+  {
+    id: "client-score-memphis-002",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-002",
+    motivationScore: 86,
+    urgencyScore: 78,
+    equitySignalScore: 84,
+    distressSignalScore: 58,
+    contactabilityScore: 75,
+    dealProbabilityScore: 78,
+    missingDataScore: 70,
+    finalPriorityScore: 79,
+    recommendedNextAction: "collect_repair_arv_evidence",
+    reasonSummary: "High motivation, but repair and ARV evidence are still missing.",
+    confidenceLevel: "medium",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-score-memphis-003",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-003",
+    motivationScore: 74,
+    urgencyScore: 70,
+    equitySignalScore: 80,
+    distressSignalScore: 44,
+    contactabilityScore: 80,
+    dealProbabilityScore: 75,
+    missingDataScore: 92,
+    finalPriorityScore: 76,
+    recommendedNextAction: "validate_buyer_demand_before_matching",
+    reasonSummary: "Underwriting evidence is ready, but buyer demand is not yet validated.",
+    confidenceLevel: "medium",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-score-memphis-004",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-004",
+    motivationScore: 76,
+    urgencyScore: 82,
+    equitySignalScore: 44,
+    distressSignalScore: 72,
+    contactabilityScore: 70,
+    dealProbabilityScore: 48,
+    missingDataScore: 94,
+    finalPriorityScore: 62,
+    recommendedNextAction: "hold_due_to_thin_offer_margin",
+    reasonSummary: "Seller motivation exists, but repair load and asking price make the margin too thin.",
+    confidenceLevel: "medium",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-score-memphis-005",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    motivationScore: 90,
+    urgencyScore: 84,
+    equitySignalScore: 88,
+    distressSignalScore: 60,
+    contactabilityScore: 92,
+    dealProbabilityScore: 88,
+    missingDataScore: 98,
+    finalPriorityScore: 89,
+    recommendedNextAction: "ready_for_buyer_matching_cp5",
+    reasonSummary: "High-priority lead with complete acquisition and underwriting support for future buyer matching.",
+    confidenceLevel: "high",
+    requiresHumanReview: true
+  }
+);
+
+clientLeadMissingDataItems.push(
+  {
+    id: "client-missing-memphis-002-arv",
+    leadId: "client-lead-memphis-002",
+    fieldName: "arv_evidence",
+    reason: "Manual ARV support is missing; no value is invented.",
+    severity: "high",
+    resolutionStatus: "open",
+    blocksReadiness: true
+  },
+  {
+    id: "client-missing-memphis-002-repairs",
+    leadId: "client-lead-memphis-002",
+    fieldName: "repair_evidence",
+    reason: "Repair evidence is missing before underwriting review can be trusted.",
+    severity: "high",
+    resolutionStatus: "open",
+    blocksReadiness: true
+  },
+  {
+    id: "client-missing-memphis-003-buyer-demand",
+    leadId: "client-lead-memphis-003",
+    fieldName: "buyer_demand_validation",
+    reason: "Buyer demand is intentionally deferred for the CP5 buyer matching loop.",
+    severity: "medium",
+    resolutionStatus: "open",
+    blocksReadiness: false
+  }
+);
+
+clientLeadNextBestActions.push(
+  {
+    id: "client-action-memphis-001",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-001",
+    actionType: "manual_acquisition_ready",
+    actionLabel: "Use acquisition brief for manual seller prep",
+    reason: "Seller profile has motivation, contact, timeline, asking price, and evidence context.",
+    priority: 88,
+    status: "open",
+    confidenceLevel: "high",
+    requiresHumanReview: false,
+    outboundActionAllowed: false,
+    providerActionAllowed: false
+  },
+  {
+    id: "client-action-memphis-002",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-002",
+    actionType: "collect_repair_arv_evidence",
+    actionLabel: "Collect repair and ARV evidence",
+    reason: "High seller motivation is present, but underwriting support is missing.",
+    priority: 79,
+    status: "open",
+    confidenceLevel: "medium",
+    requiresHumanReview: true,
+    outboundActionAllowed: false,
+    providerActionAllowed: false
+  },
+  {
+    id: "client-action-memphis-003",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-003",
+    actionType: "validate_buyer_demand_before_matching",
+    actionLabel: "Validate buyer demand before matching",
+    reason: "Underwriting is ready, but buyer demand should be checked in CP5.",
+    priority: 76,
+    status: "open",
+    confidenceLevel: "medium",
+    requiresHumanReview: true,
+    outboundActionAllowed: false,
+    providerActionAllowed: false
+  },
+  {
+    id: "client-action-memphis-004",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-004",
+    actionType: "hold_due_to_thin_offer_margin",
+    actionLabel: "Hold until margin improves or evidence changes",
+    reason: "Offer margin is too thin under current manual assumptions.",
+    priority: 62,
+    status: "blocked",
+    confidenceLevel: "medium",
+    requiresHumanReview: true,
+    outboundActionAllowed: false,
+    providerActionAllowed: false
+  },
+  {
+    id: "client-action-memphis-005",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    actionType: "ready_for_buyer_matching_cp5",
+    actionLabel: "Ready for buyer matching review",
+    reason: "Acquisition and underwriting support are ready for the future buyer matching loop.",
+    priority: 89,
+    status: "open",
+    confidenceLevel: "high",
+    requiresHumanReview: true,
+    outboundActionAllowed: false,
+    providerActionAllowed: false
+  }
+);
+
+clientLeadDivisionEvents.push(
+  {
+    id: "client-event-memphis-001",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-001",
+    divisionName: "Lead Intelligence Division",
+    managerStatus: "acquisition_ready",
+    eventType: "memphis_demo_ready",
+    eventSummary: "Lead 1 is hot and ready for manual acquisition prep.",
+    safeForClient: true
+  },
+  {
+    id: "client-event-memphis-005",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    divisionName: "Lead Intelligence Division",
+    managerStatus: "buyer_matching_ready",
+    eventType: "memphis_demo_ready",
+    eventSummary: "Lead 5 is the CP5-ready buyer matching candidate.",
+    safeForClient: true
+  }
+);
+
 export const clientLeadCards = clientLeadProfiles.map((lead) => {
   const score = clientLeadScores.find((item) => item.leadId === lead.id)!;
   return {
@@ -6241,6 +6614,466 @@ export const clientUnderwritingDivisionEvents: ClientDivisionEvent[] = [
     clientVisible: true
   }
 ];
+
+const memphisLeadIds = clientMemphisScenarioCards.map((card) => card.leadId);
+
+memphisLeadIds.forEach((leadId, index) => {
+  const number = String(index + 1).padStart(3, "0");
+  clientAcquisitionBriefs.push({
+    id: `client-acq-brief-memphis-${number}`,
+    workspaceId: "client-workspace-003",
+    leadId,
+    sellerSummary: [
+      "Hot motivated seller with enough data for acquisition prep.",
+      "High motivation with missing repair and ARV evidence.",
+      "Underwriting-ready lead with buyer demand not validated yet.",
+      "Motivated seller, but current offer margin is too thin.",
+      "Strong candidate ready for future buyer matching review."
+    ][index],
+    motivationHypothesis: [
+      "Seller appears motivated by vacancy, absentee ownership, and a short timeline.",
+      "Seller appears motivated by inheritance context and desire for a simple path.",
+      "Seller appears timeline-driven with enough detail for underwriting review.",
+      "Seller appears motivated by repairs, but pricing assumptions are not workable yet.",
+      "Seller appears motivated by tired-landlord context and vacancy."
+    ][index],
+    urgencyHypothesis: "Urgency is a client-safe hypothesis and must be confirmed manually.",
+    propertyContextSummary: "Memphis demo lead built from manual/local seed data only.",
+    recommendedCallObjective: [
+      "Confirm seller facts and prepare the appointment-ready conversation.",
+      "Confirm repair scope and collect ARV support before underwriting reliance.",
+      "Confirm buyer-demand gaps before moving toward buyer matching.",
+      "Confirm whether price or repair assumptions can change enough to reopen review.",
+      "Confirm final seller facts before CP5 buyer matching review."
+    ][index],
+    suggestedOpeningAngle: "Open calmly, verify facts, and avoid pressure or guaranteed outcomes.",
+    topQuestionsToAskSummary: "Ask motivation, timeline, condition, price expectation, decision authority, and next step.",
+    sensitiveTopicsToAvoid: ["Do not pressure the seller", "Do not imply verified buyer demand", "Do not make legal, profit, or closing claims"],
+    suggestedTone: "calm, direct, evidence-aware",
+    confidenceLevel: ["high", "medium", "medium", "medium", "high"][index] as "low" | "medium" | "high",
+    requiresHumanReview: index !== 0,
+    managerName: "Acquisition Manager",
+    clientSafeSummary: "Manual seller conversation prep only; no outbound action has occurred."
+  });
+
+  clientSellerQuestionPlans.push({
+    id: `client-question-plan-memphis-${number}`,
+    workspaceId: "client-workspace-003",
+    leadId,
+    planStatus: index === 0 || index === 2 || index === 4 ? "ready_for_manual_use" : "needs_review",
+    totalQuestions: 2,
+    highPriorityCount: 2,
+    missingDataFocusCount: index === 1 || index === 2 || index === 3 ? 1 : 0,
+    clientSafeSummary: "Manual-use Memphis demo question plan."
+  });
+
+  clientSellerQuestions.push(
+    {
+      id: `client-question-memphis-${number}-motivation`,
+      questionPlanId: `client-question-plan-memphis-${number}`,
+      leadId,
+      questionText: "What is the main thing you want solved with this property?",
+      questionCategory: "motivation",
+      priority: "high",
+      reason: "Motivation shapes the acquisition path.",
+      tiedMissingDataKey: null,
+      clientSafe: true
+    },
+    {
+      id: `client-question-memphis-${number}-condition`,
+      questionPlanId: `client-question-plan-memphis-${number}`,
+      leadId,
+      questionText: "What property condition details should be considered before any review?",
+      questionCategory: "condition",
+      priority: "high",
+      reason: "Condition details protect the underwriting review from unsupported assumptions.",
+      tiedMissingDataKey: index === 1 ? "repair_evidence" : null,
+      clientSafe: true
+    }
+  );
+
+  clientFollowUpDrafts.push({
+    id: `client-follow-up-memphis-${number}`,
+    leadId,
+    channelType: "call_note",
+    draftBody: "Manual note: review the Memphis demo lead and capture seller facts before any real-world step.",
+    purpose: "manual demo prep",
+    riskLevel: "low",
+    approvalStatus: "draft_only",
+    manualUseOnly: true,
+    noLiveSend: true,
+    unsafeLanguageFlag: false
+  });
+
+  clientAppointmentReadinessReviews.push({
+    id: `client-appt-memphis-${number}`,
+    leadId,
+    readinessScore: [92, 68, 82, 58, 88][index],
+    appointmentReady: index === 0 || index === 2 || index === 4,
+    missingRequirements: [
+      [],
+      ["arv_evidence", "repair_evidence"],
+      ["buyer_demand_validation"],
+      ["acceptable_offer_margin"],
+      []
+    ][index],
+    recommendedNextStep: [
+      "Use the manual acquisition brief; this is acquisition ready.",
+      "Collect repair and ARV evidence before relying on underwriting.",
+      "Underwriting is ready; prepare buyer demand validation next.",
+      "Hold until margin improves or assumptions change.",
+      "Prepare for CP5 buyer matching review."
+    ][index],
+    reasonSummary: [
+      "Core seller data is present and acquisition prep is ready.",
+      "Seller motivation is high, but underwriting evidence is missing.",
+      "Underwriting support is ready, but buyer demand is not validated.",
+      "Current manual assumptions create a thin offer margin.",
+      "Acquisition and underwriting support are complete enough for future buyer matching."
+    ][index],
+    confidenceLevel: ["high", "medium", "medium", "medium", "high"][index] as "low" | "medium" | "high",
+    requiresHumanReview: index !== 0
+  });
+});
+
+clientDealEvidencePackets.push(
+  {
+    id: "client-evidence-memphis-001",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-001",
+    propertyAddress: "Memphis, TN 38106",
+    sellerMotivationSummary: "Vacant absentee seller with short timeline.",
+    propertyConditionSummary: "Manual repair notes are present for demo underwriting.",
+    occupancyStatus: "vacant signal, seller confirmation needed",
+    titleStatusSummary: "Not externally verified; qualified review remains outside the system.",
+    evidenceStatus: "ready_for_underwriting",
+    missingEvidenceCount: 0,
+    requiredEvidenceSummary: [],
+    clientSafeSummary: "Ready for decision-support underwriting; no provider calls occurred.",
+    confidenceLevel: "high",
+    requiresHumanReview: false
+  },
+  {
+    id: "client-evidence-memphis-002",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-002",
+    propertyAddress: "Memphis, TN 38111",
+    sellerMotivationSummary: "High motivation from inherited/out-of-area context.",
+    propertyConditionSummary: "Repair scope and ARV evidence are missing.",
+    occupancyStatus: "occupancy not fully confirmed",
+    titleStatusSummary: "Not externally verified; qualified review remains outside the system.",
+    evidenceStatus: "missing_evidence",
+    missingEvidenceCount: 2,
+    requiredEvidenceSummary: ["arv_evidence", "repair_evidence"],
+    clientSafeSummary: "High motivation, but no ARV or repair values are invented.",
+    confidenceLevel: "low",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-evidence-memphis-003",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-003",
+    propertyAddress: "Memphis, TN 38116",
+    sellerMotivationSummary: "Timeline-driven seller with adequate manual evidence.",
+    propertyConditionSummary: "Manual repair notes and comp notes are present.",
+    occupancyStatus: "seller occupancy context noted manually",
+    titleStatusSummary: "Not externally verified; qualified review remains outside the system.",
+    evidenceStatus: "ready_for_underwriting",
+    missingEvidenceCount: 0,
+    requiredEvidenceSummary: [],
+    clientSafeSummary: "Underwriting-ready; buyer demand is intentionally deferred to CP5.",
+    confidenceLevel: "medium",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-evidence-memphis-004",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-004",
+    propertyAddress: "Memphis, TN 38127",
+    sellerMotivationSummary: "Repairs appear overwhelming, but pricing is not workable.",
+    propertyConditionSummary: "Major repair load captured from manual demo notes.",
+    occupancyStatus: "occupancy not material to current margin block",
+    titleStatusSummary: "Not externally verified; qualified review remains outside the system.",
+    evidenceStatus: "reviewed",
+    missingEvidenceCount: 0,
+    requiredEvidenceSummary: [],
+    clientSafeSummary: "Evidence is present, but the margin is too thin under current assumptions.",
+    confidenceLevel: "medium",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-evidence-memphis-005",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    propertyAddress: "Memphis, TN 38118",
+    sellerMotivationSummary: "Tired landlord/vacant context with strong equity signal.",
+    propertyConditionSummary: "Manual repair and comp notes are present.",
+    occupancyStatus: "vacant signal, seller confirmation needed",
+    titleStatusSummary: "Not externally verified; qualified review remains outside the system.",
+    evidenceStatus: "ready_for_underwriting",
+    missingEvidenceCount: 0,
+    requiredEvidenceSummary: [],
+    clientSafeSummary: "Ready for future CP5 buyer matching review; no buyer outreach occurred.",
+    confidenceLevel: "high",
+    requiresHumanReview: true
+  }
+);
+
+memphisLeadIds.forEach((leadId, index) => {
+  const itemTypes = index === 1 ? ["seller_note"] : ["seller_note", "repair_note", "comp_note", "occupancy_note", "title_note"];
+  itemTypes.forEach((itemType) => {
+    clientDealEvidenceItems.push({
+      id: `client-evidence-item-memphis-${String(index + 1).padStart(3, "0")}-${itemType}`,
+      leadId,
+      packetId: `client-evidence-memphis-00${index + 1}`,
+      itemType,
+      itemSummary: [
+        "Manual evidence supports acquisition-ready underwriting.",
+        "Seller motivation note exists; ARV and repair evidence are still missing.",
+        "Manual evidence supports underwriting, but buyer demand is missing.",
+        "Manual evidence shows margin is too thin under current assumptions.",
+        "Manual evidence supports a future buyer matching review."
+      ][index],
+      sourceType: "manual",
+      confidenceLevel: ["high", "medium", "medium", "medium", "high"][index] as "low" | "medium" | "high",
+      clientSafe: true
+    });
+  });
+});
+
+clientUnderwritingReviews.push(
+  {
+    id: "client-underwriting-memphis-001",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-001",
+    packetId: "client-evidence-memphis-001",
+    arvEstimate: 165000,
+    repairEstimate: 32000,
+    holdingCostEstimate: 6000,
+    desiredAssignmentFee: 10000,
+    maxAllowableOffer: 67500,
+    conservativeOffer: 60750,
+    standardOffer: 67500,
+    aggressiveOffer: 70875,
+    marginWarning: false,
+    confidenceLevel: "high",
+    assumptionsSummary: "Formula: ARV * 0.70 - repairs - desired assignment fee - holding costs.",
+    missingDataSummary: [],
+    requiresHumanReview: false
+  },
+  {
+    id: "client-underwriting-memphis-002",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-002",
+    packetId: "client-evidence-memphis-002",
+    arvEstimate: null,
+    repairEstimate: null,
+    holdingCostEstimate: null,
+    desiredAssignmentFee: 10000,
+    maxAllowableOffer: null,
+    conservativeOffer: null,
+    standardOffer: null,
+    aggressiveOffer: null,
+    marginWarning: true,
+    confidenceLevel: "low",
+    assumptionsSummary: "Missing ARV and repair evidence; no fake values are calculated.",
+    missingDataSummary: ["arv_estimate", "repair_estimate"],
+    requiresHumanReview: true
+  },
+  {
+    id: "client-underwriting-memphis-003",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-003",
+    packetId: "client-evidence-memphis-003",
+    arvEstimate: 210000,
+    repairEstimate: 36000,
+    holdingCostEstimate: 7000,
+    desiredAssignmentFee: 10000,
+    maxAllowableOffer: 94000,
+    conservativeOffer: 84600,
+    standardOffer: 94000,
+    aggressiveOffer: 98700,
+    marginWarning: false,
+    confidenceLevel: "medium",
+    assumptionsSummary: "Formula: ARV * 0.70 - repairs - desired assignment fee - holding costs.",
+    missingDataSummary: ["buyer_demand_validation"],
+    requiresHumanReview: true
+  },
+  {
+    id: "client-underwriting-memphis-004",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-004",
+    packetId: "client-evidence-memphis-004",
+    arvEstimate: 135000,
+    repairEstimate: 76000,
+    holdingCostEstimate: 7000,
+    desiredAssignmentFee: 10000,
+    maxAllowableOffer: 1500,
+    conservativeOffer: 1350,
+    standardOffer: 1500,
+    aggressiveOffer: 1575,
+    marginWarning: true,
+    confidenceLevel: "medium",
+    assumptionsSummary: "Formula creates an extremely low allowable offer under current repair assumptions.",
+    missingDataSummary: ["acceptable_offer_margin"],
+    requiresHumanReview: true
+  },
+  {
+    id: "client-underwriting-memphis-005",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    packetId: "client-evidence-memphis-005",
+    arvEstimate: 240000,
+    repairEstimate: 50000,
+    holdingCostEstimate: 9000,
+    desiredAssignmentFee: 15000,
+    maxAllowableOffer: 94000,
+    conservativeOffer: 84600,
+    standardOffer: 94000,
+    aggressiveOffer: 98700,
+    marginWarning: false,
+    confidenceLevel: "high",
+    assumptionsSummary: "Formula: ARV * 0.70 - repairs - desired assignment fee - holding costs.",
+    missingDataSummary: [],
+    requiresHumanReview: true
+  }
+);
+
+[
+  ["001", "client-lead-memphis-001", "client-underwriting-memphis-001", [60750, 67500, 70875]],
+  ["003", "client-lead-memphis-003", "client-underwriting-memphis-003", [84600, 94000, 98700]],
+  ["004", "client-lead-memphis-004", "client-underwriting-memphis-004", [1350, 1500, 1575]],
+  ["005", "client-lead-memphis-005", "client-underwriting-memphis-005", [84600, 94000, 98700]]
+].forEach(([number, leadId, reviewId, amounts]) => {
+  (amounts as number[]).forEach((amount, scenarioIndex) => {
+    const scenarioName = ["conservative", "standard", "aggressive"][scenarioIndex] as "conservative" | "standard" | "aggressive";
+    clientOfferScenarios.push({
+      id: `client-scenario-memphis-${number}-${scenarioName}`,
+      leadId: leadId as string,
+      underwritingReviewId: reviewId as string,
+      scenarioName,
+      offerAmount: amount,
+      projectedMargin: scenarioIndex === 0 ? Math.max(0, (amounts as number[])[1] - amount) : 0,
+      assumptions: "Decision-support scenario from manual/demo underwriting inputs.",
+      riskLevel: ["low", "medium", "high"][scenarioIndex] as "low" | "medium" | "high",
+      clientSafeExplanation: "Decision support only; no offer or contract has been sent."
+    });
+  });
+});
+
+clientOfferReadinessGates.push(
+  {
+    id: "client-offer-gate-memphis-001",
+    leadId: "client-lead-memphis-001",
+    packetId: "client-evidence-memphis-001",
+    underwritingReviewId: "client-underwriting-memphis-001",
+    readinessStatus: "ready_for_client_review",
+    readinessScore: 92,
+    blockReasons: [],
+    riskFlags: ["acquisition_ready"],
+    recommendedNextStep: "Lead 1 is acquisition ready with enough seller data for manual prep.",
+    canPresentOffer: true,
+    noContractGenerated: true,
+    noOfferSent: true,
+    requiresHumanReview: true
+  },
+  {
+    id: "client-offer-gate-memphis-002",
+    leadId: "client-lead-memphis-002",
+    packetId: "client-evidence-memphis-002",
+    underwritingReviewId: "client-underwriting-memphis-002",
+    readinessStatus: "evidence_missing",
+    readinessScore: 36,
+    blockReasons: ["arv_evidence_missing", "repair_evidence_missing"],
+    riskFlags: ["high_motivation_but_missing_evidence"],
+    recommendedNextStep: "Lead 2 needs repair and ARV evidence before underwriting reliance.",
+    canPresentOffer: false,
+    noContractGenerated: true,
+    noOfferSent: true,
+    requiresHumanReview: true
+  },
+  {
+    id: "client-offer-gate-memphis-003",
+    leadId: "client-lead-memphis-003",
+    packetId: "client-evidence-memphis-003",
+    underwritingReviewId: "client-underwriting-memphis-003",
+    readinessStatus: "ready_for_client_review",
+    readinessScore: 78,
+    blockReasons: [],
+    riskFlags: ["buyer_demand_missing_for_cp5"],
+    recommendedNextStep: "Lead 3 is underwriting ready; buyer demand still needs CP5 validation.",
+    canPresentOffer: false,
+    noContractGenerated: true,
+    noOfferSent: true,
+    requiresHumanReview: true
+  },
+  {
+    id: "client-offer-gate-memphis-004",
+    leadId: "client-lead-memphis-004",
+    packetId: "client-evidence-memphis-004",
+    underwritingReviewId: "client-underwriting-memphis-004",
+    readinessStatus: "blocked",
+    readinessScore: 18,
+    blockReasons: ["thin_offer_margin", "seller_ask_above_safe_range"],
+    riskFlags: ["margin_warning"],
+    recommendedNextStep: "Lead 4 stays blocked unless margin assumptions materially improve.",
+    canPresentOffer: false,
+    noContractGenerated: true,
+    noOfferSent: true,
+    requiresHumanReview: true
+  },
+  {
+    id: "client-offer-gate-memphis-005",
+    leadId: "client-lead-memphis-005",
+    packetId: "client-evidence-memphis-005",
+    underwritingReviewId: "client-underwriting-memphis-005",
+    readinessStatus: "ready_for_client_review",
+    readinessScore: 90,
+    blockReasons: [],
+    riskFlags: ["ready_for_buyer_matching_cp5"],
+    recommendedNextStep: "Lead 5 is ready for CP5 buyer matching review.",
+    canPresentOffer: true,
+    noContractGenerated: true,
+    noOfferSent: true,
+    requiresHumanReview: true
+  }
+);
+
+clientUnderwritingDivisionEvents.push(
+  {
+    id: "client-underwriting-event-memphis-002",
+    leadId: "client-lead-memphis-002",
+    eventType: "evidence_missing",
+    eventSummary: "Lead 2 is motivated but blocked by missing ARV and repair evidence.",
+    managerName: "Underwriting Manager",
+    clientVisible: true
+  },
+  {
+    id: "client-underwriting-event-memphis-004",
+    leadId: "client-lead-memphis-004",
+    eventType: "thin_margin_block",
+    eventSummary: "Lead 4 is blocked because the offer margin is too thin.",
+    managerName: "Underwriting Manager",
+    clientVisible: true
+  },
+  {
+    id: "client-underwriting-event-memphis-005",
+    leadId: "client-lead-memphis-005",
+    eventType: "buyer_matching_ready",
+    eventSummary: "Lead 5 is ready for the future CP5 buyer matching loop.",
+    managerName: "Underwriting Manager",
+    clientVisible: true
+  }
+);
+
+clientAcquisitionDivisionEvents.push({
+  id: "client-acq-event-memphis-001",
+  leadId: "client-lead-memphis-001",
+  eventType: "acquisition_ready",
+  eventSummary: "Acquisition Manager marked Lead 1 ready for manual prep.",
+  managerName: "Acquisition Manager",
+  clientVisible: true
+});
 
 export function getClientAcquisitionBrief(leadId: string) {
   return clientAcquisitionBriefs.find((brief) => brief.leadId === leadId);

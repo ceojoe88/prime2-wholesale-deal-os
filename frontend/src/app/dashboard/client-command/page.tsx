@@ -13,6 +13,7 @@ import {
   clientLeadCards,
   clientLeadDivisionEvents,
   clientLeadNextBestActions,
+  clientMemphisScenarioCards,
   clientOfferReadinessGates,
   clientWorkspaces
 } from "@/lib/demo-data";
@@ -34,6 +35,24 @@ export default function ClientCommandPage() {
         <MetricCard label="Acquisition briefs" value={String(clientAcquisitionBriefs.length)} detail={`${acquisitionReviewCount} need review`} />
         <MetricCard label="Offer readiness" value={String(clientOfferReadinessGates.length)} detail={`${blockedOffers} blocked by evidence or review`} />
       </div>
+
+      <Section title="Memphis Demo Scenario">
+        <div className="record-list">
+          {clientMemphisScenarioCards.map((card) => (
+            <RecordCard
+              key={card.leadId}
+              title={card.label}
+              meta={card.summary}
+              right={<Link href={`/dashboard/client-command/leads/${card.leadId}`}>View Details</Link>}
+            >
+              <div className="tag-row">
+                <Pill tone={card.tone}>{card.status}</Pill>
+                <Pill tone="green">client-safe</Pill>
+              </div>
+            </RecordCard>
+          ))}
+        </div>
+      </Section>
 
       <Section title="Client Safety Boundary">
         <div className="metric-grid">

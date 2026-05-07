@@ -167,6 +167,70 @@ def test_cp4_offer_readiness_never_generates_contract_or_sends_offer():
     assert gate["no_offer_sent"] is True
 
 
+def test_memphis_demo_scenario_covers_pre_cp5_operating_states():
+    with TestClient(app) as client:
+        workspace = client.get("/api/v1/client-command/workspaces/client-workspace-003")
+        leads = client.get(
+            "/api/v1/client-command/workspaces/client-workspace-003/leads",
+            params={"member_email": "operator@memphis-demo.example"},
+        )
+        lead_1 = client.get(
+            "/api/v1/client-command/leads/client-lead-memphis-001/appointment-readiness",
+            params={"workspace_id": "client-workspace-003"},
+        )
+        lead_2 = client.get(
+            "/api/v1/client-command/leads/client-lead-memphis-002/deal-evidence-packet",
+            params={"workspace_id": "client-workspace-003"},
+        )
+        lead_2_underwriting = client.get(
+            "/api/v1/client-command/leads/client-lead-memphis-002/underwriting-review",
+            params={"workspace_id": "client-workspace-003"},
+        )
+        lead_3 = client.get(
+            "/api/v1/client-command/leads/client-lead-memphis-003/offer-readiness",
+            params={"workspace_id": "client-workspace-003"},
+        )
+        lead_4 = client.get(
+            "/api/v1/client-command/leads/client-lead-memphis-004/offer-readiness",
+            params={"workspace_id": "client-workspace-003"},
+        )
+        lead_5 = client.get(
+            "/api/v1/client-command/leads/client-lead-memphis-005/offer-readiness",
+            params={"workspace_id": "client-workspace-003"},
+        )
+
+    assert workspace.status_code == 200
+    assert workspace.json()["workspace"]["workspace_name"] == "Memphis Virtual Wholesale Operator"
+    assert workspace.json()["lead_count"] == 5
+    assert leads.status_code == 200
+    assert len(leads.json()["leads"]) == 5
+
+    assert lead_1.status_code == 200
+    assert lead_1.json()["appointment_readiness"]["appointment_ready"] is True
+    assert lead_2.status_code == 200
+    assert lead_2.json()["evidence_packet"]["evidence_status"] == "missing_evidence"
+    assert "repair_note" in lead_2.json()["evidence_packet"]["required_evidence_summary"]
+    assert lead_2_underwriting.status_code == 200
+    assert "arv_estimate" in lead_2_underwriting.json()["underwriting_review"]["missing_data_summary"]
+
+    assert lead_3.status_code == 200
+    gate_3 = lead_3.json()["offer_readiness"]
+    assert gate_3["readiness_status"] == "ready_for_client_review"
+    assert "buyer_demand_missing_for_cp5" in gate_3["risk_flags"]
+    assert gate_3["no_offer_sent"] is True
+
+    assert lead_4.status_code == 200
+    gate_4 = lead_4.json()["offer_readiness"]
+    assert gate_4["readiness_status"] == "blocked"
+    assert "thin_offer_margin" in gate_4["block_reasons"]
+
+    assert lead_5.status_code == 200
+    gate_5 = lead_5.json()["offer_readiness"]
+    assert gate_5["readiness_status"] == "ready_for_client_review"
+    assert "ready_for_buyer_matching_cp5" in gate_5["risk_flags"]
+    assert gate_5["no_contract_generated"] is True
+
+
 def test_cp4_sanitizer_hides_internal_notes_and_provider_payloads():
     with TestClient(app) as client:
         response = client.get(
