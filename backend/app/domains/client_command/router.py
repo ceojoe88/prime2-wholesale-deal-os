@@ -16,9 +16,22 @@ from app.domains.client_command.service import (
     buyer_detail,
     buyer_matches_for_lead,
     buyer_outreach_drafts_for_lead,
+    communication_approval_gate_detail,
+    communication_approval_gates,
+    compliance_blocked,
+    compliance_needs_review,
+    compliance_overview,
+    compliance_safe_manual_use,
+    consent_record_detail,
     create_buyer_buy_box,
     create_buyer_demand_evidence,
     create_buyer_profile,
+    create_communication_approval_gate,
+    create_compliance_readiness_placeholder,
+    create_consent_record,
+    create_message_risk_review,
+    create_opt_out_record,
+    create_weekly_report,
     disposition_blocked,
     disposition_matches,
     disposition_needs_review,
@@ -33,24 +46,50 @@ from app.domains.client_command.service import (
     list_leads,
     leads_for_workspace,
     list_workspaces,
+    mark_weekly_report_client_visible,
+    mark_weekly_report_reviewed,
+    message_risk_review_detail,
     next_actions,
+    opt_out_record_detail,
     objection_drafts_for_lead,
     offer_readiness_for_lead,
     question_plan_for_lead,
+    reports_bottlenecks,
+    reports_overview,
+    reports_recommended_actions,
+    reports_weekly,
     require_member_permission,
+    safe_contact_status_for_buyer,
+    safe_contact_status_for_lead,
     score_lead,
     underwriting_blocked,
     underwriting_needs_human_review,
     underwriting_ready_review,
     underwriting_review_for_lead,
+    weekly_report_bottlenecks,
+    weekly_report_detail,
+    weekly_report_division_summaries,
+    weekly_report_lead_rollups,
+    weekly_report_metrics,
+    weekly_report_recommended_actions,
     workspace_detail,
     workspace_buyers,
+    workspace_compliance_placeholders,
+    workspace_consent_records,
+    workspace_opt_out_records,
+    workspace_weekly_reports,
 )
 from app.domains.client_command.schemas import (
     ClientBuyerBuyBoxCreate,
     ClientBuyerDemandEvidenceCreate,
     ClientBuyerOutreachDraftCreate,
     ClientBuyerProfileCreate,
+    ClientCommunicationApprovalGateCreate,
+    ClientComplianceReadinessPlaceholderCreate,
+    ClientContactConsentRecordCreate,
+    ClientContactOptOutRecordCreate,
+    ClientMessageRiskReviewCreate,
+    ClientWeeklyCommandReportCreate,
 )
 
 
@@ -646,3 +685,389 @@ def lead_score(
         return body
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/compliance/consent-records")
+def create_workspace_consent_record(
+    workspace_id: str,
+    payload: ClientContactConsentRecordCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_consent_record(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/compliance/consent-records")
+def get_workspace_consent_records(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return workspace_consent_records(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/compliance/consent-records/{record_id}")
+def get_consent_record(
+    record_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return consent_record_detail(session, record_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/compliance/opt-outs")
+def create_workspace_opt_out(
+    workspace_id: str,
+    payload: ClientContactOptOutRecordCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_opt_out_record(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/compliance/opt-outs")
+def get_workspace_opt_outs(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return workspace_opt_out_records(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/compliance/opt-outs/{record_id}")
+def get_opt_out_record(
+    record_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return opt_out_record_detail(session, record_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/leads/{lead_id}/compliance/safe-contact-status")
+def create_lead_safe_contact_status(
+    lead_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = safe_contact_status_for_lead(session, lead_id, workspace_id, refresh=True)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/leads/{lead_id}/compliance/safe-contact-status")
+def get_lead_safe_contact_status(
+    lead_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return safe_contact_status_for_lead(session, lead_id, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/buyers/{buyer_id}/compliance/safe-contact-status")
+def create_buyer_safe_contact_status(
+    buyer_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = safe_contact_status_for_buyer(session, buyer_id, workspace_id, refresh=True)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/buyers/{buyer_id}/compliance/safe-contact-status")
+def get_buyer_safe_contact_status(
+    buyer_id: str,
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return safe_contact_status_for_buyer(session, buyer_id, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/compliance/blocked")
+def list_compliance_blocked(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return compliance_blocked(session, workspace_id)
+
+
+@router.get("/compliance/needs-review")
+def list_compliance_needs_review(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return compliance_needs_review(session, workspace_id)
+
+
+@router.get("/compliance/safe-manual-use")
+def list_compliance_safe_manual_use(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return compliance_safe_manual_use(session, workspace_id)
+
+
+@router.post("/compliance/message-risk-review")
+def create_compliance_message_risk_review(
+    payload: ClientMessageRiskReviewCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_message_risk_review(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/compliance/message-risk-review/{review_id}")
+def get_compliance_message_risk_review(
+    review_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return message_risk_review_detail(session, review_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/compliance/communication-approval-gate")
+def create_compliance_communication_gate(
+    payload: ClientCommunicationApprovalGateCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_communication_approval_gate(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/compliance/communication-approval-gates")
+def list_compliance_communication_gates(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return communication_approval_gates(session, workspace_id)
+
+
+@router.get("/compliance/communication-approval-gates/{gate_id}")
+def get_compliance_communication_gate(
+    gate_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return communication_approval_gate_detail(session, gate_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/compliance/readiness-placeholders")
+def create_workspace_compliance_placeholder(
+    workspace_id: str,
+    payload: ClientComplianceReadinessPlaceholderCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_compliance_readiness_placeholder(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/compliance/readiness-placeholders")
+def get_workspace_compliance_placeholders(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return workspace_compliance_placeholders(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/compliance/overview")
+def get_compliance_overview(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return compliance_overview(session, workspace_id)
+
+
+@router.post("/workspaces/{workspace_id}/weekly-reports")
+def create_workspace_weekly_report(
+    workspace_id: str,
+    payload: ClientWeeklyCommandReportCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_weekly_report(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/weekly-reports")
+def get_workspace_weekly_reports(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return workspace_weekly_reports(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/weekly-reports/{report_id}")
+def get_weekly_report(
+    report_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return weekly_report_detail(session, report_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/weekly-reports/{report_id}/mark-reviewed")
+def review_weekly_report(
+    report_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = mark_weekly_report_reviewed(session, report_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/weekly-reports/{report_id}/mark-client-visible")
+def publish_weekly_report(
+    report_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = mark_weekly_report_client_visible(session, report_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/weekly-reports/{report_id}/metrics")
+def get_weekly_report_metrics(
+    report_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return weekly_report_metrics(session, report_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/weekly-reports/{report_id}/lead-rollups")
+def get_weekly_report_lead_rollups(
+    report_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return weekly_report_lead_rollups(session, report_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/weekly-reports/{report_id}/bottlenecks")
+def get_weekly_report_bottlenecks(
+    report_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return weekly_report_bottlenecks(session, report_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/weekly-reports/{report_id}/recommended-actions")
+def get_weekly_report_recommended_actions(
+    report_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return weekly_report_recommended_actions(session, report_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/weekly-reports/{report_id}/division-summaries")
+def get_weekly_report_division_summaries(
+    report_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return weekly_report_division_summaries(session, report_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/reports/overview")
+def get_reports_overview(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return reports_overview(session, workspace_id)
+
+
+@router.get("/reports/weekly")
+def get_reports_weekly(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return reports_weekly(session, workspace_id)
+
+
+@router.get("/reports/bottlenecks")
+def get_reports_bottlenecks(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return reports_bottlenecks(session, workspace_id)
+
+
+@router.get("/reports/recommended-actions")
+def get_reports_recommended_actions(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return reports_recommended_actions(session, workspace_id)

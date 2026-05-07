@@ -15,10 +15,17 @@ import {
   clientFollowUpDrafts,
   clientBuyerDemandEvidence,
   clientBuyerOutreachDrafts,
+  clientCommunicationApprovalGates,
+  clientComplianceDivisionEvents,
+  clientComplianceReadinessPlaceholders,
+  clientContactConsentRecords,
+  clientContactOptOutRecords,
   clientDealBuyerMatches,
   clientDispositionDivisionEvents,
   clientObjectionResponseDrafts,
   clientOfferScenarios,
+  clientMessageRiskReviews,
+  clientSafeContactStatuses,
   clientSellerQuestions,
   clientUnderwritingDivisionEvents,
   formatCurrency,
@@ -66,6 +73,12 @@ export default function ClientLeadDetailPage({ params }: { params: { leadId: str
   const dispositionReadiness = getClientDispositionReadiness(lead.id);
   const buyerOutreachDrafts = clientBuyerOutreachDrafts.filter((item) => item.leadId === lead.id);
   const dispositionEvents = clientDispositionDivisionEvents.filter((item) => item.leadId === lead.id);
+  const consentRecords = clientContactConsentRecords.filter((item) => item.leadId === lead.id);
+  const optOutRecords = clientContactOptOutRecords.filter((item) => item.leadId === lead.id);
+  const safeContactStatuses = clientSafeContactStatuses.filter((item) => item.leadId === lead.id);
+  const messageRiskReviews = clientMessageRiskReviews.filter((item) => item.leadId === lead.id);
+  const communicationGates = clientCommunicationApprovalGates.filter((item) => item.leadId === lead.id);
+  const complianceEvents = clientComplianceDivisionEvents.filter((item) => item.leadId === lead.id);
 
   return (
     <div className="page">
@@ -325,6 +338,87 @@ export default function ClientLeadDetailPage({ params }: { params: { leadId: str
         </div>
       </Section>
 
+      <Section title="Compliance Manager">
+        <div className="grid-two">
+          <RecordCard
+            title="Safe Contact Status"
+            meta={`${safeContactStatuses.length} channel checks and ${consentRecords.length} consent records`}
+            right={<Pill tone={safeContactStatuses.some((item) => item.status === "safe_for_manual_use") ? "green" : "gold"}>{safeContactStatuses.length ? safeContactStatuses[0].status : "pending"}</Pill>}
+          >
+            <p>Readiness check only - no provider check or live communication occurred.</p>
+            <div className="tag-row">
+              <Pill tone="gold">Manual Use Only</Pill>
+              <Pill tone="green">No Live Send</Pill>
+              <Pill tone="green">No Provider Check</Pill>
+            </div>
+          </RecordCard>
+          <RecordCard
+            title="Communication Approval Gate"
+            meta={communicationGates[0]?.clientSafeSummary ?? "Create a manual-use gate after consent and message risk review."}
+            right={<Pill tone={communicationGates[0]?.gateStatus === "manual_use_allowed" ? "green" : "gold"}>{communicationGates[0]?.gateStatus ?? "pending"}</Pill>}
+          >
+            <p>Manual-use approval only - no message has been sent.</p>
+            <div className="tag-row">
+              {communicationGates[0]?.requiresHumanReview ? <Pill tone="gold">Human Review Needed</Pill> : null}
+              {(communicationGates[0]?.blockReasons ?? []).map((item) => (
+                <Pill key={item} tone="red">{item}</Pill>
+              ))}
+            </div>
+          </RecordCard>
+        </div>
+      </Section>
+
+      <div className="grid-two">
+        <Section title="Consent Status">
+          <div className="record-list">
+            {consentRecords.length === 0 ? (
+              <RecordCard title="No consent records" meta="Consent is still missing or untracked for this lead." right={<Pill tone="red">review</Pill>} />
+            ) : (
+              consentRecords.map((record) => (
+                <RecordCard key={record.id} title={record.consentChannel} meta={record.consentSummary} right={<Pill tone={record.consentStatus === "confirmed" ? "green" : "gold"}>{record.consentStatus}</Pill>} />
+              ))
+            )}
+          </div>
+        </Section>
+        <Section title="Opt-Out Status">
+          <div className="record-list">
+            {optOutRecords.length === 0 ? (
+              <RecordCard title="No opt-out records" meta="No opt-out is stored for this lead." right={<Pill tone="green">clear</Pill>} />
+            ) : (
+              optOutRecords.map((record) => (
+                <RecordCard key={record.id} title={record.channel} meta={record.optOutSummary} right={<Pill tone={record.optOutStatus === "active" ? "red" : "gold"}>{record.optOutStatus}</Pill>} />
+              ))
+            )}
+          </div>
+        </Section>
+      </div>
+
+      <div className="grid-two">
+        <Section title="Message Risk Review">
+          <div className="record-list">
+            {messageRiskReviews.length === 0 ? (
+              <RecordCard title="No message risk review yet" meta="Review Message Risk after preparing a manual draft." right={<Pill tone="gold">pending</Pill>} />
+            ) : (
+              messageRiskReviews.map((review) => (
+                <RecordCard key={review.id} title={review.sourceDraftType} meta={review.reasonSummary} right={<Pill tone={review.reviewStatus === "passed_for_manual_use" ? "green" : review.reviewStatus === "blocked" ? "red" : "gold"}>{review.reviewStatus}</Pill>}>
+                  <div className="tag-row">
+                    <Pill tone="gold">{review.channel}</Pill>
+                    <Pill tone="gold">{review.riskLevel}</Pill>
+                  </div>
+                </RecordCard>
+              ))
+            )}
+          </div>
+        </Section>
+        <Section title="Compliance Placeholders">
+          <div className="record-list">
+            {clientComplianceReadinessPlaceholders.filter((item) => item.workspaceId === lead.workspaceId).map((item) => (
+              <RecordCard key={item.id} title={item.placeholderType} meta={item.summary} right={<Pill tone="gold">{item.readinessStatus}</Pill>} />
+            ))}
+          </div>
+        </Section>
+      </div>
+
       <div className="grid-two">
         <Section title="Acquisition Division Events">
           <div className="record-list">
@@ -347,6 +441,17 @@ export default function ClientLeadDetailPage({ params }: { params: { leadId: str
             <RecordCard title="No disposition events yet" meta="Disposition Manager events will appear after buyer matching or readiness review." right={<Pill tone="gold">pending</Pill>} />
           ) : (
             dispositionEvents.map((event) => (
+              <RecordCard key={event.id} title={event.managerName} meta={event.eventSummary} right={<Pill tone="green">{event.eventType}</Pill>} />
+            ))
+          )}
+        </div>
+      </Section>
+      <Section title="Compliance Division Events">
+        <div className="record-list">
+          {complianceEvents.length === 0 ? (
+            <RecordCard title="No compliance events yet" meta="Compliance Manager events will appear after consent, gate, or risk review activity." right={<Pill tone="gold">pending</Pill>} />
+          ) : (
+            complianceEvents.map((event) => (
               <RecordCard key={event.id} title={event.managerName} meta={event.eventSummary} right={<Pill tone="green">{event.eventType}</Pill>} />
             ))
           )}

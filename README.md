@@ -339,3 +339,22 @@ Production readiness pages exist in the app, but missing auth/env/secrets/provid
 ## Real-World Boundary
 
 This system supports wholesale real estate operations, but the operator is responsible for following applicable local and state law. Contracts, disclosures, title review, legal questions, and closing coordination must be handled with qualified professionals. Forecasts, assignment fees, ARV, repair estimates, buyer margin, and probability scores are estimates or source-backed internal calculations, not guaranteed profits or guaranteed closings.
+## Client Command Status
+
+Client Command OS now includes CP1 through CP7:
+- CP1 workspace foundation
+- CP2 lead intelligence
+- CP3 acquisition AI team
+- CP4 underwriting and deal evidence
+- CP5 buyer matching and disposition readiness
+- CP6 compliance and contact permission gate
+- CP7 weekly client command reports
+
+All client-command phases remain non-live:
+- no provider calls
+- no SMS or email sends
+- no voice calling
+- no campaigns
+- no contract generation
+- no e-signature
+- no billing or payment actions

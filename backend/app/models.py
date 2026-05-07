@@ -3620,3 +3620,268 @@ class ClientDispositionDivisionEvent(TimestampMixin, Base):
     event_summary: Mapped[str] = mapped_column(Text, default="")
     manager_name: Mapped[str] = mapped_column(String(120), default="Disposition Manager")
     client_visible: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientContactConsentRecord(TimestampMixin, Base):
+    __tablename__ = "client_contact_consent_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    contact_type: Mapped[str] = mapped_column(String(80), default="unknown")
+    lead_id: Mapped[str | None] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=True)
+    buyer_id: Mapped[str | None] = mapped_column(ForeignKey("client_buyer_profiles.id"), nullable=True)
+    contact_name: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    consent_channel: Mapped[str] = mapped_column(String(80), default="unknown")
+    consent_status: Mapped[str] = mapped_column(String(80), default="unknown")
+    consent_source: Mapped[str] = mapped_column(String(80), default="unknown")
+    consent_summary: Mapped[str] = mapped_column(Text, default="")
+    consent_captured_at: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    expires_at: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=False)
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+    internal_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class ClientContactOptOutRecord(TimestampMixin, Base):
+    __tablename__ = "client_contact_opt_out_records"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    contact_type: Mapped[str] = mapped_column(String(80), default="unknown")
+    lead_id: Mapped[str | None] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=True)
+    buyer_id: Mapped[str | None] = mapped_column(ForeignKey("client_buyer_profiles.id"), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    channel: Mapped[str] = mapped_column(String(80), default="unknown")
+    opt_out_status: Mapped[str] = mapped_column(String(80), default="unknown")
+    opt_out_source: Mapped[str] = mapped_column(String(80), default="unknown")
+    opt_out_summary: Mapped[str] = mapped_column(Text, default="")
+    recorded_at: Mapped[str] = mapped_column(String(80), default="")
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+    internal_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class ClientSafeContactStatus(TimestampMixin, Base):
+    __tablename__ = "client_safe_contact_statuses"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    contact_type: Mapped[str] = mapped_column(String(80), default="unknown")
+    lead_id: Mapped[str | None] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=True)
+    buyer_id: Mapped[str | None] = mapped_column(ForeignKey("client_buyer_profiles.id"), nullable=True)
+    channel: Mapped[str] = mapped_column(String(80), default="call")
+    status: Mapped[str] = mapped_column(String(80), default="needs_review")
+    consent_status_snapshot: Mapped[str] = mapped_column(String(80), default="unknown")
+    opt_out_status_snapshot: Mapped[str] = mapped_column(String(80), default="unknown")
+    dnc_placeholder_status: Mapped[str] = mapped_column(String(80), default="not_checked")
+    ten_dlc_placeholder_status: Mapped[str] = mapped_column(String(80), default="not_applicable")
+    reason_summary: Mapped[str] = mapped_column(Text, default="")
+    block_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    risk_flags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    can_use_manual_draft: Mapped[bool] = mapped_column(Boolean, default=False)
+    no_live_send: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_provider_check: Mapped[bool] = mapped_column(Boolean, default=True)
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=False)
+    client_safe_summary: Mapped[str] = mapped_column(Text, default="")
+
+
+class ClientMessageRiskReview(TimestampMixin, Base):
+    __tablename__ = "client_message_risk_reviews"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    lead_id: Mapped[str | None] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=True)
+    buyer_id: Mapped[str | None] = mapped_column(ForeignKey("client_buyer_profiles.id"), nullable=True)
+    source_draft_type: Mapped[str] = mapped_column(String(80), default="unknown")
+    source_draft_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    channel: Mapped[str] = mapped_column(String(80), default="unknown")
+    review_status: Mapped[str] = mapped_column(String(80), default="needs_review")
+    risk_level: Mapped[str] = mapped_column(String(80), default="medium")
+    unsafe_language_flags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    blocked_terms: Mapped[list[str]] = mapped_column(JSON, default=list)
+    safe_rewrite_suggestion: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reason_summary: Mapped[str] = mapped_column(Text, default="")
+    manual_use_only: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_live_send: Mapped[bool] = mapped_column(Boolean, default=True)
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ClientCommunicationApprovalGate(TimestampMixin, Base):
+    __tablename__ = "client_communication_approval_gates"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    lead_id: Mapped[str | None] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=True)
+    buyer_id: Mapped[str | None] = mapped_column(ForeignKey("client_buyer_profiles.id"), nullable=True)
+    source_draft_type: Mapped[str] = mapped_column(String(80), default="unknown")
+    source_draft_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    contact_status_id: Mapped[str | None] = mapped_column(ForeignKey("client_safe_contact_statuses.id"), nullable=True)
+    message_risk_review_id: Mapped[str | None] = mapped_column(ForeignKey("client_message_risk_reviews.id"), nullable=True)
+    gate_status: Mapped[str] = mapped_column(String(80), default="draft_only")
+    approval_scope: Mapped[str] = mapped_column(String(80), default="manual_use_only")
+    block_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    required_next_steps: Mapped[list[str]] = mapped_column(JSON, default=list)
+    no_live_send: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_provider_call: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_campaign_started: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_safe_summary: Mapped[str] = mapped_column(Text, default="")
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ClientComplianceReadinessPlaceholder(TimestampMixin, Base):
+    __tablename__ = "client_compliance_readiness_placeholders"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    placeholder_type: Mapped[str] = mapped_column(String(80), default="dnc_check")
+    readiness_status: Mapped[str] = mapped_column(String(80), default="not_configured")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    required_before_live: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_provider_call: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientComplianceDivisionEvent(TimestampMixin, Base):
+    __tablename__ = "client_compliance_division_events"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    lead_id: Mapped[str | None] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=True)
+    buyer_id: Mapped[str | None] = mapped_column(ForeignKey("client_buyer_profiles.id"), nullable=True)
+    event_type: Mapped[str] = mapped_column(String(120), default="")
+    event_summary: Mapped[str] = mapped_column(Text, default="")
+    manager_name: Mapped[str] = mapped_column(String(120), default="Compliance Manager")
+    client_visible: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientWeeklyCommandReport(TimestampMixin, Base):
+    __tablename__ = "client_weekly_command_reports"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    report_week_start: Mapped[str] = mapped_column(String(40), default="")
+    report_week_end: Mapped[str] = mapped_column(String(40), default="")
+    report_status: Mapped[str] = mapped_column(String(80), default="draft")
+    report_title: Mapped[str] = mapped_column(String(180), default="")
+    executive_summary: Mapped[str] = mapped_column(Text, default="")
+    lead_flow_summary: Mapped[str] = mapped_column(Text, default="")
+    acquisition_summary: Mapped[str] = mapped_column(Text, default="")
+    underwriting_summary: Mapped[str] = mapped_column(Text, default="")
+    disposition_summary: Mapped[str] = mapped_column(Text, default="")
+    compliance_summary: Mapped[str] = mapped_column(Text, default="")
+    bottleneck_summary: Mapped[str] = mapped_column(Text, default="")
+    next_week_focus: Mapped[str] = mapped_column(Text, default="")
+    client_safe_summary: Mapped[str] = mapped_column(Text, default="")
+    source_basis_summary: Mapped[str] = mapped_column(Text, default="")
+    no_revenue_guarantee: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_roi_claim: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_live_actions_taken: Mapped[bool] = mapped_column(Boolean, default=True)
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ClientWeeklyReportMetricSnapshot(TimestampMixin, Base):
+    __tablename__ = "client_weekly_report_metric_snapshots"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    report_id: Mapped[str] = mapped_column(ForeignKey("client_weekly_command_reports.id"), nullable=False)
+    total_leads: Mapped[int] = mapped_column(Integer, default=0)
+    hot_leads_count: Mapped[int] = mapped_column(Integer, default=0)
+    acquisition_ready_count: Mapped[int] = mapped_column(Integer, default=0)
+    appointment_ready_count: Mapped[int] = mapped_column(Integer, default=0)
+    evidence_missing_count: Mapped[int] = mapped_column(Integer, default=0)
+    underwriting_ready_count: Mapped[int] = mapped_column(Integer, default=0)
+    offer_ready_count: Mapped[int] = mapped_column(Integer, default=0)
+    buyer_match_count: Mapped[int] = mapped_column(Integer, default=0)
+    disposition_ready_count: Mapped[int] = mapped_column(Integer, default=0)
+    compliance_blocked_count: Mapped[int] = mapped_column(Integer, default=0)
+    compliance_needs_review_count: Mapped[int] = mapped_column(Integer, default=0)
+    manual_drafts_count: Mapped[int] = mapped_column(Integer, default=0)
+    blocked_actions_count: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class ClientWeeklyLeadStatusRollup(TimestampMixin, Base):
+    __tablename__ = "client_weekly_lead_status_rollups"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    report_id: Mapped[str] = mapped_column(ForeignKey("client_weekly_command_reports.id"), nullable=False)
+    lead_id: Mapped[str] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=False)
+    lead_name_or_address: Mapped[str] = mapped_column(String(180), default="")
+    current_stage: Mapped[str] = mapped_column(String(80), default="lead_intelligence")
+    status_summary: Mapped[str] = mapped_column(Text, default="")
+    top_blocker: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+    priority_level: Mapped[str] = mapped_column(String(80), default="medium")
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientWeeklyBottleneck(TimestampMixin, Base):
+    __tablename__ = "client_weekly_bottlenecks"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    report_id: Mapped[str] = mapped_column(ForeignKey("client_weekly_command_reports.id"), nullable=False)
+    bottleneck_type: Mapped[str] = mapped_column(String(120), default="")
+    bottleneck_summary: Mapped[str] = mapped_column(Text, default="")
+    affected_lead_count: Mapped[int] = mapped_column(Integer, default=0)
+    severity: Mapped[str] = mapped_column(String(80), default="medium")
+    recommended_fix: Mapped[str] = mapped_column(Text, default="")
+
+
+class ClientWeeklyRecommendedAction(TimestampMixin, Base):
+    __tablename__ = "client_weekly_recommended_actions"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    report_id: Mapped[str] = mapped_column(ForeignKey("client_weekly_command_reports.id"), nullable=False)
+    action_type: Mapped[str] = mapped_column(String(120), default="")
+    action_summary: Mapped[str] = mapped_column(Text, default="")
+    priority: Mapped[str] = mapped_column(String(80), default="medium")
+    related_lead_id: Mapped[str | None] = mapped_column(ForeignKey("client_lead_profiles.id"), nullable=True)
+    related_buyer_id: Mapped[str | None] = mapped_column(ForeignKey("client_buyer_profiles.id"), nullable=True)
+    due_window: Mapped[str] = mapped_column(String(80), default="this_week")
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientWeeklyDivisionSummary(TimestampMixin, Base):
+    __tablename__ = "client_weekly_division_summaries"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    report_id: Mapped[str] = mapped_column(ForeignKey("client_weekly_command_reports.id"), nullable=False)
+    division_name: Mapped[str] = mapped_column(String(120), default="")
+    health_status: Mapped[str] = mapped_column(String(80), default="watch")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    wins: Mapped[list[str]] = mapped_column(JSON, default=list)
+    risks: Mapped[list[str]] = mapped_column(JSON, default=list)
+    next_actions: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class ClientWeeklyReportEvent(TimestampMixin, Base):
+    __tablename__ = "client_weekly_report_events"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    report_id: Mapped[str | None] = mapped_column(ForeignKey("client_weekly_command_reports.id"), nullable=True)
+    event_type: Mapped[str] = mapped_column(String(120), default="")
+    event_summary: Mapped[str] = mapped_column(Text, default="")
+    manager_name: Mapped[str] = mapped_column(String(120), default="Client Success Manager")
+    client_visible: Mapped[bool] = mapped_column(Boolean, default=True)

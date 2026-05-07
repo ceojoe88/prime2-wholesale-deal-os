@@ -1398,3 +1398,29 @@ Allowed:
 ## Migration Strategy
 
 The initial Alembic revision creates the SQLAlchemy metadata-defined schema. The backend defaults to SQLite for local operator use and switches to Postgres when `DATABASE_URL` points to a Postgres database.
+## Client Command CP6-CP7
+
+CP6 extends the existing `client_command` domain with:
+- consent records
+- opt-out records
+- safe contact statuses
+- message risk reviews
+- communication approval gates
+- compliance readiness placeholders
+- compliance division events
+
+CP7 extends the same domain with:
+- weekly command reports
+- metric snapshots
+- lead status rollups
+- bottlenecks
+- recommended actions
+- division summaries
+- weekly report events
+
+Both phases preserve:
+- tenant isolation
+- workspace isolation
+- client-safe sanitization
+- deterministic logic
+- non-live execution boundaries

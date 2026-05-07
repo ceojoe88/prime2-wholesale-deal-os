@@ -11,6 +11,11 @@ from app.models import (
     ClientBuyerDemandEvidence,
     ClientBuyerOutreachDraft,
     ClientBuyerProfile,
+    ClientCommunicationApprovalGate,
+    ClientComplianceDivisionEvent,
+    ClientComplianceReadinessPlaceholder,
+    ClientContactConsentRecord,
+    ClientContactOptOutRecord,
     ClientDealEvidenceItem,
     ClientDealEvidencePacket,
     ClientDealBuyerMatch,
@@ -22,13 +27,22 @@ from app.models import (
     ClientLeadMissingDataItem,
     ClientLeadNextBestAction,
     ClientLeadProfile,
+    ClientMessageRiskReview,
     ClientObjectionResponseDraft,
     ClientOfferReadinessGate,
     ClientOfferScenario,
+    ClientSafeContactStatus,
     ClientSellerQuestion,
     ClientSellerQuestionPlan,
     ClientUnderwritingDivisionEvent,
     ClientUnderwritingReview,
+    ClientWeeklyBottleneck,
+    ClientWeeklyCommandReport,
+    ClientWeeklyDivisionSummary,
+    ClientWeeklyLeadStatusRollup,
+    ClientWeeklyRecommendedAction,
+    ClientWeeklyReportEvent,
+    ClientWeeklyReportMetricSnapshot,
     ClientWorkspace,
     ClientWorkspaceMember,
     ClientWorkspaceRole,
@@ -254,6 +268,103 @@ def buyer_outreach_draft_public(draft: ClientBuyerOutreachDraft) -> dict[str, An
 
 
 def disposition_event_public(event: ClientDispositionDivisionEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def consent_record_public(record: ClientContactConsentRecord) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(record))
+    data["client_safe"] = True
+    return data
+
+
+def opt_out_record_public(record: ClientContactOptOutRecord) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(record))
+    data["client_safe"] = True
+    return data
+
+
+def safe_contact_status_public(status: ClientSafeContactStatus) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(status))
+    data["can_use_manual_draft"] = bool(status.can_use_manual_draft)
+    data["no_live_send"] = True
+    data["no_provider_check"] = True
+    data["client_safe"] = True
+    return data
+
+
+def message_risk_review_public(review: ClientMessageRiskReview) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(review))
+    data["manual_use_only"] = True
+    data["no_live_send"] = True
+    data["client_safe"] = True
+    return data
+
+
+def communication_approval_gate_public(gate: ClientCommunicationApprovalGate) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(gate))
+    data["no_live_send"] = True
+    data["no_provider_call"] = True
+    data["no_campaign_started"] = True
+    data["client_safe"] = True
+    return data
+
+
+def compliance_placeholder_public(placeholder: ClientComplianceReadinessPlaceholder) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(placeholder))
+    data["required_before_live"] = True
+    data["no_provider_call"] = True
+    data["client_safe"] = True
+    return data
+
+
+def compliance_event_public(event: ClientComplianceDivisionEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def weekly_report_public(report: ClientWeeklyCommandReport) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(report))
+    data["no_revenue_guarantee"] = True
+    data["no_roi_claim"] = True
+    data["no_live_actions_taken"] = True
+    data["client_safe"] = True
+    return data
+
+
+def weekly_metric_snapshot_public(snapshot: ClientWeeklyReportMetricSnapshot) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(snapshot))
+    data["client_safe"] = True
+    return data
+
+
+def weekly_lead_rollup_public(rollup: ClientWeeklyLeadStatusRollup) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(rollup))
+    data["client_safe"] = True
+    return data
+
+
+def weekly_bottleneck_public(bottleneck: ClientWeeklyBottleneck) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(bottleneck))
+    data["client_safe"] = True
+    return data
+
+
+def weekly_recommended_action_public(action: ClientWeeklyRecommendedAction) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(action))
+    data["client_safe"] = True
+    return data
+
+
+def weekly_division_summary_public(summary: ClientWeeklyDivisionSummary) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(summary))
+    data["client_safe"] = True
+    return data
+
+
+def weekly_report_event_public(event: ClientWeeklyReportEvent) -> dict[str, Any]:
     data = strip_forbidden(model_to_dict(event))
     data["client_visible"] = True
     return data

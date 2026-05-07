@@ -9,6 +9,8 @@ CLIENT_COMMAND_PERMISSIONS = {
     "client_command.leads_view",
     "client_command.leads_manage",
     "client_command.reports_view",
+    "client_command.reports_manage",
+    "client_command.reports_approve_visibility",
     "client_command.acquisition_view",
     "client_command.acquisition_manage",
     "client_command.underwriting_view",
@@ -20,6 +22,10 @@ CLIENT_COMMAND_PERMISSIONS = {
     "client_command.buyers_manage",
     "client_command.buyer_matching_view",
     "client_command.buyer_matching_manage",
+    "client_command.compliance_view",
+    "client_command.compliance_manage",
+    "client_command.contact_gate_view",
+    "client_command.contact_gate_manage",
     "client_command.admin",
 }
 

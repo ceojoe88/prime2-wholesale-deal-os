@@ -351,3 +351,26 @@ Before any hosted deployment:
 - Contract execution remains external.
 - Payment handling remains unavailable.
 - Owner approval gates remain enabled.
+## Client Command CP6-CP7 Validation
+
+Minimum validation lane:
+- Alembic upgrade head on a clean SQLite validation DB
+- seed script
+- targeted CP6/CP7 backend tests
+- existing CP1-CP5 backend tests
+- full backend test suite
+- targeted CP6/CP7 frontend route tests
+- existing client-command frontend tests
+- unsafe visible-control sweep
+- npm audit --omit=dev
+- production build
+
+CP6 boundaries to verify:
+- no provider checks
+- no live communication
+- manual-use approval only
+
+CP7 boundaries to verify:
+- no revenue guarantee
+- no ROI guarantee
+- no fake outcome claims

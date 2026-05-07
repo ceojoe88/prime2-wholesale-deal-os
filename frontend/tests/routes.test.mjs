@@ -28,6 +28,18 @@ const requiredRouteFiles = [
   "src/app/dashboard/client-command/disposition/ready-review/page.tsx",
   "src/app/dashboard/client-command/disposition/blocked/page.tsx",
   "src/app/dashboard/client-command/disposition/needs-review/page.tsx",
+  "src/app/dashboard/client-command/compliance/page.tsx",
+  "src/app/dashboard/client-command/compliance/consent/page.tsx",
+  "src/app/dashboard/client-command/compliance/opt-outs/page.tsx",
+  "src/app/dashboard/client-command/compliance/blocked/page.tsx",
+  "src/app/dashboard/client-command/compliance/needs-review/page.tsx",
+  "src/app/dashboard/client-command/compliance/safe-manual-use/page.tsx",
+  "src/app/dashboard/client-command/compliance/gates/page.tsx",
+  "src/app/dashboard/client-command/reports/page.tsx",
+  "src/app/dashboard/client-command/reports/[reportId]/page.tsx",
+  "src/app/dashboard/client-command/reports/weekly/page.tsx",
+  "src/app/dashboard/client-command/reports/bottlenecks/page.tsx",
+  "src/app/dashboard/client-command/reports/recommended-actions/page.tsx",
   "src/app/dashboard/first-deal-cockpit/page.tsx",
   "src/app/dashboard/first-deal-cockpit/calls/page.tsx",
   "src/app/dashboard/first-deal-cockpit/offers/page.tsx",
@@ -820,6 +832,93 @@ test("CP5 client command pages expose no forbidden buyer execution controls", ()
     "market deal",
     "launch campaign",
     "send deal"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP6 client command pages render Compliance Manager and manual-use boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/compliance/page.tsx",
+    "src/app/dashboard/client-command/compliance/consent/page.tsx",
+    "src/app/dashboard/client-command/compliance/opt-outs/page.tsx",
+    "src/app/dashboard/client-command/compliance/blocked/page.tsx",
+    "src/app/dashboard/client-command/compliance/needs-review/page.tsx",
+    "src/app/dashboard/client-command/compliance/safe-manual-use/page.tsx",
+    "src/app/dashboard/client-command/compliance/gates/page.tsx",
+    "src/app/dashboard/client-command/leads/[leadId]/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Compliance Manager/);
+  assert.match(joined, /Manual-use approval only - no message has been sent\./);
+  assert.match(joined, /Readiness check only - no provider check or live communication occurred\./);
+});
+
+test("CP7 client command pages render weekly report boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/reports/page.tsx",
+    "src/app/dashboard/client-command/reports/weekly/page.tsx",
+    "src/app/dashboard/client-command/reports/[reportId]/page.tsx",
+    "src/app/dashboard/client-command/reports/bottlenecks/page.tsx",
+    "src/app/dashboard/client-command/reports/recommended-actions/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Client Success Manager|Weekly Client Command Reports/);
+  assert.match(joined, /Client-safe weekly report - no revenue, ROI, or deal outcome is guaranteed\./);
+});
+
+test("CP6 and CP7 client command pages expose no forbidden compliance or reporting controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/leads/[leadId]/page.tsx",
+    "src/app/dashboard/client-command/disposition/buyers/[buyerId]/page.tsx",
+    "src/app/dashboard/client-command/compliance/page.tsx",
+    "src/app/dashboard/client-command/compliance/consent/page.tsx",
+    "src/app/dashboard/client-command/compliance/opt-outs/page.tsx",
+    "src/app/dashboard/client-command/compliance/blocked/page.tsx",
+    "src/app/dashboard/client-command/compliance/needs-review/page.tsx",
+    "src/app/dashboard/client-command/compliance/safe-manual-use/page.tsx",
+    "src/app/dashboard/client-command/compliance/gates/page.tsx",
+    "src/app/dashboard/client-command/reports/page.tsx",
+    "src/app/dashboard/client-command/reports/weekly/page.tsx",
+    "src/app/dashboard/client-command/reports/[reportId]/page.tsx",
+    "src/app/dashboard/client-command/reports/bottlenecks/page.tsx",
+    "src/app/dashboard/client-command/reports/recommended-actions/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send sms",
+    "send email",
+    "call now",
+    "auto dial",
+    "start campaign",
+    "blast buyers",
+    "contact buyer",
+    "contact seller",
+    "pull buyer list",
+    "scrape buyers",
+    "pull skip trace",
+    "check dnc live",
+    "register 10dlc live",
+    "pull live comps",
+    "generate contract",
+    "send offer",
+    "e-sign",
+    "charge",
+    "invoice",
+    "activate",
+    "sync to provider",
+    "dispatch agent",
+    "execute",
+    "launch campaign",
+    "send deal",
+    "guaranteed roi",
+    "guaranteed profit",
+    "guaranteed buyer",
+    "guaranteed assignment fee"
   ]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }

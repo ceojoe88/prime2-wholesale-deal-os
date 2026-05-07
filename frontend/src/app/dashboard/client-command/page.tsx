@@ -10,6 +10,9 @@ import {
   clientAcquisitionBriefs,
   clientAppointmentReadinessReviews,
   clientBuyerProfiles,
+  clientCommunicationApprovalGates,
+  clientComplianceReadinessPlaceholders,
+  clientSafeContactStatuses,
   clientDealBuyerMatches,
   clientDispositionReadinessGates,
   clientDealEvidencePackets,
@@ -18,6 +21,9 @@ import {
   clientLeadNextBestActions,
   clientMemphisScenarioCards,
   clientOfferReadinessGates,
+  clientWeeklyBottlenecks,
+  clientWeeklyCommandReports,
+  clientWeeklyRecommendedActions,
   clientWorkspaces
 } from "@/lib/demo-data";
 
@@ -28,12 +34,18 @@ export default function ClientCommandPage() {
   const dispositionReady = clientDispositionReadinessGates.filter((gate) => gate.readinessStatus === "ready_for_client_review").length;
   const dispositionBlocked = clientDispositionReadinessGates.filter((gate) => gate.readinessStatus !== "ready_for_client_review").length;
   const buyerDemandNeeded = clientDispositionReadinessGates.filter((gate) => gate.blockReasons.includes("buyer_demand_evidence_missing")).length;
+  const blockedContacts = clientSafeContactStatuses.filter((status) => status.status === "blocked").length;
+  const complianceNeedsReview = clientSafeContactStatuses.filter((status) => ["needs_review", "missing_consent"].includes(status.status)).length;
+  const safeManualUse = clientSafeContactStatuses.filter((status) => status.status === "safe_for_manual_use").length;
+  const latestReport = clientWeeklyCommandReports[0];
+  const topBottleneck = clientWeeklyBottlenecks[0];
+  const nextReportAction = clientWeeklyRecommendedActions[0];
   return (
     <div className="page">
       <PageHeader
-        eyebrow="CP1-CP4 Client Command"
+        eyebrow="CP1-CP7 Client Command"
         title="Client-safe investor command workspace"
-        description="A customer-facing command layer for lead intelligence, acquisition prep, underwriting review, missing evidence, and readiness gates without exposing internal Prime governance."
+        description="A customer-facing command layer for lead intelligence, acquisition prep, underwriting review, buyer matching, compliance readiness, and weekly reporting without exposing internal Prime governance."
       />
 
       <div className="metric-grid">
@@ -49,6 +61,24 @@ export default function ClientCommandPage() {
           <MetricCard label="Strong matches" value={String(strongMatches)} detail="Deterministic buy box fit" />
           <MetricCard label="Disposition ready" value={String(dispositionReady)} detail="Manual review only" />
           <MetricCard label="Blocked disposition" value={String(dispositionBlocked)} detail={`${buyerDemandNeeded} need buyer demand evidence`} />
+        </div>
+      </Section>
+
+      <Section title="CP6 Compliance Panel">
+        <div className="metric-grid">
+          <MetricCard label="Blocked contacts" value={String(blockedContacts)} detail="Opt-out or blocked manual-use status" />
+          <MetricCard label="Needs review" value={String(complianceNeedsReview)} detail="Consent or channel review required" />
+          <MetricCard label="Safe manual use" value={String(safeManualUse)} detail="Readiness check only" />
+          <MetricCard label="Manual-use gates" value={String(clientCommunicationApprovalGates.length)} detail={`${clientComplianceReadinessPlaceholders.length} placeholders tracked`} />
+        </div>
+      </Section>
+
+      <Section title="CP7 Weekly Report Panel">
+        <div className="metric-grid">
+          <MetricCard label="Latest report" value={latestReport?.reportStatus ?? "none"} detail={latestReport?.reportWeekEnd ?? "Not generated"} />
+          <MetricCard label="Top bottleneck" value={topBottleneck?.bottleneckType ?? "clear"} detail={topBottleneck?.recommendedFix ?? "No weekly bottlenecks"} />
+          <MetricCard label="Next report action" value={nextReportAction?.priority ?? "none"} detail={nextReportAction?.actionSummary ?? "No weekly action"} />
+          <MetricCard label="Memphis weekly reports" value={String(clientWeeklyCommandReports.length)} detail="Client-safe weekly summaries" />
         </div>
       </Section>
 
@@ -83,10 +113,12 @@ export default function ClientCommandPage() {
           <div className="record-list">
             <RecordCard title="Lead Intelligence Division" meta="Scores motivation, urgency, equity, distress, contactability, probability, and missing data." right={<Pill tone="green">active</Pill>} />
             <RecordCard title="Acquisition Manager" meta="Builds seller conversation briefs, question plans, manual drafts, and appointment readiness." right={<Pill tone="green">CP3</Pill>} />
-          <RecordCard title="Underwriting Manager" meta="Checks evidence, ARV, repairs, MAO, scenarios, and offer readiness." right={<Pill tone="green">CP4</Pill>} />
+            <RecordCard title="Underwriting Manager" meta="Checks evidence, ARV, repairs, MAO, scenarios, and offer readiness." right={<Pill tone="green">CP4</Pill>} />
             <RecordCard title="Disposition Manager" meta="Ranks buyer fit, buy box evidence, and disposition readiness without buyer contact." right={<Pill tone="green">CP5</Pill>} />
+            <RecordCard title="Compliance Manager" meta="Tracks consent, opt-outs, safe manual-use status, and message risk without any provider checks." right={<Pill tone="green">CP6</Pill>} />
+            <RecordCard title="Client Success Manager" meta="Builds weekly rollups, bottlenecks, and next-week action plans without ROI or revenue guarantees." right={<Pill tone="green">CP7</Pill>} />
             <RecordCard title="Client Workspace Guard" meta="Tenant-safe roles, client permissions, and sanitized workspace responses." right={<Pill tone="green">safe</Pill>} />
-            <RecordCard title="Provider Boundary Guard" meta="No outbound provider actions or raw payload exposure in CP1-CP4." right={<Pill tone="red">locked</Pill>} />
+            <RecordCard title="Provider Boundary Guard" meta="No outbound provider actions or raw payload exposure in CP1-CP7." right={<Pill tone="red">locked</Pill>} />
           </div>
         </Section>
         <Section title="Lead Intelligence Manager">
@@ -107,6 +139,8 @@ export default function ClientCommandPage() {
           <RecordCard title="Acquisition" meta="Briefs, question plans, and review queue" right={<Link href="/dashboard/client-command/acquisition">Open</Link>} />
           <RecordCard title="Underwriting" meta={`${clientDealEvidencePackets.length} evidence packets`} right={<Link href="/dashboard/client-command/underwriting">Open</Link>} />
           <RecordCard title="Disposition" meta="Buyer matching and disposition readiness" right={<Link href="/dashboard/client-command/disposition">Open</Link>} />
+          <RecordCard title="Compliance" meta="Consent, opt-out, and manual-use approval gates" right={<Link href="/dashboard/client-command/compliance">Open</Link>} />
+          <RecordCard title="Reports" meta="Weekly command reports and bottlenecks" right={<Link href="/dashboard/client-command/reports">Open</Link>} />
           <RecordCard title="Permissions" meta={`${clientCommandPermissions.length} scoped permissions`} right={<Pill tone="gold">CP1</Pill>} />
           <RecordCard title="Lead Division" meta="Deterministic scoring" right={<Pill tone="gold">CP2</Pill>} />
         </div>

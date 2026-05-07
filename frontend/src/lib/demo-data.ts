@@ -5357,8 +5357,8 @@ export const clientCommandPermissions = [
 ];
 
 export const clientCommandSafetyCards = [
-  { label: "SMS", value: "off", detail: "No outbound provider action in CP1-CP4" },
-  { label: "Email", value: "off", detail: "No outbound provider action in CP1-CP4" },
+  { label: "SMS", value: "off", detail: "No outbound provider action in CP1-CP7" },
+  { label: "Email", value: "off", detail: "No outbound provider action in CP1-CP7" },
   { label: "Voice", value: "off", detail: "Manual client workflow only" },
   { label: "Skip trace", value: "off", detail: "No external enrichment provider call" },
   { label: "Billing", value: "off", detail: "No payment handling" },
@@ -5567,7 +5567,7 @@ export const clientLeadMissingDataItems: ClientLeadMissingDataItem[] = [
     id: "client-missing-003",
     leadId: "client-lead-003",
     fieldName: "contact_channels_present",
-    reason: "Contactability data is missing; no provider lookup is performed in CP1-CP4.",
+    reason: "Contactability data is missing; no provider lookup is performed in CP1-CP7.",
     severity: "high",
     resolutionStatus: "open",
     blocksReadiness: true
@@ -6319,6 +6319,206 @@ export type ClientBuyerOutreachDraft = {
   noLiveSend: boolean;
   noBlast: boolean;
   unsafeLanguageFlag: boolean;
+};
+
+export type ClientContactConsentRecord = {
+  id: string;
+  workspaceId: string;
+  contactType: "seller" | "buyer" | "team_member" | "unknown";
+  leadId: string | null;
+  buyerId: string | null;
+  contactName: string | null;
+  phone: string | null;
+  email: string | null;
+  consentChannel: "sms" | "email" | "call" | "unknown";
+  consentStatus: "confirmed" | "missing" | "expired" | "disputed" | "unknown";
+  consentSource: string;
+  consentSummary: string;
+  consentCapturedAt: string | null;
+  expiresAt: string | null;
+  requiresHumanReview: boolean;
+  clientSafe: boolean;
+};
+
+export type ClientContactOptOutRecord = {
+  id: string;
+  workspaceId: string;
+  contactType: "seller" | "buyer" | "team_member" | "unknown";
+  leadId: string | null;
+  buyerId: string | null;
+  phone: string | null;
+  email: string | null;
+  channel: "sms" | "email" | "call" | "all" | "unknown";
+  optOutStatus: "active" | "cleared_by_admin_review" | "disputed" | "unknown";
+  optOutSource: string;
+  optOutSummary: string;
+  recordedAt: string;
+  requiresHumanReview: boolean;
+  clientSafe: boolean;
+};
+
+export type ClientSafeContactStatus = {
+  id: string;
+  workspaceId: string;
+  contactType: "seller" | "buyer" | "unknown";
+  leadId: string | null;
+  buyerId: string | null;
+  channel: "sms" | "email" | "call";
+  status: "safe_for_manual_use" | "needs_review" | "blocked" | "missing_consent" | "opted_out" | "channel_not_configured" | "placeholder_check_required";
+  consentStatusSnapshot: string;
+  optOutStatusSnapshot: string;
+  dncPlaceholderStatus: "not_checked" | "placeholder_required" | "review_needed" | "not_applicable";
+  tenDlcPlaceholderStatus: "not_configured" | "placeholder_required" | "review_needed" | "not_applicable";
+  reasonSummary: string;
+  blockReasons: string[];
+  riskFlags: string[];
+  canUseManualDraft: boolean;
+  noLiveSend: boolean;
+  noProviderCheck: boolean;
+  requiresHumanReview: boolean;
+  clientSafeSummary: string;
+};
+
+export type ClientMessageRiskReview = {
+  id: string;
+  workspaceId: string;
+  leadId: string | null;
+  buyerId: string | null;
+  sourceDraftType: "seller_follow_up" | "buyer_outreach" | "call_note" | "unknown";
+  sourceDraftId: string | null;
+  channel: "sms" | "email" | "call_note" | "unknown";
+  reviewStatus: "passed_for_manual_use" | "needs_review" | "blocked";
+  riskLevel: "low" | "medium" | "high";
+  unsafeLanguageFlags: string[];
+  blockedTerms: string[];
+  safeRewriteSuggestion: string | null;
+  reasonSummary: string;
+  manualUseOnly: boolean;
+  noLiveSend: boolean;
+  requiresHumanReview: boolean;
+};
+
+export type ClientCommunicationApprovalGate = {
+  id: string;
+  workspaceId: string;
+  leadId: string | null;
+  buyerId: string | null;
+  sourceDraftType: "seller_follow_up" | "buyer_outreach" | "unknown";
+  sourceDraftId: string | null;
+  contactStatusId: string | null;
+  messageRiskReviewId: string | null;
+  gateStatus: "draft_only" | "manual_use_allowed" | "needs_review" | "blocked";
+  approvalScope: "manual_use_only" | "future_live_review_required";
+  blockReasons: string[];
+  requiredNextSteps: string[];
+  noLiveSend: boolean;
+  noProviderCall: boolean;
+  noCampaignStarted: boolean;
+  clientSafeSummary: string;
+  requiresHumanReview: boolean;
+};
+
+export type ClientComplianceReadinessPlaceholder = {
+  id: string;
+  workspaceId: string;
+  placeholderType: "dnc_check" | "ten_dlc_registration" | "call_recording_notice" | "email_unsubscribe" | "consent_capture_policy";
+  readinessStatus: "not_configured" | "placeholder_only" | "needs_review" | "documented" | "not_applicable";
+  summary: string;
+  requiredBeforeLive: boolean;
+  noProviderCall: boolean;
+  clientSafe: boolean;
+};
+
+export type ClientWeeklyCommandReport = {
+  id: string;
+  workspaceId: string;
+  reportWeekStart: string;
+  reportWeekEnd: string;
+  reportStatus: "draft" | "generated" | "reviewed" | "client_visible";
+  reportTitle: string;
+  executiveSummary: string;
+  leadFlowSummary: string;
+  acquisitionSummary: string;
+  underwritingSummary: string;
+  dispositionSummary: string;
+  complianceSummary: string;
+  bottleneckSummary: string;
+  nextWeekFocus: string;
+  clientSafeSummary: string;
+  sourceBasisSummary: string;
+  noRevenueGuarantee: boolean;
+  noRoiClaim: boolean;
+  noLiveActionsTaken: boolean;
+  requiresHumanReview: boolean;
+};
+
+export type ClientWeeklyReportMetricSnapshot = {
+  id: string;
+  workspaceId: string;
+  reportId: string;
+  totalLeads: number;
+  hotLeadsCount: number;
+  acquisitionReadyCount: number;
+  appointmentReadyCount: number;
+  evidenceMissingCount: number;
+  underwritingReadyCount: number;
+  offerReadyCount: number;
+  buyerMatchCount: number;
+  dispositionReadyCount: number;
+  complianceBlockedCount: number;
+  complianceNeedsReviewCount: number;
+  manualDraftsCount: number;
+  blockedActionsCount: number;
+};
+
+export type ClientWeeklyLeadStatusRollup = {
+  id: string;
+  workspaceId: string;
+  reportId: string;
+  leadId: string;
+  leadNameOrAddress: string;
+  currentStage: "lead_intelligence" | "acquisition" | "underwriting" | "offer_readiness" | "buyer_matching" | "disposition" | "compliance" | "blocked" | "needs_review";
+  statusSummary: string;
+  topBlocker: string | null;
+  recommendedNextStep: string;
+  priorityLevel: "low" | "medium" | "high" | "urgent";
+  clientSafe: boolean;
+};
+
+export type ClientWeeklyBottleneck = {
+  id: string;
+  workspaceId: string;
+  reportId: string;
+  bottleneckType: "missing_contact_data" | "missing_seller_motivation" | "missing_arv" | "missing_repairs" | "buyer_demand_missing" | "compliance_blocked" | "human_review_needed" | "thin_margin" | "stale_follow_up" | "unclear_buy_box";
+  bottleneckSummary: string;
+  affectedLeadCount: number;
+  severity: "low" | "medium" | "high";
+  recommendedFix: string;
+};
+
+export type ClientWeeklyRecommendedAction = {
+  id: string;
+  workspaceId: string;
+  reportId: string;
+  actionType: "call_seller" | "collect_missing_data" | "add_evidence" | "run_underwriting" | "review_offer_readiness" | "add_buyer_demand_evidence" | "review_compliance" | "clean_buyer_list" | "human_review";
+  actionSummary: string;
+  priority: "low" | "medium" | "high" | "urgent";
+  relatedLeadId: string | null;
+  relatedBuyerId: string | null;
+  dueWindow: "today" | "this_week" | "next_week";
+  clientSafe: boolean;
+};
+
+export type ClientWeeklyDivisionSummary = {
+  id: string;
+  workspaceId: string;
+  reportId: string;
+  divisionName: "Lead Intelligence" | "Acquisition" | "Underwriting" | "Disposition" | "Compliance";
+  healthStatus: "strong" | "watch" | "blocked" | "needs_review";
+  summary: string;
+  wins: string[];
+  risks: string[];
+  nextActions: string[];
 };
 
 export const clientAcquisitionBriefs: ClientAcquisitionBrief[] = [
@@ -7624,6 +7824,778 @@ export const clientDispositionDivisionEvents: ClientDivisionEvent[] = [
   }
 ];
 
+export const clientContactConsentRecords: ClientContactConsentRecord[] = [
+  {
+    id: "client-consent-memphis-lead-001-call",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-001",
+    buyerId: null,
+    contactName: "Lead 1 seller",
+    phone: "901-555-0101",
+    email: null,
+    consentChannel: "call",
+    consentStatus: "confirmed",
+    consentSource: "system_generated_demo",
+    consentSummary: "Lead 1 seller confirmed manual call follow-up.",
+    consentCapturedAt: "2026-05-05",
+    expiresAt: null,
+    requiresHumanReview: false,
+    clientSafe: true
+  },
+  {
+    id: "client-consent-memphis-lead-001-email",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-001",
+    buyerId: null,
+    contactName: "Lead 1 seller",
+    phone: null,
+    email: "seller1@demo.local",
+    consentChannel: "email",
+    consentStatus: "confirmed",
+    consentSource: "system_generated_demo",
+    consentSummary: "Lead 1 seller confirmed manual email recap use.",
+    consentCapturedAt: "2026-05-05",
+    expiresAt: null,
+    requiresHumanReview: false,
+    clientSafe: true
+  },
+  {
+    id: "client-consent-memphis-lead-004-call",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-004",
+    buyerId: null,
+    contactName: "Lead 4 seller",
+    phone: "901-555-0104",
+    email: null,
+    consentChannel: "call",
+    consentStatus: "expired",
+    consentSource: "system_generated_demo",
+    consentSummary: "Lead 4 consent is expired and needs review.",
+    consentCapturedAt: "2026-03-12",
+    expiresAt: "2026-04-12",
+    requiresHumanReview: true,
+    clientSafe: true
+  },
+  {
+    id: "client-consent-memphis-lead-005-call",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-005",
+    buyerId: null,
+    contactName: "Lead 5 seller",
+    phone: "901-555-0105",
+    email: null,
+    consentChannel: "call",
+    consentStatus: "confirmed",
+    consentSource: "system_generated_demo",
+    consentSummary: "Lead 5 seller confirmed manual call follow-up.",
+    consentCapturedAt: "2026-05-06",
+    expiresAt: null,
+    requiresHumanReview: false,
+    clientSafe: true
+  },
+  {
+    id: "client-consent-memphis-buyer-001-email",
+    workspaceId: "client-workspace-003",
+    contactType: "buyer",
+    leadId: null,
+    buyerId: "client-buyer-memphis-landlord",
+    contactName: "Memphis rental landlord",
+    phone: null,
+    email: "buyer1@demo.local",
+    consentChannel: "email",
+    consentStatus: "confirmed",
+    consentSource: "system_generated_demo",
+    consentSummary: "Buyer 1 can review manual-use email drafts only.",
+    consentCapturedAt: "2026-05-04",
+    expiresAt: null,
+    requiresHumanReview: false,
+    clientSafe: true
+  },
+  {
+    id: "client-consent-memphis-buyer-002-email",
+    workspaceId: "client-workspace-003",
+    contactType: "buyer",
+    leadId: null,
+    buyerId: "client-buyer-memphis-flipper",
+    contactName: "Memphis fix-and-flip buyer",
+    phone: null,
+    email: "buyer2@demo.local",
+    consentChannel: "email",
+    consentStatus: "confirmed",
+    consentSource: "system_generated_demo",
+    consentSummary: "Buyer 2 can review manual-use email previews only.",
+    consentCapturedAt: "2026-05-04",
+    expiresAt: null,
+    requiresHumanReview: false,
+    clientSafe: true
+  }
+];
+
+export const clientContactOptOutRecords: ClientContactOptOutRecord[] = [
+  {
+    id: "client-opt-out-memphis-buyer-004",
+    workspaceId: "client-workspace-003",
+    contactType: "buyer",
+    leadId: null,
+    buyerId: "client-buyer-memphis-review",
+    phone: null,
+    email: "buyer4@demo.local",
+    channel: "all",
+    optOutStatus: "active",
+    optOutSource: "system_generated_demo",
+    optOutSummary: "Demo buyer marked inactive and opted out from manual contact prep.",
+    recordedAt: "2026-05-03",
+    requiresHumanReview: true,
+    clientSafe: true
+  }
+];
+
+export const clientSafeContactStatuses: ClientSafeContactStatus[] = [
+  {
+    id: "client-safe-contact-memphis-lead-001-call",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-001",
+    buyerId: null,
+    channel: "call",
+    status: "safe_for_manual_use",
+    consentStatusSnapshot: "confirmed",
+    optOutStatusSnapshot: "cleared",
+    dncPlaceholderStatus: "placeholder_required",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Manual call prep is allowed because consent is confirmed and no opt-out exists.",
+    blockReasons: [],
+    riskFlags: [],
+    canUseManualDraft: true,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: false,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  },
+  {
+    id: "client-safe-contact-memphis-lead-001-email",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-001",
+    buyerId: null,
+    channel: "email",
+    status: "safe_for_manual_use",
+    consentStatusSnapshot: "confirmed",
+    optOutStatusSnapshot: "cleared",
+    dncPlaceholderStatus: "not_applicable",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Manual email draft review is allowed because consent is confirmed and no opt-out exists.",
+    blockReasons: [],
+    riskFlags: [],
+    canUseManualDraft: true,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: false,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  },
+  {
+    id: "client-safe-contact-memphis-lead-002-email",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-002",
+    buyerId: null,
+    channel: "email",
+    status: "missing_consent",
+    consentStatusSnapshot: "missing",
+    optOutStatusSnapshot: "unknown",
+    dncPlaceholderStatus: "not_applicable",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Lead 2 needs consent review before even manual-use draft approval.",
+    blockReasons: ["consent_missing_or_unconfirmed"],
+    riskFlags: [],
+    canUseManualDraft: false,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  },
+  {
+    id: "client-safe-contact-memphis-lead-003-call",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-003",
+    buyerId: null,
+    channel: "call",
+    status: "needs_review",
+    consentStatusSnapshot: "unknown",
+    optOutStatusSnapshot: "unknown",
+    dncPlaceholderStatus: "placeholder_required",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Lead 3 needs compliance review before manual call use.",
+    blockReasons: ["consent_missing_or_unconfirmed", "buyer_demand_gap_review"],
+    riskFlags: ["human_review_needed"],
+    canUseManualDraft: false,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  },
+  {
+    id: "client-safe-contact-memphis-lead-004-call",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-004",
+    buyerId: null,
+    channel: "call",
+    status: "needs_review",
+    consentStatusSnapshot: "expired",
+    optOutStatusSnapshot: "unknown",
+    dncPlaceholderStatus: "placeholder_required",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Lead 4 requires compliance review because consent is expired and the deal is margin-blocked.",
+    blockReasons: ["consent_expired"],
+    riskFlags: ["thin_margin"],
+    canUseManualDraft: false,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  },
+  {
+    id: "client-safe-contact-memphis-lead-005-call",
+    workspaceId: "client-workspace-003",
+    contactType: "seller",
+    leadId: "client-lead-memphis-005",
+    buyerId: null,
+    channel: "call",
+    status: "safe_for_manual_use",
+    consentStatusSnapshot: "confirmed",
+    optOutStatusSnapshot: "cleared",
+    dncPlaceholderStatus: "placeholder_required",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Lead 5 seller is ready for manual call follow-up only.",
+    blockReasons: [],
+    riskFlags: [],
+    canUseManualDraft: true,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: false,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  },
+  {
+    id: "client-safe-contact-memphis-buyer-001-email",
+    workspaceId: "client-workspace-003",
+    contactType: "buyer",
+    leadId: null,
+    buyerId: "client-buyer-memphis-landlord",
+    channel: "email",
+    status: "safe_for_manual_use",
+    consentStatusSnapshot: "confirmed",
+    optOutStatusSnapshot: "cleared",
+    dncPlaceholderStatus: "not_applicable",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Buyer 1 is safe for manual-use email drafting only.",
+    blockReasons: [],
+    riskFlags: [],
+    canUseManualDraft: true,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: false,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  },
+  {
+    id: "client-safe-contact-memphis-buyer-002-email",
+    workspaceId: "client-workspace-003",
+    contactType: "buyer",
+    leadId: null,
+    buyerId: "client-buyer-memphis-flipper",
+    channel: "email",
+    status: "safe_for_manual_use",
+    consentStatusSnapshot: "confirmed",
+    optOutStatusSnapshot: "cleared",
+    dncPlaceholderStatus: "not_applicable",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Buyer 2 can review manual-use deal preview drafts only.",
+    blockReasons: [],
+    riskFlags: [],
+    canUseManualDraft: true,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: false,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  },
+  {
+    id: "client-safe-contact-memphis-buyer-003-email",
+    workspaceId: "client-workspace-003",
+    contactType: "buyer",
+    leadId: null,
+    buyerId: "client-buyer-memphis-hedge",
+    channel: "email",
+    status: "needs_review",
+    consentStatusSnapshot: "unknown",
+    optOutStatusSnapshot: "unknown",
+    dncPlaceholderStatus: "not_applicable",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Buyer 3 needs manual consent and channel review before draft use.",
+    blockReasons: ["consent_missing_or_unconfirmed"],
+    riskFlags: ["unclear_buy_box"],
+    canUseManualDraft: false,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  },
+  {
+    id: "client-safe-contact-memphis-buyer-004-email",
+    workspaceId: "client-workspace-003",
+    contactType: "buyer",
+    leadId: null,
+    buyerId: "client-buyer-memphis-review",
+    channel: "email",
+    status: "blocked",
+    consentStatusSnapshot: "unknown",
+    optOutStatusSnapshot: "active",
+    dncPlaceholderStatus: "not_applicable",
+    tenDlcPlaceholderStatus: "not_applicable",
+    reasonSummary: "Buyer 4 is blocked because an opt-out is active.",
+    blockReasons: ["active_opt_out"],
+    riskFlags: ["inactive_buyer"],
+    canUseManualDraft: false,
+    noLiveSend: true,
+    noProviderCheck: true,
+    requiresHumanReview: true,
+    clientSafeSummary: "Readiness check only - no provider check or live communication occurred."
+  }
+];
+
+export const clientMessageRiskReviews: ClientMessageRiskReview[] = [
+  {
+    id: "client-message-risk-memphis-lead-001",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-001",
+    buyerId: null,
+    sourceDraftType: "seller_follow_up",
+    sourceDraftId: "client-follow-up-memphis-001",
+    channel: "call_note",
+    reviewStatus: "passed_for_manual_use",
+    riskLevel: "low",
+    unsafeLanguageFlags: [],
+    blockedTerms: [],
+    safeRewriteSuggestion: null,
+    reasonSummary: "Low-risk manual seller draft passed for manual use only.",
+    manualUseOnly: true,
+    noLiveSend: true,
+    requiresHumanReview: false
+  },
+  {
+    id: "client-message-risk-memphis-buyer-005",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    buyerId: "client-buyer-memphis-flipper",
+    sourceDraftType: "buyer_outreach",
+    sourceDraftId: "client-buyer-draft-memphis-005",
+    channel: "email",
+    reviewStatus: "passed_for_manual_use",
+    riskLevel: "low",
+    unsafeLanguageFlags: [],
+    blockedTerms: [],
+    safeRewriteSuggestion: null,
+    reasonSummary: "Buyer preview draft stayed factual and manual-use only.",
+    manualUseOnly: true,
+    noLiveSend: true,
+    requiresHumanReview: false
+  }
+];
+
+export const clientCommunicationApprovalGates: ClientCommunicationApprovalGate[] = [
+  {
+    id: "client-comm-gate-memphis-lead-001",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-001",
+    buyerId: null,
+    sourceDraftType: "seller_follow_up",
+    sourceDraftId: "client-follow-up-memphis-001",
+    contactStatusId: "client-safe-contact-memphis-lead-001-call",
+    messageRiskReviewId: "client-message-risk-memphis-lead-001",
+    gateStatus: "manual_use_allowed",
+    approvalScope: "manual_use_only",
+    blockReasons: [],
+    requiredNextSteps: ["manual_use_only_no_send"],
+    noLiveSend: true,
+    noProviderCall: true,
+    noCampaignStarted: true,
+    clientSafeSummary: "Manual-use approval only - no message has been sent.",
+    requiresHumanReview: false
+  },
+  {
+    id: "client-comm-gate-memphis-lead-002",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-002",
+    buyerId: null,
+    sourceDraftType: "seller_follow_up",
+    sourceDraftId: "client-follow-up-memphis-002",
+    contactStatusId: "client-safe-contact-memphis-lead-002-email",
+    messageRiskReviewId: null,
+    gateStatus: "needs_review",
+    approvalScope: "manual_use_only",
+    blockReasons: ["consent_missing_or_unconfirmed"],
+    requiredNextSteps: ["resolve_manual_consent_or_placeholder_gap"],
+    noLiveSend: true,
+    noProviderCall: true,
+    noCampaignStarted: true,
+    clientSafeSummary: "Manual-use approval only - no message has been sent.",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-comm-gate-memphis-buyer-005",
+    workspaceId: "client-workspace-003",
+    leadId: "client-lead-memphis-005",
+    buyerId: "client-buyer-memphis-flipper",
+    sourceDraftType: "buyer_outreach",
+    sourceDraftId: "client-buyer-draft-memphis-005",
+    contactStatusId: "client-safe-contact-memphis-buyer-002-email",
+    messageRiskReviewId: "client-message-risk-memphis-buyer-005",
+    gateStatus: "manual_use_allowed",
+    approvalScope: "manual_use_only",
+    blockReasons: [],
+    requiredNextSteps: ["manual_use_only_no_send"],
+    noLiveSend: true,
+    noProviderCall: true,
+    noCampaignStarted: true,
+    clientSafeSummary: "Manual-use approval only - no message has been sent.",
+    requiresHumanReview: false
+  }
+];
+
+export const clientComplianceReadinessPlaceholders: ClientComplianceReadinessPlaceholder[] = [
+  {
+    id: "client-placeholder-memphis-dnc",
+    workspaceId: "client-workspace-003",
+    placeholderType: "dnc_check",
+    readinessStatus: "placeholder_only",
+    summary: "Demo DNC readiness placeholder only; no provider check occurs.",
+    requiredBeforeLive: true,
+    noProviderCall: true,
+    clientSafe: true
+  },
+  {
+    id: "client-placeholder-memphis-10dlc",
+    workspaceId: "client-workspace-003",
+    placeholderType: "ten_dlc_registration",
+    readinessStatus: "placeholder_only",
+    summary: "Demo 10DLC placeholder only; no live registration occurs.",
+    requiredBeforeLive: true,
+    noProviderCall: true,
+    clientSafe: true
+  }
+];
+
+export const clientComplianceDivisionEvents: ClientDivisionEvent[] = [
+  {
+    id: "client-compliance-event-memphis-002",
+    leadId: "client-lead-memphis-002",
+    eventType: "missing_consent",
+    eventSummary: "Compliance Manager flagged Lead 2 for missing consent before manual draft use.",
+    managerName: "Compliance Manager",
+    clientVisible: true
+  },
+  {
+    id: "client-compliance-event-memphis-005",
+    leadId: "client-lead-memphis-005",
+    eventType: "manual_use_gate_ready",
+    eventSummary: "Compliance Manager cleared Lead 5 buyer preview for manual use only.",
+    managerName: "Compliance Manager",
+    clientVisible: true
+  }
+];
+
+export const clientWeeklyCommandReports: ClientWeeklyCommandReport[] = [
+  {
+    id: "client-weekly-report-memphis-2026-05-07",
+    workspaceId: "client-workspace-003",
+    reportWeekStart: "2026-05-01",
+    reportWeekEnd: "2026-05-07",
+    reportStatus: "client_visible",
+    reportTitle: "Memphis Virtual Wholesale Operator weekly command report",
+    executiveSummary: "The Memphis workspace has one disposition-ready lead, one hot acquisition-ready lead, and several evidence or compliance bottlenecks that need manual attention.",
+    leadFlowSummary: "Five Memphis leads remain in the client-safe operating loop across acquisition, underwriting, disposition, and compliance stages.",
+    acquisitionSummary: "Lead 1 is acquisition ready while Lead 2 still needs consent and evidence support before manual use improves.",
+    underwritingSummary: "Lead 2 still lacks ARV and repair evidence, and Lead 4 remains margin-blocked despite underwriting context.",
+    dispositionSummary: "Lead 5 is ready for buyer matching review, while Lead 3 still needs buyer demand evidence.",
+    complianceSummary: "Manual-use compliance is clear for Lead 1 and Lead 5, but Lead 2, Lead 3, and Lead 4 still need review.",
+    bottleneckSummary: "Top bottlenecks are missing ARV or repairs, buyer demand gaps, thin margin, and compliance review needs.",
+    nextWeekFocus: "Resolve missing evidence and compliance review first, then move Lead 5 through manual buyer review.",
+    clientSafeSummary: "Client-safe weekly report - no revenue, ROI, or deal outcome is guaranteed.",
+    sourceBasisSummary: "Built from demo/local CP2-CP6 records only.",
+    noRevenueGuarantee: true,
+    noRoiClaim: true,
+    noLiveActionsTaken: true,
+    requiresHumanReview: true
+  }
+];
+
+export const clientWeeklyReportMetricSnapshots: ClientWeeklyReportMetricSnapshot[] = [
+  {
+    id: "client-weekly-metrics-memphis-2026-05-07",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    totalLeads: 5,
+    hotLeadsCount: 2,
+    acquisitionReadyCount: 2,
+    appointmentReadyCount: 2,
+    evidenceMissingCount: 1,
+    underwritingReadyCount: 3,
+    offerReadyCount: 2,
+    buyerMatchCount: 2,
+    dispositionReadyCount: 1,
+    complianceBlockedCount: 1,
+    complianceNeedsReviewCount: 3,
+    manualDraftsCount: 4,
+    blockedActionsCount: 2
+  }
+];
+
+export const clientWeeklyLeadStatusRollups: ClientWeeklyLeadStatusRollup[] = [
+  {
+    id: "client-weekly-rollup-memphis-001",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    leadId: "client-lead-memphis-001",
+    leadNameOrAddress: "Lead 1 Memphis motivated seller",
+    currentStage: "acquisition",
+    statusSummary: "Lead 1 is acquisition ready with confirmed manual-use seller contact status.",
+    topBlocker: null,
+    recommendedNextStep: "Use the acquisition brief and manual call checklist for Lead 1.",
+    priorityLevel: "urgent",
+    clientSafe: true
+  },
+  {
+    id: "client-weekly-rollup-memphis-002",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    leadId: "client-lead-memphis-002",
+    leadNameOrAddress: "Lead 2 Memphis evidence gap",
+    currentStage: "compliance",
+    statusSummary: "Lead 2 remains blocked by missing consent and missing ARV or repair evidence.",
+    topBlocker: "missing_arv_or_repairs",
+    recommendedNextStep: "Collect seller consent and add ARV or repair evidence for Lead 2.",
+    priorityLevel: "high",
+    clientSafe: true
+  },
+  {
+    id: "client-weekly-rollup-memphis-003",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    leadId: "client-lead-memphis-003",
+    leadNameOrAddress: "Lead 3 Memphis buyer demand gap",
+    currentStage: "disposition",
+    statusSummary: "Lead 3 is underwritten but still needs buyer demand evidence and compliance review.",
+    topBlocker: "buyer_demand_missing",
+    recommendedNextStep: "Add buyer demand evidence before manual buyer review for Lead 3.",
+    priorityLevel: "high",
+    clientSafe: true
+  },
+  {
+    id: "client-weekly-rollup-memphis-004",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    leadId: "client-lead-memphis-004",
+    leadNameOrAddress: "Lead 4 Memphis thin margin",
+    currentStage: "blocked",
+    statusSummary: "Lead 4 remains blocked because the margin is too thin and compliance still needs review.",
+    topBlocker: "thin_margin",
+    recommendedNextStep: "Hold Lead 4 until better numbers or evidence changes the margin outlook.",
+    priorityLevel: "medium",
+    clientSafe: true
+  },
+  {
+    id: "client-weekly-rollup-memphis-005",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    leadId: "client-lead-memphis-005",
+    leadNameOrAddress: "Lead 5 Memphis disposition ready",
+    currentStage: "disposition",
+    statusSummary: "Lead 5 is ready for client review with manual-use buyer matching and compliance gates.",
+    topBlocker: null,
+    recommendedNextStep: "Review Lead 5 buyer matches and manual buyer draft with the client.",
+    priorityLevel: "urgent",
+    clientSafe: true
+  }
+];
+
+export const clientWeeklyBottlenecks: ClientWeeklyBottleneck[] = [
+  {
+    id: "client-weekly-bottleneck-memphis-arv",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    bottleneckType: "missing_arv",
+    bottleneckSummary: "ARV evidence is missing from at least one Memphis lead.",
+    affectedLeadCount: 1,
+    severity: "high",
+    recommendedFix: "Add manual ARV evidence before another underwriting pass."
+  },
+  {
+    id: "client-weekly-bottleneck-memphis-repairs",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    bottleneckType: "missing_repairs",
+    bottleneckSummary: "Repair estimates are missing from at least one Memphis lead.",
+    affectedLeadCount: 1,
+    severity: "high",
+    recommendedFix: "Add repair notes before another underwriting pass."
+  },
+  {
+    id: "client-weekly-bottleneck-memphis-demand",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    bottleneckType: "buyer_demand_missing",
+    bottleneckSummary: "Buyer demand evidence is missing for one Memphis lead.",
+    affectedLeadCount: 1,
+    severity: "medium",
+    recommendedFix: "Add buyer demand evidence before more buyer review."
+  },
+  {
+    id: "client-weekly-bottleneck-memphis-compliance",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    bottleneckType: "compliance_blocked",
+    bottleneckSummary: "Compliance review is slowing multiple Memphis leads.",
+    affectedLeadCount: 3,
+    severity: "high",
+    recommendedFix: "Resolve consent and manual-use gate issues before using drafts."
+  },
+  {
+    id: "client-weekly-bottleneck-memphis-margin",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    bottleneckType: "thin_margin",
+    bottleneckSummary: "Thin margin is blocking one Memphis lead.",
+    affectedLeadCount: 1,
+    severity: "medium",
+    recommendedFix: "Hold the lead until evidence or price context changes."
+  }
+];
+
+export const clientWeeklyRecommendedActions: ClientWeeklyRecommendedAction[] = [
+  {
+    id: "client-weekly-action-memphis-001",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    actionType: "call_seller",
+    actionSummary: "Call Lead 1 next using the acquisition brief and manual checklist.",
+    priority: "urgent",
+    relatedLeadId: "client-lead-memphis-001",
+    relatedBuyerId: null,
+    dueWindow: "today",
+    clientSafe: true
+  },
+  {
+    id: "client-weekly-action-memphis-002",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    actionType: "add_evidence",
+    actionSummary: "Collect ARV and repair evidence for Lead 2 before more underwriting review.",
+    priority: "high",
+    relatedLeadId: "client-lead-memphis-002",
+    relatedBuyerId: null,
+    dueWindow: "this_week",
+    clientSafe: true
+  },
+  {
+    id: "client-weekly-action-memphis-003",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    actionType: "add_buyer_demand_evidence",
+    actionSummary: "Add buyer demand evidence for Lead 3 before more disposition review.",
+    priority: "high",
+    relatedLeadId: "client-lead-memphis-003",
+    relatedBuyerId: null,
+    dueWindow: "this_week",
+    clientSafe: true
+  },
+  {
+    id: "client-weekly-action-memphis-004",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    actionType: "review_compliance",
+    actionSummary: "Review consent and manual-use readiness on Leads 2, 3, and 4.",
+    priority: "high",
+    relatedLeadId: "client-lead-memphis-002",
+    relatedBuyerId: null,
+    dueWindow: "this_week",
+    clientSafe: true
+  },
+  {
+    id: "client-weekly-action-memphis-005",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    actionType: "review_offer_readiness",
+    actionSummary: "Review Lead 5 buyer matches and manual-use buyer draft with the client.",
+    priority: "urgent",
+    relatedLeadId: "client-lead-memphis-005",
+    relatedBuyerId: "client-buyer-memphis-flipper",
+    dueWindow: "today",
+    clientSafe: true
+  }
+];
+
+export const clientWeeklyDivisionSummaries: ClientWeeklyDivisionSummary[] = [
+  {
+    id: "client-weekly-division-memphis-li",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    divisionName: "Lead Intelligence",
+    healthStatus: "strong",
+    summary: "Lead intelligence surfaced two high-priority Memphis opportunities.",
+    wins: ["Lead 1 and Lead 5 remain the top priorities."],
+    risks: ["Lead 2 and Lead 3 still need more evidence or review."],
+    nextActions: ["Keep the hot-lead board focused on Memphis Leads 1 and 5."]
+  },
+  {
+    id: "client-weekly-division-memphis-acq",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    divisionName: "Acquisition",
+    healthStatus: "watch",
+    summary: "Acquisition prep is healthy, but consent gaps still slow manual follow-up on some leads.",
+    wins: ["Lead 1 is fully acquisition ready."],
+    risks: ["Lead 2 still needs consent before draft use."],
+    nextActions: ["Use the call prep brief and confirm missing facts manually."]
+  },
+  {
+    id: "client-weekly-division-memphis-uw",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    divisionName: "Underwriting",
+    healthStatus: "watch",
+    summary: "Underwriting has enough data on several leads, but missing ARV and repair evidence still creates friction.",
+    wins: ["Lead 5 and Lead 3 have usable underwriting context."],
+    risks: ["Lead 2 still lacks ARV and repair support."],
+    nextActions: ["Add evidence before rerunning offer review on blocked files."]
+  },
+  {
+    id: "client-weekly-division-memphis-disp",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    divisionName: "Disposition",
+    healthStatus: "watch",
+    summary: "Disposition is working, but only one lead is ready for client review.",
+    wins: ["Lead 5 has strong buyer matching support."],
+    risks: ["Lead 3 still lacks buyer demand evidence."],
+    nextActions: ["Strengthen buyer demand evidence before more manual buyer review."]
+  },
+  {
+    id: "client-weekly-division-memphis-comp",
+    workspaceId: "client-workspace-003",
+    reportId: "client-weekly-report-memphis-2026-05-07",
+    divisionName: "Compliance",
+    healthStatus: "watch",
+    summary: "Compliance manual-use status is clear for some records, but multiple files still need review.",
+    wins: ["Lead 1 and Lead 5 have manual-use contact readiness."],
+    risks: ["Lead 2, Lead 3, and Lead 4 still need compliance review."],
+    nextActions: ["Resolve consent and manual-use gate questions before using more drafts."]
+  }
+];
+
 export function getClientBuyer(buyerId: string) {
   return clientBuyerProfiles.find((buyer) => buyer.id === buyerId);
 }
@@ -7658,4 +8630,20 @@ export function getClientUnderwritingReview(leadId: string) {
 
 export function getClientOfferReadiness(leadId: string) {
   return clientOfferReadinessGates.find((gate) => gate.leadId === leadId);
+}
+
+export function getClientComplianceStatusesForLead(leadId: string) {
+  return clientSafeContactStatuses.filter((status) => status.leadId === leadId);
+}
+
+export function getClientComplianceStatusesForBuyer(buyerId: string) {
+  return clientSafeContactStatuses.filter((status) => status.buyerId === buyerId);
+}
+
+export function getClientWeeklyReport(reportId: string) {
+  return clientWeeklyCommandReports.find((report) => report.id === reportId);
+}
+
+export function getClientLatestWeeklyReport(workspaceId = "client-workspace-003") {
+  return clientWeeklyCommandReports.find((report) => report.workspaceId === workspaceId);
 }

@@ -380,3 +380,16 @@ Production checklist:
 Prime 2 Wholesale Deal OS supports wholesale real estate operations, but it does not replace professional judgment, local/state law compliance, attorney review, title company review, or licensed professional guidance where required.
 
 Forecasts, buyer margins, assignment fees, ARV inputs, repair estimates, and probability scores are estimates or source-backed internal calculations. They are not guaranteed profits, guaranteed closings, legal advice, investment advice, or binding commitments.
+## Client Command OS
+
+The client-facing Prime2 Client Command OS now spans CP1 through CP7.
+
+Current controlled loop:
+Lead Intelligence -> Acquisition Prep -> Underwriting -> Buyer Matching -> Compliance Contact Gate -> Weekly Client Command Report
+
+CP6 and CP7 remain readiness-only:
+- no provider calls
+- no DNC checks
+- no 10DLC registration
+- no live communication
+- no guaranteed ROI or revenue claims

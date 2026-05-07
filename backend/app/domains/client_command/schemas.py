@@ -59,3 +59,65 @@ class ClientBuyerOutreachDraftCreate(BaseModel):
     buyer_id: str | None = None
     draft_type: str = "deal_preview"
     purpose: str = "manual buyer preview"
+
+
+class ClientContactConsentRecordCreate(BaseModel):
+    contact_type: str = "unknown"
+    lead_id: str | None = None
+    buyer_id: str | None = None
+    contact_name: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    consent_channel: str = "unknown"
+    consent_status: str = "unknown"
+    consent_source: str = "manual_entry"
+    consent_summary: str = ""
+    consent_captured_at: str | None = None
+    expires_at: str | None = None
+    requires_human_review: bool = False
+
+
+class ClientContactOptOutRecordCreate(BaseModel):
+    contact_type: str = "unknown"
+    lead_id: str | None = None
+    buyer_id: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    channel: str = "unknown"
+    opt_out_status: str = "unknown"
+    opt_out_source: str = "manual_entry"
+    opt_out_summary: str = ""
+    recorded_at: str = ""
+    requires_human_review: bool = True
+
+
+class ClientMessageRiskReviewCreate(BaseModel):
+    workspace_id: str
+    lead_id: str | None = None
+    buyer_id: str | None = None
+    source_draft_type: str = "unknown"
+    source_draft_id: str | None = None
+    channel: str = "unknown"
+    draft_body: str | None = None
+
+
+class ClientCommunicationApprovalGateCreate(BaseModel):
+    workspace_id: str
+    lead_id: str | None = None
+    buyer_id: str | None = None
+    source_draft_type: str = "unknown"
+    source_draft_id: str | None = None
+    contact_status_id: str | None = None
+    message_risk_review_id: str | None = None
+
+
+class ClientComplianceReadinessPlaceholderCreate(BaseModel):
+    placeholder_type: str = "dnc_check"
+    readiness_status: str = "placeholder_only"
+    summary: str = ""
+    required_before_live: bool = True
+
+
+class ClientWeeklyCommandReportCreate(BaseModel):
+    report_week_start: str = ""
+    report_week_end: str = ""

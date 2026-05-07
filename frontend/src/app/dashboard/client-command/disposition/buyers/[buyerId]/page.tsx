@@ -8,7 +8,11 @@ import { Section } from "@/components/Section";
 import {
   clientBuyerBuyBoxes,
   clientBuyerProfiles,
+  clientCommunicationApprovalGates,
+  clientContactConsentRecords,
+  clientContactOptOutRecords,
   clientDealBuyerMatches,
+  getClientComplianceStatusesForBuyer,
   formatCurrency,
   getClientBuyer,
   getClientBuyerConfidence,
@@ -27,6 +31,10 @@ export default function ClientCommandDispositionBuyerDetailPage({ params }: { pa
   const confidence = getClientBuyerConfidence(buyer.id);
   const buyBoxes = clientBuyerBuyBoxes.filter((box) => box.buyerId === buyer.id);
   const matches = clientDealBuyerMatches.filter((match) => match.buyerId === buyer.id);
+  const safeStatuses = getClientComplianceStatusesForBuyer(buyer.id);
+  const consentRecords = clientContactConsentRecords.filter((record) => record.buyerId === buyer.id);
+  const optOutRecords = clientContactOptOutRecords.filter((record) => record.buyerId === buyer.id);
+  const gates = clientCommunicationApprovalGates.filter((gate) => gate.buyerId === buyer.id);
 
   return (
     <div className="page">
@@ -103,6 +111,47 @@ export default function ClientCommandDispositionBuyerDetailPage({ params }: { pa
           )}
         </div>
       </Section>
+
+      <Section title="Compliance Manager">
+        <div className="grid-two">
+          <RecordCard title="Safe Contact Status" meta={safeStatuses[0]?.reasonSummary ?? "No buyer contact readiness recorded."} right={<Pill tone={safeStatuses[0]?.status === "safe_for_manual_use" ? "green" : safeStatuses[0]?.status === "blocked" ? "red" : "gold"}>{safeStatuses[0]?.status ?? "pending"}</Pill>}>
+            <p>Readiness check only - no provider check or live communication occurred.</p>
+            <div className="tag-row">
+              <Pill tone="gold">Manual Use Only</Pill>
+              <Pill tone="green">No Live Send</Pill>
+              <Pill tone="green">No Provider Check</Pill>
+            </div>
+          </RecordCard>
+          <RecordCard title="Communication Gate" meta={gates[0]?.clientSafeSummary ?? "No manual-use gate yet."} right={<Pill tone={gates[0]?.gateStatus === "manual_use_allowed" ? "green" : "gold"}>{gates[0]?.gateStatus ?? "pending"}</Pill>}>
+            <p>Manual-use approval only - no message has been sent.</p>
+          </RecordCard>
+        </div>
+      </Section>
+
+      <div className="grid-two">
+        <Section title="Consent Records">
+          <div className="record-list">
+            {consentRecords.length === 0 ? (
+              <RecordCard title="No consent records" meta="Consent is still missing or untracked for this buyer." right={<Pill tone="gold">review</Pill>} />
+            ) : (
+              consentRecords.map((record) => (
+                <RecordCard key={record.id} title={record.consentChannel} meta={record.consentSummary} right={<Pill tone={record.consentStatus === "confirmed" ? "green" : "gold"}>{record.consentStatus}</Pill>} />
+              ))
+            )}
+          </div>
+        </Section>
+        <Section title="Opt-Out Records">
+          <div className="record-list">
+            {optOutRecords.length === 0 ? (
+              <RecordCard title="No opt-out records" meta="No opt-out is stored for this buyer." right={<Pill tone="green">clear</Pill>} />
+            ) : (
+              optOutRecords.map((record) => (
+                <RecordCard key={record.id} title={record.channel} meta={record.optOutSummary} right={<Pill tone={record.optOutStatus === "active" ? "red" : "gold"}>{record.optOutStatus}</Pill>} />
+              ))
+            )}
+          </div>
+        </Section>
+      </div>
     </div>
   );
 }

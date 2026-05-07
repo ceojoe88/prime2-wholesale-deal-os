@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 from uuid import uuid4
 
 from sqlalchemy import desc
@@ -24,6 +25,10 @@ from app.domains.client_command.sanitizer import (
     buyer_demand_evidence_public,
     buyer_outreach_draft_public,
     buyer_profile_public,
+    communication_approval_gate_public,
+    compliance_event_public,
+    compliance_placeholder_public,
+    consent_record_public,
     deal_buyer_match_public,
     disposition_event_public,
     disposition_readiness_public,
@@ -32,17 +37,27 @@ from app.domains.client_command.sanitizer import (
     event_public,
     follow_up_draft_public,
     lead_public,
+    message_risk_review_public,
     member_public,
     missing_item_public,
     objection_draft_public,
+    opt_out_record_public,
     offer_readiness_public,
     offer_scenario_public,
     question_plan_public,
     role_public,
+    safe_contact_status_public,
     score_public,
     seller_question_public,
     underwriting_event_public,
     underwriting_review_public,
+    weekly_bottleneck_public,
+    weekly_division_summary_public,
+    weekly_lead_rollup_public,
+    weekly_metric_snapshot_public,
+    weekly_recommended_action_public,
+    weekly_report_event_public,
+    weekly_report_public,
     workspace_public,
 )
 from app.domains.client_command.scoring import missing_fields, score_client_lead
@@ -61,6 +76,11 @@ from app.models import (
     ClientBuyerDemandEvidence,
     ClientBuyerOutreachDraft,
     ClientBuyerProfile,
+    ClientCommunicationApprovalGate,
+    ClientComplianceDivisionEvent,
+    ClientComplianceReadinessPlaceholder,
+    ClientContactConsentRecord,
+    ClientContactOptOutRecord,
     ClientSellerQuestionPlan,
     ClientSellerQuestion,
     ClientObjectionResponseDraft,
@@ -72,10 +92,19 @@ from app.models import (
     ClientDealBuyerMatch,
     ClientDispositionDivisionEvent,
     ClientDispositionReadinessGate,
+    ClientMessageRiskReview,
+    ClientSafeContactStatus,
     ClientUnderwritingReview,
     ClientOfferScenario,
     ClientOfferReadinessGate,
     ClientUnderwritingDivisionEvent,
+    ClientWeeklyBottleneck,
+    ClientWeeklyCommandReport,
+    ClientWeeklyDivisionSummary,
+    ClientWeeklyLeadStatusRollup,
+    ClientWeeklyRecommendedAction,
+    ClientWeeklyReportEvent,
+    ClientWeeklyReportMetricSnapshot,
 )
 
 
@@ -169,6 +198,7 @@ def lead_detail(session: Session, lead_id: str, workspace_id: str | None = None)
     buyer_matches = ensure_buyer_matches(session, lead)
     disposition_gate = ensure_disposition_readiness(session, lead)
     outreach_drafts = ensure_buyer_outreach_drafts(session, lead)
+    safe_contacts = ensure_safe_contact_statuses_for_lead(session, lead)
     return {
         "lead": lead_public(lead),
         "score": score_public(score),
@@ -233,6 +263,29 @@ def lead_detail(session: Session, lead_id: str, workspace_id: str | None = None)
             "division_events": [
                 disposition_event_public(event)
                 for event in _disposition_events(session, lead.workspace_id, lead.id)
+            ],
+        },
+        "compliance": {
+            "consent_records": [
+                consent_record_public(record)
+                for record in _consent_records(session, lead.workspace_id, lead.id, None)
+            ],
+            "opt_out_records": [
+                opt_out_record_public(record)
+                for record in _opt_out_records(session, lead.workspace_id, lead.id, None)
+            ],
+            "safe_contact_statuses": [safe_contact_status_public(status) for status in safe_contacts],
+            "message_risk_reviews": [
+                message_risk_review_public(review)
+                for review in _message_risk_reviews(session, lead.workspace_id, lead.id, None)
+            ],
+            "communication_gates": [
+                communication_approval_gate_public(gate)
+                for gate in _communication_gates(session, lead.workspace_id, lead.id, None)
+            ],
+            "division_events": [
+                compliance_event_public(event)
+                for event in _compliance_events(session, lead.workspace_id, lead.id, None)
             ],
         },
         "safety": client_command_safety_rules(),
@@ -618,6 +671,20 @@ def buyer_detail(session: Session, buyer_id: str, workspace_id: str | None = Non
             deal_buyer_match_public(match)
             for match in _buyer_matches_for_buyer(session, buyer.workspace_id, buyer.id)
         ],
+        "compliance": {
+            "consent_records": [
+                consent_record_public(record)
+                for record in _consent_records(session, buyer.workspace_id, None, buyer.id)
+            ],
+            "opt_out_records": [
+                opt_out_record_public(record)
+                for record in _opt_out_records(session, buyer.workspace_id, None, buyer.id)
+            ],
+            "safe_contact_statuses": [
+                safe_contact_status_public(status)
+                for status in ensure_safe_contact_statuses_for_buyer(session, buyer)
+            ],
+        },
         "safety": client_command_safety_rules(),
     }
 
@@ -2429,3 +2496,1305 @@ def _action_label(action_type: str) -> str:
         "ready_for_buyer_matching_cp5": "Ready for buyer matching review",
     }
     return labels.get(action_type, "Review next best action")
+
+
+def create_consent_record(
+    session: Session,
+    workspace_id: str,
+    values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    values = values or {}
+    lead_id = str(values.get("lead_id") or "") or None
+    buyer_id = str(values.get("buyer_id") or "") or None
+    if lead_id:
+        _lead_or_404(session, lead_id, workspace_id)
+    if buyer_id:
+        _buyer_or_404(session, buyer_id, workspace_id)
+    record = ClientContactConsentRecord(
+        id=f"client-consent-{uuid4().hex[:10]}",
+        workspace_id=workspace_id,
+        lead_id=lead_id,
+        buyer_id=buyer_id,
+        contact_type=str(values.get("contact_type") or ("seller" if lead_id else "buyer" if buyer_id else "unknown")),
+        contact_name=str(values.get("contact_name") or "") or None,
+        phone=str(values.get("phone") or "") or None,
+        email=str(values.get("email") or "") or None,
+        consent_channel=str(values.get("consent_channel") or "unknown"),
+        consent_status=str(values.get("consent_status") or "unknown"),
+        consent_source=str(values.get("consent_source") or "manual_entry"),
+        consent_summary=str(values.get("consent_summary") or "Manual/demo consent record added for client-safe review."),
+        consent_captured_at=str(values.get("consent_captured_at") or "") or None,
+        expires_at=str(values.get("expires_at") or "") or None,
+        requires_human_review=bool(values.get("requires_human_review", False)),
+        client_safe=True,
+        internal_notes="Hidden compliance note.",
+    )
+    session.add(record)
+    session.flush()
+    if lead_id:
+        ensure_safe_contact_statuses_for_lead(session, _lead_or_404(session, lead_id, workspace_id), refresh=True)
+    if buyer_id:
+        ensure_safe_contact_statuses_for_buyer(session, _buyer_or_404(session, buyer_id, workspace_id), refresh=True)
+    return {"consent_record": consent_record_public(record), "safety": client_command_safety_rules()}
+
+
+def workspace_consent_records(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    records = (
+        session.query(ClientContactConsentRecord)
+        .filter(ClientContactConsentRecord.workspace_id == workspace_id)
+        .order_by(desc(ClientContactConsentRecord.created_at))
+        .all()
+    )
+    return {"workspace_id": workspace_id, "consent_records": [consent_record_public(record) for record in records], "safety": client_command_safety_rules()}
+
+
+def consent_record_detail(session: Session, record_id: str) -> dict[str, object]:
+    record = session.get(ClientContactConsentRecord, record_id)
+    if record is None:
+        raise ValueError(f"Consent record not found: {record_id}")
+    return {"consent_record": consent_record_public(record), "safety": client_command_safety_rules()}
+
+
+def create_opt_out_record(
+    session: Session,
+    workspace_id: str,
+    values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    values = values or {}
+    lead_id = str(values.get("lead_id") or "") or None
+    buyer_id = str(values.get("buyer_id") or "") or None
+    if lead_id:
+        _lead_or_404(session, lead_id, workspace_id)
+    if buyer_id:
+        _buyer_or_404(session, buyer_id, workspace_id)
+    record = ClientContactOptOutRecord(
+        id=f"client-opt-out-{uuid4().hex[:10]}",
+        workspace_id=workspace_id,
+        lead_id=lead_id,
+        buyer_id=buyer_id,
+        contact_type=str(values.get("contact_type") or ("seller" if lead_id else "buyer" if buyer_id else "unknown")),
+        phone=str(values.get("phone") or "") or None,
+        email=str(values.get("email") or "") or None,
+        channel=str(values.get("channel") or "unknown"),
+        opt_out_status=str(values.get("opt_out_status") or "unknown"),
+        opt_out_source=str(values.get("opt_out_source") or "manual_entry"),
+        opt_out_summary=str(values.get("opt_out_summary") or "Manual/demo opt-out record added for client-safe review."),
+        recorded_at=str(values.get("recorded_at") or date.today().isoformat()),
+        requires_human_review=bool(values.get("requires_human_review", True)),
+        client_safe=True,
+        internal_notes="Hidden opt-out note.",
+    )
+    session.add(record)
+    session.flush()
+    if lead_id:
+        ensure_safe_contact_statuses_for_lead(session, _lead_or_404(session, lead_id, workspace_id), refresh=True)
+    if buyer_id:
+        ensure_safe_contact_statuses_for_buyer(session, _buyer_or_404(session, buyer_id, workspace_id), refresh=True)
+    return {"opt_out_record": opt_out_record_public(record), "safety": client_command_safety_rules()}
+
+
+def workspace_opt_out_records(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    records = (
+        session.query(ClientContactOptOutRecord)
+        .filter(ClientContactOptOutRecord.workspace_id == workspace_id)
+        .order_by(desc(ClientContactOptOutRecord.created_at))
+        .all()
+    )
+    return {"workspace_id": workspace_id, "opt_out_records": [opt_out_record_public(record) for record in records], "safety": client_command_safety_rules()}
+
+
+def opt_out_record_detail(session: Session, record_id: str) -> dict[str, object]:
+    record = session.get(ClientContactOptOutRecord, record_id)
+    if record is None:
+        raise ValueError(f"Opt-out record not found: {record_id}")
+    return {"opt_out_record": opt_out_record_public(record), "safety": client_command_safety_rules()}
+
+
+def safe_contact_status_for_lead(
+    session: Session,
+    lead_id: str,
+    workspace_id: str | None = None,
+    refresh: bool = False,
+) -> dict[str, object]:
+    lead = _lead_or_404(session, lead_id, workspace_id)
+    statuses = ensure_safe_contact_statuses_for_lead(session, lead, refresh=refresh)
+    return {
+        "lead": lead_public(lead),
+        "safe_contact_statuses": [safe_contact_status_public(status) for status in statuses],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def safe_contact_status_for_buyer(
+    session: Session,
+    buyer_id: str,
+    workspace_id: str | None = None,
+    refresh: bool = False,
+) -> dict[str, object]:
+    buyer = _buyer_or_404(session, buyer_id, workspace_id)
+    statuses = ensure_safe_contact_statuses_for_buyer(session, buyer, refresh=refresh)
+    return {
+        "buyer": buyer_profile_public(buyer),
+        "safe_contact_statuses": [safe_contact_status_public(status) for status in statuses],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def compliance_blocked(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientSafeContactStatus).filter(ClientSafeContactStatus.status.in_(["blocked", "opted_out"]))
+    if workspace_id:
+        query = query.filter(ClientSafeContactStatus.workspace_id == workspace_id)
+    rows = query.order_by(desc(ClientSafeContactStatus.created_at)).all()
+    return {"workspace_id": workspace_id, "blocked": [safe_contact_status_public(row) for row in rows], "safety": client_command_safety_rules()}
+
+
+def compliance_needs_review(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientSafeContactStatus).filter(ClientSafeContactStatus.status.in_(["needs_review", "missing_consent", "placeholder_check_required"]))
+    if workspace_id:
+        query = query.filter(ClientSafeContactStatus.workspace_id == workspace_id)
+    rows = query.order_by(desc(ClientSafeContactStatus.created_at)).all()
+    return {"workspace_id": workspace_id, "needs_review": [safe_contact_status_public(row) for row in rows], "safety": client_command_safety_rules()}
+
+
+def compliance_safe_manual_use(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientSafeContactStatus).filter(ClientSafeContactStatus.status == "safe_for_manual_use")
+    if workspace_id:
+        query = query.filter(ClientSafeContactStatus.workspace_id == workspace_id)
+    rows = query.order_by(desc(ClientSafeContactStatus.created_at)).all()
+    return {"workspace_id": workspace_id, "safe_manual_use": [safe_contact_status_public(row) for row in rows], "safety": client_command_safety_rules()}
+
+
+def create_message_risk_review(
+    session: Session,
+    values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    values = values or {}
+    workspace_id = str(values.get("workspace_id") or "")
+    if not workspace_id:
+        raise ValueError("workspace_id is required")
+    _workspace_or_404(session, workspace_id)
+    lead_id = str(values.get("lead_id") or "") or None
+    buyer_id = str(values.get("buyer_id") or "") or None
+    if lead_id:
+        _lead_or_404(session, lead_id, workspace_id)
+    if buyer_id:
+        _buyer_or_404(session, buyer_id, workspace_id)
+    source_draft_type = str(values.get("source_draft_type") or "unknown")
+    source_draft_id = str(values.get("source_draft_id") or "") or None
+    channel = str(values.get("channel") or "unknown")
+    draft_body = str(values.get("draft_body") or _message_source_text(session, workspace_id, source_draft_type, source_draft_id, lead_id, buyer_id))
+    safety = validate_client_safe_text(draft_body)
+    flags = list(safety["risk_flags"])
+    blocked_terms = flags[:]
+    review_status = "passed_for_manual_use"
+    risk_level = "low"
+    if source_draft_type == "unknown" or channel == "unknown":
+        review_status = "needs_review"
+        risk_level = "medium"
+        flags.append("missing_channel_or_source_context")
+    if not safety["allowed"]:
+        review_status = "blocked"
+        risk_level = "high"
+    review = ClientMessageRiskReview(
+        id=f"client-message-risk-{uuid4().hex[:10]}",
+        workspace_id=workspace_id,
+        lead_id=lead_id,
+        buyer_id=buyer_id,
+        source_draft_type=source_draft_type,
+        source_draft_id=source_draft_id,
+        channel=channel,
+        review_status=review_status,
+        risk_level=risk_level,
+        unsafe_language_flags=sorted(set(flags)),
+        blocked_terms=sorted(set(blocked_terms)),
+        safe_rewrite_suggestion=None if review_status == "passed_for_manual_use" else "Use factual, non-urgent language and remove guarantees, pressure, and legal conclusions.",
+        reason_summary="Manual-use draft review only. No live communication or provider check occurred.",
+        manual_use_only=True,
+        no_live_send=True,
+        requires_human_review=review_status != "passed_for_manual_use",
+    )
+    session.add(review)
+    session.flush()
+    if lead_id:
+        _ensure_compliance_event(session, workspace_id, lead_id, None, "message_risk_review", f"Compliance Manager set draft review to {review_status}.")
+    if buyer_id:
+        _ensure_compliance_event(session, workspace_id, None, buyer_id, "message_risk_review", f"Compliance Manager set buyer draft review to {review_status}.")
+    return {"message_risk_review": message_risk_review_public(review), "safety": client_command_safety_rules()}
+
+
+def message_risk_review_detail(session: Session, review_id: str) -> dict[str, object]:
+    review = session.get(ClientMessageRiskReview, review_id)
+    if review is None:
+        raise ValueError(f"Message risk review not found: {review_id}")
+    return {"message_risk_review": message_risk_review_public(review), "safety": client_command_safety_rules()}
+
+
+def create_communication_approval_gate(
+    session: Session,
+    values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    values = values or {}
+    workspace_id = str(values.get("workspace_id") or "")
+    if not workspace_id:
+        raise ValueError("workspace_id is required")
+    _workspace_or_404(session, workspace_id)
+    lead_id = str(values.get("lead_id") or "") or None
+    buyer_id = str(values.get("buyer_id") or "") or None
+    source_draft_type = str(values.get("source_draft_type") or "unknown")
+    source_draft_id = str(values.get("source_draft_id") or "") or None
+    if source_draft_type == "buyer_outreach" and buyer_id:
+        buyer = _buyer_or_404(session, buyer_id, workspace_id)
+        contact_status = _select_contact_status(ensure_safe_contact_statuses_for_buyer(session, buyer, refresh=True), source_draft_type)
+    elif lead_id:
+        lead = _lead_or_404(session, lead_id, workspace_id)
+        contact_status = _select_contact_status(ensure_safe_contact_statuses_for_lead(session, lead, refresh=True), source_draft_type)
+    elif buyer_id:
+        buyer = _buyer_or_404(session, buyer_id, workspace_id)
+        contact_status = _select_contact_status(ensure_safe_contact_statuses_for_buyer(session, buyer, refresh=True), source_draft_type)
+    else:
+        raise ValueError("lead_id or buyer_id is required")
+    review_id = str(values.get("message_risk_review_id") or "") or None
+    review = session.get(ClientMessageRiskReview, review_id) if review_id else None
+    if review is None:
+        review = create_message_risk_review(
+            session,
+            {
+                "workspace_id": workspace_id,
+                "lead_id": lead_id,
+                "buyer_id": buyer_id,
+                "source_draft_type": source_draft_type,
+                "source_draft_id": source_draft_id,
+                "channel": contact_status.channel if contact_status else "unknown",
+            },
+        )["message_risk_review"]
+        review = session.get(ClientMessageRiskReview, review["id"])
+    block_reasons: list[str] = []
+    required_next_steps: list[str] = []
+    gate_status = "manual_use_allowed"
+    if contact_status is None:
+        gate_status = "needs_review"
+        block_reasons.append("contact_status_missing")
+        required_next_steps.append("check_safe_contact_status")
+    elif contact_status.status in {"blocked", "opted_out"}:
+        gate_status = "blocked"
+        block_reasons.extend(contact_status.block_reasons or [contact_status.status])
+        required_next_steps.append("respect_opt_out_and_hold_draft")
+    elif contact_status.status in {"needs_review", "missing_consent", "placeholder_check_required", "channel_not_configured"}:
+        gate_status = "needs_review"
+        block_reasons.extend(contact_status.block_reasons or [contact_status.status])
+        required_next_steps.append("resolve_manual_consent_or_placeholder_gap")
+    if review.review_status == "blocked":
+        gate_status = "blocked"
+        block_reasons.extend(review.blocked_terms or ["message_risk_blocked"])
+        required_next_steps.append("rewrite_message_for_manual_use")
+    elif review.review_status == "needs_review" and gate_status != "blocked":
+        gate_status = "needs_review"
+        required_next_steps.append("review_message_language")
+    if gate_status == "manual_use_allowed":
+        required_next_steps.append("manual_use_only_no_send")
+    gate = ClientCommunicationApprovalGate(
+        id=f"client-comm-gate-{uuid4().hex[:10]}",
+        workspace_id=workspace_id,
+        lead_id=lead_id,
+        buyer_id=buyer_id,
+        source_draft_type=source_draft_type,
+        source_draft_id=source_draft_id,
+        contact_status_id=contact_status.id if contact_status else None,
+        message_risk_review_id=review.id if review else None,
+        gate_status=gate_status if gate_status != "manual_use_allowed" else "manual_use_allowed",
+        approval_scope="manual_use_only",
+        block_reasons=sorted(set(block_reasons)),
+        required_next_steps=required_next_steps,
+        no_live_send=True,
+        no_provider_call=True,
+        no_campaign_started=True,
+        client_safe_summary="Manual-use approval only; no message has been sent.",
+        requires_human_review=gate_status != "manual_use_allowed",
+    )
+    session.add(gate)
+    session.flush()
+    _ensure_compliance_event(session, workspace_id, lead_id, buyer_id, "communication_gate", f"Compliance Manager set communication gate to {gate.gate_status}.")
+    return {"communication_approval_gate": communication_approval_gate_public(gate), "safety": client_command_safety_rules()}
+
+
+def communication_approval_gates(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientCommunicationApprovalGate)
+    if workspace_id:
+        query = query.filter(ClientCommunicationApprovalGate.workspace_id == workspace_id)
+    rows = query.order_by(desc(ClientCommunicationApprovalGate.created_at)).all()
+    return {"workspace_id": workspace_id, "communication_approval_gates": [communication_approval_gate_public(row) for row in rows], "safety": client_command_safety_rules()}
+
+
+def communication_approval_gate_detail(session: Session, gate_id: str) -> dict[str, object]:
+    gate = session.get(ClientCommunicationApprovalGate, gate_id)
+    if gate is None:
+        raise ValueError(f"Communication approval gate not found: {gate_id}")
+    return {"communication_approval_gate": communication_approval_gate_public(gate), "safety": client_command_safety_rules()}
+
+
+def create_compliance_readiness_placeholder(
+    session: Session,
+    workspace_id: str,
+    values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    values = values or {}
+    placeholder = ClientComplianceReadinessPlaceholder(
+        id=f"client-placeholder-{uuid4().hex[:10]}",
+        workspace_id=workspace_id,
+        placeholder_type=str(values.get("placeholder_type") or "dnc_check"),
+        readiness_status=str(values.get("readiness_status") or "placeholder_only"),
+        summary=str(values.get("summary") or "Manual compliance placeholder only; no provider registration or external check occurred."),
+        required_before_live=bool(values.get("required_before_live", True)),
+        no_provider_call=True,
+        client_safe=True,
+    )
+    session.add(placeholder)
+    session.flush()
+    return {"readiness_placeholder": compliance_placeholder_public(placeholder), "safety": client_command_safety_rules()}
+
+
+def workspace_compliance_placeholders(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    rows = _compliance_placeholders(session, workspace_id)
+    return {"workspace_id": workspace_id, "readiness_placeholders": [compliance_placeholder_public(row) for row in rows], "safety": client_command_safety_rules()}
+
+
+def compliance_overview(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    blocked = compliance_blocked(session, workspace_id)["blocked"]
+    needs_review = compliance_needs_review(session, workspace_id)["needs_review"]
+    safe_rows = compliance_safe_manual_use(session, workspace_id)["safe_manual_use"]
+    query = session.query(ClientCommunicationApprovalGate)
+    if workspace_id:
+        query = query.filter(ClientCommunicationApprovalGate.workspace_id == workspace_id)
+    gates = query.order_by(desc(ClientCommunicationApprovalGate.created_at)).all()
+    return {
+        "workspace_id": workspace_id,
+        "blocked_count": len(blocked),
+        "needs_review_count": len(needs_review),
+        "safe_manual_use_count": len(safe_rows),
+        "gate_count": len(gates),
+        "blocked": blocked,
+        "needs_review": needs_review,
+        "safe_manual_use": safe_rows,
+        "communication_approval_gates": [communication_approval_gate_public(gate) for gate in gates],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_weekly_report(
+    session: Session,
+    workspace_id: str,
+    values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    values = values or {}
+    week_end = str(values.get("report_week_end") or date.today().isoformat())
+    week_start = str(values.get("report_week_start") or (date.fromisoformat(week_end) - timedelta(days=6)).isoformat())
+    report = ClientWeeklyCommandReport(
+        id=f"client-weekly-report-{uuid4().hex[:10]}",
+        workspace_id=workspace_id,
+        report_week_start=week_start,
+        report_week_end=week_end,
+    )
+    session.add(report)
+    session.flush()
+    _refresh_weekly_report(session, workspace, report)
+    return weekly_report_detail(session, report.id)
+
+
+def workspace_weekly_reports(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    rows = _weekly_reports(session, workspace_id)
+    return {"workspace_id": workspace_id, "weekly_reports": [weekly_report_public(row) for row in rows], "safety": client_command_safety_rules()}
+
+
+def weekly_report_detail(session: Session, report_id: str) -> dict[str, object]:
+    report = session.get(ClientWeeklyCommandReport, report_id)
+    if report is None:
+        raise ValueError(f"Weekly report not found: {report_id}")
+    return {
+        "weekly_report": weekly_report_public(report),
+        "metrics": [weekly_metric_snapshot_public(item) for item in _weekly_metric_snapshots(session, report.workspace_id, report.id)],
+        "lead_rollups": [weekly_lead_rollup_public(item) for item in _weekly_lead_rollups(session, report.workspace_id, report.id)],
+        "bottlenecks": [weekly_bottleneck_public(item) for item in _weekly_bottlenecks(session, report.workspace_id, report.id)],
+        "recommended_actions": [weekly_recommended_action_public(item) for item in _weekly_recommended_actions(session, report.workspace_id, report.id)],
+        "division_summaries": [weekly_division_summary_public(item) for item in _weekly_division_summaries(session, report.workspace_id, report.id)],
+        "events": [weekly_report_event_public(item) for item in _weekly_report_events(session, report.workspace_id, report.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def mark_weekly_report_reviewed(session: Session, report_id: str) -> dict[str, object]:
+    report = session.get(ClientWeeklyCommandReport, report_id)
+    if report is None:
+        raise ValueError(f"Weekly report not found: {report_id}")
+    report.report_status = "reviewed"
+    session.flush()
+    return weekly_report_detail(session, report_id)
+
+
+def mark_weekly_report_client_visible(session: Session, report_id: str) -> dict[str, object]:
+    report = session.get(ClientWeeklyCommandReport, report_id)
+    if report is None:
+        raise ValueError(f"Weekly report not found: {report_id}")
+    report.report_status = "client_visible"
+    session.flush()
+    return weekly_report_detail(session, report_id)
+
+
+def weekly_report_metrics(session: Session, report_id: str) -> dict[str, object]:
+    report = session.get(ClientWeeklyCommandReport, report_id)
+    if report is None:
+        raise ValueError(f"Weekly report not found: {report_id}")
+    return {"report_id": report_id, "metrics": [weekly_metric_snapshot_public(item) for item in _weekly_metric_snapshots(session, report.workspace_id, report.id)], "safety": client_command_safety_rules()}
+
+
+def weekly_report_lead_rollups(session: Session, report_id: str) -> dict[str, object]:
+    report = session.get(ClientWeeklyCommandReport, report_id)
+    if report is None:
+        raise ValueError(f"Weekly report not found: {report_id}")
+    return {"report_id": report_id, "lead_rollups": [weekly_lead_rollup_public(item) for item in _weekly_lead_rollups(session, report.workspace_id, report.id)], "safety": client_command_safety_rules()}
+
+
+def weekly_report_bottlenecks(session: Session, report_id: str) -> dict[str, object]:
+    report = session.get(ClientWeeklyCommandReport, report_id)
+    if report is None:
+        raise ValueError(f"Weekly report not found: {report_id}")
+    return {"report_id": report_id, "bottlenecks": [weekly_bottleneck_public(item) for item in _weekly_bottlenecks(session, report.workspace_id, report.id)], "safety": client_command_safety_rules()}
+
+
+def weekly_report_recommended_actions(session: Session, report_id: str) -> dict[str, object]:
+    report = session.get(ClientWeeklyCommandReport, report_id)
+    if report is None:
+        raise ValueError(f"Weekly report not found: {report_id}")
+    return {"report_id": report_id, "recommended_actions": [weekly_recommended_action_public(item) for item in _weekly_recommended_actions(session, report.workspace_id, report.id)], "safety": client_command_safety_rules()}
+
+
+def weekly_report_division_summaries(session: Session, report_id: str) -> dict[str, object]:
+    report = session.get(ClientWeeklyCommandReport, report_id)
+    if report is None:
+        raise ValueError(f"Weekly report not found: {report_id}")
+    return {"report_id": report_id, "division_summaries": [weekly_division_summary_public(item) for item in _weekly_division_summaries(session, report.workspace_id, report.id)], "safety": client_command_safety_rules()}
+
+
+def reports_overview(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientWeeklyCommandReport)
+    if workspace_id:
+        query = query.filter(ClientWeeklyCommandReport.workspace_id == workspace_id)
+    reports = query.order_by(desc(ClientWeeklyCommandReport.created_at)).all()
+    latest = reports[0] if reports else None
+    latest_detail = weekly_report_detail(session, latest.id) if latest else None
+    return {
+        "workspace_id": workspace_id,
+        "latest_report": latest_detail["weekly_report"] if latest_detail else None,
+        "report_count": len(reports),
+        "latest_bottleneck": latest_detail["bottlenecks"][0] if latest_detail and latest_detail["bottlenecks"] else None,
+        "next_recommended_action": latest_detail["recommended_actions"][0] if latest_detail and latest_detail["recommended_actions"] else None,
+        "safety": client_command_safety_rules(),
+    }
+
+
+def reports_weekly(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientWeeklyCommandReport)
+    if workspace_id:
+        query = query.filter(ClientWeeklyCommandReport.workspace_id == workspace_id)
+    reports = query.order_by(desc(ClientWeeklyCommandReport.created_at)).all()
+    return {"workspace_id": workspace_id, "weekly_reports": [weekly_report_public(item) for item in reports], "safety": client_command_safety_rules()}
+
+
+def reports_bottlenecks(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    report = _latest_weekly_report(session, workspace_id)
+    if report is None:
+        return {"workspace_id": workspace_id, "bottlenecks": [], "safety": client_command_safety_rules()}
+    return weekly_report_bottlenecks(session, report.id)
+
+
+def reports_recommended_actions(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    report = _latest_weekly_report(session, workspace_id)
+    if report is None:
+        return {"workspace_id": workspace_id, "recommended_actions": [], "safety": client_command_safety_rules()}
+    return weekly_report_recommended_actions(session, report.id)
+
+
+def ensure_safe_contact_statuses_for_lead(
+    session: Session,
+    lead: ClientLeadProfile,
+    refresh: bool = False,
+) -> list[ClientSafeContactStatus]:
+    existing = _safe_contact_statuses(session, lead.workspace_id, lead.id, None)
+    if existing and not refresh:
+        return existing
+    if refresh:
+        session.query(ClientSafeContactStatus).filter(ClientSafeContactStatus.lead_id == lead.id).delete(synchronize_session=False)
+    channels = _contact_channels_for_lead(session, lead)
+    statuses: list[ClientSafeContactStatus] = []
+    placeholders = {item.placeholder_type: item for item in _compliance_placeholders(session, lead.workspace_id)}
+    for channel in channels:
+        status = (
+            session.query(ClientSafeContactStatus)
+            .filter(ClientSafeContactStatus.lead_id == lead.id, ClientSafeContactStatus.channel == channel)
+            .first()
+        )
+        if status is None:
+            status = ClientSafeContactStatus(
+                id=f"client-safe-contact-{uuid4().hex[:10]}",
+                workspace_id=lead.workspace_id,
+                lead_id=lead.id,
+                contact_type="seller",
+                channel=channel,
+            )
+            session.add(status)
+        _populate_safe_contact_status(session, status, lead.workspace_id, lead.id, None, channel, placeholders)
+        statuses.append(status)
+    if statuses:
+        _ensure_compliance_event(session, lead.workspace_id, lead.id, None, "safe_contact_status", "Compliance Manager refreshed seller contact readiness.")
+    session.flush()
+    return _safe_contact_statuses(session, lead.workspace_id, lead.id, None)
+
+
+def ensure_safe_contact_statuses_for_buyer(
+    session: Session,
+    buyer: ClientBuyerProfile,
+    refresh: bool = False,
+) -> list[ClientSafeContactStatus]:
+    existing = _safe_contact_statuses(session, buyer.workspace_id, None, buyer.id)
+    if existing and not refresh:
+        return existing
+    if refresh:
+        session.query(ClientSafeContactStatus).filter(ClientSafeContactStatus.buyer_id == buyer.id).delete(synchronize_session=False)
+    channels = _contact_channels_for_buyer(session, buyer)
+    statuses: list[ClientSafeContactStatus] = []
+    placeholders = {item.placeholder_type: item for item in _compliance_placeholders(session, buyer.workspace_id)}
+    for channel in channels:
+        status = (
+            session.query(ClientSafeContactStatus)
+            .filter(ClientSafeContactStatus.buyer_id == buyer.id, ClientSafeContactStatus.channel == channel)
+            .first()
+        )
+        if status is None:
+            status = ClientSafeContactStatus(
+                id=f"client-safe-contact-{uuid4().hex[:10]}",
+                workspace_id=buyer.workspace_id,
+                buyer_id=buyer.id,
+                contact_type="buyer",
+                channel=channel,
+            )
+            session.add(status)
+        _populate_safe_contact_status(session, status, buyer.workspace_id, None, buyer.id, channel, placeholders)
+        statuses.append(status)
+    if statuses:
+        _ensure_compliance_event(session, buyer.workspace_id, None, buyer.id, "safe_contact_status", "Compliance Manager refreshed buyer contact readiness.")
+    session.flush()
+    return _safe_contact_statuses(session, buyer.workspace_id, None, buyer.id)
+
+
+def _populate_safe_contact_status(
+    session: Session,
+    status: ClientSafeContactStatus,
+    workspace_id: str,
+    lead_id: str | None,
+    buyer_id: str | None,
+    channel: str,
+    placeholders: dict[str, ClientComplianceReadinessPlaceholder],
+) -> None:
+    disposition_gate = (
+        session.query(ClientDispositionReadinessGate)
+        .filter(ClientDispositionReadinessGate.lead_id == lead_id)
+        .first()
+        if lead_id
+        else None
+    )
+    consents = [
+        record
+        for record in _consent_records(session, workspace_id, lead_id, buyer_id)
+        if record.consent_channel in {channel, "unknown"}
+    ]
+    opt_outs = [
+        record
+        for record in _opt_out_records(session, workspace_id, lead_id, buyer_id)
+        if record.channel in {channel, "all", "unknown"}
+    ]
+    consent = consents[0] if consents else None
+    active_opt_out = next((record for record in opt_outs if record.opt_out_status == "active"), None)
+    dnc = placeholders.get("dnc_check")
+    ten_dlc = placeholders.get("ten_dlc_registration")
+    block_reasons: list[str] = []
+    risk_flags: list[str] = []
+    if active_opt_out:
+        status.status = "blocked"
+        status.opt_out_status_snapshot = active_opt_out.opt_out_status
+        status.consent_status_snapshot = consent.consent_status if consent else "unknown"
+        block_reasons.append("active_opt_out")
+        status.can_use_manual_draft = False
+    elif consent is None or consent.consent_status in {"missing", "unknown", "disputed"}:
+        status.status = (
+            "needs_review"
+            if disposition_gate and disposition_gate.readiness_status in {"buyer_demand_missing", "ready_for_client_review"}
+            else "missing_consent"
+        )
+        status.consent_status_snapshot = consent.consent_status if consent else "missing"
+        status.opt_out_status_snapshot = "unknown" if not opt_outs else opt_outs[0].opt_out_status
+        block_reasons.append("consent_missing_or_unconfirmed")
+        status.can_use_manual_draft = False
+    elif consent.consent_status == "expired":
+        status.status = "needs_review"
+        status.consent_status_snapshot = "expired"
+        status.opt_out_status_snapshot = "unknown" if not opt_outs else opt_outs[0].opt_out_status
+        block_reasons.append("consent_expired")
+        status.can_use_manual_draft = False
+    else:
+        status.status = "safe_for_manual_use"
+        status.consent_status_snapshot = consent.consent_status
+        status.opt_out_status_snapshot = "cleared" if not opt_outs else opt_outs[0].opt_out_status
+        status.can_use_manual_draft = True
+    if channel == "call":
+        status.dnc_placeholder_status = "placeholder_required" if not dnc or dnc.readiness_status != "documented" else "review_needed"
+        status.ten_dlc_placeholder_status = "not_applicable"
+    elif channel == "sms":
+        status.dnc_placeholder_status = "placeholder_required" if not dnc or dnc.readiness_status != "documented" else "review_needed"
+        status.ten_dlc_placeholder_status = "placeholder_required" if not ten_dlc or ten_dlc.readiness_status != "documented" else "review_needed"
+    else:
+        status.dnc_placeholder_status = "not_applicable"
+        status.ten_dlc_placeholder_status = "not_applicable"
+    if channel == "unknown":
+        status.status = "needs_review"
+        block_reasons.append("channel_unknown")
+        status.can_use_manual_draft = False
+    if channel == "email" and consent is not None and consent.email is None:
+        risk_flags.append("email_not_recorded")
+    if channel in {"call", "sms"} and consent is not None and consent.phone is None:
+        risk_flags.append("phone_not_recorded")
+    status.reason_summary = _contact_reason_summary(status.status, channel, consent, active_opt_out)
+    status.block_reasons = sorted(set(block_reasons))
+    status.risk_flags = sorted(set(risk_flags))
+    status.no_live_send = True
+    status.no_provider_check = True
+    status.requires_human_review = status.status != "safe_for_manual_use"
+    status.client_safe_summary = "Readiness check only; no provider check or live communication occurred."
+
+
+def _refresh_weekly_report(
+    session: Session,
+    workspace: ClientWorkspace,
+    report: ClientWeeklyCommandReport,
+) -> None:
+    leads = (
+        session.query(ClientLeadProfile)
+        .filter(ClientLeadProfile.workspace_id == workspace.id)
+        .order_by(ClientLeadProfile.created_at)
+        .all()
+    )
+    session.query(ClientWeeklyReportMetricSnapshot).filter(ClientWeeklyReportMetricSnapshot.report_id == report.id).delete(synchronize_session=False)
+    session.query(ClientWeeklyLeadStatusRollup).filter(ClientWeeklyLeadStatusRollup.report_id == report.id).delete(synchronize_session=False)
+    session.query(ClientWeeklyBottleneck).filter(ClientWeeklyBottleneck.report_id == report.id).delete(synchronize_session=False)
+    session.query(ClientWeeklyRecommendedAction).filter(ClientWeeklyRecommendedAction.report_id == report.id).delete(synchronize_session=False)
+    session.query(ClientWeeklyDivisionSummary).filter(ClientWeeklyDivisionSummary.report_id == report.id).delete(synchronize_session=False)
+    session.query(ClientWeeklyReportEvent).filter(ClientWeeklyReportEvent.report_id == report.id).delete(synchronize_session=False)
+
+    hot_leads = 0
+    acquisition_ready = 0
+    appointment_ready = 0
+    evidence_missing = 0
+    underwriting_ready = 0
+    offer_ready = 0
+    buyer_match_count = 0
+    disposition_ready = 0
+    compliance_blocked = 0
+    compliance_needs_review = 0
+    manual_drafts = 0
+    blocked_actions = 0
+    bottlenecks: dict[str, int] = {}
+
+    for lead in leads:
+        score = ensure_score(session, lead)
+        brief = ensure_acquisition_brief(session, lead)
+        readiness = ensure_appointment_readiness(session, lead)
+        packet = ensure_evidence_packet(session, lead)
+        review = ensure_underwriting_review(session, lead, packet)
+        offer_gate = ensure_offer_readiness(session, lead, packet, review)
+        matches = ensure_buyer_matches(session, lead)
+        disposition_gate = ensure_disposition_readiness(session, lead)
+        follow_up = ensure_follow_up_drafts(session, lead)
+        buyer_drafts = ensure_buyer_outreach_drafts(session, lead)
+        compliance_statuses = ensure_safe_contact_statuses_for_lead(session, lead)
+
+        if score.final_priority_score >= 78:
+            hot_leads += 1
+        if brief and not brief.requires_human_review:
+            acquisition_ready += 1
+        if readiness.appointment_ready:
+            appointment_ready += 1
+        if packet.evidence_status == "missing_evidence":
+            evidence_missing += 1
+        if review.max_allowable_offer is not None:
+            underwriting_ready += 1
+        if offer_gate.readiness_status == "ready_for_client_review":
+            offer_ready += 1
+        if matches:
+            buyer_match_count += 1
+        if disposition_gate.readiness_status == "ready_for_client_review":
+            disposition_ready += 1
+        if any(item.status in {"blocked", "opted_out"} for item in compliance_statuses):
+            compliance_blocked += 1
+            blocked_actions += 1
+        if any(item.status in {"needs_review", "missing_consent", "placeholder_check_required"} for item in compliance_statuses):
+            compliance_needs_review += 1
+        manual_drafts += len(follow_up) + len(buyer_drafts)
+
+        top_blocker = None
+        if "arv_estimate_missing" in offer_gate.block_reasons or "repair_estimate_missing" in offer_gate.block_reasons:
+            bottlenecks["missing_arv"] = bottlenecks.get("missing_arv", 0) + 1
+            bottlenecks["missing_repairs"] = bottlenecks.get("missing_repairs", 0) + 1
+            top_blocker = "missing_arv_or_repairs"
+        if "buyer_demand_evidence_missing" in disposition_gate.block_reasons:
+            bottlenecks["buyer_demand_missing"] = bottlenecks.get("buyer_demand_missing", 0) + 1
+            top_blocker = top_blocker or "buyer_demand_missing"
+        if any(item.status in {"needs_review", "missing_consent", "blocked", "opted_out"} for item in compliance_statuses):
+            bottlenecks["compliance_blocked"] = bottlenecks.get("compliance_blocked", 0) + 1
+            top_blocker = top_blocker or "compliance_review_needed"
+        if "thin_or_negative_offer_margin" in offer_gate.block_reasons:
+            bottlenecks["thin_margin"] = bottlenecks.get("thin_margin", 0) + 1
+            top_blocker = top_blocker or "thin_margin"
+        if _missing_items(session, lead.workspace_id, lead.id):
+            bottlenecks["missing_contact_data"] = bottlenecks.get("missing_contact_data", 0) + 1
+            top_blocker = top_blocker or "missing_contact_data"
+
+        rollup = ClientWeeklyLeadStatusRollup(
+            id=f"client-rollup-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+            report_id=report.id,
+            lead_id=lead.id,
+            lead_name_or_address=lead.display_name or lead.property_address_summary,
+            current_stage=_lead_stage(offer_gate, disposition_gate, compliance_statuses),
+            status_summary=_lead_status_summary(score, offer_gate, disposition_gate, compliance_statuses),
+            top_blocker=top_blocker,
+            recommended_next_step=_weekly_next_step(score, offer_gate, disposition_gate, compliance_statuses),
+            priority_level="urgent" if score.final_priority_score >= 78 else "high" if score.final_priority_score >= 65 else "medium" if score.final_priority_score >= 40 else "low",
+            client_safe=True,
+        )
+        session.add(rollup)
+
+    metric = ClientWeeklyReportMetricSnapshot(
+        id=f"client-metric-{uuid4().hex[:10]}",
+        workspace_id=workspace.id,
+        report_id=report.id,
+        total_leads=len(leads),
+        hot_leads_count=hot_leads,
+        acquisition_ready_count=acquisition_ready,
+        appointment_ready_count=appointment_ready,
+        evidence_missing_count=evidence_missing,
+        underwriting_ready_count=underwriting_ready,
+        offer_ready_count=offer_ready,
+        buyer_match_count=buyer_match_count,
+        disposition_ready_count=disposition_ready,
+        compliance_blocked_count=compliance_blocked,
+        compliance_needs_review_count=compliance_needs_review,
+        manual_drafts_count=manual_drafts,
+        blocked_actions_count=blocked_actions,
+    )
+    session.add(metric)
+
+    for bottleneck_type, count in bottlenecks.items():
+        session.add(
+            ClientWeeklyBottleneck(
+                id=f"client-bottleneck-{uuid4().hex[:10]}",
+                workspace_id=workspace.id,
+                report_id=report.id,
+                bottleneck_type=bottleneck_type,
+                bottleneck_summary=_bottleneck_summary(bottleneck_type),
+                affected_lead_count=count,
+                severity="high" if count >= 2 else "medium",
+                recommended_fix=_bottleneck_fix(bottleneck_type),
+            )
+        )
+
+    for action in _build_weekly_actions(session, workspace.id, report.id):
+        session.add(ClientWeeklyRecommendedAction(id=f"client-weekly-action-{uuid4().hex[:10]}", workspace_id=workspace.id, report_id=report.id, **action))
+
+    for division in _build_division_summaries(metric):
+        session.add(ClientWeeklyDivisionSummary(id=f"client-division-summary-{uuid4().hex[:10]}", workspace_id=workspace.id, report_id=report.id, **division))
+
+    report.report_status = "generated"
+    report.report_title = f"{workspace.workspace_name} weekly command report"
+    report.executive_summary = f"{metric.hot_leads_count} hot leads, {metric.offer_ready_count} offer-ready leads, and {metric.disposition_ready_count} disposition-ready leads are in view for this week."
+    report.lead_flow_summary = f"{metric.total_leads} leads are tracked, with {metric.acquisition_ready_count} acquisition-ready and {metric.underwriting_ready_count} underwritten."
+    report.acquisition_summary = f"{metric.appointment_ready_count} leads are appointment-ready while manual drafts remain manual-use only."
+    report.underwriting_summary = f"{metric.evidence_missing_count} leads still need evidence before underwriting or offer confidence improves."
+    report.disposition_summary = f"{metric.buyer_match_count} leads have buyer matching context and {metric.disposition_ready_count} are ready for client review."
+    report.compliance_summary = f"{metric.compliance_blocked_count} leads are compliance blocked and {metric.compliance_needs_review_count} need manual review."
+    report.bottleneck_summary = ", ".join(_bottleneck_summary(name) for name in bottlenecks.keys()) or "No major bottlenecks detected in the current demo records."
+    report.next_week_focus = _weekly_focus(metric, bottlenecks)
+    report.client_safe_summary = "Client-safe weekly report only. No revenue, ROI, buyer purchase, or outcome is guaranteed."
+    report.source_basis_summary = "Built from CP2-CP6 lead, acquisition, underwriting, disposition, and compliance records only."
+    report.no_revenue_guarantee = True
+    report.no_roi_claim = True
+    report.no_live_actions_taken = True
+    report.requires_human_review = metric.compliance_blocked_count > 0 or metric.evidence_missing_count > 0
+    session.add(
+        ClientWeeklyReportEvent(
+            id=f"client-report-event-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+            report_id=report.id,
+            event_type="weekly_report_generated",
+            event_summary="Client Success Manager generated a deterministic weekly command report.",
+            manager_name="Client Success Manager",
+            client_visible=True,
+        )
+    )
+    session.flush()
+
+
+def _contact_channels_for_lead(session: Session, lead: ClientLeadProfile) -> list[str]:
+    channels: list[str] = []
+    if "phone" in (lead.contact_channels_present or []):
+        channels.extend(["call", "sms"])
+    if "email" in (lead.contact_channels_present or []):
+        channels.append("email")
+    channels.extend(
+        record.consent_channel
+        for record in _consent_records(session, lead.workspace_id, lead.id, None)
+        if record.consent_channel not in {"unknown", ""}
+    )
+    return sorted(set(channels or ["call"]))
+
+
+def _contact_channels_for_buyer(session: Session, buyer: ClientBuyerProfile) -> list[str]:
+    channels: list[str] = []
+    if buyer.communication_preference in {"call", "sms", "email"}:
+        channels.append(buyer.communication_preference)
+    channels.extend(
+        record.consent_channel
+        for record in _consent_records(session, buyer.workspace_id, None, buyer.id)
+        if record.consent_channel not in {"unknown", ""}
+    )
+    return sorted(set(channels or ["email"]))
+
+
+def _message_source_text(
+    session: Session,
+    workspace_id: str,
+    source_draft_type: str,
+    source_draft_id: str | None,
+    lead_id: str | None,
+    buyer_id: str | None,
+) -> str:
+    if source_draft_id:
+        if source_draft_type == "seller_follow_up":
+            draft = session.get(ClientFollowUpDraft, source_draft_id)
+            if draft and draft.workspace_id == workspace_id:
+                return draft.draft_body
+        if source_draft_type == "buyer_outreach":
+            draft = session.get(ClientBuyerOutreachDraft, source_draft_id)
+            if draft and draft.workspace_id == workspace_id:
+                return draft.draft_body
+    if lead_id and source_draft_type == "seller_follow_up":
+        draft = next(iter(_follow_up_drafts(session, workspace_id, lead_id)), None)
+        if draft:
+            return draft.draft_body
+    if lead_id and source_draft_type == "buyer_outreach":
+        draft = next(iter(_buyer_outreach_drafts(session, workspace_id, lead_id)), None)
+        if draft:
+            return draft.draft_body
+    if buyer_id and source_draft_type == "buyer_outreach":
+        drafts = (
+            session.query(ClientBuyerOutreachDraft)
+            .filter(ClientBuyerOutreachDraft.workspace_id == workspace_id, ClientBuyerOutreachDraft.buyer_id == buyer_id)
+            .order_by(desc(ClientBuyerOutreachDraft.created_at))
+            .all()
+        )
+        if drafts:
+            return drafts[0].draft_body
+    return "Manual-use draft only."
+
+
+def _select_contact_status(statuses: list[ClientSafeContactStatus], source_draft_type: str) -> ClientSafeContactStatus | None:
+    preferred = "email"
+    if source_draft_type == "seller_follow_up":
+        preferred = "call"
+    elif source_draft_type == "buyer_outreach":
+        preferred = "email"
+    return next((item for item in statuses if item.channel == preferred), statuses[0] if statuses else None)
+
+
+def _contact_reason_summary(
+    status: str,
+    channel: str,
+    consent: ClientContactConsentRecord | None,
+    active_opt_out: ClientContactOptOutRecord | None,
+) -> str:
+    if active_opt_out is not None:
+        return f"{channel} channel is blocked because an opt-out is active."
+    if consent is None:
+        return f"{channel} channel needs manual consent tracking before even manual-use drafting is considered safe."
+    if status == "safe_for_manual_use":
+        return f"{channel} channel is cleared for manual-use drafting only. No live communication is allowed."
+    return f"{channel} channel needs review because consent is {consent.consent_status}."
+
+
+def _lead_stage(
+    offer_gate: ClientOfferReadinessGate,
+    disposition_gate: ClientDispositionReadinessGate,
+    compliance_statuses: list[ClientSafeContactStatus],
+) -> str:
+    if any(item.status in {"blocked", "opted_out"} for item in compliance_statuses):
+        return "compliance"
+    if disposition_gate.readiness_status == "ready_for_client_review":
+        return "disposition"
+    if offer_gate.readiness_status == "ready_for_client_review":
+        return "offer_readiness"
+    if offer_gate.readiness_status == "underwriting_review_needed":
+        return "underwriting"
+    if offer_gate.readiness_status == "evidence_missing":
+        return "acquisition"
+    return "lead_intelligence"
+
+
+def _lead_status_summary(
+    score: ClientLeadIntelligenceScore,
+    offer_gate: ClientOfferReadinessGate,
+    disposition_gate: ClientDispositionReadinessGate,
+    compliance_statuses: list[ClientSafeContactStatus],
+) -> str:
+    if any(item.status in {"blocked", "opted_out"} for item in compliance_statuses):
+        return "Compliance gate is blocked until opt-out or manual review issues are resolved."
+    if disposition_gate.readiness_status == "buyer_demand_missing":
+        return "Lead is underwritten but still needs buyer demand evidence."
+    if offer_gate.readiness_status != "ready_for_client_review":
+        return f"Offer readiness is {offer_gate.readiness_status}."
+    return f"Lead priority {score.final_priority_score} is ready for the next client-review step."
+
+
+def _weekly_next_step(
+    score: ClientLeadIntelligenceScore,
+    offer_gate: ClientOfferReadinessGate,
+    disposition_gate: ClientDispositionReadinessGate,
+    compliance_statuses: list[ClientSafeContactStatus],
+) -> str:
+    if any(item.status in {"blocked", "opted_out"} for item in compliance_statuses):
+        return "Review consent or opt-out records before using any draft manually."
+    if "arv_estimate_missing" in offer_gate.block_reasons or "repair_estimate_missing" in offer_gate.block_reasons:
+        return "Add ARV and repair evidence before more underwriting review."
+    if "buyer_demand_evidence_missing" in disposition_gate.block_reasons:
+        return "Add buyer demand evidence or stronger buy box matches."
+    if "thin_or_negative_offer_margin" in offer_gate.block_reasons:
+        return "Hold the lead until price or evidence changes improve margin."
+    return _action_label(score.recommended_next_action)
+
+
+def _bottleneck_summary(bottleneck_type: str) -> str:
+    mapping = {
+        "missing_contact_data": "Missing seller contact data is slowing manual follow-up prep.",
+        "missing_seller_motivation": "Seller motivation details are incomplete.",
+        "missing_arv": "ARV evidence is missing from underwriting-ready leads.",
+        "missing_repairs": "Repair estimates are missing from underwriting review.",
+        "buyer_demand_missing": "Buyer demand evidence is missing for leads that are otherwise progressing.",
+        "compliance_blocked": "Compliance review is blocking manual-use readiness.",
+        "human_review_needed": "Human review flags are stacking up.",
+        "thin_margin": "Thin deal margin is blocking offer or disposition readiness.",
+        "stale_follow_up": "Manual follow-up drafts exist without newer review.",
+        "unclear_buy_box": "Buyer buy boxes are too unclear for high-confidence matching.",
+    }
+    return mapping.get(bottleneck_type, "Manual review bottleneck detected.")
+
+
+def _bottleneck_fix(bottleneck_type: str) -> str:
+    mapping = {
+        "missing_contact_data": "Collect confirmed seller contact details and log consent manually.",
+        "missing_seller_motivation": "Use the acquisition brief and question plan to capture motivation and timeline.",
+        "missing_arv": "Add manual ARV evidence before another underwriting pass.",
+        "missing_repairs": "Add repair notes before another underwriting pass.",
+        "buyer_demand_missing": "Add buyer demand evidence or stronger buy box matches before disposition review.",
+        "compliance_blocked": "Review consent, opt-out, and channel placeholders before using any manual draft.",
+        "human_review_needed": "Work the human-review queue before adding more manual drafts.",
+        "thin_margin": "Hold or re-evaluate the opportunity after better data arrives.",
+        "stale_follow_up": "Refresh manual follow-up drafts with current lead context.",
+        "unclear_buy_box": "Clarify buyer preferences and proof-of-funds posture manually.",
+    }
+    return mapping.get(bottleneck_type, "Review the relevant division queue.")
+
+
+def _weekly_focus(metric: ClientWeeklyReportMetricSnapshot, bottlenecks: dict[str, int]) -> str:
+    if bottlenecks.get("missing_arv") or bottlenecks.get("missing_repairs"):
+        return "Tighten underwriting inputs first, then revisit offer readiness."
+    if bottlenecks.get("buyer_demand_missing"):
+        return "Collect buyer demand evidence before spending more time on blocked disposition leads."
+    if metric.compliance_needs_review_count or metric.compliance_blocked_count:
+        return "Resolve consent and opt-out questions before any manual outreach planning."
+    return "Advance the hottest client-safe leads through manual review in order of score and readiness."
+
+
+def _build_weekly_actions(session: Session, workspace_id: str, report_id: str) -> list[dict[str, object]]:
+    report_rollups = _weekly_lead_rollups(session, workspace_id, report_id)
+    actions: list[dict[str, object]] = []
+    for rollup in report_rollups[:5]:
+        action_type = "human_review"
+        if rollup.top_blocker == "missing_arv_or_repairs":
+            action_type = "add_evidence"
+        elif rollup.top_blocker == "buyer_demand_missing":
+            action_type = "add_buyer_demand_evidence"
+        elif rollup.top_blocker == "compliance_review_needed":
+            action_type = "review_compliance"
+        elif rollup.current_stage == "acquisition":
+            action_type = "call_seller"
+        actions.append(
+            {
+                "action_type": action_type,
+                "action_summary": rollup.recommended_next_step,
+                "priority": rollup.priority_level if rollup.priority_level in {"low", "medium", "high", "urgent"} else "medium",
+                "related_lead_id": rollup.lead_id,
+                "related_buyer_id": None,
+                "due_window": "this_week" if rollup.priority_level != "urgent" else "today",
+                "client_safe": True,
+            }
+        )
+    return actions
+
+
+def _build_division_summaries(metric: ClientWeeklyReportMetricSnapshot) -> list[dict[str, object]]:
+    lead_health = "strong" if metric.hot_leads_count and metric.evidence_missing_count <= 1 else "watch" if metric.total_leads else "blocked"
+    acquisition_health = "strong" if metric.appointment_ready_count else "watch" if metric.manual_drafts_count else "blocked"
+    underwriting_health = "strong" if metric.offer_ready_count else "watch" if metric.evidence_missing_count else "blocked"
+    disposition_health = "strong" if metric.disposition_ready_count else "watch" if metric.buyer_match_count else "blocked"
+    compliance_health = "blocked" if metric.compliance_blocked_count else "watch" if metric.compliance_needs_review_count else "strong"
+    return [
+        {
+            "division_name": "Lead Intelligence",
+            "health_status": lead_health,
+            "summary": "Lead intelligence remains deterministic and workspace-scoped.",
+            "wins": [f"{metric.hot_leads_count} hot leads identified."],
+            "risks": [f"{metric.total_leads - metric.hot_leads_count} leads are below the hot threshold."],
+            "next_actions": ["Work the highest-priority leads first."],
+        },
+        {
+            "division_name": "Acquisition",
+            "health_status": acquisition_health,
+            "summary": "Acquisition prep is manual-use only.",
+            "wins": [f"{metric.appointment_ready_count} leads are appointment-ready."],
+            "risks": [f"{metric.manual_drafts_count} manual drafts still need human use and review."],
+            "next_actions": ["Use the call brief and question plan before any manual outreach."],
+        },
+        {
+            "division_name": "Underwriting",
+            "health_status": underwriting_health,
+            "summary": "Underwriting remains decision support only.",
+            "wins": [f"{metric.underwriting_ready_count} leads have underwriting math."],
+            "risks": [f"{metric.evidence_missing_count} leads still need evidence."],
+            "next_actions": ["Add ARV and repair evidence where missing."],
+        },
+        {
+            "division_name": "Disposition",
+            "health_status": disposition_health,
+            "summary": "Disposition remains manual-use and non-live.",
+            "wins": [f"{metric.disposition_ready_count} leads are ready for client review."],
+            "risks": [f"{metric.buyer_match_count - metric.disposition_ready_count if metric.buyer_match_count > metric.disposition_ready_count else 0} leads still need stronger buyer demand."],
+            "next_actions": ["Improve buyer demand evidence before any manual deal preview."],
+        },
+        {
+            "division_name": "Compliance",
+            "health_status": compliance_health,
+            "summary": "Compliance is a readiness gate only; no live channels are enabled.",
+            "wins": [f"{metric.compliance_blocked_count} blocked manual-use contacts are clearly surfaced."],
+            "risks": [f"{metric.compliance_needs_review_count} records need consent or channel review."],
+            "next_actions": ["Resolve consent and opt-out questions before manual use."],
+        },
+    ]
+
+
+def _consent_records(
+    session: Session,
+    workspace_id: str,
+    lead_id: str | None,
+    buyer_id: str | None,
+) -> list[ClientContactConsentRecord]:
+    query = session.query(ClientContactConsentRecord).filter(ClientContactConsentRecord.workspace_id == workspace_id)
+    if lead_id is not None:
+        query = query.filter(ClientContactConsentRecord.lead_id == lead_id)
+    if buyer_id is not None:
+        query = query.filter(ClientContactConsentRecord.buyer_id == buyer_id)
+    return query.order_by(desc(ClientContactConsentRecord.created_at)).all()
+
+
+def _opt_out_records(
+    session: Session,
+    workspace_id: str,
+    lead_id: str | None,
+    buyer_id: str | None,
+) -> list[ClientContactOptOutRecord]:
+    query = session.query(ClientContactOptOutRecord).filter(ClientContactOptOutRecord.workspace_id == workspace_id)
+    if lead_id is not None:
+        query = query.filter(ClientContactOptOutRecord.lead_id == lead_id)
+    if buyer_id is not None:
+        query = query.filter(ClientContactOptOutRecord.buyer_id == buyer_id)
+    return query.order_by(desc(ClientContactOptOutRecord.created_at)).all()
+
+
+def _safe_contact_statuses(
+    session: Session,
+    workspace_id: str,
+    lead_id: str | None,
+    buyer_id: str | None,
+) -> list[ClientSafeContactStatus]:
+    query = session.query(ClientSafeContactStatus).filter(ClientSafeContactStatus.workspace_id == workspace_id)
+    if lead_id is not None:
+        query = query.filter(ClientSafeContactStatus.lead_id == lead_id)
+    if buyer_id is not None:
+        query = query.filter(ClientSafeContactStatus.buyer_id == buyer_id)
+    return query.order_by(ClientSafeContactStatus.channel).all()
+
+
+def _message_risk_reviews(
+    session: Session,
+    workspace_id: str,
+    lead_id: str | None,
+    buyer_id: str | None,
+) -> list[ClientMessageRiskReview]:
+    query = session.query(ClientMessageRiskReview).filter(ClientMessageRiskReview.workspace_id == workspace_id)
+    if lead_id is not None:
+        query = query.filter(ClientMessageRiskReview.lead_id == lead_id)
+    if buyer_id is not None:
+        query = query.filter(ClientMessageRiskReview.buyer_id == buyer_id)
+    return query.order_by(desc(ClientMessageRiskReview.created_at)).all()
+
+
+def _communication_gates(
+    session: Session,
+    workspace_id: str,
+    lead_id: str | None,
+    buyer_id: str | None,
+) -> list[ClientCommunicationApprovalGate]:
+    query = session.query(ClientCommunicationApprovalGate).filter(ClientCommunicationApprovalGate.workspace_id == workspace_id)
+    if lead_id is not None:
+        query = query.filter(ClientCommunicationApprovalGate.lead_id == lead_id)
+    if buyer_id is not None:
+        query = query.filter(ClientCommunicationApprovalGate.buyer_id == buyer_id)
+    return query.order_by(desc(ClientCommunicationApprovalGate.created_at)).all()
+
+
+def _compliance_placeholders(session: Session, workspace_id: str) -> list[ClientComplianceReadinessPlaceholder]:
+    return (
+        session.query(ClientComplianceReadinessPlaceholder)
+        .filter(ClientComplianceReadinessPlaceholder.workspace_id == workspace_id)
+        .order_by(ClientComplianceReadinessPlaceholder.placeholder_type)
+        .all()
+    )
+
+
+def _compliance_events(
+    session: Session,
+    workspace_id: str,
+    lead_id: str | None,
+    buyer_id: str | None,
+) -> list[ClientComplianceDivisionEvent]:
+    query = session.query(ClientComplianceDivisionEvent).filter(ClientComplianceDivisionEvent.workspace_id == workspace_id)
+    if lead_id is not None:
+        query = query.filter(ClientComplianceDivisionEvent.lead_id == lead_id)
+    if buyer_id is not None:
+        query = query.filter(ClientComplianceDivisionEvent.buyer_id == buyer_id)
+    return query.order_by(desc(ClientComplianceDivisionEvent.created_at)).all()
+
+
+def _ensure_compliance_event(
+    session: Session,
+    workspace_id: str,
+    lead_id: str | None,
+    buyer_id: str | None,
+    event_type: str,
+    summary: str,
+) -> None:
+    event = (
+        session.query(ClientComplianceDivisionEvent)
+        .filter(
+            ClientComplianceDivisionEvent.workspace_id == workspace_id,
+            ClientComplianceDivisionEvent.lead_id == lead_id,
+            ClientComplianceDivisionEvent.buyer_id == buyer_id,
+            ClientComplianceDivisionEvent.event_type == event_type,
+        )
+        .first()
+    )
+    if event is None:
+        event = ClientComplianceDivisionEvent(
+            id=f"client-compliance-event-{uuid4().hex[:10]}",
+            workspace_id=workspace_id,
+            lead_id=lead_id,
+            buyer_id=buyer_id,
+            event_type=event_type,
+        )
+        session.add(event)
+    event.event_summary = summary
+    event.manager_name = "Compliance Manager"
+    event.client_visible = True
+
+
+def _weekly_reports(session: Session, workspace_id: str) -> list[ClientWeeklyCommandReport]:
+    return (
+        session.query(ClientWeeklyCommandReport)
+        .filter(ClientWeeklyCommandReport.workspace_id == workspace_id)
+        .order_by(desc(ClientWeeklyCommandReport.created_at))
+        .all()
+    )
+
+
+def _latest_weekly_report(session: Session, workspace_id: str | None) -> ClientWeeklyCommandReport | None:
+    query = session.query(ClientWeeklyCommandReport)
+    if workspace_id:
+        query = query.filter(ClientWeeklyCommandReport.workspace_id == workspace_id)
+    return query.order_by(desc(ClientWeeklyCommandReport.created_at)).first()
+
+
+def _weekly_metric_snapshots(session: Session, workspace_id: str, report_id: str) -> list[ClientWeeklyReportMetricSnapshot]:
+    return (
+        session.query(ClientWeeklyReportMetricSnapshot)
+        .filter(ClientWeeklyReportMetricSnapshot.workspace_id == workspace_id, ClientWeeklyReportMetricSnapshot.report_id == report_id)
+        .order_by(desc(ClientWeeklyReportMetricSnapshot.created_at))
+        .all()
+    )
+
+
+def _weekly_lead_rollups(session: Session, workspace_id: str, report_id: str) -> list[ClientWeeklyLeadStatusRollup]:
+    return (
+        session.query(ClientWeeklyLeadStatusRollup)
+        .filter(ClientWeeklyLeadStatusRollup.workspace_id == workspace_id, ClientWeeklyLeadStatusRollup.report_id == report_id)
+        .order_by(desc(ClientWeeklyLeadStatusRollup.priority_level), ClientWeeklyLeadStatusRollup.lead_name_or_address)
+        .all()
+    )
+
+
+def _weekly_bottlenecks(session: Session, workspace_id: str, report_id: str) -> list[ClientWeeklyBottleneck]:
+    return (
+        session.query(ClientWeeklyBottleneck)
+        .filter(ClientWeeklyBottleneck.workspace_id == workspace_id, ClientWeeklyBottleneck.report_id == report_id)
+        .order_by(desc(ClientWeeklyBottleneck.affected_lead_count), ClientWeeklyBottleneck.bottleneck_type)
+        .all()
+    )
+
+
+def _weekly_recommended_actions(session: Session, workspace_id: str, report_id: str) -> list[ClientWeeklyRecommendedAction]:
+    return (
+        session.query(ClientWeeklyRecommendedAction)
+        .filter(ClientWeeklyRecommendedAction.workspace_id == workspace_id, ClientWeeklyRecommendedAction.report_id == report_id)
+        .order_by(desc(ClientWeeklyRecommendedAction.created_at))
+        .all()
+    )
+
+
+def _weekly_division_summaries(session: Session, workspace_id: str, report_id: str) -> list[ClientWeeklyDivisionSummary]:
+    return (
+        session.query(ClientWeeklyDivisionSummary)
+        .filter(ClientWeeklyDivisionSummary.workspace_id == workspace_id, ClientWeeklyDivisionSummary.report_id == report_id)
+        .order_by(ClientWeeklyDivisionSummary.division_name)
+        .all()
+    )
+
+
+def _weekly_report_events(session: Session, workspace_id: str, report_id: str) -> list[ClientWeeklyReportEvent]:
+    return (
+        session.query(ClientWeeklyReportEvent)
+        .filter(ClientWeeklyReportEvent.workspace_id == workspace_id, ClientWeeklyReportEvent.report_id == report_id)
+        .order_by(desc(ClientWeeklyReportEvent.created_at))
+        .all()
+    )
