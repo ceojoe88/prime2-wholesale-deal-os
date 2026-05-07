@@ -64,7 +64,7 @@ V27 adds Prime 2 memory and learning. It stores source-cited memory items, learn
 
 V31 adds the real deal execution pack. It gives Prime 2 a First Deal Cockpit for the first real wholesale loop: real lead batches, QA, manual seller calls, underwriting, offer decisioning, buyer validation, contract-ready readiness, title/attorney prep, assignment-fee evidence, field-test reporting, and execution coaching. It is guidance and tracking only; it cannot contact sellers or buyers, execute contracts, submit title packets, handle payments, or bypass owner approval.
 
-CP1 and CP2 add the first customer-facing Prime2 Client Command OS layer. CP1 introduces tenant-safe client workspaces, roles, members, and scoped client permissions. CP2 introduces a client-safe Lead Intelligence Division that scores motivation, urgency, equity, distress, contactability, deal probability, missing data, and final priority without exposing internal Prime governance, raw provider payloads, admin-only controls, or live provider actions.
+CP1 through CP4 add the first customer-facing Prime2 Client Command OS layer. CP1 introduces tenant-safe client workspaces, roles, members, and scoped client permissions. CP2 introduces a client-safe Lead Intelligence Division that scores motivation, urgency, equity, distress, contactability, deal probability, missing data, and final priority. CP3 adds Acquisition Manager prep for seller briefs, question plans, manual drafts, and appointment readiness. CP4 adds Underwriting Manager evidence packets, transparent MAO math, offer scenarios, and readiness gates. Client Command never exposes internal Prime governance, raw provider payloads, admin-only controls, live provider actions, legal guidance, or execution controls.
 
 ## Backend Modules
 
@@ -88,7 +88,7 @@ CP1 and CP2 add the first customer-facing Prime2 Client Command OS layer. CP1 in
 - `app/domains/market_enrichment/*`: V26 market profiles, comps, rent estimates, buyer activity snapshots, lead source ROI records, deterministic heat scoring, ARV confidence, demand confidence, source-quality gates, and sanitizers that label strategy outputs as estimate-only.
 - `app/domains/prime_memory/*`: V27 source-cited memory items, learning signals, scoring weight recommendations, playbook recommendations, approved AI context projection, external sanitization, and guards against unsupported claims, auto-applied scoring, compliance overrides, and portal strategy exposure.
 - `app/domains/real_deal_execution/*`: V31 first deal execution cockpit with batch records, status workflow, call checklist generation, offer decision scoring, buyer validation gates, contract-ready gates, assignment-fee evidence checks, field-test reports, learning-signal creation, sanitization, and hard blocks against live outreach, legal/title/payment/contract execution, and unsupported 10K+ claims.
-- `app/domains/client_command/*`: CP1/CP2 client-facing command foundation with workspace/member/role permissions, client lead profiles, deterministic Lead Intelligence scoring, missing-data records, next-best-action recommendations, division events, sanitizers, and safety guards against provider calls, billing, e-signature, legal guidance, fake ROI, internal governance exposure, and raw provider payload exposure.
+- `app/domains/client_command/*`: CP1-CP4 client-facing command foundation with workspace/member/role permissions, client lead profiles, deterministic Lead Intelligence scoring, acquisition prep, question plans, manual draft queues, appointment readiness, evidence packets, underwriting reviews, offer scenarios, offer readiness gates, division events, sanitizers, and safety guards against provider calls, billing, e-signature, legal guidance, fake ROI, internal governance exposure, raw provider payload exposure, external property data pulls, provider sync, and autonomous fulfillment.
 - `app/domain/seller_acquisition.py`: seller safety language guard, draft-only follow-up engine, seller pipeline command center, and offer packet prep gate.
 - `app/domain/contract_control.py`: V4 contract prep gate, title handoff safety summary, assignment readiness gate, and contract/title language guard.
 - `app/domain/communications.py`: V5 communication safety checks, dry-run receipts, owner approval gate, idempotency gate, blocked attempt audit, and mock email/SMS adapters.
@@ -1108,6 +1108,62 @@ V31 safety boundary:
 
 - The cockpit does not make calls, send messages, publish portals, execute contracts, submit title packets, handle payments, provide legal guidance, or create guaranteed fee/profit claims.
 - Contract-ready remains an internal readiness mark for external attorney/title process.
+
+## Client Command CP3 + CP4
+
+CP3 and CP4 extend `app.domains.client_command` instead of creating a separate customer system.
+
+Backend additions:
+
+- `ClientAcquisitionBrief`
+- `ClientSellerQuestionPlan`
+- `ClientSellerQuestion`
+- `ClientObjectionResponseDraft`
+- `ClientFollowUpDraft`
+- `ClientAppointmentReadinessReview`
+- `ClientAcquisitionDivisionEvent`
+- `ClientDealEvidencePacket`
+- `ClientDealEvidenceItem`
+- `ClientUnderwritingReview`
+- `ClientOfferScenario`
+- `ClientOfferReadinessGate`
+- `ClientUnderwritingDivisionEvent`
+
+API additions:
+
+- `/api/v1/client-command/leads/{lead_id}/acquisition-brief`
+- `/api/v1/client-command/leads/{lead_id}/question-plan`
+- `/api/v1/client-command/leads/{lead_id}/objection-drafts`
+- `/api/v1/client-command/leads/{lead_id}/follow-up-drafts`
+- `/api/v1/client-command/leads/{lead_id}/appointment-readiness`
+- `/api/v1/client-command/leads/{lead_id}/deal-evidence-packet`
+- `/api/v1/client-command/leads/{lead_id}/evidence-items`
+- `/api/v1/client-command/leads/{lead_id}/underwriting-review`
+- `/api/v1/client-command/leads/{lead_id}/offer-readiness`
+- `/api/v1/client-command/acquisition/briefs`
+- `/api/v1/client-command/acquisition/needs-review`
+- `/api/v1/client-command/underwriting/ready-review`
+- `/api/v1/client-command/underwriting/blocked`
+- `/api/v1/client-command/underwriting/needs-human-review`
+
+Frontend additions:
+
+- `/dashboard/client-command/acquisition`
+- `/dashboard/client-command/acquisition/briefs`
+- `/dashboard/client-command/acquisition/needs-review`
+- `/dashboard/client-command/underwriting`
+- `/dashboard/client-command/underwriting/ready-review`
+- `/dashboard/client-command/underwriting/blocked`
+
+CP3 consumes CP2 lead scores and missing-data records. It does not replace CP2 scoring. CP4 consumes lead profile, CP2 score/missing data, manual/demo underwriting inputs, and evidence records. It does not claim live comp accuracy, title accuracy, tax accuracy, ARV accuracy, or guaranteed profit.
+
+CP3/CP4 safety boundary:
+
+- Drafts are manual-use only.
+- Underwriting is decision support only.
+- No outbound provider actions occur.
+- No offers, contracts, messages, provider syncs, payments, skip tracing, DNC provider checks, title calls, tax calls, MLS calls, or legal guidance occur.
+- Sanitizers hide internal notes, raw provider payloads, audit internals, provider config, secrets, legal conclusions, hidden policy logic, and unsafe execution fields.
 - Mobile call queues and cockpit call queues are manual capture and guidance only.
 - Prime 2 execution coach recommendations are advisory and cannot override owner approval, compliance, buyer margin protection, evidence requirements, or existing V5/V13/V22/V30 gates.
 

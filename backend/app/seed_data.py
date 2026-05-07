@@ -125,11 +125,24 @@ from app.models import (
     CallIntelligenceSession,
     CallObjectionRecord,
     CallTranscriptInput,
+    ClientAcquisitionBrief,
+    ClientAcquisitionDivisionEvent,
+    ClientAppointmentReadinessReview,
+    ClientDealEvidenceItem,
+    ClientDealEvidencePacket,
+    ClientFollowUpDraft,
     ClientLeadDivisionEvent,
     ClientLeadIntelligenceScore,
     ClientLeadMissingDataItem,
     ClientLeadNextBestAction,
     ClientLeadProfile,
+    ClientObjectionResponseDraft,
+    ClientOfferReadinessGate,
+    ClientOfferScenario,
+    ClientSellerQuestion,
+    ClientSellerQuestionPlan,
+    ClientUnderwritingDivisionEvent,
+    ClientUnderwritingReview,
     ClientWorkspace,
     ClientWorkspaceMember,
     ClientWorkspaceRole,
@@ -8661,6 +8674,11 @@ CLIENT_COMMAND_PERMISSIONS = [
     "client_command.leads_view",
     "client_command.leads_manage",
     "client_command.reports_view",
+    "client_command.acquisition_view",
+    "client_command.acquisition_manage",
+    "client_command.underwriting_view",
+    "client_command.underwriting_manage",
+    "client_command.offer_review",
     "client_command.admin",
 ]
 
@@ -8676,9 +8694,9 @@ def build_client_workspace_records() -> list[dict[str, object]]:
             "market_focus": ["Dallas TX", "Fort Worth TX"],
             "allowed_permissions": CLIENT_COMMAND_PERMISSIONS,
             "safety_rules": [
-                "No outbound provider actions in CP1/CP2.",
+                "No outbound provider actions in CP1-CP4.",
                 "No internal Prime governance or raw provider payload exposure.",
-                "Lead intelligence is deterministic and client-safe.",
+                "Lead intelligence, acquisition prep, and underwriting review are deterministic and client-safe.",
             ],
             "onboarding_notes": "Client workspace foundation seeded for safe command-center review.",
             "internal_prime_governance_visible": False,
@@ -8698,10 +8716,12 @@ def build_client_workspace_records() -> list[dict[str, object]]:
             "allowed_permissions": [
                 "client_command.view",
                 "client_command.leads_view",
+                "client_command.acquisition_view",
+                "client_command.underwriting_view",
                 "client_command.reports_view",
             ],
             "safety_rules": [
-                "No outbound provider actions in CP1/CP2.",
+                "No outbound provider actions in CP1-CP4.",
                 "Workspace data remains tenant-isolated.",
             ],
             "onboarding_notes": "Second workspace used to validate tenant isolation.",
@@ -8737,6 +8757,8 @@ def build_client_workspace_role_records() -> list[dict[str, object]]:
             "permissions": [
                 "client_command.view",
                 "client_command.leads_view",
+                "client_command.acquisition_view",
+                "client_command.underwriting_view",
                 "client_command.reports_view",
             ],
             "tenant_safe": True,
@@ -8753,6 +8775,8 @@ def build_client_workspace_role_records() -> list[dict[str, object]]:
             "permissions": [
                 "client_command.view",
                 "client_command.leads_view",
+                "client_command.acquisition_view",
+                "client_command.underwriting_view",
                 "client_command.reports_view",
             ],
             "tenant_safe": True,
@@ -9099,7 +9123,7 @@ def build_client_lead_missing_data_records() -> list[dict[str, object]]:
             "workspace_id": "client-workspace-001",
             "lead_id": "client-lead-003",
             "field_name": "contact_channels_present",
-            "reason": "Contactability data is missing; no provider lookup is performed in CP1/CP2.",
+            "reason": "Contactability data is missing; no provider lookup is performed in CP1-CP4.",
             "severity": "high",
             "resolution_status": "open",
             "blocks_readiness": True,
@@ -9133,6 +9157,560 @@ def build_client_lead_division_event_records() -> list[dict[str, object]]:
             "safe_for_client": True,
             "internal_prime_governance_visible": False,
             "raw_provider_payload_exposed": False,
+        },
+    ]
+
+
+def build_client_acquisition_brief_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-acq-brief-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "seller_summary": "South Dallas absentee owner with tired-landlord and deferred-maintenance signals.",
+            "lead_priority_snapshot": {"final_priority_score": 80, "recommended_next_action": "owner_review_hot_lead"},
+            "motivation_hypothesis": "Likely motivated by absentee ownership, tired landlord context, and deferred maintenance.",
+            "urgency_hypothesis": "Timeline appears strong but must be confirmed by the seller.",
+            "property_context_summary": "Single-family lead in Dallas 75216 with high equity signal and vacancy/code notes.",
+            "recommended_call_objective": "Confirm motivation, timeline, condition, price expectation, and appointment fit.",
+            "suggested_opening_angle": "Open with a calm property check-in and ask what the seller wants to solve.",
+            "top_questions_to_ask_summary": "Ask motivation, timeline, condition, asking price, decision authority, and occupancy.",
+            "sensitive_topics_to_avoid": [
+                "Do not pressure the seller.",
+                "Do not imply legal conclusions.",
+                "Do not claim buyer demand without evidence.",
+            ],
+            "suggested_tone": "calm, curious, respectful",
+            "confidence_level": "high",
+            "requires_human_review": True,
+            "manager_name": "Acquisition Manager",
+            "source_basis_summary": "Built from CP2 score, lead profile fields, and missing-data checklist.",
+            "client_safe_summary": "Manual seller conversation prep only; no outbound action has occurred.",
+        },
+        {
+            "id": "client-acq-brief-003",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "seller_summary": "Incomplete vacant lead missing address, contactability, valuation, and motivation facts.",
+            "lead_priority_snapshot": {"final_priority_score": 16, "recommended_next_action": "complete_missing_data"},
+            "motivation_hypothesis": "Motivation is unconfirmed and requires basic data collection before seller prep.",
+            "urgency_hypothesis": "Urgency is weak because timeline and contactability are not reliable.",
+            "property_context_summary": "Vacancy signal exists, but property address and valuation are incomplete.",
+            "recommended_call_objective": "Research missing data before attempting seller conversation planning.",
+            "suggested_opening_angle": "Do not use seller-facing language until the property and contact facts are confirmed.",
+            "top_questions_to_ask_summary": "Confirm property address, contact channel, motivation, timeline, and ownership context.",
+            "sensitive_topics_to_avoid": ["Do not imply verified ownership.", "Do not make pricing or urgency claims."],
+            "suggested_tone": "careful, verification-first",
+            "confidence_level": "low",
+            "requires_human_review": True,
+            "manager_name": "Acquisition Manager",
+            "source_basis_summary": "Built from CP2 missing-data state.",
+            "client_safe_summary": "Research-only brief; no outbound action has occurred.",
+        },
+    ]
+
+
+def build_client_seller_question_plan_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-question-plan-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "plan_status": "ready_for_manual_use",
+            "total_questions": 2,
+            "high_priority_count": 2,
+            "missing_data_focus_count": 0,
+            "client_safe_summary": "Manual-use question plan for seller discovery.",
+        },
+        {
+            "id": "client-question-plan-003",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "plan_status": "needs_review",
+            "total_questions": 2,
+            "high_priority_count": 2,
+            "missing_data_focus_count": 2,
+            "client_safe_summary": "Missing-data question plan; requires review before use.",
+        },
+    ]
+
+
+def build_client_seller_question_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-question-001",
+            "question_plan_id": "client-question-plan-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "question_text": "What has you thinking about selling this property now?",
+            "question_category": "motivation",
+            "priority": "high",
+            "reason": "Motivation drives acquisition readiness.",
+            "tied_missing_data_key": None,
+            "client_safe": True,
+        },
+        {
+            "id": "client-question-002",
+            "question_plan_id": "client-question-plan-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "question_text": "What repairs or condition concerns should we account for?",
+            "question_category": "condition",
+            "priority": "high",
+            "reason": "Repair context is needed for underwriting.",
+            "tied_missing_data_key": None,
+            "client_safe": True,
+        },
+        {
+            "id": "client-question-003",
+            "question_plan_id": "client-question-plan-003",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "question_text": "Can you confirm the property address before any review?",
+            "question_category": "access_showing",
+            "priority": "high",
+            "reason": "Property address is missing.",
+            "tied_missing_data_key": "property_address_summary",
+            "client_safe": True,
+        },
+        {
+            "id": "client-question-004",
+            "question_plan_id": "client-question-plan-003",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "question_text": "What is the best manual follow-up channel after the basic property facts are verified?",
+            "question_category": "access_showing",
+            "priority": "high",
+            "reason": "Contactability data is missing.",
+            "tied_missing_data_key": "contact_channels_present",
+            "client_safe": True,
+        },
+    ]
+
+
+def build_client_objection_response_draft_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-objection-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "objection_type": "price_too_low",
+            "seller_objection": "The number feels lower than expected.",
+            "suggested_response": "I understand. The number should reflect repairs, timeline, and as-is assumptions. If your target is different, I can note it for manual review.",
+            "risk_level": "medium",
+            "requires_human_review": True,
+            "client_safe": True,
+            "manual_use_only": True,
+        },
+        {
+            "id": "client-objection-002",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "objection_type": "trust_concern",
+            "seller_objection": "How do I know this is legitimate?",
+            "suggested_response": "Fair question. Any paperwork should be reviewed by qualified professionals. I can keep the next step clear and simple for manual review.",
+            "risk_level": "medium",
+            "requires_human_review": True,
+            "client_safe": True,
+            "manual_use_only": True,
+        },
+    ]
+
+
+def build_client_follow_up_draft_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-follow-up-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "channel_type": "sms_draft",
+            "draft_body": "Manual note: follow up about the property and ask whether the seller still wants to talk through options.",
+            "purpose": "simple seller check-in",
+            "risk_level": "low",
+            "approval_status": "draft_only",
+            "manual_use_only": True,
+            "no_live_send": True,
+            "unsafe_language_flag": False,
+        },
+        {
+            "id": "client-follow-up-002",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "channel_type": "call_note",
+            "draft_body": "Manual note: verify the property address and contact facts before any seller conversation.",
+            "purpose": "missing-data research",
+            "risk_level": "low",
+            "approval_status": "draft_only",
+            "manual_use_only": True,
+            "no_live_send": True,
+            "unsafe_language_flag": False,
+        },
+    ]
+
+
+def build_client_appointment_readiness_review_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-appt-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "readiness_score": 86,
+            "appointment_ready": True,
+            "missing_requirements": [],
+            "recommended_next_step": "Use the manual seller question plan and confirm appointment logistics.",
+            "reason_summary": "Core motivation, contact, timeline, condition signal, and asking price are present.",
+            "confidence_level": "high",
+            "requires_human_review": False,
+        },
+        {
+            "id": "client-appt-003",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "readiness_score": 22,
+            "appointment_ready": False,
+            "missing_requirements": ["seller_motivation", "phone_or_email", "property_condition", "asking_price_or_expectation", "cp2_missing_data_score"],
+            "recommended_next_step": "Complete missing seller and property data before appointment review.",
+            "reason_summary": "Missing data blocks appointment readiness.",
+            "confidence_level": "low",
+            "requires_human_review": True,
+        },
+    ]
+
+
+def build_client_acquisition_division_event_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-acq-event-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "event_type": "acquisition_brief",
+            "event_summary": "Acquisition Manager prepared a manual-use call brief.",
+            "manager_name": "Acquisition Manager",
+            "client_visible": True,
+        }
+    ]
+
+
+def build_client_deal_evidence_packet_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-evidence-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "property_address": "Dallas, TX 75216",
+            "seller_motivation_summary": "Absentee owner, tired landlord, deferred-maintenance signals.",
+            "property_condition_summary": "Deferred-maintenance evidence requires seller confirmation.",
+            "occupancy_status": "vacancy signal",
+            "title_status_summary": "Not externally verified; qualified review required for any real file.",
+            "evidence_status": "ready_for_underwriting",
+            "missing_evidence_count": 0,
+            "required_evidence_summary": [],
+            "client_safe_summary": "Ready for decision-support underwriting; no provider calls occurred.",
+            "confidence_level": "high",
+            "requires_human_review": False,
+        },
+        {
+            "id": "client-evidence-002",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-002",
+            "property_address": "Fort Worth, TX 76104",
+            "seller_motivation_summary": "Inherited and out-of-area owner signals.",
+            "property_condition_summary": "Condition evidence missing.",
+            "occupancy_status": "occupancy not confirmed",
+            "title_status_summary": "Probate context needs external review.",
+            "evidence_status": "missing_evidence",
+            "missing_evidence_count": 3,
+            "required_evidence_summary": ["repair_note", "comp_note", "occupancy_note"],
+            "client_safe_summary": "Missing ARV and repair support; no values are invented.",
+            "confidence_level": "low",
+            "requires_human_review": True,
+        },
+        {
+            "id": "client-evidence-003",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "property_address": "",
+            "seller_motivation_summary": "Seller motivation not confirmed.",
+            "property_condition_summary": "No condition evidence recorded.",
+            "occupancy_status": "vacancy signal only",
+            "title_status_summary": "Not reviewed.",
+            "evidence_status": "missing_evidence",
+            "missing_evidence_count": 5,
+            "required_evidence_summary": ["seller_note", "repair_note", "comp_note", "occupancy_note", "title_note"],
+            "client_safe_summary": "Research-only packet; no underwriting readiness.",
+            "confidence_level": "low",
+            "requires_human_review": True,
+        },
+    ]
+
+
+def build_client_deal_evidence_item_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-evidence-item-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "packet_id": "client-evidence-001",
+            "item_type": "seller_note",
+            "item_summary": "Seller signals include absentee ownership and tired-landlord context.",
+            "source_type": "system_generated",
+            "confidence_level": "high",
+            "client_safe": True,
+            "internal_notes": "Hidden support note.",
+        },
+        {
+            "id": "client-evidence-item-002",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "packet_id": "client-evidence-001",
+            "item_type": "repair_note",
+            "item_summary": "Manual demo repair note supports repair-estimate review.",
+            "source_type": "manual",
+            "confidence_level": "medium",
+            "client_safe": True,
+            "internal_notes": "Hidden support note.",
+        },
+        {
+            "id": "client-evidence-item-003",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "packet_id": "client-evidence-001",
+            "item_type": "comp_note",
+            "item_summary": "Manual comp note supports placeholder ARV review.",
+            "source_type": "manual",
+            "confidence_level": "medium",
+            "client_safe": True,
+            "internal_notes": "No live provider call.",
+        },
+        {
+            "id": "client-evidence-item-004",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "packet_id": "client-evidence-001",
+            "item_type": "occupancy_note",
+            "item_summary": "Vacancy signal needs seller confirmation before showing/access planning.",
+            "source_type": "system_generated",
+            "confidence_level": "medium",
+            "client_safe": True,
+            "internal_notes": "Hidden support note.",
+        },
+        {
+            "id": "client-evidence-item-005",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "packet_id": "client-evidence-001",
+            "item_type": "title_note",
+            "item_summary": "Title status is not verified and needs qualified review for any real file.",
+            "source_type": "manual",
+            "confidence_level": "low",
+            "client_safe": True,
+            "internal_notes": "Hidden support note.",
+        },
+        {
+            "id": "client-evidence-item-006",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-002",
+            "packet_id": "client-evidence-002",
+            "item_type": "seller_note",
+            "item_summary": "Inherited/out-of-area seller context is present.",
+            "source_type": "system_generated",
+            "confidence_level": "medium",
+            "client_safe": True,
+            "internal_notes": "Hidden support note.",
+        },
+    ]
+
+
+def build_client_underwriting_review_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-underwriting-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "packet_id": "client-evidence-001",
+            "arv_estimate": 238000,
+            "repair_estimate": 42000,
+            "holding_cost_estimate": 8000,
+            "desired_assignment_fee": 10000,
+            "max_allowable_offer": 106600,
+            "conservative_offer": 95940,
+            "standard_offer": 106600,
+            "aggressive_offer": 111930,
+            "margin_warning": False,
+            "confidence_level": "high",
+            "assumptions_summary": "Formula: ARV * 0.70 - repairs - desired assignment fee - holding costs.",
+            "missing_data_summary": [],
+            "requires_human_review": False,
+        },
+        {
+            "id": "client-underwriting-002",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-002",
+            "packet_id": "client-evidence-002",
+            "arv_estimate": None,
+            "repair_estimate": None,
+            "holding_cost_estimate": None,
+            "desired_assignment_fee": 10000,
+            "max_allowable_offer": None,
+            "conservative_offer": None,
+            "standard_offer": None,
+            "aggressive_offer": None,
+            "margin_warning": True,
+            "confidence_level": "low",
+            "assumptions_summary": "Missing underwriting inputs; no fake values are calculated.",
+            "missing_data_summary": ["arv_estimate", "repair_estimate", "holding_cost_estimate"],
+            "requires_human_review": True,
+        },
+    ]
+
+
+def build_client_offer_scenario_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-scenario-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "underwriting_review_id": "client-underwriting-001",
+            "scenario_name": "conservative",
+            "offer_amount": 95940,
+            "projected_margin": 10660,
+            "assumptions": "90% of max allowable offer.",
+            "risk_level": "low",
+            "client_safe_explanation": "Decision support only; no offer or contract has been sent.",
+        },
+        {
+            "id": "client-scenario-002",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "underwriting_review_id": "client-underwriting-001",
+            "scenario_name": "standard",
+            "offer_amount": 106600,
+            "projected_margin": 0,
+            "assumptions": "Max allowable offer from manual inputs.",
+            "risk_level": "medium",
+            "client_safe_explanation": "Decision support only; no offer or contract has been sent.",
+        },
+        {
+            "id": "client-scenario-003",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "underwriting_review_id": "client-underwriting-001",
+            "scenario_name": "aggressive",
+            "offer_amount": 111930,
+            "projected_margin": 0,
+            "assumptions": "105% of max allowable offer; requires careful review.",
+            "risk_level": "high",
+            "client_safe_explanation": "Decision support only; no offer or contract has been sent.",
+        },
+    ]
+
+
+def build_client_offer_readiness_gate_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-offer-gate-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "packet_id": "client-evidence-001",
+            "underwriting_review_id": "client-underwriting-001",
+            "readiness_status": "ready_for_client_review",
+            "readiness_score": 100,
+            "block_reasons": [],
+            "risk_flags": [],
+            "recommended_next_step": "Client can review the decision-support offer range manually.",
+            "can_present_offer": True,
+            "no_contract_generated": True,
+            "no_offer_sent": True,
+            "requires_human_review": True,
+        },
+        {
+            "id": "client-offer-gate-002",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-002",
+            "packet_id": "client-evidence-002",
+            "underwriting_review_id": "client-underwriting-002",
+            "readiness_status": "evidence_missing",
+            "readiness_score": 28,
+            "block_reasons": ["evidence_missing", "arv_estimate_missing", "repair_estimate_missing", "underwriting_review_needed"],
+            "risk_flags": ["margin_warning"],
+            "recommended_next_step": "Resolve evidence and underwriting inputs before offer review.",
+            "can_present_offer": False,
+            "no_contract_generated": True,
+            "no_offer_sent": True,
+            "requires_human_review": True,
+        },
+        {
+            "id": "client-offer-gate-003",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-003",
+            "packet_id": "client-evidence-003",
+            "underwriting_review_id": None,
+            "readiness_status": "blocked",
+            "readiness_score": 0,
+            "block_reasons": ["evidence_missing", "arv_estimate_missing", "repair_estimate_missing"],
+            "risk_flags": ["missing_property_address", "low_confidence"],
+            "recommended_next_step": "Complete missing data and evidence before underwriting.",
+            "can_present_offer": False,
+            "no_contract_generated": True,
+            "no_offer_sent": True,
+            "requires_human_review": True,
+        },
+    ]
+
+
+def build_client_underwriting_division_event_records() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "client-underwriting-event-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-001",
+            "event_type": "offer_readiness",
+            "event_summary": "Underwriting Manager marked one deal ready for client review.",
+            "manager_name": "Underwriting Manager",
+            "client_visible": True,
+        },
+        {
+            "id": "client-underwriting-event-002",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": "client-workspace-001",
+            "lead_id": "client-lead-002",
+            "event_type": "evidence_missing",
+            "event_summary": "Underwriting Manager blocked offer readiness due to missing ARV and repair support.",
+            "manager_name": "Underwriting Manager",
+            "client_visible": True,
         },
     ]
 
@@ -9271,6 +9849,19 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "client_lead_next_best_actions": build_client_lead_next_best_action_records(),
         "client_lead_missing_data_items": build_client_lead_missing_data_records(),
         "client_lead_division_events": build_client_lead_division_event_records(),
+        "client_acquisition_briefs": build_client_acquisition_brief_records(),
+        "client_seller_question_plans": build_client_seller_question_plan_records(),
+        "client_seller_questions": build_client_seller_question_records(),
+        "client_objection_response_drafts": build_client_objection_response_draft_records(),
+        "client_follow_up_drafts": build_client_follow_up_draft_records(),
+        "client_appointment_readiness_reviews": build_client_appointment_readiness_review_records(),
+        "client_acquisition_division_events": build_client_acquisition_division_event_records(),
+        "client_deal_evidence_packets": build_client_deal_evidence_packet_records(),
+        "client_deal_evidence_items": build_client_deal_evidence_item_records(),
+        "client_underwriting_reviews": build_client_underwriting_review_records(),
+        "client_offer_scenarios": build_client_offer_scenario_records(),
+        "client_offer_readiness_gates": build_client_offer_readiness_gate_records(),
+        "client_underwriting_division_events": build_client_underwriting_division_event_records(),
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -9312,6 +9903,19 @@ def seed_database(session: Session) -> dict[str, int]:
         LiveProviderActivationAttempt,
         LiveProviderActivation,
         RealDealExecutionBatch,
+        ClientUnderwritingDivisionEvent,
+        ClientOfferReadinessGate,
+        ClientOfferScenario,
+        ClientUnderwritingReview,
+        ClientDealEvidenceItem,
+        ClientDealEvidencePacket,
+        ClientAcquisitionDivisionEvent,
+        ClientAppointmentReadinessReview,
+        ClientFollowUpDraft,
+        ClientObjectionResponseDraft,
+        ClientSellerQuestion,
+        ClientSellerQuestionPlan,
+        ClientAcquisitionBrief,
         ClientLeadDivisionEvent,
         ClientLeadMissingDataItem,
         ClientLeadNextBestAction,
@@ -9730,6 +10334,51 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         ClientLeadDivisionEvent(**row)
         for row in payload["client_lead_division_events"]
+    )
+    session.add_all(
+        ClientAcquisitionBrief(**row) for row in payload["client_acquisition_briefs"]
+    )
+    session.add_all(
+        ClientSellerQuestionPlan(**row)
+        for row in payload["client_seller_question_plans"]
+    )
+    session.add_all(
+        ClientSellerQuestion(**row) for row in payload["client_seller_questions"]
+    )
+    session.add_all(
+        ClientObjectionResponseDraft(**row)
+        for row in payload["client_objection_response_drafts"]
+    )
+    session.add_all(
+        ClientFollowUpDraft(**row) for row in payload["client_follow_up_drafts"]
+    )
+    session.add_all(
+        ClientAppointmentReadinessReview(**row)
+        for row in payload["client_appointment_readiness_reviews"]
+    )
+    session.add_all(
+        ClientAcquisitionDivisionEvent(**row)
+        for row in payload["client_acquisition_division_events"]
+    )
+    session.add_all(
+        ClientDealEvidencePacket(**row) for row in payload["client_deal_evidence_packets"]
+    )
+    session.add_all(
+        ClientDealEvidenceItem(**row) for row in payload["client_deal_evidence_items"]
+    )
+    session.add_all(
+        ClientUnderwritingReview(**row) for row in payload["client_underwriting_reviews"]
+    )
+    session.add_all(
+        ClientOfferScenario(**row) for row in payload["client_offer_scenarios"]
+    )
+    session.add_all(
+        ClientOfferReadinessGate(**row)
+        for row in payload["client_offer_readiness_gates"]
+    )
+    session.add_all(
+        ClientUnderwritingDivisionEvent(**row)
+        for row in payload["client_underwriting_division_events"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

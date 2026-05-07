@@ -44,6 +44,7 @@ Prime 2 Wholesale Deal OS supports the full internal acquisition-to-assignment w
 - Production cloud readiness for private deployment profiles, masked environment validation, backup/restore metadata, monitoring readiness, and fail-closed hosting checks
 - Controlled live provider activation records for one-action OpenAI, email, SMS, CRM, and storage lanes gated by safety, dry-runs, owner approval, provider readiness, cloud readiness, idempotency, and audit logs
 - First Deal Cockpit execution guidance for real lead batches, QA, seller calls, offer decisions, buyer validation, contract-ready prep, assignment-fee evidence, and field-test reports
+- Client Command OS workspace, lead intelligence, acquisition prep, and underwriting decision-support layers that hide internal Prime governance and provider internals
 
 ## Command Hierarchy
 
@@ -229,6 +230,18 @@ Added provider activation records, attempts, blocked attempts, and audit events 
 
 V31 Real Deal Execution Pack:
 Added the First Deal Cockpit for the first real wholesale execution loop: imported real leads, QA, prioritized calls, manual call outcomes, underwriting, offer decisioning, buyer validation, contract-ready readiness, title/attorney review prep, assignment-fee evidence, field-test reporting, and Prime 2 execution coaching. V31 is guidance and tracking only; the owner still performs and approves real-world action, and the cockpit cannot send outreach, execute contracts, submit title packets, handle payments, publish portals, or provide legal guidance.
+
+CP1 Client Workspace Foundation:
+Added tenant-safe client workspaces, members, roles, permissions, and sanitized client workspace APIs. Client access cannot expose internal Prime governance, raw provider payloads, secrets, billing, e-signature, or admin-only controls.
+
+CP2 Lead Intelligence Division:
+Added deterministic lead scoring, missing-data items, hot lead boards, next-best-action records, and client-safe Lead Intelligence Manager status. CP2 remains the source of truth for lead priority, missing data, and next action.
+
+CP3 Acquisition AI Team:
+Added Acquisition Manager briefs, seller question plans, objection response drafts, manual follow-up drafts, appointment readiness reviews, and acquisition division events. CP3 is non-live; drafts are manual-use only and no message is sent.
+
+CP4 Underwriting + Deal Evidence:
+Added deal evidence packets, evidence items, underwriting reviews, offer scenarios, offer readiness gates, and Underwriting Manager events. CP4 is decision support only; no provider data pulls, offers, contracts, title submissions, payments, legal advice, or profit guarantees are created.
 
 ## Local Run Commands
 

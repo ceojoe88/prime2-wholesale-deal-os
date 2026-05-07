@@ -15,6 +15,12 @@ const requiredRouteFiles = [
   "src/app/dashboard/client-command/leads/[leadId]/page.tsx",
   "src/app/dashboard/client-command/hot-leads/page.tsx",
   "src/app/dashboard/client-command/next-actions/page.tsx",
+  "src/app/dashboard/client-command/acquisition/page.tsx",
+  "src/app/dashboard/client-command/acquisition/briefs/page.tsx",
+  "src/app/dashboard/client-command/acquisition/needs-review/page.tsx",
+  "src/app/dashboard/client-command/underwriting/page.tsx",
+  "src/app/dashboard/client-command/underwriting/ready-review/page.tsx",
+  "src/app/dashboard/client-command/underwriting/blocked/page.tsx",
   "src/app/dashboard/first-deal-cockpit/page.tsx",
   "src/app/dashboard/first-deal-cockpit/calls/page.tsx",
   "src/app/dashboard/first-deal-cockpit/offers/page.tsx",
@@ -672,6 +678,69 @@ test("CP1 and CP2 client command pages expose no dangerous client controls", () 
     "charge card",
     "send contract",
     "e-signature send",
+    "legal advice",
+    "guaranteed roi",
+    "guaranteed profit",
+    "raw_provider_payload",
+    "internal_prime_governance"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP3 and CP4 client command pages render managers and preserve manual boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/acquisition/page.tsx",
+    "src/app/dashboard/client-command/acquisition/briefs/page.tsx",
+    "src/app/dashboard/client-command/acquisition/needs-review/page.tsx",
+    "src/app/dashboard/client-command/underwriting/page.tsx",
+    "src/app/dashboard/client-command/underwriting/ready-review/page.tsx",
+    "src/app/dashboard/client-command/underwriting/blocked/page.tsx",
+    "src/app/dashboard/client-command/leads/[leadId]/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Acquisition Manager/);
+  assert.match(joined, /Underwriting Manager/);
+  assert.match(joined, /Manual use only — no message has been sent\./);
+  assert.match(joined, /Decision support only — no contract or offer has been sent\./);
+});
+
+test("CP3 and CP4 client command pages expose no forbidden client controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/workspaces/page.tsx",
+    "src/app/dashboard/client-command/leads/page.tsx",
+    "src/app/dashboard/client-command/leads/[leadId]/page.tsx",
+    "src/app/dashboard/client-command/hot-leads/page.tsx",
+    "src/app/dashboard/client-command/next-actions/page.tsx",
+    "src/app/dashboard/client-command/acquisition/page.tsx",
+    "src/app/dashboard/client-command/acquisition/briefs/page.tsx",
+    "src/app/dashboard/client-command/acquisition/needs-review/page.tsx",
+    "src/app/dashboard/client-command/underwriting/page.tsx",
+    "src/app/dashboard/client-command/underwriting/ready-review/page.tsx",
+    "src/app/dashboard/client-command/underwriting/blocked/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send sms",
+    "send email",
+    "call now",
+    "auto dial",
+    "start campaign",
+    "pull skip trace",
+    "check dnc live",
+    "pull live comps",
+    "generate contract",
+    "send offer",
+    "e-sign",
+    "charge",
+    "invoice",
+    "activate",
+    "sync to provider",
+    "dispatch agent",
+    "execute",
     "legal advice",
     "guaranteed roi",
     "guaranteed profit",

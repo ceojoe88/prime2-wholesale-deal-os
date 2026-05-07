@@ -32,6 +32,8 @@ from app.models import (
     CampaignRuleRecord,
     BuyerDealPublication,
     BuyerDemandProfile,
+    ClientAcquisitionBrief,
+    ClientDealEvidencePacket,
     ClientWorkspace,
     CommunicationDraft,
     CloudDeploymentProfile,
@@ -123,6 +125,8 @@ async def lifespan(app: FastAPI):
                 or session.query(LiveProviderActivation).count() == 0
                 or session.query(RealDealExecutionBatch).count() == 0
                 or session.query(ClientWorkspace).count() == 0
+                or session.query(ClientAcquisitionBrief).count() == 0
+                or session.query(ClientDealEvidencePacket).count() == 0
             ):
                 seed_database(session)
     yield

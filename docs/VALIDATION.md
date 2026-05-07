@@ -50,6 +50,8 @@ Expected coverage includes:
 - V31 real deal execution batch creation, status transitions, call checklist generation, offer decision calculations, buyer validation gate, contract-ready checklist, assignment-fee evidence validation, field-test report learning signals, execution coach recommendations, and no live/legal/title/payment action paths
 - CP1 validation lane `client_command_workspace_cp1`: workspace/member/role tenant isolation, scoped client permissions, sanitized workspace responses, and no client access to internal Prime governance or raw provider payloads
 - CP2 validation lane `lead_intelligence_division_cp2`: deterministic lead scoring, missing-data readiness reduction, hot-board ranking, next-action recommendations, and no outbound provider actions
+- CP3 validation lane `client_command_acquisition_cp3`: deterministic acquisition briefs, missing-data-driven question plans, manual-use follow-up drafts, appointment readiness blocks, client-safe sanitizer, and no outbound provider actions
+- CP4 validation lane `client_command_underwriting_cp4`: evidence packet isolation, missing evidence tracking, ARV/repair blocks, transparent MAO/scenario math, offer readiness gates, no offer/contract execution, and sanitized evidence items
 
 ## Frontend
 
@@ -76,7 +78,8 @@ Expected coverage includes:
 - V29 cloud readiness routes render and expose no deployment or secret controls
 - V30 live activation routes render and expose no bulk or bypass controls
 - V31 first deal cockpit routes render and expose no unsafe call/send/contract/title/payment controls
-- CP1/CP2 client command routes render and expose no dangerous send/call/provider/billing/contract controls
+- CP1-CP4 client command routes render and expose no dangerous send/call/provider/billing/contract controls
+- CP3/CP4 client command routes render and expose no forbidden send/call/provider/billing/contract/payment controls
 
 ## Source Sweeps
 
@@ -187,6 +190,12 @@ Smoke check:
 - `/dashboard/client-command/leads`
 - `/dashboard/client-command/hot-leads`
 - `/dashboard/client-command/next-actions`
+- `/dashboard/client-command/acquisition`
+- `/dashboard/client-command/acquisition/briefs`
+- `/dashboard/client-command/acquisition/needs-review`
+- `/dashboard/client-command/underwriting`
+- `/dashboard/client-command/underwriting/ready-review`
+- `/dashboard/client-command/underwriting/blocked`
 - `/buyer-portal`
 - `/seller-portal`
 
@@ -277,10 +286,16 @@ Smoke check:
 - `/api/v1/client-command/workspaces`
 - `/api/v1/client-command/workspaces/client-workspace-001`
 - `/api/v1/client-command/workspaces/client-workspace-001/leads`
+- `/api/v1/client-command/leads`
 - `/api/v1/client-command/leads/client-lead-001`
 - `/api/v1/client-command/leads/client-lead-001/score`
 - `/api/v1/client-command/leads/hot-board`
 - `/api/v1/client-command/leads/next-actions`
+- `/api/v1/client-command/acquisition/briefs`
+- `/api/v1/client-command/acquisition/needs-review`
+- `/api/v1/client-command/underwriting/ready-review`
+- `/api/v1/client-command/underwriting/blocked`
+- `/api/v1/client-command/underwriting/needs-human-review`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist

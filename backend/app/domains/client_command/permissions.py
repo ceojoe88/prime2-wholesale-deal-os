@@ -9,6 +9,11 @@ CLIENT_COMMAND_PERMISSIONS = {
     "client_command.leads_view",
     "client_command.leads_manage",
     "client_command.reports_view",
+    "client_command.acquisition_view",
+    "client_command.acquisition_manage",
+    "client_command.underwriting_view",
+    "client_command.underwriting_manage",
+    "client_command.offer_review",
     "client_command.admin",
 }
 

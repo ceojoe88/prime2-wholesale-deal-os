@@ -3,11 +3,24 @@ from __future__ import annotations
 from typing import Any
 
 from app.models import (
+    ClientAcquisitionBrief,
+    ClientAcquisitionDivisionEvent,
+    ClientAppointmentReadinessReview,
+    ClientDealEvidenceItem,
+    ClientDealEvidencePacket,
+    ClientFollowUpDraft,
     ClientLeadDivisionEvent,
     ClientLeadIntelligenceScore,
     ClientLeadMissingDataItem,
     ClientLeadNextBestAction,
     ClientLeadProfile,
+    ClientObjectionResponseDraft,
+    ClientOfferReadinessGate,
+    ClientOfferScenario,
+    ClientSellerQuestion,
+    ClientSellerQuestionPlan,
+    ClientUnderwritingDivisionEvent,
+    ClientUnderwritingReview,
     ClientWorkspace,
     ClientWorkspaceMember,
     ClientWorkspaceRole,
@@ -24,6 +37,20 @@ FORBIDDEN_KEYS = {
     "raw_provider_payload_exposure_allowed",
     "can_view_raw_provider_payloads",
     "raw_risk_logic",
+    "raw_scoring_logic",
+    "raw_underwriting_logic",
+    "raw_risk_reasoning",
+    "internal_notes",
+    "audit_internals",
+    "provider_config",
+    "provider_secret",
+    "secret_value",
+    "secrets",
+    "legal_conclusion",
+    "legal_conclusions",
+    "hidden_policy_logic",
+    "unsafe_execution_fields",
+    "provider_payload",
     "admin_only_controls_visible",
     "can_use_admin_controls",
 }
@@ -82,4 +109,89 @@ def missing_item_public(item: ClientLeadMissingDataItem) -> dict[str, Any]:
 def event_public(event: ClientLeadDivisionEvent) -> dict[str, Any]:
     data = strip_forbidden(model_to_dict(event))
     data["safe_for_client"] = True
+    return data
+
+
+def acquisition_brief_public(brief: ClientAcquisitionBrief) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(brief))
+    data["client_safe"] = True
+    data["manager_name"] = "Acquisition Manager"
+    return data
+
+
+def question_plan_public(plan: ClientSellerQuestionPlan) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(plan))
+    data["client_safe"] = True
+    return data
+
+
+def seller_question_public(question: ClientSellerQuestion) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(question))
+    data["client_safe"] = True
+    return data
+
+
+def objection_draft_public(draft: ClientObjectionResponseDraft) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(draft))
+    data["client_safe"] = True
+    data["manual_use_only"] = True
+    return data
+
+
+def follow_up_draft_public(draft: ClientFollowUpDraft) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(draft))
+    data["client_safe"] = True
+    data["manual_use_only"] = True
+    data["no_live_send"] = True
+    return data
+
+
+def appointment_readiness_public(review: ClientAppointmentReadinessReview) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(review))
+    data["client_safe"] = True
+    return data
+
+
+def acquisition_event_public(event: ClientAcquisitionDivisionEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def evidence_packet_public(packet: ClientDealEvidencePacket) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(packet))
+    data["client_safe"] = True
+    return data
+
+
+def evidence_item_public(item: ClientDealEvidenceItem) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(item))
+    data["client_safe"] = True
+    return data
+
+
+def underwriting_review_public(review: ClientUnderwritingReview) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(review))
+    data["client_safe"] = True
+    return data
+
+
+def offer_scenario_public(scenario: ClientOfferScenario) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(scenario))
+    data["client_safe"] = True
+    return data
+
+
+def offer_readiness_public(gate: ClientOfferReadinessGate) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(gate))
+    data["can_present_offer"] = bool(gate.can_present_offer)
+    data["no_contract_generated"] = True
+    data["no_offer_sent"] = True
+    data["client_safe"] = True
+    return data
+
+
+def underwriting_event_public(event: ClientUnderwritingDivisionEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
     return data

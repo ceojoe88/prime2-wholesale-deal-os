@@ -17,7 +17,7 @@ export default function ClientNextActionsPage() {
       <PageHeader
         eyebrow="Client Next Actions"
         title="Recommended next action queue"
-        description="Client-safe recommendations only. Actions can research, review, and prepare internal notes; provider, billing, and e-sign lanes remain unavailable."
+        description="Client-safe recommendations only. Actions can research, review, and prepare internal notes; provider, billing, and document signing lanes remain unavailable."
       />
 
       <div className="metric-grid">
@@ -46,7 +46,7 @@ export default function ClientNextActionsPage() {
             <RecordCard
               key={`${action.id}-lock`}
               title={leadName(action.leadId)}
-              meta="Outbound/provider execution remains unavailable in CP1/CP2."
+              meta="Outbound/provider execution remains unavailable in CP1-CP4."
               right={<Pill tone={action.outboundActionAllowed || action.providerActionAllowed ? "red" : "green"}>locked</Pill>}
             />
           ))}

@@ -11,7 +11,7 @@ export default function ClientCommandWorkspacesPage() {
       <PageHeader
         eyebrow="CP1 Workspace Foundation"
         title="Client workspaces"
-        description="Tenant-safe client command rooms with scoped permissions, sanitized workspace data, and disabled live-provider, billing, and e-sign lanes."
+        description="Tenant-safe client command rooms with scoped permissions, sanitized workspace data, and disabled live-provider, billing, and document signing lanes."
       />
 
       <div className="metric-grid">

@@ -5348,16 +5348,21 @@ export const clientCommandPermissions = [
   "client_command.leads_view",
   "client_command.leads_manage",
   "client_command.reports_view",
+  "client_command.acquisition_view",
+  "client_command.acquisition_manage",
+  "client_command.underwriting_view",
+  "client_command.underwriting_manage",
+  "client_command.offer_review",
   "client_command.admin"
 ];
 
 export const clientCommandSafetyCards = [
-  { label: "SMS", value: "off", detail: "No outbound provider action in CP1/CP2" },
-  { label: "Email", value: "off", detail: "No outbound provider action in CP1/CP2" },
+  { label: "SMS", value: "off", detail: "No outbound provider action in CP1-CP4" },
+  { label: "Email", value: "off", detail: "No outbound provider action in CP1-CP4" },
   { label: "Voice", value: "off", detail: "Manual client workflow only" },
   { label: "Skip trace", value: "off", detail: "No external enrichment provider call" },
-  { label: "Billing", value: "off", detail: "No charges or payment handling" },
-  { label: "E-sign", value: "off", detail: "No document execution lane" }
+  { label: "Billing", value: "off", detail: "No payment handling" },
+  { label: "Document signing", value: "off", detail: "No signed-document lane" }
 ];
 
 export const clientWorkspaces: ClientWorkspace[] = [
@@ -5562,7 +5567,7 @@ export const clientLeadMissingDataItems: ClientLeadMissingDataItem[] = [
     id: "client-missing-003",
     leadId: "client-lead-003",
     fieldName: "contact_channels_present",
-    reason: "Contactability data is missing; no provider lookup is performed in CP1/CP2.",
+    reason: "Contactability data is missing; no provider lookup is performed in CP1-CP4.",
     severity: "high",
     resolutionStatus: "open",
     blocksReadiness: true
@@ -5657,4 +5662,606 @@ export function getClientLead(leadId: string) {
 
 export function getClientLeadScore(leadId: string) {
   return clientLeadScores.find((score) => score.leadId === leadId);
+}
+
+export type ClientAcquisitionBrief = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  sellerSummary: string;
+  motivationHypothesis: string;
+  urgencyHypothesis: string;
+  propertyContextSummary: string;
+  recommendedCallObjective: string;
+  suggestedOpeningAngle: string;
+  topQuestionsToAskSummary: string;
+  sensitiveTopicsToAvoid: string[];
+  suggestedTone: string;
+  confidenceLevel: "low" | "medium" | "high";
+  requiresHumanReview: boolean;
+  managerName: string;
+  clientSafeSummary: string;
+};
+
+export type ClientSellerQuestionPlan = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  planStatus: "draft" | "ready_for_manual_use" | "needs_review";
+  totalQuestions: number;
+  highPriorityCount: number;
+  missingDataFocusCount: number;
+  clientSafeSummary: string;
+};
+
+export type ClientSellerQuestion = {
+  id: string;
+  questionPlanId: string;
+  leadId: string;
+  questionText: string;
+  questionCategory: string;
+  priority: "low" | "medium" | "high";
+  reason: string;
+  tiedMissingDataKey: string | null;
+  clientSafe: boolean;
+};
+
+export type ClientObjectionResponseDraft = {
+  id: string;
+  leadId: string;
+  objectionType: string;
+  sellerObjection: string;
+  suggestedResponse: string;
+  riskLevel: "low" | "medium" | "high";
+  requiresHumanReview: boolean;
+  clientSafe: boolean;
+  manualUseOnly: boolean;
+};
+
+export type ClientFollowUpDraft = {
+  id: string;
+  leadId: string;
+  channelType: "sms_draft" | "email_draft" | "call_note";
+  draftBody: string;
+  purpose: string;
+  riskLevel: "low" | "medium" | "high";
+  approvalStatus: "draft_only" | "needs_review" | "approved_for_manual_use";
+  manualUseOnly: boolean;
+  noLiveSend: boolean;
+  unsafeLanguageFlag: boolean;
+};
+
+export type ClientAppointmentReadinessReview = {
+  id: string;
+  leadId: string;
+  readinessScore: number;
+  appointmentReady: boolean;
+  missingRequirements: string[];
+  recommendedNextStep: string;
+  reasonSummary: string;
+  confidenceLevel: "low" | "medium" | "high";
+  requiresHumanReview: boolean;
+};
+
+export type ClientDealEvidencePacket = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  propertyAddress: string;
+  sellerMotivationSummary: string;
+  propertyConditionSummary: string;
+  occupancyStatus: string;
+  titleStatusSummary: string;
+  evidenceStatus: "draft" | "missing_evidence" | "ready_for_underwriting" | "reviewed";
+  missingEvidenceCount: number;
+  requiredEvidenceSummary: string[];
+  clientSafeSummary: string;
+  confidenceLevel: "low" | "medium" | "high";
+  requiresHumanReview: boolean;
+};
+
+export type ClientDealEvidenceItem = {
+  id: string;
+  leadId: string;
+  packetId: string;
+  itemType: string;
+  itemSummary: string;
+  sourceType: string;
+  confidenceLevel: "low" | "medium" | "high";
+  clientSafe: boolean;
+};
+
+export type ClientUnderwritingReview = {
+  id: string;
+  workspaceId: string;
+  leadId: string;
+  packetId: string;
+  arvEstimate: number | null;
+  repairEstimate: number | null;
+  holdingCostEstimate: number | null;
+  desiredAssignmentFee: number | null;
+  maxAllowableOffer: number | null;
+  conservativeOffer: number | null;
+  standardOffer: number | null;
+  aggressiveOffer: number | null;
+  marginWarning: boolean;
+  confidenceLevel: "low" | "medium" | "high";
+  assumptionsSummary: string;
+  missingDataSummary: string[];
+  requiresHumanReview: boolean;
+};
+
+export type ClientOfferScenario = {
+  id: string;
+  leadId: string;
+  underwritingReviewId: string;
+  scenarioName: "conservative" | "standard" | "aggressive";
+  offerAmount: number;
+  projectedMargin: number | null;
+  assumptions: string;
+  riskLevel: "low" | "medium" | "high";
+  clientSafeExplanation: string;
+};
+
+export type ClientOfferReadinessGate = {
+  id: string;
+  leadId: string;
+  packetId: string;
+  underwritingReviewId: string | null;
+  readinessStatus: "not_ready" | "evidence_missing" | "underwriting_review_needed" | "ready_for_client_review" | "blocked";
+  readinessScore: number;
+  blockReasons: string[];
+  riskFlags: string[];
+  recommendedNextStep: string;
+  canPresentOffer: boolean;
+  noContractGenerated: boolean;
+  noOfferSent: boolean;
+  requiresHumanReview: boolean;
+};
+
+export type ClientDivisionEvent = {
+  id: string;
+  leadId: string;
+  eventType: string;
+  eventSummary: string;
+  managerName: string;
+  clientVisible: boolean;
+};
+
+export const clientAcquisitionBriefs: ClientAcquisitionBrief[] = [
+  {
+    id: "client-acq-brief-001",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-001",
+    sellerSummary: "South Dallas absentee owner with tired-landlord and deferred-maintenance signals.",
+    motivationHypothesis: "Likely motivated by absentee ownership, tired landlord context, and deferred maintenance.",
+    urgencyHypothesis: "Timeline appears strong but must be confirmed by the seller.",
+    propertyContextSummary: "Single-family lead in Dallas 75216 with high equity signal and vacancy/code notes.",
+    recommendedCallObjective: "Confirm motivation, timeline, condition, price expectation, and appointment fit.",
+    suggestedOpeningAngle: "Open with a calm property check-in and ask what the seller wants to solve.",
+    topQuestionsToAskSummary: "Ask motivation, timeline, condition, asking price, decision authority, and occupancy.",
+    sensitiveTopicsToAvoid: ["Do not pressure the seller", "Do not imply legal conclusions", "Do not claim buyer demand without evidence"],
+    suggestedTone: "calm, curious, respectful",
+    confidenceLevel: "high",
+    requiresHumanReview: true,
+    managerName: "Acquisition Manager",
+    clientSafeSummary: "Manual seller conversation prep only; no outbound action has occurred."
+  },
+  {
+    id: "client-acq-brief-003",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-003",
+    sellerSummary: "Incomplete vacant lead missing address, contactability, valuation, and motivation facts.",
+    motivationHypothesis: "Motivation is unconfirmed and requires basic data collection before seller prep.",
+    urgencyHypothesis: "Urgency is weak because timeline and contactability are not reliable.",
+    propertyContextSummary: "Vacancy signal exists, but property address and valuation are incomplete.",
+    recommendedCallObjective: "Research missing data before seller conversation planning.",
+    suggestedOpeningAngle: "Use verification-first internal notes until property and contact facts are confirmed.",
+    topQuestionsToAskSummary: "Confirm property address, contact channel, motivation, timeline, and ownership context.",
+    sensitiveTopicsToAvoid: ["Do not imply verified ownership", "Do not make pricing or urgency claims"],
+    suggestedTone: "careful, verification-first",
+    confidenceLevel: "low",
+    requiresHumanReview: true,
+    managerName: "Acquisition Manager",
+    clientSafeSummary: "Research-only brief; no outbound action has occurred."
+  }
+];
+
+export const clientSellerQuestionPlans: ClientSellerQuestionPlan[] = [
+  {
+    id: "client-question-plan-001",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-001",
+    planStatus: "ready_for_manual_use",
+    totalQuestions: 2,
+    highPriorityCount: 2,
+    missingDataFocusCount: 0,
+    clientSafeSummary: "Manual-use question plan for seller discovery."
+  },
+  {
+    id: "client-question-plan-003",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-003",
+    planStatus: "needs_review",
+    totalQuestions: 2,
+    highPriorityCount: 2,
+    missingDataFocusCount: 2,
+    clientSafeSummary: "Missing-data question plan; requires review before use."
+  }
+];
+
+export const clientSellerQuestions: ClientSellerQuestion[] = [
+  {
+    id: "client-question-001",
+    questionPlanId: "client-question-plan-001",
+    leadId: "client-lead-001",
+    questionText: "What has you thinking about selling this property now?",
+    questionCategory: "motivation",
+    priority: "high",
+    reason: "Motivation drives acquisition readiness.",
+    tiedMissingDataKey: null,
+    clientSafe: true
+  },
+  {
+    id: "client-question-002",
+    questionPlanId: "client-question-plan-001",
+    leadId: "client-lead-001",
+    questionText: "What repairs or condition concerns should we account for?",
+    questionCategory: "condition",
+    priority: "high",
+    reason: "Repair context is needed for underwriting.",
+    tiedMissingDataKey: null,
+    clientSafe: true
+  },
+  {
+    id: "client-question-003",
+    questionPlanId: "client-question-plan-003",
+    leadId: "client-lead-003",
+    questionText: "Can you confirm the property address before any review?",
+    questionCategory: "access_showing",
+    priority: "high",
+    reason: "Property address is missing.",
+    tiedMissingDataKey: "property_address_summary",
+    clientSafe: true
+  }
+];
+
+export const clientObjectionResponseDrafts: ClientObjectionResponseDraft[] = [
+  {
+    id: "client-objection-001",
+    leadId: "client-lead-001",
+    objectionType: "price_too_low",
+    sellerObjection: "The number feels lower than expected.",
+    suggestedResponse: "I understand. The number should reflect repairs, timeline, and as-is assumptions. If your target is different, I can note it for manual review.",
+    riskLevel: "medium",
+    requiresHumanReview: true,
+    clientSafe: true,
+    manualUseOnly: true
+  },
+  {
+    id: "client-objection-002",
+    leadId: "client-lead-001",
+    objectionType: "trust_concern",
+    sellerObjection: "How do I know this is legitimate?",
+    suggestedResponse: "Fair question. Any paperwork should be reviewed by qualified professionals. I can keep the next step clear and simple for manual review.",
+    riskLevel: "medium",
+    requiresHumanReview: true,
+    clientSafe: true,
+    manualUseOnly: true
+  }
+];
+
+export const clientFollowUpDrafts: ClientFollowUpDraft[] = [
+  {
+    id: "client-follow-up-001",
+    leadId: "client-lead-001",
+    channelType: "sms_draft",
+    draftBody: "Manual note: follow up about the property and ask whether the seller still wants to talk through options.",
+    purpose: "simple seller check-in",
+    riskLevel: "low",
+    approvalStatus: "draft_only",
+    manualUseOnly: true,
+    noLiveSend: true,
+    unsafeLanguageFlag: false
+  },
+  {
+    id: "client-follow-up-002",
+    leadId: "client-lead-003",
+    channelType: "call_note",
+    draftBody: "Manual note: verify the property address and contact facts before any seller conversation.",
+    purpose: "missing-data research",
+    riskLevel: "low",
+    approvalStatus: "draft_only",
+    manualUseOnly: true,
+    noLiveSend: true,
+    unsafeLanguageFlag: false
+  }
+];
+
+export const clientAppointmentReadinessReviews: ClientAppointmentReadinessReview[] = [
+  {
+    id: "client-appt-001",
+    leadId: "client-lead-001",
+    readinessScore: 86,
+    appointmentReady: true,
+    missingRequirements: [],
+    recommendedNextStep: "Use the manual seller question plan and confirm appointment logistics.",
+    reasonSummary: "Core motivation, contact, timeline, condition signal, and asking price are present.",
+    confidenceLevel: "high",
+    requiresHumanReview: false
+  },
+  {
+    id: "client-appt-003",
+    leadId: "client-lead-003",
+    readinessScore: 22,
+    appointmentReady: false,
+    missingRequirements: ["seller_motivation", "phone_or_email", "property_condition", "asking_price_or_expectation", "cp2_missing_data_score"],
+    recommendedNextStep: "Complete missing seller and property data before appointment review.",
+    reasonSummary: "Missing data blocks appointment readiness.",
+    confidenceLevel: "low",
+    requiresHumanReview: true
+  }
+];
+
+export const clientDealEvidencePackets: ClientDealEvidencePacket[] = [
+  {
+    id: "client-evidence-001",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-001",
+    propertyAddress: "Dallas, TX 75216",
+    sellerMotivationSummary: "Absentee owner, tired landlord, deferred-maintenance signals.",
+    propertyConditionSummary: "Deferred-maintenance evidence requires seller confirmation.",
+    occupancyStatus: "vacancy signal",
+    titleStatusSummary: "Not externally verified; qualified review required for any real file.",
+    evidenceStatus: "ready_for_underwriting",
+    missingEvidenceCount: 0,
+    requiredEvidenceSummary: [],
+    clientSafeSummary: "Ready for decision-support underwriting; no provider calls occurred.",
+    confidenceLevel: "high",
+    requiresHumanReview: false
+  },
+  {
+    id: "client-evidence-002",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-002",
+    propertyAddress: "Fort Worth, TX 76104",
+    sellerMotivationSummary: "Inherited and out-of-area owner signals.",
+    propertyConditionSummary: "Condition evidence missing.",
+    occupancyStatus: "occupancy not confirmed",
+    titleStatusSummary: "Probate context needs external review.",
+    evidenceStatus: "missing_evidence",
+    missingEvidenceCount: 3,
+    requiredEvidenceSummary: ["repair_note", "comp_note", "occupancy_note"],
+    clientSafeSummary: "Missing ARV and repair support; no values are invented.",
+    confidenceLevel: "low",
+    requiresHumanReview: true
+  },
+  {
+    id: "client-evidence-003",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-003",
+    propertyAddress: "",
+    sellerMotivationSummary: "Seller motivation not confirmed.",
+    propertyConditionSummary: "No condition evidence recorded.",
+    occupancyStatus: "vacancy signal only",
+    titleStatusSummary: "Not reviewed.",
+    evidenceStatus: "missing_evidence",
+    missingEvidenceCount: 5,
+    requiredEvidenceSummary: ["seller_note", "repair_note", "comp_note", "occupancy_note", "title_note"],
+    clientSafeSummary: "Research-only packet; no underwriting readiness.",
+    confidenceLevel: "low",
+    requiresHumanReview: true
+  }
+];
+
+export const clientDealEvidenceItems: ClientDealEvidenceItem[] = [
+  {
+    id: "client-evidence-item-001",
+    leadId: "client-lead-001",
+    packetId: "client-evidence-001",
+    itemType: "seller_note",
+    itemSummary: "Seller signals include absentee ownership and tired-landlord context.",
+    sourceType: "system_generated",
+    confidenceLevel: "high",
+    clientSafe: true
+  },
+  {
+    id: "client-evidence-item-002",
+    leadId: "client-lead-001",
+    packetId: "client-evidence-001",
+    itemType: "repair_note",
+    itemSummary: "Manual demo repair note supports repair-estimate review.",
+    sourceType: "manual",
+    confidenceLevel: "medium",
+    clientSafe: true
+  },
+  {
+    id: "client-evidence-item-003",
+    leadId: "client-lead-002",
+    packetId: "client-evidence-002",
+    itemType: "seller_note",
+    itemSummary: "Inherited/out-of-area seller context is present.",
+    sourceType: "system_generated",
+    confidenceLevel: "medium",
+    clientSafe: true
+  }
+];
+
+export const clientUnderwritingReviews: ClientUnderwritingReview[] = [
+  {
+    id: "client-underwriting-001",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-001",
+    packetId: "client-evidence-001",
+    arvEstimate: 238000,
+    repairEstimate: 42000,
+    holdingCostEstimate: 8000,
+    desiredAssignmentFee: 10000,
+    maxAllowableOffer: 106600,
+    conservativeOffer: 95940,
+    standardOffer: 106600,
+    aggressiveOffer: 111930,
+    marginWarning: false,
+    confidenceLevel: "high",
+    assumptionsSummary: "Formula: ARV * 0.70 - repairs - desired assignment fee - holding costs.",
+    missingDataSummary: [],
+    requiresHumanReview: false
+  },
+  {
+    id: "client-underwriting-002",
+    workspaceId: "client-workspace-001",
+    leadId: "client-lead-002",
+    packetId: "client-evidence-002",
+    arvEstimate: null,
+    repairEstimate: null,
+    holdingCostEstimate: null,
+    desiredAssignmentFee: 10000,
+    maxAllowableOffer: null,
+    conservativeOffer: null,
+    standardOffer: null,
+    aggressiveOffer: null,
+    marginWarning: true,
+    confidenceLevel: "low",
+    assumptionsSummary: "Missing underwriting inputs; no fake values are calculated.",
+    missingDataSummary: ["arv_estimate", "repair_estimate", "holding_cost_estimate"],
+    requiresHumanReview: true
+  }
+];
+
+export const clientOfferScenarios: ClientOfferScenario[] = [
+  {
+    id: "client-scenario-001",
+    leadId: "client-lead-001",
+    underwritingReviewId: "client-underwriting-001",
+    scenarioName: "conservative",
+    offerAmount: 95940,
+    projectedMargin: 10660,
+    assumptions: "90% of max allowable offer.",
+    riskLevel: "low",
+    clientSafeExplanation: "Decision support only; no offer or contract has been sent."
+  },
+  {
+    id: "client-scenario-002",
+    leadId: "client-lead-001",
+    underwritingReviewId: "client-underwriting-001",
+    scenarioName: "standard",
+    offerAmount: 106600,
+    projectedMargin: 0,
+    assumptions: "Max allowable offer from manual inputs.",
+    riskLevel: "medium",
+    clientSafeExplanation: "Decision support only; no offer or contract has been sent."
+  },
+  {
+    id: "client-scenario-003",
+    leadId: "client-lead-001",
+    underwritingReviewId: "client-underwriting-001",
+    scenarioName: "aggressive",
+    offerAmount: 111930,
+    projectedMargin: 0,
+    assumptions: "105% of max allowable offer; requires careful review.",
+    riskLevel: "high",
+    clientSafeExplanation: "Decision support only; no offer or contract has been sent."
+  }
+];
+
+export const clientOfferReadinessGates: ClientOfferReadinessGate[] = [
+  {
+    id: "client-offer-gate-001",
+    leadId: "client-lead-001",
+    packetId: "client-evidence-001",
+    underwritingReviewId: "client-underwriting-001",
+    readinessStatus: "ready_for_client_review",
+    readinessScore: 100,
+    blockReasons: [],
+    riskFlags: [],
+    recommendedNextStep: "Client can review the decision-support offer range manually.",
+    canPresentOffer: true,
+    noContractGenerated: true,
+    noOfferSent: true,
+    requiresHumanReview: true
+  },
+  {
+    id: "client-offer-gate-002",
+    leadId: "client-lead-002",
+    packetId: "client-evidence-002",
+    underwritingReviewId: "client-underwriting-002",
+    readinessStatus: "evidence_missing",
+    readinessScore: 28,
+    blockReasons: ["evidence_missing", "arv_estimate_missing", "repair_estimate_missing", "underwriting_review_needed"],
+    riskFlags: ["margin_warning"],
+    recommendedNextStep: "Resolve evidence and underwriting inputs before offer review.",
+    canPresentOffer: false,
+    noContractGenerated: true,
+    noOfferSent: true,
+    requiresHumanReview: true
+  },
+  {
+    id: "client-offer-gate-003",
+    leadId: "client-lead-003",
+    packetId: "client-evidence-003",
+    underwritingReviewId: null,
+    readinessStatus: "blocked",
+    readinessScore: 0,
+    blockReasons: ["evidence_missing", "arv_estimate_missing", "repair_estimate_missing"],
+    riskFlags: ["missing_property_address", "low_confidence"],
+    recommendedNextStep: "Complete missing data and evidence before underwriting.",
+    canPresentOffer: false,
+    noContractGenerated: true,
+    noOfferSent: true,
+    requiresHumanReview: true
+  }
+];
+
+export const clientAcquisitionDivisionEvents: ClientDivisionEvent[] = [
+  {
+    id: "client-acq-event-001",
+    leadId: "client-lead-001",
+    eventType: "acquisition_brief",
+    eventSummary: "Acquisition Manager prepared a manual-use call brief.",
+    managerName: "Acquisition Manager",
+    clientVisible: true
+  }
+];
+
+export const clientUnderwritingDivisionEvents: ClientDivisionEvent[] = [
+  {
+    id: "client-underwriting-event-001",
+    leadId: "client-lead-001",
+    eventType: "offer_readiness",
+    eventSummary: "Underwriting Manager marked one deal ready for client review.",
+    managerName: "Underwriting Manager",
+    clientVisible: true
+  },
+  {
+    id: "client-underwriting-event-002",
+    leadId: "client-lead-002",
+    eventType: "evidence_missing",
+    eventSummary: "Underwriting Manager blocked offer readiness due to missing ARV and repair support.",
+    managerName: "Underwriting Manager",
+    clientVisible: true
+  }
+];
+
+export function getClientAcquisitionBrief(leadId: string) {
+  return clientAcquisitionBriefs.find((brief) => brief.leadId === leadId);
+}
+
+export function getClientQuestionPlan(leadId: string) {
+  return clientSellerQuestionPlans.find((plan) => plan.leadId === leadId);
+}
+
+export function getClientAppointmentReadiness(leadId: string) {
+  return clientAppointmentReadinessReviews.find((review) => review.leadId === leadId);
+}
+
+export function getClientEvidencePacket(leadId: string) {
+  return clientDealEvidencePackets.find((packet) => packet.leadId === leadId);
+}
+
+export function getClientUnderwritingReview(leadId: string) {
+  return clientUnderwritingReviews.find((review) => review.leadId === leadId);
+}
+
+export function getClientOfferReadiness(leadId: string) {
+  return clientOfferReadinessGates.find((gate) => gate.leadId === leadId);
 }

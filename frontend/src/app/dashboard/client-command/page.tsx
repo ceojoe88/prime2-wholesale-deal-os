@@ -7,28 +7,32 @@ import { Section } from "@/components/Section";
 import {
   clientCommandPermissions,
   clientCommandSafetyCards,
-  clientHotLeadCards,
+  clientAcquisitionBriefs,
+  clientAppointmentReadinessReviews,
+  clientDealEvidencePackets,
   clientLeadCards,
   clientLeadDivisionEvents,
   clientLeadNextBestActions,
+  clientOfferReadinessGates,
   clientWorkspaces
 } from "@/lib/demo-data";
 
 export default function ClientCommandPage() {
-  const reviewCount = clientLeadCards.filter((card) => card.score.requiresHumanReview).length;
+  const acquisitionReviewCount = clientAppointmentReadinessReviews.filter((review) => review.requiresHumanReview).length;
+  const blockedOffers = clientOfferReadinessGates.filter((gate) => gate.readinessStatus !== "ready_for_client_review").length;
   return (
     <div className="page">
       <PageHeader
-        eyebrow="CP1 + CP2 Client Command"
+        eyebrow="CP1-CP4 Client Command"
         title="Client-safe investor command workspace"
-        description="A customer-facing command layer for lead intelligence, workspace-safe permissions, missing data, confidence flags, and recommended next actions without exposing internal Prime governance."
+        description="A customer-facing command layer for lead intelligence, acquisition prep, underwriting review, missing evidence, and readiness gates without exposing internal Prime governance."
       />
 
       <div className="metric-grid">
         <MetricCard label="Client workspaces" value={String(clientWorkspaces.length)} detail="Tenant-safe command rooms" />
         <MetricCard label="Lead profiles" value={String(clientLeadCards.length)} detail="Client-safe lead intelligence" />
-        <MetricCard label="Hot leads" value={String(clientHotLeadCards.length)} detail="Priority score 70+" />
-        <MetricCard label="Human review" value={String(reviewCount)} detail="Manager-gated records" />
+        <MetricCard label="Acquisition briefs" value={String(clientAcquisitionBriefs.length)} detail={`${acquisitionReviewCount} need review`} />
+        <MetricCard label="Offer readiness" value={String(clientOfferReadinessGates.length)} detail={`${blockedOffers} blocked by evidence or review`} />
       </div>
 
       <Section title="Client Safety Boundary">
@@ -43,8 +47,10 @@ export default function ClientCommandPage() {
         <Section title="AI Division Cards">
           <div className="record-list">
             <RecordCard title="Lead Intelligence Division" meta="Scores motivation, urgency, equity, distress, contactability, probability, and missing data." right={<Pill tone="green">active</Pill>} />
+            <RecordCard title="Acquisition Manager" meta="Builds seller conversation briefs, question plans, manual drafts, and appointment readiness." right={<Pill tone="green">CP3</Pill>} />
+            <RecordCard title="Underwriting Manager" meta="Checks evidence, ARV, repairs, MAO, scenarios, and offer readiness." right={<Pill tone="green">CP4</Pill>} />
             <RecordCard title="Client Workspace Guard" meta="Tenant-safe roles, client permissions, and sanitized workspace responses." right={<Pill tone="green">safe</Pill>} />
-            <RecordCard title="Provider Boundary Guard" meta="No outbound provider actions or raw payload exposure in CP1/CP2." right={<Pill tone="red">locked</Pill>} />
+            <RecordCard title="Provider Boundary Guard" meta="No outbound provider actions or raw payload exposure in CP1-CP4." right={<Pill tone="red">locked</Pill>} />
           </div>
         </Section>
         <Section title="Lead Intelligence Manager">
@@ -62,6 +68,8 @@ export default function ClientCommandPage() {
           <RecordCard title="Leads" meta="Lead intelligence profiles" right={<Link href="/dashboard/client-command/leads">Open</Link>} />
           <RecordCard title="Hot Lead Board" meta="Highest priority records" right={<Link href="/dashboard/client-command/hot-leads">Open</Link>} />
           <RecordCard title="Next Actions" meta={`${clientLeadNextBestActions.length} client-safe recommendations`} right={<Link href="/dashboard/client-command/next-actions">Open</Link>} />
+          <RecordCard title="Acquisition" meta="Briefs, question plans, and review queue" right={<Link href="/dashboard/client-command/acquisition">Open</Link>} />
+          <RecordCard title="Underwriting" meta={`${clientDealEvidencePackets.length} evidence packets`} right={<Link href="/dashboard/client-command/underwriting">Open</Link>} />
           <RecordCard title="Permissions" meta={`${clientCommandPermissions.length} scoped permissions`} right={<Pill tone="gold">CP1</Pill>} />
           <RecordCard title="Lead Division" meta="Deterministic scoring" right={<Pill tone="gold">CP2</Pill>} />
         </div>

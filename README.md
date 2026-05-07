@@ -19,6 +19,7 @@ The useful outcome is speed with guardrails:
 - Keep legal, title, payment, live outreach, and high-risk actions gated.
 - Guide the first real wholesale loop from imported leads through QA, seller calls, underwriting, offer decisions, buyer validation, contract-ready prep, title/attorney review prep, assignment-fee evidence, and field-test reporting.
 - Provide a client-safe investor command workspace foundation with Lead Intelligence scoring while hiding internal Prime governance, provider payloads, secrets, billing, e-signature, and admin-only controls.
+- Extend the client-safe layer into Acquisition Manager prep and Underwriting Manager decision support without live outreach, external property data pulls, offers, contracts, payments, or legal advice.
 
 ## Prime 2 Identity
 
@@ -63,6 +64,8 @@ Implemented phases:
 - V31 real deal execution pack and first deal cockpit
 - CP1 client workspace foundation
 - CP2 lead intelligence division
+- CP3 acquisition AI team
+- CP4 underwriting and deal evidence packet
 - Prime 2 overseer rebrand
 
 ## Core Capabilities
@@ -167,6 +170,17 @@ V31 adds the First Deal Cockpit, a guided internal execution board for the first
 
 This is not a new live-action layer. The cockpit gives Prime 2 a way to recommend the next step, show blockers, validate buyer margin, block unsupported 10K+ claims, and create advisory learning signals after a batch. The owner still performs and approves real-world action, and the cockpit cannot send outreach, execute contracts, submit title packets, handle payments, or provide legal guidance.
 
+## Client Command CP3 + CP4
+
+CP3 adds a client-safe Acquisition Manager that prepares seller briefs, question plans, objection responses, manual follow-up drafts, and appointment readiness reviews from CP2 lead intelligence. Drafts are manual-use only and the UI states that no message has been sent.
+
+CP4 adds a client-safe Underwriting Manager that prepares deal evidence packets, evidence items, transparent MAO math, offer scenarios, and offer readiness gates. Underwriting is decision support only: no contract or offer is sent, no external provider data is pulled, no legal advice is provided, and missing ARV/repair inputs block calculations instead of inventing numbers.
+
+Docs:
+
+- [CP3 Acquisition AI Team](docs/client_command/CP3_ACQUISITION_AI_TEAM.md)
+- [CP4 Underwriting + Deal Evidence](docs/client_command/CP4_UNDERWRITING_DEAL_EVIDENCE.md)
+
 ## Safety Boundaries
 
 Allowed:
@@ -261,6 +275,9 @@ Open:
 - Cloud readiness: [http://localhost:3000/dashboard/cloud-readiness](http://localhost:3000/dashboard/cloud-readiness)
 - Live activation: [http://localhost:3000/dashboard/live-activation](http://localhost:3000/dashboard/live-activation)
 - First Deal Cockpit: [http://localhost:3000/dashboard/first-deal-cockpit](http://localhost:3000/dashboard/first-deal-cockpit)
+- Client Command: [http://localhost:3000/dashboard/client-command](http://localhost:3000/dashboard/client-command)
+- Client Acquisition: [http://localhost:3000/dashboard/client-command/acquisition](http://localhost:3000/dashboard/client-command/acquisition)
+- Client Underwriting: [http://localhost:3000/dashboard/client-command/underwriting](http://localhost:3000/dashboard/client-command/underwriting)
 - Buyer portal demo: [http://localhost:3000/buyer-portal](http://localhost:3000/buyer-portal)
 - Seller portal demo: [http://localhost:3000/seller-portal](http://localhost:3000/seller-portal)
 - Backend health: [http://localhost:8000/health](http://localhost:8000/health)

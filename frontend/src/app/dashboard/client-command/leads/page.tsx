@@ -3,7 +3,12 @@ import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { Section } from "@/components/Section";
-import { clientLeadCards, formatCurrency } from "@/lib/demo-data";
+import {
+  clientAppointmentReadinessReviews,
+  clientLeadCards,
+  clientOfferReadinessGates,
+  formatCurrency
+} from "@/lib/demo-data";
 
 export default function ClientCommandLeadsPage() {
   const missingCount = clientLeadCards.reduce((total, card) => total + card.missingData.length, 0);
@@ -31,6 +36,8 @@ export default function ClientCommandLeadsPage() {
               <th>Equity</th>
               <th>Priority</th>
               <th>Confidence</th>
+              <th>Acquisition</th>
+              <th>Offer Gate</th>
               <th>Next Action</th>
             </tr>
           </thead>
@@ -45,6 +52,16 @@ export default function ClientCommandLeadsPage() {
                 <td>{formatCurrency(card.lead.estimatedEquity)}</td>
                 <td><Pill tone={card.score.finalPriorityScore >= 70 ? "green" : "gold"}>{card.score.finalPriorityScore}</Pill></td>
                 <td>{card.score.confidenceLevel}</td>
+                <td>
+                  <Pill tone={clientAppointmentReadinessReviews.find((item) => item.leadId === card.lead.id)?.appointmentReady ? "green" : "gold"}>
+                    {clientAppointmentReadinessReviews.find((item) => item.leadId === card.lead.id)?.appointmentReady ? "ready" : "review"}
+                  </Pill>
+                </td>
+                <td>
+                  <Pill tone={clientOfferReadinessGates.find((item) => item.leadId === card.lead.id)?.readinessStatus === "ready_for_client_review" ? "green" : "red"}>
+                    {clientOfferReadinessGates.find((item) => item.leadId === card.lead.id)?.readinessStatus ?? "not_ready"}
+                  </Pill>
+                </td>
                 <td>{card.nextAction?.actionLabel ?? card.score.recommendedNextAction}</td>
               </tr>
             ))}
