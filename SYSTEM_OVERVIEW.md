@@ -382,14 +382,27 @@ Prime 2 Wholesale Deal OS supports wholesale real estate operations, but it does
 Forecasts, buyer margins, assignment fees, ARV inputs, repair estimates, and probability scores are estimates or source-backed internal calculations. They are not guaranteed profits, guaranteed closings, legal advice, investment advice, or binding commitments.
 ## Client Command OS
 
-The client-facing Prime2 Client Command OS now spans CP1 through CP7.
+The client-facing Prime2 Client Command OS now spans CP1 through CP8.
 
 Current controlled loop:
-Lead Intelligence -> Acquisition Prep -> Underwriting -> Buyer Matching -> Compliance Contact Gate -> Weekly Client Command Report
+Lead Intelligence -> Acquisition Prep -> Underwriting -> Buyer Matching -> Compliance Contact Gate -> Weekly Client Command Report -> Client Onboarding + Workspace Activation Readiness
 
-CP6 and CP7 remain readiness-only:
+CP6 through CP8 remain readiness-only:
 - no provider calls
 - no DNC checks
 - no 10DLC registration
 - no live communication
 - no guaranteed ROI or revenue claims
+
+CP8 adds:
+- business and strategy profiles
+- market and pipeline setup
+- lead-source and buyer-list setup review
+- team and compliance setup checklists
+- first-lead readiness tracking
+- workspace readiness scoring
+- activation blockers
+- manual-operation go-live gating
+- onboarding tasks and timeline events
+- first weekly-cycle readiness
+- client-safe onboarding reports

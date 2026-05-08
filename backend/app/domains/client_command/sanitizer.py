@@ -6,11 +6,15 @@ from app.models import (
     ClientAcquisitionBrief,
     ClientAcquisitionDivisionEvent,
     ClientAppointmentReadinessReview,
+    ClientActivationBlocker,
     ClientBuyerBuyBox,
     ClientBuyerConfidenceScore,
     ClientBuyerDemandEvidence,
+    ClientBuyerListSetup,
     ClientBuyerOutreachDraft,
+    ClientBusinessProfile,
     ClientBuyerProfile,
+    ClientComplianceSetupChecklist,
     ClientCommunicationApprovalGate,
     ClientComplianceDivisionEvent,
     ClientComplianceReadinessPlaceholder,
@@ -22,20 +26,34 @@ from app.models import (
     ClientDispositionDivisionEvent,
     ClientDispositionReadinessGate,
     ClientFollowUpDraft,
+    ClientFirstLeadImportChecklist,
+    ClientFirstWeeklyCycleReadiness,
+    ClientGoLiveReadinessGate,
     ClientLeadDivisionEvent,
     ClientLeadIntelligenceScore,
     ClientLeadMissingDataItem,
     ClientLeadNextBestAction,
     ClientLeadProfile,
+    ClientLeadSourceSetup,
+    ClientMarketSetup,
     ClientMessageRiskReview,
     ClientObjectionResponseDraft,
+    ClientOnboardingManagerEvent,
+    ClientOnboardingReport,
+    ClientOnboardingTask,
+    ClientOnboardingTimelineEvent,
     ClientOfferReadinessGate,
     ClientOfferScenario,
+    ClientPipelineSetup,
+    ClientPipelineStageTemplate,
     ClientSafeContactStatus,
     ClientSellerQuestion,
     ClientSellerQuestionPlan,
+    ClientStrategyProfile,
+    ClientTeamSetupChecklist,
     ClientUnderwritingDivisionEvent,
     ClientUnderwritingReview,
+    ClientWorkspaceReadinessScore,
     ClientWeeklyBottleneck,
     ClientWeeklyCommandReport,
     ClientWeeklyDivisionSummary,
@@ -72,6 +90,10 @@ FORBIDDEN_KEYS = {
     "legal_conclusions",
     "hidden_policy_logic",
     "unsafe_execution_fields",
+    "billing_internals",
+    "billing_internal_state",
+    "live_provider_flags",
+    "live_provider_enabled",
     "provider_payload",
     "admin_only_controls_visible",
     "can_use_admin_controls",
@@ -365,6 +387,132 @@ def weekly_division_summary_public(summary: ClientWeeklyDivisionSummary) -> dict
 
 
 def weekly_report_event_public(event: ClientWeeklyReportEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def business_profile_public(profile: ClientBusinessProfile) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(profile))
+    data["client_safe"] = True
+    return data
+
+
+def strategy_profile_public(profile: ClientStrategyProfile) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(profile))
+    data["client_safe"] = True
+    return data
+
+
+def market_setup_public(market: ClientMarketSetup) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(market))
+    data["client_safe"] = True
+    data["no_live_data_provider"] = True
+    return data
+
+
+def pipeline_setup_public(pipeline: ClientPipelineSetup) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(pipeline))
+    data["client_safe"] = True
+    return data
+
+
+def pipeline_stage_public(stage: ClientPipelineStageTemplate) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(stage))
+    data["client_safe"] = True
+    return data
+
+
+def lead_source_setup_public(source: ClientLeadSourceSetup) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(source))
+    data["client_safe"] = True
+    data["provider_connected"] = False
+    data["no_provider_sync"] = True
+    return data
+
+
+def buyer_list_setup_public(setup: ClientBuyerListSetup) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(setup))
+    data["client_safe"] = True
+    data["no_buyer_contacted"] = True
+    data["no_campaign_started"] = True
+    return data
+
+
+def team_setup_checklist_public(checklist: ClientTeamSetupChecklist) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(checklist))
+    data["client_safe"] = True
+    return data
+
+
+def compliance_setup_checklist_public(checklist: ClientComplianceSetupChecklist) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(checklist))
+    data["client_safe"] = True
+    data["no_provider_check"] = True
+    data["no_live_registration"] = True
+    return data
+
+
+def first_lead_import_checklist_public(checklist: ClientFirstLeadImportChecklist) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(checklist))
+    data["client_safe"] = True
+    data["no_external_import"] = True
+    return data
+
+
+def workspace_readiness_public(score: ClientWorkspaceReadinessScore) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(score))
+    data["client_safe"] = True
+    data["no_live_actions_enabled"] = True
+    return data
+
+
+def activation_blocker_public(blocker: ClientActivationBlocker) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(blocker))
+    data["client_safe"] = True
+    return data
+
+
+def go_live_gate_public(gate: ClientGoLiveReadinessGate) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(gate))
+    data["client_safe"] = True
+    data["no_live_communication"] = True
+    data["no_provider_execution"] = True
+    data["no_billing_action"] = True
+    data["no_contract_action"] = True
+    data["no_campaign_action"] = True
+    return data
+
+
+def onboarding_task_public(task: ClientOnboardingTask) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(task))
+    data["client_safe"] = True
+    return data
+
+
+def onboarding_timeline_event_public(event: ClientOnboardingTimelineEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def first_weekly_cycle_readiness_public(readiness: ClientFirstWeeklyCycleReadiness) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(readiness))
+    data["client_safe"] = True
+    data["no_live_actions_taken"] = True
+    return data
+
+
+def onboarding_report_public(report: ClientOnboardingReport) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(report))
+    data["client_safe"] = True
+    data["no_live_actions_enabled"] = True
+    data["no_revenue_guarantee"] = True
+    data["no_roi_claim"] = True
+    return data
+
+
+def onboarding_manager_event_public(event: ClientOnboardingManagerEvent) -> dict[str, Any]:
     data = strip_forbidden(model_to_dict(event))
     data["client_visible"] = True
     return data

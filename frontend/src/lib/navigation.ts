@@ -7,6 +7,7 @@ export const dashboardRoutes = [
   { href: "/dashboard/client-command/disposition", label: "Client Disposition", icon: "Handshake" },
   { href: "/dashboard/client-command/compliance", label: "Client Compliance", icon: "ShieldCheck" },
   { href: "/dashboard/client-command/reports", label: "Client Reports", icon: "FileText" },
+  { href: "/dashboard/client-command/onboarding", label: "Client Onboarding", icon: "ClipboardList" },
   { href: "/dashboard/first-deal-cockpit", label: "First Deal Cockpit", icon: "ClipboardList" },
   { href: "/dashboard/autonomy", label: "Autonomy", icon: "Command" },
   { href: "/dashboard/auto-execution", label: "Auto Execution", icon: "TimerReset" },

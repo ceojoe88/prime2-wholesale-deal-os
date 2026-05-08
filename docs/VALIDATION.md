@@ -53,6 +53,7 @@ Expected coverage includes:
 - CP3 validation lane `client_command_acquisition_cp3`: deterministic acquisition briefs, missing-data-driven question plans, manual-use follow-up drafts, appointment readiness blocks, client-safe sanitizer, and no outbound provider actions
 - CP4 validation lane `client_command_underwriting_cp4`: evidence packet isolation, missing evidence tracking, ARV/repair blocks, transparent MAO/scenario math, offer readiness gates, no offer/contract execution, and sanitized evidence items
 - CP5 validation lane `client_command_disposition_cp5`: buyer profile workspace isolation, deterministic buyer confidence, buy box scoping, deal-to-buyer matching, disposition readiness gates, manual-only buyer drafts, Memphis scenario states, no buyer contact, no campaign, and no provider actions
+- CP8 validation lane `client_command_onboarding_cp8`: business/strategy/market/pipeline setup, lead-source non-sync posture, buyer-list and team/compliance checklist readiness, first-leads readiness, weighted workspace readiness score, manual-operation go-live gating, onboarding tasks, first weekly-cycle readiness, onboarding reports, and no provider/billing/campaign/contract execution
 
 ## Frontend
 
@@ -82,6 +83,7 @@ Expected coverage includes:
 - CP1-CP5 client command routes render and expose no dangerous send/call/provider/billing/contract/campaign controls
 - CP3/CP4 client command routes render and expose no forbidden send/call/provider/billing/contract/payment controls
 - CP5 client command routes render and expose no forbidden buyer outreach, campaign, provider, billing, contract, payment, or sync controls
+- CP8 client command onboarding routes render and expose no forbidden send/call/provider/billing/campaign/contract controls
 
 ## Source Sweeps
 
@@ -351,7 +353,7 @@ Before any hosted deployment:
 - Contract execution remains external.
 - Payment handling remains unavailable.
 - Owner approval gates remain enabled.
-## Client Command CP6-CP7 Validation
+## Client Command CP6-CP8 Validation
 
 Minimum validation lane:
 - Alembic upgrade head on a clean SQLite validation DB
@@ -374,3 +376,14 @@ CP7 boundaries to verify:
 - no revenue guarantee
 - no ROI guarantee
 - no fake outcome claims
+
+CP8 boundaries to verify:
+- onboarding is setup/readiness only
+- go-live means manual Prime2 operation only
+- no messages are sent
+- no campaigns start
+- no provider sync occurs
+- no DNC provider checks occur
+- no 10DLC live registration occurs
+- no billing or payment actions occur
+- no contract or e-signature actions occur

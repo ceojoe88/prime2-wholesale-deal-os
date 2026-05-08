@@ -1398,7 +1398,7 @@ Allowed:
 ## Migration Strategy
 
 The initial Alembic revision creates the SQLAlchemy metadata-defined schema. The backend defaults to SQLite for local operator use and switches to Postgres when `DATABASE_URL` points to a Postgres database.
-## Client Command CP6-CP7
+## Client Command CP6-CP8
 
 CP6 extends the existing `client_command` domain with:
 - consent records
@@ -1424,3 +1424,24 @@ Both phases preserve:
 - client-safe sanitization
 - deterministic logic
 - non-live execution boundaries
+
+CP8 extends the same `client_command` domain with:
+- business profiles
+- strategy profiles
+- market setups
+- pipeline setups and stage templates
+- lead source setups
+- buyer-list setup records
+- team setup checklists
+- compliance setup checklists
+- first-lead import checklists
+- workspace readiness scores
+- activation blockers
+- manual-operation go-live readiness gates
+- onboarding tasks
+- onboarding timeline events
+- first weekly-cycle readiness records
+- onboarding reports
+- onboarding manager events
+
+CP8 is a setup and activation-readiness layer only. It does not enable provider execution, live communication, DNC checks, 10DLC registration, billing, campaigns, contracts, or autonomous execution. In CP8, "go-live" means the workspace is ready for controlled/manual Prime2 operation only.

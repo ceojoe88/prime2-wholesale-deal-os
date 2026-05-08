@@ -3,9 +3,19 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
-import { clientCommandPermissions, clientCommandSafetyCards, clientWorkspaces } from "@/lib/demo-data";
+import {
+  clientActivationBlockers,
+  clientCommandPermissions,
+  clientCommandSafetyCards,
+  clientGoLiveReadinessGates,
+  clientWorkspaceReadinessScores,
+  clientWorkspaces
+} from "@/lib/demo-data";
 
 export default function ClientCommandWorkspacesPage() {
+  const readiness = clientWorkspaceReadinessScores[0];
+  const gate = clientGoLiveReadinessGates[0];
+  const blocker = clientActivationBlockers[0];
   return (
     <div className="page">
       <PageHeader
@@ -20,6 +30,15 @@ export default function ClientCommandWorkspacesPage() {
         <MetricCard label="Live lanes" value="0" detail="Provider lanes unavailable" />
         <MetricCard label="Admin exposure" value="0" detail="Internal governance hidden" />
       </div>
+
+      <Section title="Activation Readiness Snapshot">
+        <div className="metric-grid">
+          <MetricCard label="Workspace readiness" value={String(readiness?.readinessScore ?? 0)} detail={readiness?.readinessStatus ?? "not_started"} />
+          <MetricCard label="Manual gate" value={gate?.gateStatus ?? "not_ready"} detail={gate?.approvedScope ?? "manual review only"} />
+          <MetricCard label="Top blocker" value={blocker?.severity ?? "clear"} detail={blocker?.blockerSummary ?? "No blockers"} />
+          <MetricCard label="Billing lanes" value="0" detail="No billing/admin controls in client view" />
+        </div>
+      </Section>
 
       <Section title="Workspace Registry">
         <div className="record-list">

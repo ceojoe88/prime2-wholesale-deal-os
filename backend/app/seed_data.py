@@ -133,9 +133,11 @@ from app.models import (
     ClientBuyerDemandEvidence,
     ClientBuyerOutreachDraft,
     ClientBuyerProfile,
+    ClientBusinessProfile,
     ClientCommunicationApprovalGate,
     ClientComplianceDivisionEvent,
     ClientComplianceReadinessPlaceholder,
+    ClientComplianceSetupChecklist,
     ClientContactConsentRecord,
     ClientContactOptOutRecord,
     ClientDealEvidenceItem,
@@ -143,21 +145,37 @@ from app.models import (
     ClientDealBuyerMatch,
     ClientDispositionDivisionEvent,
     ClientDispositionReadinessGate,
+    ClientFirstLeadImportChecklist,
+    ClientFirstWeeklyCycleReadiness,
     ClientFollowUpDraft,
+    ClientGoLiveReadinessGate,
     ClientLeadDivisionEvent,
     ClientLeadIntelligenceScore,
     ClientLeadMissingDataItem,
     ClientLeadNextBestAction,
     ClientLeadProfile,
+    ClientLeadSourceSetup,
     ClientMessageRiskReview,
     ClientObjectionResponseDraft,
+    ClientOnboardingManagerEvent,
+    ClientOnboardingReport,
+    ClientOnboardingTask,
+    ClientOnboardingTimelineEvent,
     ClientOfferReadinessGate,
     ClientOfferScenario,
+    ClientPipelineSetup,
+    ClientPipelineStageTemplate,
     ClientSafeContactStatus,
     ClientSellerQuestion,
     ClientSellerQuestionPlan,
+    ClientStrategyProfile,
+    ClientTeamSetupChecklist,
     ClientUnderwritingDivisionEvent,
     ClientUnderwritingReview,
+    ClientWorkspaceReadinessScore,
+    ClientActivationBlocker,
+    ClientBuyerListSetup,
+    ClientMarketSetup,
     ClientWeeklyBottleneck,
     ClientWeeklyCommandReport,
     ClientWeeklyDivisionSummary,
@@ -8713,6 +8731,14 @@ CLIENT_COMMAND_PERMISSIONS = [
     "client_command.compliance_manage",
     "client_command.contact_gate_view",
     "client_command.contact_gate_manage",
+    "client_command.onboarding_view",
+    "client_command.onboarding_manage",
+    "client_command.onboarding_tasks_view",
+    "client_command.onboarding_tasks_manage",
+    "client_command.readiness_view",
+    "client_command.readiness_manage",
+    "client_command.activation_gate_view",
+    "client_command.activation_gate_manage",
     "client_command.admin",
 ]
 
@@ -8728,9 +8754,9 @@ def build_client_workspace_records() -> list[dict[str, object]]:
             "market_focus": ["Dallas TX", "Fort Worth TX"],
             "allowed_permissions": CLIENT_COMMAND_PERMISSIONS,
             "safety_rules": [
-                "No outbound provider actions in CP1-CP7.",
+                "No outbound provider actions in CP1-CP8.",
                 "No internal Prime governance or raw provider payload exposure.",
-                "Lead intelligence, acquisition prep, underwriting, disposition, compliance, and weekly reports are deterministic and client-safe.",
+                "Lead intelligence, acquisition prep, underwriting, disposition, compliance, reporting, and onboarding remain deterministic and client-safe.",
             ],
             "onboarding_notes": "Client workspace foundation seeded for safe command-center review.",
             "internal_prime_governance_visible": False,
@@ -8755,7 +8781,7 @@ def build_client_workspace_records() -> list[dict[str, object]]:
                 "client_command.reports_view",
             ],
             "safety_rules": [
-                "No outbound provider actions in CP1-CP7.",
+                "No outbound provider actions in CP1-CP8.",
                 "Workspace data remains tenant-isolated.",
             ],
             "onboarding_notes": "Second workspace used to validate tenant isolation.",
@@ -9750,7 +9776,7 @@ def build_client_underwriting_division_event_records() -> list[dict[str, object]
 
 
 def add_memphis_client_demo(payload: dict[str, list[dict[str, object]]]) -> None:
-    """Add the CP1-CP7 Memphis demo scenario for client command walkthroughs."""
+    """Add the CP1-CP8 Memphis demo scenario for client command walkthroughs."""
 
     workspace_id = "client-workspace-003"
     lead_ids = [f"client-lead-memphis-00{index}" for index in range(1, 6)]
@@ -9764,11 +9790,11 @@ def add_memphis_client_demo(payload: dict[str, list[dict[str, object]]]) -> None
             "market_focus": ["Memphis TN", "Shelby County TN"],
             "allowed_permissions": CLIENT_COMMAND_PERMISSIONS,
             "safety_rules": [
-                "Demo/local CP1-CP7 client command scenario only.",
+                "Demo/local CP1-CP8 client command scenario only.",
                 "No outbound provider actions, offers, contracts, billing, or live outreach.",
-                "Compliance and reporting remain manual/readiness-only with no provider checks.",
+                "Compliance, reporting, and onboarding remain manual/readiness-only with no provider checks.",
             ],
-            "onboarding_notes": "Five-lead Memphis demo scenario for acquisition, underwriting, disposition, compliance, and weekly-report walkthroughs.",
+            "onboarding_notes": "Five-lead Memphis demo scenario for acquisition, underwriting, disposition, compliance, reporting, and onboarding walkthroughs.",
             "internal_prime_governance_visible": False,
             "raw_provider_payload_exposure_allowed": False,
             "admin_only_controls_visible": False,
@@ -12071,6 +12097,563 @@ def add_memphis_client_demo(payload: dict[str, list[dict[str, object]]]) -> None
             "client_visible": True,
         }
     )
+    payload["client_business_profiles"].append(
+        {
+            "id": "client-business-profile-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "business_name": "Memphis Virtual Wholesale Operator",
+            "operator_name": "Memphis Demo Operator",
+            "business_type": "solo_wholesaler",
+            "experience_level": "intermediate",
+            "primary_market": "Memphis, TN",
+            "secondary_markets": ["Shelby County, TN"],
+            "monthly_lead_goal": 20,
+            "monthly_contract_goal": 2,
+            "preferred_strategy": "wholesaling",
+            "current_tools_summary": "Demo/manual Prime2 client command workspace only.",
+            "biggest_bottleneck": "buyers",
+            "client_safe_summary": "Memphis Virtual Wholesale Operator runs a manual-first virtual wholesale workflow in Memphis, TN.",
+        }
+    )
+    payload["client_strategy_profiles"].append(
+        {
+            "id": "client-strategy-profile-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "strategy_type": "virtual_wholesale",
+            "acquisition_channels": ["manual_entry", "referrals", "driving_for_dollars"],
+            "disposition_channels": ["buyer_list", "manual_review"],
+            "target_property_types": ["single_family", "small_multifamily"],
+            "target_seller_situations": ["vacant", "inheritance", "tired_landlord", "high_equity"],
+            "target_price_band_min": 50000,
+            "target_price_band_max": 180000,
+            "assignment_fee_target": 10000,
+            "risk_tolerance": "balanced",
+            "operating_mode": "manual",
+            "strategy_summary": "Manual-only virtual wholesale setup focused on Memphis leads and buyer-list review.",
+            "requires_human_review": False,
+        }
+    )
+    payload["client_market_setups"].append(
+        {
+            "id": "client-market-setup-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "market_name": "Memphis, TN",
+            "state": "TN",
+            "counties": ["Shelby County"],
+            "cities": ["Memphis"],
+            "zip_codes": ["38106", "38111", "38116", "38118", "38127"],
+            "market_priority": "primary",
+            "market_status": "configured",
+            "market_notes_summary": "Demo/local market setup only with no live provider data.",
+            "no_live_data_provider": True,
+        }
+    )
+    payload["client_pipeline_setups"].append(
+        {
+            "id": "client-pipeline-setup-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "pipeline_name": "Prime2 Full Deal Loop",
+            "pipeline_type": "full_deal_loop",
+            "setup_status": "configured",
+            "stage_count": 12,
+            "client_safe_summary": "Client-safe setup only; pipeline stages support controlled/manual Prime2 operation.",
+        }
+    )
+    payload["client_pipeline_stage_templates"].extend(
+        [
+            {
+                "id": "client-pipeline-stage-memphis-001",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "New Lead",
+                "stage_order": 1,
+                "stage_type": "new_lead",
+                "required_before_next": [],
+                "manager_owner": "Lead Intelligence Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-002",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Contact Needed",
+                "stage_order": 2,
+                "stage_type": "contact_needed",
+                "required_before_next": ["lead_profile"],
+                "manager_owner": "Lead Intelligence Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-003",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Acquisition Prep",
+                "stage_order": 3,
+                "stage_type": "acquisition_prep",
+                "required_before_next": ["contact_channels"],
+                "manager_owner": "Acquisition Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-004",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Appointment Ready",
+                "stage_order": 4,
+                "stage_type": "appointment_ready",
+                "required_before_next": ["motivation", "timeline", "condition"],
+                "manager_owner": "Acquisition Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-005",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Evidence Needed",
+                "stage_order": 5,
+                "stage_type": "evidence_needed",
+                "required_before_next": ["seller_notes"],
+                "manager_owner": "Underwriting Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-006",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Underwriting Review",
+                "stage_order": 6,
+                "stage_type": "underwriting_review",
+                "required_before_next": ["arv", "repairs"],
+                "manager_owner": "Underwriting Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-007",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Offer Ready",
+                "stage_order": 7,
+                "stage_type": "offer_ready",
+                "required_before_next": ["mao", "evidence_packet"],
+                "manager_owner": "Underwriting Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-008",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Buyer Matching",
+                "stage_order": 8,
+                "stage_type": "buyer_matching",
+                "required_before_next": ["offer_readiness"],
+                "manager_owner": "Disposition Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-009",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Disposition Ready",
+                "stage_order": 9,
+                "stage_type": "disposition_ready",
+                "required_before_next": ["buyer_match"],
+                "manager_owner": "Disposition Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-010",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Compliance Review",
+                "stage_order": 10,
+                "stage_type": "compliance_review",
+                "required_before_next": ["manual_use_gate"],
+                "manager_owner": "Compliance Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-011",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Blocked / Needs Review",
+                "stage_order": 11,
+                "stage_type": "blocked",
+                "required_before_next": [],
+                "manager_owner": "Onboarding Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pipeline-stage-memphis-012",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "pipeline_setup_id": "client-pipeline-setup-memphis",
+                "stage_name": "Closed / Archived",
+                "stage_order": 12,
+                "stage_type": "closed_archived",
+                "required_before_next": [],
+                "manager_owner": "Client Success Manager",
+                "client_safe": True,
+            },
+        ]
+    )
+    payload["client_lead_source_setups"].extend(
+        [
+            {
+                "id": "client-lead-source-memphis-manual",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "source_name": "Memphis manual demo leads",
+                "source_type": "manual_entry",
+                "source_status": "active_manual",
+                "expected_monthly_leads": 12,
+                "cost_tracking_enabled": False,
+                "provider_connected": False,
+                "no_provider_sync": True,
+                "notes_summary": "Setup record only - no provider sync or campaign launch occurred.",
+            },
+            {
+                "id": "client-lead-source-memphis-referrals",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "source_name": "Memphis referrals demo",
+                "source_type": "referrals",
+                "source_status": "active_manual",
+                "expected_monthly_leads": 6,
+                "cost_tracking_enabled": False,
+                "provider_connected": False,
+                "no_provider_sync": True,
+                "notes_summary": "Manual referral setup only with no provider connectivity.",
+            },
+        ]
+    )
+    payload["client_buyer_list_setups"].append(
+        {
+            "id": "client-buyer-list-setup-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "setup_status": "ready_for_matching",
+            "buyer_count": 4,
+            "active_buyer_count": 3,
+            "clear_buy_box_count": 3,
+            "missing_buy_box_count": 1,
+            "verified_or_stated_funding_count": 3,
+            "needs_review_count": 2,
+            "recommended_next_step": "Buyer setup only - no buyer has been contacted.",
+            "no_buyer_contacted": True,
+            "no_campaign_started": True,
+        }
+    )
+    payload["client_team_setup_checklists"].append(
+        {
+            "id": "client-team-checklist-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "owner_added": True,
+            "acquisition_role_added": True,
+            "underwriting_role_added": True,
+            "disposition_role_added": True,
+            "compliance_owner_added": False,
+            "client_success_owner_added": False,
+            "team_member_count": 1,
+            "missing_roles": ["compliance_owner", "client_success_owner"],
+            "setup_status": "partial",
+            "recommended_next_step": "Document compliance and client success ownership, or note that the operator covers those reviews manually.",
+        }
+    )
+    payload["client_compliance_setup_checklists"].append(
+        {
+            "id": "client-compliance-setup-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "consent_policy_documented": True,
+            "opt_out_process_documented": True,
+            "dnc_placeholder_created": True,
+            "ten_dlc_placeholder_created": True,
+            "email_unsubscribe_placeholder_created": True,
+            "call_recording_notice_placeholder_created": False,
+            "compliance_owner_assigned": False,
+            "setup_status": "needs_review",
+            "block_reasons": ["compliance_owner_missing", "call_recording_notice_placeholder_missing"],
+            "recommended_next_step": "Readiness checklist only - no DNC provider check or 10DLC live registration occurred.",
+            "no_provider_check": True,
+            "no_live_registration": True,
+        }
+    )
+    payload["client_first_lead_import_checklists"].append(
+        {
+            "id": "client-first-leads-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "first_10_leads_target": 10,
+            "current_lead_count": 5,
+            "leads_with_contact_count": 5,
+            "leads_with_property_address_count": 5,
+            "leads_with_motivation_count": 5,
+            "leads_with_condition_count": 5,
+            "leads_with_timeline_count": 5,
+            "leads_scored_count": 5,
+            "hot_leads_count": 3,
+            "import_status": "ready_for_review",
+            "missing_requirements": ["first_10_leads_target_not_met"],
+            "recommended_next_step": "Demo/local first-leads checklist is usable for manual review, but the first-10 target is not fully met yet.",
+            "no_external_import": True,
+        }
+    )
+    payload["client_workspace_readiness_scores"].append(
+        {
+            "id": "client-readiness-score-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "readiness_score": 83,
+            "readiness_status": "ready_for_manual_operation",
+            "business_profile_score": 100,
+            "market_setup_score": 100,
+            "pipeline_setup_score": 100,
+            "lead_source_score": 65,
+            "lead_import_score": 65,
+            "buyer_setup_score": 80,
+            "team_setup_score": 70,
+            "compliance_setup_score": 80,
+            "report_readiness_score": 100,
+            "top_blockers": ["unknown", "unsafe_contact_posture", "unknown"],
+            "recommended_next_step": "Manual operation readiness is close; finish compliance ownership and add more leads before depending on the first weekly cycle.",
+            "no_live_actions_enabled": True,
+        }
+    )
+    payload["client_activation_blockers"].extend(
+        [
+            {
+                "id": "client-activation-blocker-memphis-leads",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "blocker_type": "unknown",
+                "severity": "medium",
+                "blocker_summary": "The first 10-lead target is not met yet.",
+                "affected_area": "leads",
+                "recommended_fix": "Continue loading or qualifying leads until the first-10 target is reached.",
+                "resolved": False,
+            },
+            {
+                "id": "client-activation-blocker-memphis-compliance",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "blocker_type": "unsafe_contact_posture",
+                "severity": "medium",
+                "blocker_summary": "Manual-use contact posture still needs review on one or more records.",
+                "affected_area": "compliance",
+                "recommended_fix": "Resolve consent and opt-out questions before treating more contacts as ready.",
+                "resolved": False,
+            },
+            {
+                "id": "client-activation-blocker-memphis-buyers",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "blocker_type": "unknown",
+                "severity": "medium",
+                "blocker_summary": "Some leads still need buyer demand evidence before disposition review.",
+                "affected_area": "buyers",
+                "recommended_fix": "Add buyer demand evidence or stronger buyer matches for blocked leads.",
+                "resolved": False,
+            },
+        ]
+    )
+    payload["client_go_live_readiness_gates"].append(
+        {
+            "id": "client-go-live-gate-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "gate_status": "ready_for_manual_operation",
+            "readiness_score_snapshot": 83,
+            "required_before_manual_operation": ["unknown", "unsafe_contact_posture", "unknown"],
+            "block_reasons": [
+                "The first 10-lead target is not met yet.",
+                "Manual-use contact posture still needs review on one or more records.",
+                "Some leads still need buyer demand evidence before disposition review.",
+            ],
+            "approved_scope": "manual_operation_only",
+            "no_live_communication": True,
+            "no_provider_execution": True,
+            "no_billing_action": True,
+            "no_contract_action": True,
+            "no_campaign_action": True,
+            "client_safe_summary": "Manual operation readiness only - no live communication, provider execution, billing, contracts, or campaigns are enabled.",
+            "requires_human_review": True,
+        }
+    )
+    payload["client_onboarding_tasks"].extend(
+        [
+            {
+                "id": "client-onboarding-task-memphis-001",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "task_title": "Finish the first 10-lead batch",
+                "task_description": "The Memphis demo is usable, but the first 10-lead target is not met yet.",
+                "task_category": "lead_import",
+                "task_status": "todo",
+                "priority": "high",
+                "owner_role": "acquisition_manager",
+                "due_window": "before_activation",
+                "related_blocker_id": "client-activation-blocker-memphis-leads",
+                "client_safe": True,
+            },
+            {
+                "id": "client-onboarding-task-memphis-002",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "task_title": "Document compliance ownership and review gaps",
+                "task_description": "Manual-use contact posture still needs review on one or more records.",
+                "task_category": "compliance",
+                "task_status": "in_progress",
+                "priority": "high",
+                "owner_role": "compliance_manager",
+                "due_window": "this_week",
+                "related_blocker_id": "client-activation-blocker-memphis-compliance",
+                "client_safe": True,
+            },
+            {
+                "id": "client-onboarding-task-memphis-003",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "task_title": "Add buyer demand evidence for blocked leads",
+                "task_description": "Some leads still need buyer demand evidence before disposition review.",
+                "task_category": "buyer_list",
+                "task_status": "todo",
+                "priority": "medium",
+                "owner_role": "disposition_manager",
+                "due_window": "this_week",
+                "related_blocker_id": "client-activation-blocker-memphis-buyers",
+                "client_safe": True,
+            },
+        ]
+    )
+    payload["client_onboarding_timeline_events"].extend(
+        [
+            {
+                "id": "client-onboarding-timeline-memphis-001",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "event_type": "workspace_created",
+                "event_summary": "Client workspace foundation is in place.",
+                "milestone_name": "Workspace foundation",
+                "progress_percent": 15,
+                "manager_name": "Onboarding Manager",
+                "client_visible": True,
+            },
+            {
+                "id": "client-onboarding-timeline-memphis-002",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "event_type": "setup_reviewed",
+                "event_summary": "Onboarding Manager reviewed setup records and checklists.",
+                "milestone_name": "Setup review",
+                "progress_percent": 48,
+                "manager_name": "Onboarding Manager",
+                "client_visible": True,
+            },
+            {
+                "id": "client-onboarding-timeline-memphis-003",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "event_type": "readiness_scored",
+                "event_summary": "Workspace readiness score was calculated for manual operation.",
+                "milestone_name": "Readiness scored",
+                "progress_percent": 83,
+                "manager_name": "Onboarding Manager",
+                "client_visible": True,
+            },
+            {
+                "id": "client-onboarding-timeline-memphis-004",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "event_type": "weekly_cycle_reviewed",
+                "event_summary": "First weekly cycle readiness was reviewed without enabling live actions.",
+                "milestone_name": "Weekly cycle readiness",
+                "progress_percent": 88,
+                "manager_name": "Onboarding Manager",
+                "client_visible": True,
+            },
+        ]
+    )
+    payload["client_first_weekly_cycle_readiness"].append(
+        {
+            "id": "client-first-weekly-cycle-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "ready_for_first_weekly_cycle": True,
+            "lead_minimum_met": True,
+            "buyer_setup_minimum_met": True,
+            "compliance_minimum_met": True,
+            "report_can_generate": True,
+            "top_missing_items": [],
+            "recommended_next_step": "Run the first weekly client command cycle in manual mode.",
+            "no_live_actions_taken": True,
+        }
+    )
+    payload["client_onboarding_reports"].append(
+        {
+            "id": "client-onboarding-report-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "report_status": "client_visible",
+            "report_title": "Memphis Virtual Wholesale Operator onboarding readiness report",
+            "executive_summary": "Memphis Virtual Wholesale Operator is ready for controlled/manual Prime2 operation, with follow-up blockers still open around compliance review, first-10 lead volume, and buyer-demand coverage.",
+            "setup_progress_summary": "Business profile, strategy, market setup, pipeline, buyer setup, compliance placeholders, and reporting are documented in demo/local form only.",
+            "readiness_summary": "Go-live readiness remains manual-operation only. No live communication, provider execution, billing, contracts, or campaigns are enabled.",
+            "blocker_summary": "Top blockers are the first 10-lead target, compliance review posture, and buyer demand evidence gaps on some leads.",
+            "next_steps_summary": "Finish the first 10-lead batch, document compliance ownership, and strengthen buyer demand evidence before relying on more disposition review.",
+            "first_week_focus": "Use the first weekly command cycle in manual mode while clearing the remaining blockers.",
+            "client_safe_summary": "Client-safe onboarding report - no revenue, ROI, or deal outcome is guaranteed.",
+            "no_live_actions_enabled": True,
+            "no_revenue_guarantee": True,
+            "no_roi_claim": True,
+        }
+    )
+    payload["client_onboarding_manager_events"].extend(
+        [
+            {
+                "id": "client-onboarding-event-memphis-001",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "event_type": "onboarding_summary",
+                "event_summary": "Onboarding Manager summarized the current workspace setup posture.",
+                "manager_name": "Onboarding Manager",
+                "client_visible": True,
+            },
+            {
+                "id": "client-onboarding-event-memphis-002",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "event_type": "readiness_status",
+                "event_summary": "Onboarding Manager marked workspace readiness as ready_for_manual_operation.",
+                "manager_name": "Onboarding Manager",
+                "client_visible": True,
+            },
+            {
+                "id": "client-onboarding-event-memphis-003",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "event_type": "weekly_cycle_status",
+                "event_summary": "Onboarding Manager confirmed the first weekly cycle is ready in manual mode only.",
+                "manager_name": "Onboarding Manager",
+                "client_visible": True,
+            },
+        ]
+    )
 
 
 def seed_payload() -> dict[str, list[dict[str, object]]]:
@@ -12242,6 +12825,24 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "client_weekly_recommended_actions": [],
         "client_weekly_division_summaries": [],
         "client_weekly_report_events": [],
+        "client_business_profiles": [],
+        "client_strategy_profiles": [],
+        "client_market_setups": [],
+        "client_pipeline_setups": [],
+        "client_pipeline_stage_templates": [],
+        "client_lead_source_setups": [],
+        "client_buyer_list_setups": [],
+        "client_team_setup_checklists": [],
+        "client_compliance_setup_checklists": [],
+        "client_first_lead_import_checklists": [],
+        "client_workspace_readiness_scores": [],
+        "client_activation_blockers": [],
+        "client_go_live_readiness_gates": [],
+        "client_onboarding_tasks": [],
+        "client_onboarding_timeline_events": [],
+        "client_first_weekly_cycle_readiness": [],
+        "client_onboarding_reports": [],
+        "client_onboarding_manager_events": [],
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -12285,6 +12886,24 @@ def seed_database(session: Session) -> dict[str, int]:
         LiveProviderActivationAttempt,
         LiveProviderActivation,
         RealDealExecutionBatch,
+        ClientOnboardingManagerEvent,
+        ClientOnboardingReport,
+        ClientFirstWeeklyCycleReadiness,
+        ClientOnboardingTimelineEvent,
+        ClientOnboardingTask,
+        ClientGoLiveReadinessGate,
+        ClientActivationBlocker,
+        ClientWorkspaceReadinessScore,
+        ClientFirstLeadImportChecklist,
+        ClientComplianceSetupChecklist,
+        ClientTeamSetupChecklist,
+        ClientBuyerListSetup,
+        ClientLeadSourceSetup,
+        ClientPipelineStageTemplate,
+        ClientPipelineSetup,
+        ClientMarketSetup,
+        ClientStrategyProfile,
+        ClientBusinessProfile,
         ClientWeeklyReportEvent,
         ClientWeeklyDivisionSummary,
         ClientWeeklyRecommendedAction,
@@ -12868,6 +13487,78 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         ClientWeeklyReportEvent(**row)
         for row in payload["client_weekly_report_events"]
+    )
+    session.add_all(
+        ClientBusinessProfile(**row)
+        for row in payload["client_business_profiles"]
+    )
+    session.add_all(
+        ClientStrategyProfile(**row)
+        for row in payload["client_strategy_profiles"]
+    )
+    session.add_all(
+        ClientMarketSetup(**row)
+        for row in payload["client_market_setups"]
+    )
+    session.add_all(
+        ClientPipelineSetup(**row)
+        for row in payload["client_pipeline_setups"]
+    )
+    session.add_all(
+        ClientPipelineStageTemplate(**row)
+        for row in payload["client_pipeline_stage_templates"]
+    )
+    session.add_all(
+        ClientLeadSourceSetup(**row)
+        for row in payload["client_lead_source_setups"]
+    )
+    session.add_all(
+        ClientBuyerListSetup(**row)
+        for row in payload["client_buyer_list_setups"]
+    )
+    session.add_all(
+        ClientTeamSetupChecklist(**row)
+        for row in payload["client_team_setup_checklists"]
+    )
+    session.add_all(
+        ClientComplianceSetupChecklist(**row)
+        for row in payload["client_compliance_setup_checklists"]
+    )
+    session.add_all(
+        ClientFirstLeadImportChecklist(**row)
+        for row in payload["client_first_lead_import_checklists"]
+    )
+    session.add_all(
+        ClientWorkspaceReadinessScore(**row)
+        for row in payload["client_workspace_readiness_scores"]
+    )
+    session.add_all(
+        ClientActivationBlocker(**row)
+        for row in payload["client_activation_blockers"]
+    )
+    session.add_all(
+        ClientGoLiveReadinessGate(**row)
+        for row in payload["client_go_live_readiness_gates"]
+    )
+    session.add_all(
+        ClientOnboardingTask(**row)
+        for row in payload["client_onboarding_tasks"]
+    )
+    session.add_all(
+        ClientOnboardingTimelineEvent(**row)
+        for row in payload["client_onboarding_timeline_events"]
+    )
+    session.add_all(
+        ClientFirstWeeklyCycleReadiness(**row)
+        for row in payload["client_first_weekly_cycle_readiness"]
+    )
+    session.add_all(
+        ClientOnboardingReport(**row)
+        for row in payload["client_onboarding_reports"]
+    )
+    session.add_all(
+        ClientOnboardingManagerEvent(**row)
+        for row in payload["client_onboarding_manager_events"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

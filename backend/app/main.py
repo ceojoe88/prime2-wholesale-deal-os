@@ -34,12 +34,17 @@ from app.models import (
     BuyerDemandProfile,
     ClientAcquisitionBrief,
     ClientBuyerProfile,
+    ClientBusinessProfile,
     ClientCommunicationApprovalGate,
+    ClientComplianceSetupChecklist,
     ClientContactConsentRecord,
     ClientDealEvidencePacket,
     ClientDispositionReadinessGate,
+    ClientGoLiveReadinessGate,
+    ClientOnboardingReport,
     ClientWeeklyCommandReport,
     ClientWorkspace,
+    ClientWorkspaceReadinessScore,
     CommunicationDraft,
     CloudDeploymentProfile,
     ContractControl,
@@ -137,6 +142,11 @@ async def lifespan(app: FastAPI):
                 or session.query(ClientContactConsentRecord).count() == 0
                 or session.query(ClientCommunicationApprovalGate).count() == 0
                 or session.query(ClientWeeklyCommandReport).count() == 0
+                or session.query(ClientBusinessProfile).count() == 0
+                or session.query(ClientWorkspaceReadinessScore).count() == 0
+                or session.query(ClientGoLiveReadinessGate).count() == 0
+                or session.query(ClientOnboardingReport).count() == 0
+                or session.query(ClientComplianceSetupChecklist).count() == 0
             ):
                 seed_database(session)
     yield

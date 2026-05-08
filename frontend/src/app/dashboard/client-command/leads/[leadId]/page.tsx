@@ -11,11 +11,14 @@ import {
   clientLeadProfiles,
   clientLeadScores,
   clientAcquisitionDivisionEvents,
+  clientActivationBlockers,
   clientDealEvidenceItems,
   clientFollowUpDrafts,
   clientBuyerDemandEvidence,
   clientBuyerOutreachDrafts,
   clientCommunicationApprovalGates,
+  clientOnboardingTasks,
+  clientOnboardingTimelineEvents,
   clientComplianceDivisionEvents,
   clientComplianceReadinessPlaceholders,
   clientContactConsentRecords,
@@ -28,6 +31,12 @@ import {
   clientSafeContactStatuses,
   clientSellerQuestions,
   clientUnderwritingDivisionEvents,
+  getClientBusinessProfile,
+  getClientBuyerListSetup,
+  getClientComplianceSetupChecklist,
+  getClientFirstLeadImportChecklist,
+  getClientFirstWeeklyCycleReadiness,
+  getClientGoLiveGate,
   formatCurrency,
   getClientAcquisitionBrief,
   getClientAppointmentReadiness,
@@ -37,8 +46,11 @@ import {
   getClientDispositionReadiness,
   getClientLead,
   getClientLeadScore,
+  getClientOnboardingReport,
   getClientOfferReadiness,
   getClientQuestionPlan,
+  getClientStrategyProfile,
+  getClientTeamSetupChecklist,
   getClientUnderwritingReview
 } from "@/lib/demo-data";
 
@@ -79,6 +91,18 @@ export default function ClientLeadDetailPage({ params }: { params: { leadId: str
   const messageRiskReviews = clientMessageRiskReviews.filter((item) => item.leadId === lead.id);
   const communicationGates = clientCommunicationApprovalGates.filter((item) => item.leadId === lead.id);
   const complianceEvents = clientComplianceDivisionEvents.filter((item) => item.leadId === lead.id);
+  const businessProfile = getClientBusinessProfile(lead.workspaceId);
+  const strategyProfile = getClientStrategyProfile(lead.workspaceId);
+  const buyerListSetup = getClientBuyerListSetup(lead.workspaceId);
+  const teamChecklist = getClientTeamSetupChecklist(lead.workspaceId);
+  const complianceChecklist = getClientComplianceSetupChecklist(lead.workspaceId);
+  const firstLeadChecklist = getClientFirstLeadImportChecklist(lead.workspaceId);
+  const goLiveGate = getClientGoLiveGate(lead.workspaceId);
+  const firstWeeklyCycle = getClientFirstWeeklyCycleReadiness(lead.workspaceId);
+  const onboardingReport = getClientOnboardingReport(lead.workspaceId);
+  const onboardingBlockers = clientActivationBlockers.filter((item) => item.workspaceId === lead.workspaceId);
+  const onboardingTasks = clientOnboardingTasks.filter((item) => item.workspaceId === lead.workspaceId);
+  const onboardingTimeline = clientOnboardingTimelineEvents.filter((item) => item.workspaceId === lead.workspaceId);
 
   return (
     <div className="page">
@@ -455,6 +479,53 @@ export default function ClientLeadDetailPage({ params }: { params: { leadId: str
               <RecordCard key={event.id} title={event.managerName} meta={event.eventSummary} right={<Pill tone="green">{event.eventType}</Pill>} />
             ))
           )}
+        </div>
+      </Section>
+      <Section title="Onboarding Manager">
+        <div className="grid-two">
+          <RecordCard title="Workspace Readiness Score" meta={businessProfile?.clientSafeSummary ?? "Create Business Profile to begin onboarding."} right={<Pill tone={goLiveGate?.gateStatus === "ready_for_manual_operation" ? "green" : "gold"}>{goLiveGate?.gateStatus ?? "review"}</Pill>}>
+            <p>Manual operation readiness only - no live communication, provider execution, billing, contracts, or campaigns are enabled.</p>
+            <div className="tag-row">
+              <Pill tone="gold">{strategyProfile?.strategyType ?? "strategy pending"}</Pill>
+              <Pill tone="green">No Live Actions</Pill>
+            </div>
+          </RecordCard>
+          <RecordCard title="First Weekly Cycle Readiness" meta={firstWeeklyCycle?.recommendedNextStep ?? "Review first weekly-cycle readiness after setup."} right={<Pill tone={firstWeeklyCycle?.readyForFirstWeeklyCycle ? "green" : "gold"}>{firstWeeklyCycle?.readyForFirstWeeklyCycle ? "ready" : "review"}</Pill>}>
+            <p>{onboardingReport?.clientSafeSummary ?? "Client-safe onboarding report - no revenue, ROI, or deal outcome is guaranteed."}</p>
+            <div className="tag-row">
+              <Pill tone="green">Manual Use Only</Pill>
+              <Pill tone="green">No Buyer Contacted</Pill>
+            </div>
+          </RecordCard>
+        </div>
+      </Section>
+      <div className="grid-two">
+        <Section title="Activation Blockers">
+          <div className="record-list">
+            {onboardingBlockers.map((blocker) => (
+              <RecordCard key={blocker.id} title={blocker.blockerType} meta={blocker.blockerSummary} right={<Pill tone={blocker.severity === "critical" ? "red" : blocker.severity === "high" ? "gold" : "green"}>{blocker.severity}</Pill>}>
+                <p>{blocker.recommendedFix}</p>
+              </RecordCard>
+            ))}
+          </div>
+        </Section>
+        <Section title="Onboarding Tasks">
+          <div className="record-list">
+            {onboardingTasks.map((task) => (
+              <RecordCard key={task.id} title={task.taskTitle} meta={task.taskDescription} right={<Pill tone={task.priority === "urgent" ? "red" : task.priority === "high" ? "gold" : "green"}>{task.taskStatus}</Pill>} />
+            ))}
+            <RecordCard title="Buyer setup only" meta={buyerListSetup?.recommendedNextStep ?? "Buyer setup only - no buyer has been contacted."} right={<Pill tone="gold">{buyerListSetup?.setupStatus ?? "pending"}</Pill>} />
+            <RecordCard title="Compliance setup checklist" meta={complianceChecklist?.recommendedNextStep ?? "Readiness checklist only - no DNC provider check or 10DLC live registration occurred."} right={<Pill tone="gold">{complianceChecklist?.setupStatus ?? "pending"}</Pill>} />
+            <RecordCard title="First 10 Leads checklist" meta={firstLeadChecklist?.recommendedNextStep ?? "Review first 10 leads checklist."} right={<Pill tone="gold">{firstLeadChecklist?.importStatus ?? "pending"}</Pill>} />
+            <RecordCard title="Team setup checklist" meta={teamChecklist?.recommendedNextStep ?? "Review Team Checklist."} right={<Pill tone="gold">{teamChecklist?.setupStatus ?? "pending"}</Pill>} />
+          </div>
+        </Section>
+      </div>
+      <Section title="Onboarding Timeline">
+        <div className="record-list">
+          {onboardingTimeline.map((event) => (
+            <RecordCard key={event.id} title={event.milestoneName} meta={event.eventSummary} right={<Pill tone="green">{event.progressPercent}%</Pill>} />
+          ))}
         </div>
       </Section>
     </div>

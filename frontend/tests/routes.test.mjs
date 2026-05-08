@@ -40,6 +40,21 @@ const requiredRouteFiles = [
   "src/app/dashboard/client-command/reports/weekly/page.tsx",
   "src/app/dashboard/client-command/reports/bottlenecks/page.tsx",
   "src/app/dashboard/client-command/reports/recommended-actions/page.tsx",
+  "src/app/dashboard/client-command/onboarding/page.tsx",
+  "src/app/dashboard/client-command/onboarding/business-profile/page.tsx",
+  "src/app/dashboard/client-command/onboarding/strategy/page.tsx",
+  "src/app/dashboard/client-command/onboarding/markets/page.tsx",
+  "src/app/dashboard/client-command/onboarding/pipeline/page.tsx",
+  "src/app/dashboard/client-command/onboarding/lead-sources/page.tsx",
+  "src/app/dashboard/client-command/onboarding/buyer-list/page.tsx",
+  "src/app/dashboard/client-command/onboarding/team/page.tsx",
+  "src/app/dashboard/client-command/onboarding/compliance/page.tsx",
+  "src/app/dashboard/client-command/onboarding/first-leads/page.tsx",
+  "src/app/dashboard/client-command/onboarding/readiness/page.tsx",
+  "src/app/dashboard/client-command/onboarding/blockers/page.tsx",
+  "src/app/dashboard/client-command/onboarding/tasks/page.tsx",
+  "src/app/dashboard/client-command/onboarding/report/page.tsx",
+  "src/app/dashboard/client-command/onboarding/activation-board/page.tsx",
   "src/app/dashboard/first-deal-cockpit/page.tsx",
   "src/app/dashboard/first-deal-cockpit/calls/page.tsx",
   "src/app/dashboard/first-deal-cockpit/offers/page.tsx",
@@ -914,6 +929,95 @@ test("CP6 and CP7 client command pages expose no forbidden compliance or reporti
     "dispatch agent",
     "execute",
     "launch campaign",
+    "send deal",
+    "guaranteed roi",
+    "guaranteed profit",
+    "guaranteed buyer",
+    "guaranteed assignment fee"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP8 client command pages render onboarding and manual-readiness boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/workspaces/page.tsx",
+    "src/app/dashboard/client-command/leads/[leadId]/page.tsx",
+    "src/app/dashboard/client-command/onboarding/page.tsx",
+    "src/app/dashboard/client-command/onboarding/business-profile/page.tsx",
+    "src/app/dashboard/client-command/onboarding/strategy/page.tsx",
+    "src/app/dashboard/client-command/onboarding/markets/page.tsx",
+    "src/app/dashboard/client-command/onboarding/pipeline/page.tsx",
+    "src/app/dashboard/client-command/onboarding/lead-sources/page.tsx",
+    "src/app/dashboard/client-command/onboarding/buyer-list/page.tsx",
+    "src/app/dashboard/client-command/onboarding/team/page.tsx",
+    "src/app/dashboard/client-command/onboarding/compliance/page.tsx",
+    "src/app/dashboard/client-command/onboarding/first-leads/page.tsx",
+    "src/app/dashboard/client-command/onboarding/readiness/page.tsx",
+    "src/app/dashboard/client-command/onboarding/blockers/page.tsx",
+    "src/app/dashboard/client-command/onboarding/tasks/page.tsx",
+    "src/app/dashboard/client-command/onboarding/report/page.tsx",
+    "src/app/dashboard/client-command/onboarding/activation-board/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Onboarding Manager/);
+  assert.match(joined, /Manual operation readiness only - no live communication, provider execution, billing, contracts, or campaigns are enabled\./);
+  assert.match(joined, /Setup record only - no provider sync or campaign launch occurred\./);
+  assert.match(joined, /Buyer setup only - no buyer has been contacted\./);
+  assert.match(joined, /Readiness checklist only - no DNC provider check or 10DLC live registration occurred\./);
+  assert.match(joined, /Client-safe onboarding report - no revenue, ROI, or deal outcome is guaranteed\./);
+});
+
+test("CP8 client command pages expose no forbidden onboarding or activation controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/workspaces/page.tsx",
+    "src/app/dashboard/client-command/leads/[leadId]/page.tsx",
+    "src/app/dashboard/client-command/onboarding/page.tsx",
+    "src/app/dashboard/client-command/onboarding/business-profile/page.tsx",
+    "src/app/dashboard/client-command/onboarding/strategy/page.tsx",
+    "src/app/dashboard/client-command/onboarding/markets/page.tsx",
+    "src/app/dashboard/client-command/onboarding/pipeline/page.tsx",
+    "src/app/dashboard/client-command/onboarding/lead-sources/page.tsx",
+    "src/app/dashboard/client-command/onboarding/buyer-list/page.tsx",
+    "src/app/dashboard/client-command/onboarding/team/page.tsx",
+    "src/app/dashboard/client-command/onboarding/compliance/page.tsx",
+    "src/app/dashboard/client-command/onboarding/first-leads/page.tsx",
+    "src/app/dashboard/client-command/onboarding/readiness/page.tsx",
+    "src/app/dashboard/client-command/onboarding/blockers/page.tsx",
+    "src/app/dashboard/client-command/onboarding/tasks/page.tsx",
+    "src/app/dashboard/client-command/onboarding/report/page.tsx",
+    "src/app/dashboard/client-command/onboarding/activation-board/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send sms",
+    "send email",
+    "call now",
+    "auto dial",
+    "start campaign",
+    "launch campaign",
+    "blast buyers",
+    "contact buyer",
+    "contact seller",
+    "pull buyer list",
+    "scrape buyers",
+    "pull skip trace",
+    "check dnc live",
+    "register 10dlc live",
+    "pull live comps",
+    "generate contract",
+    "send offer",
+    "e-sign",
+    "charge",
+    "invoice",
+    "activate billing",
+    "activate live",
+    "sync to provider",
+    "dispatch agent",
+    "execute",
     "send deal",
     "guaranteed roi",
     "guaranteed profit",

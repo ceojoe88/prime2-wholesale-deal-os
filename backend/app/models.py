@@ -3885,3 +3885,316 @@ class ClientWeeklyReportEvent(TimestampMixin, Base):
     event_summary: Mapped[str] = mapped_column(Text, default="")
     manager_name: Mapped[str] = mapped_column(String(120), default="Client Success Manager")
     client_visible: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientBusinessProfile(TimestampMixin, Base):
+    __tablename__ = "client_business_profiles"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    business_name: Mapped[str] = mapped_column(String(180), default="")
+    operator_name: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    business_type: Mapped[str] = mapped_column(String(80), default="unknown")
+    experience_level: Mapped[str] = mapped_column(String(80), default="unknown")
+    primary_market: Mapped[str] = mapped_column(String(120), default="")
+    secondary_markets: Mapped[list[str]] = mapped_column(JSON, default=list)
+    monthly_lead_goal: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    monthly_contract_goal: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    preferred_strategy: Mapped[str] = mapped_column(String(80), default="unknown")
+    current_tools_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    biggest_bottleneck: Mapped[str] = mapped_column(String(80), default="unknown")
+    client_safe_summary: Mapped[str] = mapped_column(Text, default="")
+
+
+class ClientStrategyProfile(TimestampMixin, Base):
+    __tablename__ = "client_strategy_profiles"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    strategy_type: Mapped[str] = mapped_column(String(80), default="unknown")
+    acquisition_channels: Mapped[list[str]] = mapped_column(JSON, default=list)
+    disposition_channels: Mapped[list[str]] = mapped_column(JSON, default=list)
+    target_property_types: Mapped[list[str]] = mapped_column(JSON, default=list)
+    target_seller_situations: Mapped[list[str]] = mapped_column(JSON, default=list)
+    target_price_band_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    target_price_band_max: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    assignment_fee_target: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    risk_tolerance: Mapped[str] = mapped_column(String(80), default="unknown")
+    operating_mode: Mapped[str] = mapped_column(String(80), default="unknown")
+    strategy_summary: Mapped[str] = mapped_column(Text, default="")
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ClientMarketSetup(TimestampMixin, Base):
+    __tablename__ = "client_market_setups"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    market_name: Mapped[str] = mapped_column(String(160), default="")
+    state: Mapped[str] = mapped_column(String(40), default="")
+    counties: Mapped[list[str]] = mapped_column(JSON, default=list)
+    cities: Mapped[list[str]] = mapped_column(JSON, default=list)
+    zip_codes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    market_priority: Mapped[str] = mapped_column(String(80), default="primary")
+    market_status: Mapped[str] = mapped_column(String(80), default="draft")
+    market_notes_summary: Mapped[str] = mapped_column(Text, default="")
+    no_live_data_provider: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientPipelineSetup(TimestampMixin, Base):
+    __tablename__ = "client_pipeline_setups"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    pipeline_name: Mapped[str] = mapped_column(String(160), default="")
+    pipeline_type: Mapped[str] = mapped_column(String(80), default="full_deal_loop")
+    setup_status: Mapped[str] = mapped_column(String(80), default="draft")
+    stage_count: Mapped[int] = mapped_column(Integer, default=0)
+    client_safe_summary: Mapped[str] = mapped_column(Text, default="")
+
+
+class ClientPipelineStageTemplate(TimestampMixin, Base):
+    __tablename__ = "client_pipeline_stage_templates"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    pipeline_setup_id: Mapped[str] = mapped_column(ForeignKey("client_pipeline_setups.id"), nullable=False)
+    stage_name: Mapped[str] = mapped_column(String(160), default="")
+    stage_order: Mapped[int] = mapped_column(Integer, default=0)
+    stage_type: Mapped[str] = mapped_column(String(80), default="custom")
+    required_before_next: Mapped[list[str]] = mapped_column(JSON, default=list)
+    manager_owner: Mapped[str] = mapped_column(String(120), default="Onboarding Manager")
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientLeadSourceSetup(TimestampMixin, Base):
+    __tablename__ = "client_lead_source_setups"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    source_name: Mapped[str] = mapped_column(String(160), default="")
+    source_type: Mapped[str] = mapped_column(String(80), default="unknown")
+    source_status: Mapped[str] = mapped_column(String(80), default="planned")
+    expected_monthly_leads: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cost_tracking_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_connected: Mapped[bool] = mapped_column(Boolean, default=False)
+    no_provider_sync: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes_summary: Mapped[str] = mapped_column(Text, default="")
+
+
+class ClientBuyerListSetup(TimestampMixin, Base):
+    __tablename__ = "client_buyer_list_setups"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    setup_status: Mapped[str] = mapped_column(String(80), default="not_started")
+    buyer_count: Mapped[int] = mapped_column(Integer, default=0)
+    active_buyer_count: Mapped[int] = mapped_column(Integer, default=0)
+    clear_buy_box_count: Mapped[int] = mapped_column(Integer, default=0)
+    missing_buy_box_count: Mapped[int] = mapped_column(Integer, default=0)
+    verified_or_stated_funding_count: Mapped[int] = mapped_column(Integer, default=0)
+    needs_review_count: Mapped[int] = mapped_column(Integer, default=0)
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+    no_buyer_contacted: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_campaign_started: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientTeamSetupChecklist(TimestampMixin, Base):
+    __tablename__ = "client_team_setup_checklists"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    owner_added: Mapped[bool] = mapped_column(Boolean, default=False)
+    acquisition_role_added: Mapped[bool] = mapped_column(Boolean, default=False)
+    underwriting_role_added: Mapped[bool] = mapped_column(Boolean, default=False)
+    disposition_role_added: Mapped[bool] = mapped_column(Boolean, default=False)
+    compliance_owner_added: Mapped[bool] = mapped_column(Boolean, default=False)
+    client_success_owner_added: Mapped[bool] = mapped_column(Boolean, default=False)
+    team_member_count: Mapped[int] = mapped_column(Integer, default=0)
+    missing_roles: Mapped[list[str]] = mapped_column(JSON, default=list)
+    setup_status: Mapped[str] = mapped_column(String(80), default="not_started")
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+
+
+class ClientComplianceSetupChecklist(TimestampMixin, Base):
+    __tablename__ = "client_compliance_setup_checklists"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    consent_policy_documented: Mapped[bool] = mapped_column(Boolean, default=False)
+    opt_out_process_documented: Mapped[bool] = mapped_column(Boolean, default=False)
+    dnc_placeholder_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    ten_dlc_placeholder_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    email_unsubscribe_placeholder_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    call_recording_notice_placeholder_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    compliance_owner_assigned: Mapped[bool] = mapped_column(Boolean, default=False)
+    setup_status: Mapped[str] = mapped_column(String(80), default="not_started")
+    block_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+    no_provider_check: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_live_registration: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientFirstLeadImportChecklist(TimestampMixin, Base):
+    __tablename__ = "client_first_lead_import_checklists"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    first_10_leads_target: Mapped[int] = mapped_column(Integer, default=10)
+    current_lead_count: Mapped[int] = mapped_column(Integer, default=0)
+    leads_with_contact_count: Mapped[int] = mapped_column(Integer, default=0)
+    leads_with_property_address_count: Mapped[int] = mapped_column(Integer, default=0)
+    leads_with_motivation_count: Mapped[int] = mapped_column(Integer, default=0)
+    leads_with_condition_count: Mapped[int] = mapped_column(Integer, default=0)
+    leads_with_timeline_count: Mapped[int] = mapped_column(Integer, default=0)
+    leads_scored_count: Mapped[int] = mapped_column(Integer, default=0)
+    hot_leads_count: Mapped[int] = mapped_column(Integer, default=0)
+    import_status: Mapped[str] = mapped_column(String(80), default="not_started")
+    missing_requirements: Mapped[list[str]] = mapped_column(JSON, default=list)
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+    no_external_import: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientWorkspaceReadinessScore(TimestampMixin, Base):
+    __tablename__ = "client_workspace_readiness_scores"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    readiness_score: Mapped[int] = mapped_column(Integer, default=0)
+    readiness_status: Mapped[str] = mapped_column(String(80), default="not_started")
+    business_profile_score: Mapped[int] = mapped_column(Integer, default=0)
+    market_setup_score: Mapped[int] = mapped_column(Integer, default=0)
+    pipeline_setup_score: Mapped[int] = mapped_column(Integer, default=0)
+    lead_source_score: Mapped[int] = mapped_column(Integer, default=0)
+    lead_import_score: Mapped[int] = mapped_column(Integer, default=0)
+    buyer_setup_score: Mapped[int] = mapped_column(Integer, default=0)
+    team_setup_score: Mapped[int] = mapped_column(Integer, default=0)
+    compliance_setup_score: Mapped[int] = mapped_column(Integer, default=0)
+    report_readiness_score: Mapped[int] = mapped_column(Integer, default=0)
+    top_blockers: Mapped[list[str]] = mapped_column(JSON, default=list)
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+    no_live_actions_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientActivationBlocker(TimestampMixin, Base):
+    __tablename__ = "client_activation_blockers"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    blocker_type: Mapped[str] = mapped_column(String(120), default="unknown")
+    severity: Mapped[str] = mapped_column(String(80), default="medium")
+    blocker_summary: Mapped[str] = mapped_column(Text, default="")
+    affected_area: Mapped[str] = mapped_column(String(80), default="business")
+    recommended_fix: Mapped[str] = mapped_column(Text, default="")
+    resolved: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ClientGoLiveReadinessGate(TimestampMixin, Base):
+    __tablename__ = "client_go_live_readiness_gates"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    gate_status: Mapped[str] = mapped_column(String(80), default="not_ready")
+    readiness_score_snapshot: Mapped[int] = mapped_column(Integer, default=0)
+    required_before_manual_operation: Mapped[list[str]] = mapped_column(JSON, default=list)
+    block_reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    approved_scope: Mapped[str] = mapped_column(String(80), default="none")
+    no_live_communication: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_provider_execution: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_billing_action: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_contract_action: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_campaign_action: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_safe_summary: Mapped[str] = mapped_column(Text, default="")
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ClientOnboardingTask(TimestampMixin, Base):
+    __tablename__ = "client_onboarding_tasks"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    task_title: Mapped[str] = mapped_column(String(180), default="")
+    task_description: Mapped[str] = mapped_column(Text, default="")
+    task_category: Mapped[str] = mapped_column(String(80), default="review")
+    task_status: Mapped[str] = mapped_column(String(80), default="todo")
+    priority: Mapped[str] = mapped_column(String(80), default="medium")
+    owner_role: Mapped[str] = mapped_column(String(120), default="onboarding_manager")
+    due_window: Mapped[str] = mapped_column(String(80), default="this_week")
+    related_blocker_id: Mapped[str | None] = mapped_column(ForeignKey("client_activation_blockers.id"), nullable=True)
+    client_safe: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientOnboardingTimelineEvent(TimestampMixin, Base):
+    __tablename__ = "client_onboarding_timeline_events"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(120), default="")
+    event_summary: Mapped[str] = mapped_column(Text, default="")
+    milestone_name: Mapped[str] = mapped_column(String(160), default="")
+    progress_percent: Mapped[int] = mapped_column(Integer, default=0)
+    manager_name: Mapped[str] = mapped_column(String(120), default="Onboarding Manager")
+    client_visible: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientFirstWeeklyCycleReadiness(TimestampMixin, Base):
+    __tablename__ = "client_first_weekly_cycle_readiness"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    ready_for_first_weekly_cycle: Mapped[bool] = mapped_column(Boolean, default=False)
+    lead_minimum_met: Mapped[bool] = mapped_column(Boolean, default=False)
+    buyer_setup_minimum_met: Mapped[bool] = mapped_column(Boolean, default=False)
+    compliance_minimum_met: Mapped[bool] = mapped_column(Boolean, default=False)
+    report_can_generate: Mapped[bool] = mapped_column(Boolean, default=False)
+    top_missing_items: Mapped[list[str]] = mapped_column(JSON, default=list)
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+    no_live_actions_taken: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientOnboardingReport(TimestampMixin, Base):
+    __tablename__ = "client_onboarding_reports"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    report_status: Mapped[str] = mapped_column(String(80), default="draft")
+    report_title: Mapped[str] = mapped_column(String(180), default="")
+    executive_summary: Mapped[str] = mapped_column(Text, default="")
+    setup_progress_summary: Mapped[str] = mapped_column(Text, default="")
+    readiness_summary: Mapped[str] = mapped_column(Text, default="")
+    blocker_summary: Mapped[str] = mapped_column(Text, default="")
+    next_steps_summary: Mapped[str] = mapped_column(Text, default="")
+    first_week_focus: Mapped[str] = mapped_column(Text, default="")
+    client_safe_summary: Mapped[str] = mapped_column(Text, default="")
+    no_live_actions_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_revenue_guarantee: Mapped[bool] = mapped_column(Boolean, default=True)
+    no_roi_claim: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ClientOnboardingManagerEvent(TimestampMixin, Base):
+    __tablename__ = "client_onboarding_manager_events"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(80), default="tenant-demo-001")
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("client_workspaces.id"), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(120), default="")
+    event_summary: Mapped[str] = mapped_column(Text, default="")
+    manager_name: Mapped[str] = mapped_column(String(120), default="Onboarding Manager")
+    client_visible: Mapped[bool] = mapped_column(Boolean, default=True)

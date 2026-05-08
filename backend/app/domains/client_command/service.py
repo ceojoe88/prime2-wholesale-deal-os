@@ -19,12 +19,16 @@ from app.domains.client_command.sanitizer import (
     acquisition_brief_public,
     acquisition_event_public,
     action_public,
+    activation_blocker_public,
     appointment_readiness_public,
+    business_profile_public,
     buyer_buy_box_public,
     buyer_confidence_public,
     buyer_demand_evidence_public,
+    buyer_list_setup_public,
     buyer_outreach_draft_public,
     buyer_profile_public,
+    compliance_setup_checklist_public,
     communication_approval_gate_public,
     compliance_event_public,
     compliance_placeholder_public,
@@ -35,20 +39,33 @@ from app.domains.client_command.sanitizer import (
     evidence_item_public,
     evidence_packet_public,
     event_public,
+    first_lead_import_checklist_public,
+    first_weekly_cycle_readiness_public,
     follow_up_draft_public,
+    go_live_gate_public,
     lead_public,
+    lead_source_setup_public,
+    market_setup_public,
     message_risk_review_public,
     member_public,
     missing_item_public,
     objection_draft_public,
+    onboarding_manager_event_public,
+    onboarding_report_public,
+    onboarding_task_public,
+    onboarding_timeline_event_public,
     opt_out_record_public,
     offer_readiness_public,
     offer_scenario_public,
+    pipeline_setup_public,
+    pipeline_stage_public,
     question_plan_public,
     role_public,
     safe_contact_status_public,
     score_public,
     seller_question_public,
+    strategy_profile_public,
+    team_setup_checklist_public,
     underwriting_event_public,
     underwriting_review_public,
     weekly_bottleneck_public,
@@ -59,9 +76,11 @@ from app.domains.client_command.sanitizer import (
     weekly_report_event_public,
     weekly_report_public,
     workspace_public,
+    workspace_readiness_public,
 )
 from app.domains.client_command.scoring import missing_fields, score_client_lead
 from app.models import (
+    ClientActivationBlocker,
     ClientLeadDivisionEvent,
     ClientLeadIntelligenceScore,
     ClientLeadMissingDataItem,
@@ -71,11 +90,14 @@ from app.models import (
     ClientWorkspaceMember,
     ClientWorkspaceRole,
     ClientAcquisitionBrief,
+    ClientBusinessProfile,
     ClientBuyerBuyBox,
     ClientBuyerConfidenceScore,
     ClientBuyerDemandEvidence,
+    ClientBuyerListSetup,
     ClientBuyerOutreachDraft,
     ClientBuyerProfile,
+    ClientComplianceSetupChecklist,
     ClientCommunicationApprovalGate,
     ClientComplianceDivisionEvent,
     ClientComplianceReadinessPlaceholder,
@@ -94,10 +116,24 @@ from app.models import (
     ClientDispositionReadinessGate,
     ClientMessageRiskReview,
     ClientSafeContactStatus,
+    ClientFirstLeadImportChecklist,
+    ClientFirstWeeklyCycleReadiness,
     ClientUnderwritingReview,
     ClientOfferScenario,
     ClientOfferReadinessGate,
     ClientUnderwritingDivisionEvent,
+    ClientGoLiveReadinessGate,
+    ClientLeadSourceSetup,
+    ClientMarketSetup,
+    ClientOnboardingManagerEvent,
+    ClientOnboardingReport,
+    ClientOnboardingTask,
+    ClientOnboardingTimelineEvent,
+    ClientPipelineSetup,
+    ClientPipelineStageTemplate,
+    ClientStrategyProfile,
+    ClientTeamSetupChecklist,
+    ClientWorkspaceReadinessScore,
     ClientWeeklyBottleneck,
     ClientWeeklyCommandReport,
     ClientWeeklyDivisionSummary,
@@ -3798,3 +3834,1640 @@ def _weekly_report_events(session: Session, workspace_id: str, report_id: str) -
         .order_by(desc(ClientWeeklyReportEvent.created_at))
         .all()
     )
+
+
+def create_business_profile(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    profile = ensure_business_profile(session, workspace, values=values)
+    _ensure_onboarding_manager_event(session, workspace.id, "business_profile_updated", "Onboarding Manager updated the client business profile.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "business_profile": business_profile_public(profile),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def business_profile_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "business_profile": business_profile_public(ensure_business_profile(session, workspace)),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_strategy_profile(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    profile = ensure_strategy_profile(session, workspace, values=values)
+    _ensure_onboarding_manager_event(session, workspace.id, "strategy_profile_updated", "Onboarding Manager updated the client strategy profile.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "strategy_profile": strategy_profile_public(profile),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def strategy_profile_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "strategy_profile": strategy_profile_public(ensure_strategy_profile(session, workspace)),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_market_setup(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    market = ClientMarketSetup(
+        id=f"client-market-setup-{uuid4().hex[:10]}",
+        workspace_id=workspace.id,
+        market_name=str(values.get("market_name") or ""),
+        state=str(values.get("state") or ""),
+        counties=list(values.get("counties") or []),
+        cities=list(values.get("cities") or []),
+        zip_codes=list(values.get("zip_codes") or []),
+        market_priority=str(values.get("market_priority") or "primary"),
+        market_status=str(values.get("market_status") or "draft"),
+        market_notes_summary=str(values.get("market_notes_summary") or ""),
+        no_live_data_provider=True,
+    )
+    session.add(market)
+    _ensure_onboarding_manager_event(session, workspace.id, "market_added", f"Onboarding Manager added market setup for {market.market_name or 'the workspace'}")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "market": market_setup_public(market),
+        "markets": [market_setup_public(item) for item in _market_setups(session, workspace.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def market_setups_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "markets": [market_setup_public(item) for item in _market_setups(session, workspace.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_pipeline_setup(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    pipeline = ensure_pipeline_setup(session, workspace, values=values)
+    _ensure_onboarding_manager_event(session, workspace.id, "pipeline_updated", "Onboarding Manager updated the pipeline setup.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "pipeline": pipeline_setup_public(pipeline),
+        "stages": [pipeline_stage_public(stage) for stage in _pipeline_stages(session, workspace.id, pipeline.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def pipeline_setup_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    pipeline = ensure_pipeline_setup(session, workspace)
+    return {
+        "workspace": workspace_public(workspace),
+        "pipeline": pipeline_setup_public(pipeline),
+        "stages": [pipeline_stage_public(stage) for stage in _pipeline_stages(session, workspace.id, pipeline.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_default_pipeline_stages(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    pipeline = ensure_pipeline_setup(session, workspace)
+    stages = ensure_default_pipeline_stages(session, workspace, pipeline)
+    _ensure_onboarding_manager_event(session, workspace.id, "default_stages_added", "Onboarding Manager added default full-deal-loop stages.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "pipeline": pipeline_setup_public(pipeline),
+        "stages": [pipeline_stage_public(stage) for stage in stages],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def pipeline_stage_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    pipeline = ensure_pipeline_setup(session, workspace)
+    return {
+        "workspace": workspace_public(workspace),
+        "pipeline": pipeline_setup_public(pipeline),
+        "stages": [pipeline_stage_public(stage) for stage in _pipeline_stages(session, workspace.id, pipeline.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_lead_source_setup(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    source = ClientLeadSourceSetup(
+        id=f"client-lead-source-{uuid4().hex[:10]}",
+        workspace_id=workspace.id,
+        source_name=str(values.get("source_name") or "Manual lead source"),
+        source_type=str(values.get("source_type") or "manual_entry"),
+        source_status=str(values.get("source_status") or "planned"),
+        expected_monthly_leads=values.get("expected_monthly_leads"),
+        cost_tracking_enabled=bool(values.get("cost_tracking_enabled") or False),
+        provider_connected=False,
+        no_provider_sync=True,
+        notes_summary=str(values.get("notes_summary") or ""),
+    )
+    session.add(source)
+    _ensure_onboarding_manager_event(session, workspace.id, "lead_source_added", f"Onboarding Manager added lead source {source.source_name}.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "lead_source": lead_source_setup_public(source),
+        "lead_sources": [lead_source_setup_public(item) for item in _lead_source_setups(session, workspace.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def lead_source_setups_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "lead_sources": [lead_source_setup_public(item) for item in _lead_source_setups(session, workspace.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_buyer_list_setup(session: Session, workspace_id: str, values: dict[str, object] | None = None) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    setup = ensure_buyer_list_setup(session, workspace, refresh=True, values=values)
+    _ensure_onboarding_manager_event(session, workspace.id, "buyer_list_reviewed", "Onboarding Manager refreshed buyer list setup readiness.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "buyer_list_setup": buyer_list_setup_public(setup),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def buyer_list_setup_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "buyer_list_setup": buyer_list_setup_public(ensure_buyer_list_setup(session, workspace)),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_team_setup_checklist(session: Session, workspace_id: str, values: dict[str, object] | None = None) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    checklist = ensure_team_setup_checklist(session, workspace, refresh=True, values=values)
+    _ensure_onboarding_manager_event(session, workspace.id, "team_checklist_reviewed", "Onboarding Manager refreshed the team setup checklist.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "team_checklist": team_setup_checklist_public(checklist),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def team_setup_checklist_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "team_checklist": team_setup_checklist_public(ensure_team_setup_checklist(session, workspace)),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_compliance_setup_checklist(session: Session, workspace_id: str, values: dict[str, object] | None = None) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    checklist = ensure_compliance_setup_checklist(session, workspace, refresh=True, values=values)
+    _ensure_onboarding_manager_event(session, workspace.id, "compliance_checklist_reviewed", "Onboarding Manager refreshed the compliance setup checklist.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "compliance_checklist": compliance_setup_checklist_public(checklist),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def compliance_setup_checklist_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "compliance_checklist": compliance_setup_checklist_public(ensure_compliance_setup_checklist(session, workspace)),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_first_leads_checklist(session: Session, workspace_id: str, values: dict[str, object] | None = None) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    checklist = ensure_first_lead_import_checklist(session, workspace, refresh=True, values=values)
+    _ensure_onboarding_manager_event(session, workspace.id, "first_leads_reviewed", "Onboarding Manager refreshed the first-leads checklist.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "first_leads_checklist": first_lead_import_checklist_public(checklist),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def first_leads_checklist_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "first_leads_checklist": first_lead_import_checklist_public(ensure_first_lead_import_checklist(session, workspace)),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_readiness_score(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    score = ensure_workspace_readiness_score(session, workspace, refresh=True)
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "readiness_score": workspace_readiness_public(score),
+        "blockers": [activation_blocker_public(item) for item in _activation_blockers(session, workspace.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def readiness_score_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "readiness_score": workspace_readiness_public(ensure_workspace_readiness_score(session, workspace)),
+        "blockers": [activation_blocker_public(item) for item in _activation_blockers(session, workspace.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def onboarding_blockers_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    ensure_workspace_readiness_score(session, workspace)
+    return {
+        "workspace": workspace_public(workspace),
+        "blockers": [activation_blocker_public(item) for item in _activation_blockers(session, workspace.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_go_live_gate(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    gate = ensure_go_live_gate(session, workspace, refresh=True)
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "go_live_gate": go_live_gate_public(gate),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def go_live_gate_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "go_live_gate": go_live_gate_public(ensure_go_live_gate(session, workspace)),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_first_weekly_cycle_readiness(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    readiness = ensure_first_weekly_cycle_readiness(session, workspace, refresh=True)
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "first_weekly_cycle_readiness": first_weekly_cycle_readiness_public(readiness),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def first_weekly_cycle_readiness_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "first_weekly_cycle_readiness": first_weekly_cycle_readiness_public(ensure_first_weekly_cycle_readiness(session, workspace)),
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_onboarding_task(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    task = ClientOnboardingTask(
+        id=f"client-onboarding-task-{uuid4().hex[:10]}",
+        workspace_id=workspace.id,
+        task_title=str(values.get("task_title") or "Review onboarding blocker"),
+        task_description=str(values.get("task_description") or ""),
+        task_category=str(values.get("task_category") or "review"),
+        task_status=str(values.get("task_status") or "todo"),
+        priority=str(values.get("priority") or "medium"),
+        owner_role=str(values.get("owner_role") or "onboarding_manager"),
+        due_window=str(values.get("due_window") or "this_week"),
+        related_blocker_id=values.get("related_blocker_id"),
+        client_safe=True,
+    )
+    session.add(task)
+    _ensure_onboarding_manager_event(session, workspace.id, "task_added", f"Onboarding Manager added task: {task.task_title}.")
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "task": onboarding_task_public(task),
+        "tasks": [onboarding_task_public(item) for item in _onboarding_tasks(session, workspace.id)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def onboarding_tasks_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    tasks = ensure_onboarding_tasks(session, workspace)
+    return {
+        "workspace": workspace_public(workspace),
+        "tasks": [onboarding_task_public(item) for item in tasks],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def onboarding_tasks_blocked(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientOnboardingTask).filter(ClientOnboardingTask.task_status == "blocked")
+    if workspace_id:
+        query = query.filter(ClientOnboardingTask.workspace_id == workspace_id)
+    tasks = query.order_by(desc(ClientOnboardingTask.created_at)).all()
+    return {
+        "workspace_id": workspace_id,
+        "tasks": [onboarding_task_public(item) for item in tasks],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def onboarding_tasks_urgent(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    query = session.query(ClientOnboardingTask).filter(ClientOnboardingTask.priority == "urgent")
+    if workspace_id:
+        query = query.filter(ClientOnboardingTask.workspace_id == workspace_id)
+    tasks = query.order_by(desc(ClientOnboardingTask.created_at)).all()
+    return {
+        "workspace_id": workspace_id,
+        "tasks": [onboarding_task_public(item) for item in tasks],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_onboarding_report(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    report = ensure_onboarding_report(session, workspace, refresh=True)
+    session.flush()
+    return {
+        "workspace": workspace_public(workspace),
+        "report": onboarding_report_public(report),
+        "timeline": [onboarding_timeline_event_public(item) for item in ensure_onboarding_timeline(session, workspace)],
+        "manager_events": [onboarding_manager_event_public(item) for item in ensure_onboarding_manager_events(session, workspace)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def onboarding_report_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    workspace = _workspace_or_404(session, workspace_id)
+    return {
+        "workspace": workspace_public(workspace),
+        "report": onboarding_report_public(ensure_onboarding_report(session, workspace)),
+        "timeline": [onboarding_timeline_event_public(item) for item in ensure_onboarding_timeline(session, workspace)],
+        "manager_events": [onboarding_manager_event_public(item) for item in ensure_onboarding_manager_events(session, workspace)],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def onboarding_overview(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    workspaces = [_workspace_or_404(session, workspace_id)] if workspace_id else session.query(ClientWorkspace).order_by(ClientWorkspace.workspace_name).all()
+    items = []
+    for workspace in workspaces:
+        readiness = ensure_workspace_readiness_score(session, workspace)
+        gate = ensure_go_live_gate(session, workspace)
+        weekly = ensure_first_weekly_cycle_readiness(session, workspace)
+        blockers = _activation_blockers(session, workspace.id)
+        tasks = ensure_onboarding_tasks(session, workspace)
+        items.append(
+            {
+                "workspace": workspace_public(workspace),
+                "readiness_score": workspace_readiness_public(readiness),
+                "go_live_gate": go_live_gate_public(gate),
+                "first_weekly_cycle_readiness": first_weekly_cycle_readiness_public(weekly),
+                "top_blocker": activation_blocker_public(blockers[0]) if blockers else None,
+                "next_task": onboarding_task_public(tasks[0]) if tasks else None,
+            }
+        )
+    return {
+        "workspace_id": workspace_id,
+        "overview": items,
+        "safety": client_command_safety_rules(),
+    }
+
+
+def onboarding_activation_board(session: Session, workspace_id: str | None = None) -> dict[str, object]:
+    workspaces = [_workspace_or_404(session, workspace_id)] if workspace_id else session.query(ClientWorkspace).order_by(ClientWorkspace.workspace_name).all()
+    board = []
+    for workspace in workspaces:
+        readiness = ensure_workspace_readiness_score(session, workspace)
+        gate = ensure_go_live_gate(session, workspace)
+        blockers = _activation_blockers(session, workspace.id)
+        board.append(
+            {
+                "workspace": workspace_public(workspace),
+                "readiness_score": workspace_readiness_public(readiness),
+                "go_live_gate": go_live_gate_public(gate),
+                "blockers": [activation_blocker_public(item) for item in blockers],
+                "tasks": [onboarding_task_public(item) for item in ensure_onboarding_tasks(session, workspace)],
+            }
+        )
+    return {
+        "workspace_id": workspace_id,
+        "activation_board": board,
+        "safety": client_command_safety_rules(),
+    }
+
+
+def ensure_business_profile(
+    session: Session,
+    workspace: ClientWorkspace,
+    values: dict[str, object] | None = None,
+) -> ClientBusinessProfile:
+    profile = session.query(ClientBusinessProfile).filter(ClientBusinessProfile.workspace_id == workspace.id).first()
+    if profile is None:
+        profile = ClientBusinessProfile(
+            id=f"client-business-profile-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(profile)
+    if values:
+        for key in [
+            "business_name",
+            "operator_name",
+            "business_type",
+            "experience_level",
+            "primary_market",
+            "secondary_markets",
+            "monthly_lead_goal",
+            "monthly_contract_goal",
+            "preferred_strategy",
+            "current_tools_summary",
+            "biggest_bottleneck",
+        ]:
+            if key in values and values.get(key) is not None:
+                setattr(profile, key, values.get(key))
+    profile.business_name = profile.business_name or workspace.client_name or workspace.workspace_name
+    if not profile.primary_market and workspace.market_focus:
+        profile.primary_market = workspace.market_focus[0]
+    if not profile.operator_name:
+        member = (
+            session.query(ClientWorkspaceMember)
+            .filter(ClientWorkspaceMember.workspace_id == workspace.id)
+            .order_by(ClientWorkspaceMember.created_at)
+            .first()
+        )
+        profile.operator_name = member.member_name if member else None
+    profile.client_safe_summary = (
+        f"{profile.business_name or workspace.workspace_name} operates as a "
+        f"{(profile.business_type or 'unknown').replace('_', ' ')} in "
+        f"{profile.primary_market or 'the selected market'} with a "
+        f"{(profile.preferred_strategy or 'unknown').replace('_', ' ')} focus."
+    )
+    session.flush()
+    return profile
+
+
+def ensure_strategy_profile(
+    session: Session,
+    workspace: ClientWorkspace,
+    values: dict[str, object] | None = None,
+) -> ClientStrategyProfile:
+    profile = session.query(ClientStrategyProfile).filter(ClientStrategyProfile.workspace_id == workspace.id).first()
+    if profile is None:
+        profile = ClientStrategyProfile(
+            id=f"client-strategy-profile-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(profile)
+    if values:
+        for key in [
+            "strategy_type",
+            "acquisition_channels",
+            "disposition_channels",
+            "target_property_types",
+            "target_seller_situations",
+            "target_price_band_min",
+            "target_price_band_max",
+            "assignment_fee_target",
+            "risk_tolerance",
+            "operating_mode",
+            "strategy_summary",
+            "requires_human_review",
+        ]:
+            if key in values and values.get(key) is not None:
+                setattr(profile, key, values.get(key))
+    if not profile.strategy_type or profile.strategy_type == "unknown":
+        business = ensure_business_profile(session, workspace)
+        if business.preferred_strategy and business.preferred_strategy != "unknown":
+            profile.strategy_type = business.preferred_strategy
+    if not profile.strategy_summary:
+        profile.strategy_summary = (
+            f"Client strategy is {(profile.strategy_type or 'unknown').replace('_', ' ')} "
+            f"with acquisition channels {', '.join(profile.acquisition_channels or ['manual'])}."
+        )
+    session.flush()
+    return profile
+
+
+def ensure_pipeline_setup(
+    session: Session,
+    workspace: ClientWorkspace,
+    values: dict[str, object] | None = None,
+) -> ClientPipelineSetup:
+    pipeline = session.query(ClientPipelineSetup).filter(ClientPipelineSetup.workspace_id == workspace.id).first()
+    if pipeline is None:
+        pipeline = ClientPipelineSetup(
+            id=f"client-pipeline-setup-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+            pipeline_name="Prime2 Full Deal Loop",
+            pipeline_type="full_deal_loop",
+            setup_status="draft",
+        )
+        session.add(pipeline)
+    if values:
+        for key in ["pipeline_name", "pipeline_type", "setup_status"]:
+            if key in values and values.get(key) is not None:
+                setattr(pipeline, key, values.get(key))
+    pipeline.stage_count = len(_pipeline_stages(session, workspace.id, pipeline.id))
+    pipeline.client_safe_summary = "Client-safe setup only; pipeline stages support controlled/manual Prime2 operation."
+    session.flush()
+    return pipeline
+
+
+def ensure_default_pipeline_stages(
+    session: Session,
+    workspace: ClientWorkspace,
+    pipeline: ClientPipelineSetup,
+) -> list[ClientPipelineStageTemplate]:
+    existing = _pipeline_stages(session, workspace.id, pipeline.id)
+    if not existing:
+        for stage in _default_pipeline_stage_templates():
+            session.add(
+                ClientPipelineStageTemplate(
+                    id=f"client-pipeline-stage-{uuid4().hex[:10]}",
+                    workspace_id=workspace.id,
+                    pipeline_setup_id=pipeline.id,
+                    stage_name=stage["stage_name"],
+                    stage_order=stage["stage_order"],
+                    stage_type=stage["stage_type"],
+                    required_before_next=stage["required_before_next"],
+                    manager_owner=stage["manager_owner"],
+                    client_safe=True,
+                )
+            )
+        pipeline.setup_status = "configured"
+    pipeline.stage_count = len(_pipeline_stages(session, workspace.id, pipeline.id)) or len(_default_pipeline_stage_templates())
+    session.flush()
+    return _pipeline_stages(session, workspace.id, pipeline.id)
+
+
+def ensure_buyer_list_setup(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+    values: dict[str, object] | None = None,
+) -> ClientBuyerListSetup:
+    setup = session.query(ClientBuyerListSetup).filter(ClientBuyerListSetup.workspace_id == workspace.id).first()
+    if setup is None:
+        setup = ClientBuyerListSetup(
+            id=f"client-buyer-list-setup-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(setup)
+    if refresh or not setup.recommended_next_step:
+        buyers = (
+            session.query(ClientBuyerProfile)
+            .filter(ClientBuyerProfile.workspace_id == workspace.id)
+            .order_by(ClientBuyerProfile.buyer_name)
+            .all()
+        )
+        setup.buyer_count = len(buyers)
+        setup.active_buyer_count = len([buyer for buyer in buyers if buyer.active_status == "active"])
+        clear = 0
+        funding = 0
+        needs_review = 0
+        for buyer in buyers:
+            boxes = _buyer_buy_boxes(session, workspace.id, buyer.id)
+            clear_box = any(
+                (box.zip_codes or box.property_types or box.max_purchase_price or box.min_purchase_price)
+                for box in boxes
+            )
+            if clear_box:
+                clear += 1
+            if buyer.funding_status in {"verified", "stated"} or buyer.proof_of_funds_status in {"verified", "requested"}:
+                funding += 1
+            if buyer.active_status == "needs_review" or not clear_box or buyer.communication_preference == "unknown":
+                needs_review += 1
+        setup.clear_buy_box_count = clear
+        setup.missing_buy_box_count = max(0, setup.buyer_count - clear)
+        setup.verified_or_stated_funding_count = funding
+        setup.needs_review_count = needs_review
+        if setup.buyer_count == 0:
+            setup.setup_status = "not_started"
+            setup.recommended_next_step = "Add at least one buyer profile before using disposition workflows."
+        elif setup.active_buyer_count and setup.clear_buy_box_count:
+            setup.setup_status = "ready_for_matching"
+            setup.recommended_next_step = "Use buyer profiles as manual matching context only."
+        elif setup.clear_buy_box_count == 0:
+            setup.setup_status = "buyer_profiles_started"
+            setup.recommended_next_step = "Clarify buy boxes before relying on buyer matching."
+        else:
+            setup.setup_status = "needs_review"
+            setup.recommended_next_step = "Review buyers missing clear buy boxes or funding posture."
+    if values:
+        if values.get("setup_status"):
+            setup.setup_status = str(values["setup_status"])
+        if values.get("recommended_next_step"):
+            setup.recommended_next_step = str(values["recommended_next_step"])
+    setup.no_buyer_contacted = True
+    setup.no_campaign_started = True
+    session.flush()
+    return setup
+
+
+def ensure_team_setup_checklist(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+    values: dict[str, object] | None = None,
+) -> ClientTeamSetupChecklist:
+    checklist = session.query(ClientTeamSetupChecklist).filter(ClientTeamSetupChecklist.workspace_id == workspace.id).first()
+    if checklist is None:
+        checklist = ClientTeamSetupChecklist(
+            id=f"client-team-checklist-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(checklist)
+    if refresh or not checklist.recommended_next_step:
+        roles = (
+            session.query(ClientWorkspaceRole)
+            .filter(ClientWorkspaceRole.workspace_id == workspace.id)
+            .all()
+        )
+        members = (
+            session.query(ClientWorkspaceMember)
+            .filter(ClientWorkspaceMember.workspace_id == workspace.id)
+            .all()
+        )
+        role_map = {role.id: role for role in roles}
+        checklist.team_member_count = len(members)
+        checklist.owner_added = False
+        checklist.acquisition_role_added = False
+        checklist.underwriting_role_added = False
+        checklist.disposition_role_added = False
+        checklist.compliance_owner_added = False
+        checklist.client_success_owner_added = False
+        for member in members:
+            role = role_map.get(member.role_id)
+            name = f"{member.member_name} {(role.role_name if role else '')} {(role.role_key if role else '')}".lower()
+            perms = set(member_permissions(member, role))
+            if "client_command.admin" in perms or "owner" in name or "operator" in name:
+                checklist.owner_added = True
+            if "acquisition" in name:
+                checklist.acquisition_role_added = True
+            if "underwriting" in name:
+                checklist.underwriting_role_added = True
+            if "disposition" in name or "buyer" in name:
+                checklist.disposition_role_added = True
+            if "compliance" in name:
+                checklist.compliance_owner_added = True
+            if "success" in name:
+                checklist.client_success_owner_added = True
+        missing_roles = []
+        if not checklist.owner_added:
+            missing_roles.append("owner")
+        if not checklist.acquisition_role_added:
+            missing_roles.append("acquisition_role")
+        if not checklist.underwriting_role_added:
+            missing_roles.append("underwriting_role")
+        if not checklist.disposition_role_added:
+            missing_roles.append("disposition_role")
+        if not checklist.compliance_owner_added:
+            missing_roles.append("compliance_owner")
+        if not checklist.client_success_owner_added:
+            missing_roles.append("client_success_owner")
+        checklist.missing_roles = missing_roles
+        if not checklist.owner_added:
+            checklist.setup_status = "not_started"
+            checklist.recommended_next_step = "Add an owner/operator record before manual operation readiness can clear."
+        elif missing_roles:
+            checklist.setup_status = "partial"
+            checklist.recommended_next_step = "Document missing roles or note that the owner will cover them manually."
+        else:
+            checklist.setup_status = "ready"
+            checklist.recommended_next_step = "Team structure is documented for controlled/manual Prime2 operation."
+    if values:
+        for key in [
+            "owner_added",
+            "acquisition_role_added",
+            "underwriting_role_added",
+            "disposition_role_added",
+            "compliance_owner_added",
+            "client_success_owner_added",
+        ]:
+            if key in values and values.get(key) is not None:
+                setattr(checklist, key, bool(values.get(key)))
+        if values.get("recommended_next_step"):
+            checklist.recommended_next_step = str(values["recommended_next_step"])
+    session.flush()
+    return checklist
+
+
+def ensure_compliance_setup_checklist(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+    values: dict[str, object] | None = None,
+) -> ClientComplianceSetupChecklist:
+    checklist = session.query(ClientComplianceSetupChecklist).filter(ClientComplianceSetupChecklist.workspace_id == workspace.id).first()
+    if checklist is None:
+        checklist = ClientComplianceSetupChecklist(
+            id=f"client-compliance-setup-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(checklist)
+    if refresh or not checklist.recommended_next_step:
+        placeholders = _compliance_placeholders(session, workspace.id)
+        consent_records = session.query(ClientContactConsentRecord).filter(ClientContactConsentRecord.workspace_id == workspace.id).all()
+        opt_out_records = session.query(ClientContactOptOutRecord).filter(ClientContactOptOutRecord.workspace_id == workspace.id).all()
+        placeholder_types = {item.placeholder_type for item in placeholders}
+        checklist.consent_policy_documented = bool(consent_records) or "consent_capture_policy" in placeholder_types
+        checklist.opt_out_process_documented = bool(opt_out_records) or "email_unsubscribe" in placeholder_types
+        checklist.dnc_placeholder_created = "dnc_check" in placeholder_types
+        checklist.ten_dlc_placeholder_created = "ten_dlc_registration" in placeholder_types
+        checklist.email_unsubscribe_placeholder_created = "email_unsubscribe" in placeholder_types
+        checklist.call_recording_notice_placeholder_created = "call_recording_notice" in placeholder_types
+        team = ensure_team_setup_checklist(session, workspace)
+        checklist.compliance_owner_assigned = team.compliance_owner_added or team.owner_added
+        block_reasons = []
+        if not checklist.consent_policy_documented:
+            block_reasons.append("consent_policy_missing")
+        if not checklist.opt_out_process_documented:
+            block_reasons.append("opt_out_process_missing")
+        if not checklist.dnc_placeholder_created:
+            block_reasons.append("dnc_placeholder_missing")
+        if not checklist.compliance_owner_assigned:
+            block_reasons.append("compliance_owner_missing")
+        checklist.block_reasons = block_reasons
+        if not any([
+            checklist.consent_policy_documented,
+            checklist.opt_out_process_documented,
+            checklist.dnc_placeholder_created,
+            checklist.ten_dlc_placeholder_created,
+        ]):
+            checklist.setup_status = "not_started"
+            checklist.recommended_next_step = "Document consent and opt-out basics before manual contact review."
+        elif block_reasons:
+            checklist.setup_status = "needs_review"
+            checklist.recommended_next_step = "Finish compliance documentation and placeholder setup before treating contacts as ready."
+        else:
+            checklist.setup_status = "ready_for_manual_use"
+            checklist.recommended_next_step = "Compliance placeholders are documented for manual-use review only."
+    if values:
+        for key in [
+            "consent_policy_documented",
+            "opt_out_process_documented",
+            "dnc_placeholder_created",
+            "ten_dlc_placeholder_created",
+            "email_unsubscribe_placeholder_created",
+            "call_recording_notice_placeholder_created",
+            "compliance_owner_assigned",
+        ]:
+            if key in values and values.get(key) is not None:
+                setattr(checklist, key, bool(values.get(key)))
+        if values.get("recommended_next_step"):
+            checklist.recommended_next_step = str(values["recommended_next_step"])
+    checklist.no_provider_check = True
+    checklist.no_live_registration = True
+    session.flush()
+    return checklist
+
+
+def ensure_first_lead_import_checklist(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+    values: dict[str, object] | None = None,
+) -> ClientFirstLeadImportChecklist:
+    checklist = session.query(ClientFirstLeadImportChecklist).filter(ClientFirstLeadImportChecklist.workspace_id == workspace.id).first()
+    if checklist is None:
+        checklist = ClientFirstLeadImportChecklist(
+            id=f"client-first-leads-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(checklist)
+    if checklist.first_10_leads_target is None:
+        checklist.first_10_leads_target = 10
+    if refresh or not checklist.recommended_next_step:
+        leads = session.query(ClientLeadProfile).filter(ClientLeadProfile.workspace_id == workspace.id).all()
+        scores = _scores_for_workspace(session, workspace.id)
+        checklist.current_lead_count = len(leads)
+        checklist.leads_with_contact_count = len([lead for lead in leads if lead.contact_channels_present])
+        checklist.leads_with_property_address_count = len([lead for lead in leads if lead.property_address_summary])
+        checklist.leads_with_motivation_count = len([lead for lead in leads if lead.motivation_signals])
+        checklist.leads_with_condition_count = len([lead for lead in leads if lead.client_notes or lead.distress_signals])
+        checklist.leads_with_timeline_count = len([lead for lead in leads if lead.timeline_days and lead.timeline_days <= 120])
+        checklist.leads_scored_count = len(scores)
+        checklist.hot_leads_count = len([score for score in scores if score.final_priority_score >= 78])
+        missing_requirements = []
+        if checklist.current_lead_count < checklist.first_10_leads_target:
+            missing_requirements.append("first_10_leads_target_not_met")
+        if checklist.leads_with_contact_count < checklist.current_lead_count:
+            missing_requirements.append("missing_contactability_data")
+        if checklist.leads_with_motivation_count < checklist.current_lead_count:
+            missing_requirements.append("missing_motivation_data")
+        if checklist.leads_with_condition_count < checklist.current_lead_count:
+            missing_requirements.append("missing_condition_data")
+        if checklist.leads_with_timeline_count < checklist.current_lead_count:
+            missing_requirements.append("missing_timeline_data")
+        checklist.missing_requirements = missing_requirements
+        if checklist.current_lead_count == 0:
+            checklist.import_status = "not_started"
+            checklist.recommended_next_step = "Load the first 10 leads before the first command cycle."
+        elif checklist.current_lead_count >= checklist.first_10_leads_target and len(missing_requirements) <= 1:
+            checklist.import_status = "ready_for_first_command_cycle"
+            checklist.recommended_next_step = "Lead minimum is met for the first controlled command cycle."
+        elif checklist.current_lead_count >= max(5, checklist.first_10_leads_target // 2):
+            checklist.import_status = "ready_for_review"
+            checklist.recommended_next_step = "Demo or partial lead batch is ready for manual review, but the first-10 target is not met yet."
+        else:
+            checklist.import_status = "partial"
+            checklist.recommended_next_step = "Add more leads and fill missing contact, motivation, condition, and timeline data."
+    if values:
+        if values.get("first_10_leads_target") is not None:
+            checklist.first_10_leads_target = int(values["first_10_leads_target"])
+        if values.get("recommended_next_step"):
+            checklist.recommended_next_step = str(values["recommended_next_step"])
+    checklist.no_external_import = True
+    session.flush()
+    return checklist
+
+
+def ensure_workspace_readiness_score(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+) -> ClientWorkspaceReadinessScore:
+    score = session.query(ClientWorkspaceReadinessScore).filter(ClientWorkspaceReadinessScore.workspace_id == workspace.id).first()
+    if score is not None and not refresh:
+        return score
+    if score is None:
+        score = ClientWorkspaceReadinessScore(
+            id=f"client-readiness-score-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(score)
+    business = ensure_business_profile(session, workspace)
+    strategy = ensure_strategy_profile(session, workspace)
+    pipeline = ensure_pipeline_setup(session, workspace)
+    buyer_setup = ensure_buyer_list_setup(session, workspace)
+    team = ensure_team_setup_checklist(session, workspace)
+    compliance = ensure_compliance_setup_checklist(session, workspace)
+    first_leads = ensure_first_lead_import_checklist(session, workspace)
+    markets = _market_setups(session, workspace.id)
+    lead_sources = _lead_source_setups(session, workspace.id)
+    latest_report = _latest_weekly_report(session, workspace.id)
+    score.business_profile_score = _business_profile_score(business, strategy)
+    score.market_setup_score = _market_setup_score(markets)
+    score.pipeline_setup_score = _pipeline_setup_score(session, pipeline)
+    score.lead_source_score = _lead_source_score(lead_sources)
+    score.lead_import_score = _lead_import_score(first_leads)
+    score.buyer_setup_score = _buyer_setup_score(buyer_setup)
+    score.team_setup_score = _team_setup_score(team)
+    score.compliance_setup_score = _compliance_setup_score(compliance)
+    score.report_readiness_score = 100 if latest_report else 0
+    weighted = (
+        score.business_profile_score * 0.10
+        + score.market_setup_score * 0.10
+        + score.pipeline_setup_score * 0.10
+        + score.lead_source_score * 0.10
+        + score.lead_import_score * 0.20
+        + score.buyer_setup_score * 0.15
+        + score.team_setup_score * 0.10
+        + score.compliance_setup_score * 0.10
+        + score.report_readiness_score * 0.05
+    )
+    score.readiness_score = int(round(weighted))
+    blockers = ensure_activation_blockers(session, workspace, refresh=True)
+    critical = [item for item in blockers if item.severity == "critical" and not item.resolved]
+    score.top_blockers = [item.blocker_type for item in blockers[:3]]
+    if score.readiness_score <= 24:
+        status = "not_started"
+    elif critical:
+        status = "blocked"
+    elif score.readiness_score <= 79:
+        status = "setup_in_progress"
+    elif score.readiness_score <= 89:
+        status = "ready_for_manual_operation"
+    else:
+        status = "ready_for_first_weekly_cycle"
+    score.readiness_status = status
+    score.recommended_next_step = (
+        blockers[0].recommended_fix
+        if blockers
+        else "Workspace is ready for controlled/manual Prime2 operation."
+    )
+    score.no_live_actions_enabled = True
+    session.flush()
+    return score
+
+
+def ensure_activation_blockers(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+) -> list[ClientActivationBlocker]:
+    existing = _activation_blockers(session, workspace.id)
+    if existing and not refresh:
+        return existing
+    if refresh and existing:
+        session.query(ClientActivationBlocker).filter(ClientActivationBlocker.workspace_id == workspace.id).delete(synchronize_session=False)
+    business = ensure_business_profile(session, workspace)
+    pipeline = ensure_pipeline_setup(session, workspace)
+    markets = _market_setups(session, workspace.id)
+    leads = session.query(ClientLeadProfile).filter(ClientLeadProfile.workspace_id == workspace.id).all()
+    lead_sources = _lead_source_setups(session, workspace.id)
+    buyer_setup = ensure_buyer_list_setup(session, workspace)
+    team = ensure_team_setup_checklist(session, workspace)
+    compliance = ensure_compliance_setup_checklist(session, workspace)
+    first_leads = ensure_first_lead_import_checklist(session, workspace)
+    safe_manual_use = session.query(ClientSafeContactStatus).filter(
+        ClientSafeContactStatus.workspace_id == workspace.id,
+        ClientSafeContactStatus.status == "safe_for_manual_use",
+    ).count()
+    compliance_risks = session.query(ClientSafeContactStatus).filter(
+        ClientSafeContactStatus.workspace_id == workspace.id,
+        ClientSafeContactStatus.status.in_(["blocked", "needs_review", "missing_consent"]),
+    ).count()
+    latest_report = _latest_weekly_report(session, workspace.id)
+    blockers: list[dict[str, object]] = []
+    if not business.business_name or business.business_type == "unknown":
+        blockers.append(
+            _blocker_payload(
+                "missing_business_profile",
+                "critical",
+                "business",
+                "Business identity is incomplete for this workspace.",
+                "Complete the client business profile before manual operation readiness can clear.",
+            )
+        )
+    if not markets:
+        blockers.append(
+            _blocker_payload(
+                "missing_market",
+                "critical",
+                "market",
+                "No market setup is configured.",
+                "Add at least one primary market with zip or city coverage.",
+            )
+        )
+    if pipeline.stage_count == 0:
+        blockers.append(
+            _blocker_payload(
+                "missing_pipeline",
+                "critical",
+                "pipeline",
+                "The client pipeline has no configured stages yet.",
+                "Add the default full-deal-loop stages before activation.",
+            )
+        )
+    if not lead_sources:
+        blockers.append(
+            _blocker_payload(
+                "missing_lead_source",
+                "medium",
+                "leads",
+                "No lead source setup has been documented yet.",
+                "Add at least one manual lead source setup record.",
+            )
+        )
+    if not leads:
+        blockers.append(
+            _blocker_payload(
+                "missing_leads",
+                "critical",
+                "leads",
+                "No leads are loaded into the workspace yet.",
+                "Load leads before the first command cycle.",
+            )
+        )
+    if buyer_setup.buyer_count == 0:
+        blockers.append(
+            _blocker_payload(
+                "missing_buyer_list",
+                "critical",
+                "buyers",
+                "No buyer setup exists for disposition review.",
+                "Add buyer profiles with clear buy boxes before relying on CP5.",
+            )
+        )
+    elif buyer_setup.setup_status != "ready_for_matching":
+        blockers.append(
+            _blocker_payload(
+                "missing_buyer_list",
+                "medium",
+                "buyers",
+                "Buyer setup is present but still needs stronger buy-box clarity.",
+                "Clarify buy boxes and funding posture for buyer matching.",
+            )
+        )
+    if not team.owner_added:
+        blockers.append(
+            _blocker_payload(
+                "missing_team_owner",
+                "critical",
+                "team",
+                "No workspace owner/operator is documented.",
+                "Add the client owner before activation can proceed.",
+            )
+        )
+    if compliance.setup_status in {"not_started", "blocked"}:
+        blockers.append(
+            _blocker_payload(
+                "missing_compliance_setup",
+                "critical",
+                "compliance",
+                "Compliance setup is incomplete for manual-use operation.",
+                compliance.recommended_next_step or "Document consent, opt-out, and DNC placeholders.",
+            )
+        )
+    elif compliance.setup_status in {"partial", "needs_review"} or compliance_risks:
+        blockers.append(
+            _blocker_payload(
+                "unsafe_contact_posture",
+                "medium",
+                "compliance",
+                "Manual-use contact posture still needs review on one or more records.",
+                "Resolve consent and opt-out questions before treating more contacts as ready.",
+            )
+        )
+    if first_leads.current_lead_count and first_leads.current_lead_count < first_leads.first_10_leads_target:
+        blockers.append(
+            _blocker_payload(
+                "unknown",
+                "medium",
+                "leads",
+                "The first 10-lead target is not met yet.",
+                "Continue loading or qualifying leads until the first-10 target is reached.",
+            )
+        )
+    disposition_gaps = session.query(ClientDispositionReadinessGate).filter(
+        ClientDispositionReadinessGate.workspace_id == workspace.id,
+        ClientDispositionReadinessGate.readiness_status == "buyer_demand_missing",
+    ).count()
+    if disposition_gaps:
+        blockers.append(
+            _blocker_payload(
+                "unknown",
+                "medium",
+                "buyers",
+                "Some leads still need buyer demand evidence before disposition review.",
+                "Add buyer demand evidence or stronger buyer matches for blocked leads.",
+            )
+        )
+    if latest_report is None:
+        blockers.append(
+            _blocker_payload(
+                "missing_weekly_report",
+                "medium",
+                "reporting",
+                "No weekly client command report exists yet.",
+                "Generate the first weekly report once setup basics are documented.",
+            )
+        )
+    if compliance_risks and safe_manual_use == 0:
+        blockers.append(
+            _blocker_payload(
+                "unsafe_contact_posture",
+                "critical",
+                "compliance",
+                "No safe manual-use contact records exist yet.",
+                "Resolve safe-contact posture before any manual outreach planning.",
+            )
+        )
+    for payload in blockers:
+        session.add(
+            ClientActivationBlocker(
+                id=f"client-activation-blocker-{uuid4().hex[:10]}",
+                workspace_id=workspace.id,
+                blocker_type=str(payload["blocker_type"]),
+                severity=str(payload["severity"]),
+                blocker_summary=str(payload["blocker_summary"]),
+                affected_area=str(payload["affected_area"]),
+                recommended_fix=str(payload["recommended_fix"]),
+                resolved=False,
+            )
+        )
+    session.flush()
+    return _activation_blockers(session, workspace.id)
+
+
+def ensure_go_live_gate(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+) -> ClientGoLiveReadinessGate:
+    gate = session.query(ClientGoLiveReadinessGate).filter(ClientGoLiveReadinessGate.workspace_id == workspace.id).first()
+    if gate is not None and not refresh:
+        return gate
+    if gate is None:
+        gate = ClientGoLiveReadinessGate(
+            id=f"client-go-live-gate-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(gate)
+    readiness = ensure_workspace_readiness_score(session, workspace, refresh=refresh)
+    blockers = ensure_activation_blockers(session, workspace, refresh=refresh)
+    critical = [item for item in blockers if item.severity == "critical" and not item.resolved]
+    gate.readiness_score_snapshot = readiness.readiness_score
+    gate.required_before_manual_operation = [item.blocker_type for item in blockers]
+    gate.block_reasons = [item.blocker_summary for item in blockers]
+    if critical:
+        gate.gate_status = "blocked"
+        gate.approved_scope = "none"
+    elif readiness.readiness_score >= 90 and ensure_first_weekly_cycle_readiness(session, workspace).ready_for_first_weekly_cycle:
+        gate.gate_status = "ready_for_first_weekly_cycle"
+        gate.approved_scope = "first_weekly_cycle_only"
+    elif readiness.readiness_score >= 80:
+        gate.gate_status = "ready_for_manual_operation"
+        gate.approved_scope = "manual_operation_only"
+    else:
+        gate.gate_status = "not_ready"
+        gate.approved_scope = "none"
+    gate.no_live_communication = True
+    gate.no_provider_execution = True
+    gate.no_billing_action = True
+    gate.no_contract_action = True
+    gate.no_campaign_action = True
+    gate.requires_human_review = bool(blockers)
+    gate.client_safe_summary = "Manual operation readiness only - no live communication, provider execution, billing, contracts, or campaigns are enabled."
+    session.flush()
+    return gate
+
+
+def ensure_first_weekly_cycle_readiness(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+) -> ClientFirstWeeklyCycleReadiness:
+    readiness = session.query(ClientFirstWeeklyCycleReadiness).filter(ClientFirstWeeklyCycleReadiness.workspace_id == workspace.id).first()
+    if readiness is not None and not refresh:
+        return readiness
+    if readiness is None:
+        readiness = ClientFirstWeeklyCycleReadiness(
+            id=f"client-first-weekly-cycle-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(readiness)
+    buyer_setup = ensure_buyer_list_setup(session, workspace)
+    compliance = ensure_compliance_setup_checklist(session, workspace)
+    first_leads = ensure_first_lead_import_checklist(session, workspace)
+    latest_report = _latest_weekly_report(session, workspace.id)
+    readiness.lead_minimum_met = first_leads.current_lead_count >= first_leads.first_10_leads_target or (
+        first_leads.current_lead_count >= 5 and latest_report is not None
+    )
+    readiness.buyer_setup_minimum_met = buyer_setup.clear_buy_box_count >= 1
+    readiness.compliance_minimum_met = compliance.setup_status in {"ready_for_manual_use", "needs_review"} and (
+        session.query(ClientSafeContactStatus)
+        .filter(ClientSafeContactStatus.workspace_id == workspace.id, ClientSafeContactStatus.status == "safe_for_manual_use")
+        .count()
+        > 0
+    )
+    readiness.report_can_generate = latest_report is not None or first_leads.current_lead_count > 0
+    readiness.top_missing_items = [
+        label
+        for label, passed in [
+            ("lead_minimum", readiness.lead_minimum_met),
+            ("buyer_setup", readiness.buyer_setup_minimum_met),
+            ("compliance_setup", readiness.compliance_minimum_met),
+            ("weekly_report", readiness.report_can_generate),
+        ]
+        if not passed
+    ]
+    readiness.ready_for_first_weekly_cycle = not readiness.top_missing_items
+    readiness.recommended_next_step = (
+        "Run the first weekly client command cycle in manual mode."
+        if readiness.ready_for_first_weekly_cycle
+        else "Resolve missing readiness items before relying on the first weekly cycle."
+    )
+    readiness.no_live_actions_taken = True
+    session.flush()
+    return readiness
+
+
+def ensure_onboarding_tasks(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+) -> list[ClientOnboardingTask]:
+    tasks = _onboarding_tasks(session, workspace.id)
+    if tasks and not refresh:
+        return tasks
+    if refresh and tasks:
+        session.query(ClientOnboardingTask).filter(ClientOnboardingTask.workspace_id == workspace.id).delete(synchronize_session=False)
+    blockers = ensure_activation_blockers(session, workspace, refresh=refresh)
+    payloads = []
+    for blocker in blockers:
+        payloads.append(
+            {
+                "task_title": blocker.recommended_fix.split(".")[0],
+                "task_description": blocker.blocker_summary,
+                "task_category": _task_category_for_area(blocker.affected_area),
+                "task_status": "blocked" if blocker.severity == "critical" else "todo",
+                "priority": "urgent" if blocker.severity == "critical" else "high" if blocker.severity == "high" else "medium",
+                "owner_role": _task_owner_for_area(blocker.affected_area),
+                "due_window": "before_activation" if blocker.severity == "critical" else "this_week",
+                "related_blocker_id": blocker.id,
+            }
+        )
+    if not payloads:
+        payloads.append(
+            {
+                "task_title": "Review workspace activation board",
+                "task_description": "No major blockers are present. Review readiness and keep manual-operation boundaries in place.",
+                "task_category": "review",
+                "task_status": "todo",
+                "priority": "medium",
+                "owner_role": "onboarding_manager",
+                "due_window": "this_week",
+                "related_blocker_id": None,
+            }
+        )
+    for payload in payloads:
+        session.add(
+            ClientOnboardingTask(
+                id=f"client-onboarding-task-{uuid4().hex[:10]}",
+                workspace_id=workspace.id,
+                task_title=str(payload["task_title"]),
+                task_description=str(payload["task_description"]),
+                task_category=str(payload["task_category"]),
+                task_status=str(payload["task_status"]),
+                priority=str(payload["priority"]),
+                owner_role=str(payload["owner_role"]),
+                due_window=str(payload["due_window"]),
+                related_blocker_id=payload["related_blocker_id"],
+                client_safe=True,
+            )
+        )
+    session.flush()
+    return _onboarding_tasks(session, workspace.id)
+
+
+def ensure_onboarding_timeline(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+) -> list[ClientOnboardingTimelineEvent]:
+    events = _onboarding_timeline(session, workspace.id)
+    if events and not refresh:
+        return events
+    if refresh and events:
+        session.query(ClientOnboardingTimelineEvent).filter(ClientOnboardingTimelineEvent.workspace_id == workspace.id).delete(synchronize_session=False)
+    readiness = ensure_workspace_readiness_score(session, workspace, refresh=refresh)
+    milestones = [
+        ("workspace_created", "Workspace foundation", 15, "Client workspace foundation is in place."),
+        ("setup_reviewed", "Setup review", min(45, readiness.readiness_score), "Onboarding Manager reviewed setup records and checklists."),
+        ("readiness_scored", "Readiness scored", min(80, readiness.readiness_score), "Workspace readiness score was calculated for manual operation."),
+        ("weekly_cycle_reviewed", "Weekly cycle readiness", readiness.readiness_score, "First weekly cycle readiness was reviewed without enabling live actions."),
+    ]
+    for event_type, milestone_name, progress_percent, summary in milestones:
+        session.add(
+            ClientOnboardingTimelineEvent(
+                id=f"client-onboarding-timeline-{uuid4().hex[:10]}",
+                workspace_id=workspace.id,
+                event_type=event_type,
+                event_summary=summary,
+                milestone_name=milestone_name,
+                progress_percent=int(progress_percent),
+                manager_name="Onboarding Manager",
+                client_visible=True,
+            )
+        )
+    session.flush()
+    return _onboarding_timeline(session, workspace.id)
+
+
+def ensure_onboarding_manager_events(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+) -> list[ClientOnboardingManagerEvent]:
+    events = _onboarding_manager_events(session, workspace.id)
+    if events and not refresh:
+        return events
+    if refresh and events:
+        session.query(ClientOnboardingManagerEvent).filter(ClientOnboardingManagerEvent.workspace_id == workspace.id).delete(synchronize_session=False)
+    readiness = ensure_workspace_readiness_score(session, workspace, refresh=refresh)
+    summaries = [
+        ("onboarding_summary", "Onboarding Manager summarized the current workspace setup posture."),
+        ("readiness_status", f"Onboarding Manager marked workspace readiness as {readiness.readiness_status}."),
+    ]
+    for event_type, summary in summaries:
+        session.add(
+            ClientOnboardingManagerEvent(
+                id=f"client-onboarding-event-{uuid4().hex[:10]}",
+                workspace_id=workspace.id,
+                event_type=event_type,
+                event_summary=summary,
+                manager_name="Onboarding Manager",
+                client_visible=True,
+            )
+        )
+    session.flush()
+    return _onboarding_manager_events(session, workspace.id)
+
+
+def ensure_onboarding_report(
+    session: Session,
+    workspace: ClientWorkspace,
+    refresh: bool = False,
+) -> ClientOnboardingReport:
+    report = session.query(ClientOnboardingReport).filter(ClientOnboardingReport.workspace_id == workspace.id).first()
+    if report is not None and not refresh:
+        return report
+    if report is None:
+        report = ClientOnboardingReport(
+            id=f"client-onboarding-report-{uuid4().hex[:10]}",
+            workspace_id=workspace.id,
+        )
+        session.add(report)
+    readiness = ensure_workspace_readiness_score(session, workspace, refresh=refresh)
+    gate = ensure_go_live_gate(session, workspace, refresh=refresh)
+    first_weekly = ensure_first_weekly_cycle_readiness(session, workspace, refresh=refresh)
+    blockers = ensure_activation_blockers(session, workspace, refresh=refresh)
+    tasks = ensure_onboarding_tasks(session, workspace, refresh=refresh)
+    report.report_status = "generated"
+    report.report_title = f"{workspace.workspace_name} onboarding readiness report"
+    report.executive_summary = (
+        f"{workspace.workspace_name} is {readiness.readiness_status.replace('_', ' ')} with a readiness score of {readiness.readiness_score}. "
+        "Prime2 remains in manual-operation mode only."
+    )
+    report.setup_progress_summary = (
+        f"Business, market, pipeline, buyer, team, compliance, and reporting readiness are tracked in CP8 without enabling live actions."
+    )
+    report.readiness_summary = (
+        f"Go-live gate status: {gate.gate_status}. First weekly cycle ready: {first_weekly.ready_for_first_weekly_cycle}."
+    )
+    report.blocker_summary = "; ".join(item.blocker_summary for item in blockers[:3]) if blockers else "No major onboarding blockers remain."
+    report.next_steps_summary = "; ".join(task.task_title for task in tasks[:3]) if tasks else "Review the activation board."
+    report.first_week_focus = first_weekly.recommended_next_step
+    report.client_safe_summary = "Client-safe onboarding report - no revenue, ROI, or deal outcome is guaranteed."
+    report.no_live_actions_enabled = True
+    report.no_revenue_guarantee = True
+    report.no_roi_claim = True
+    session.flush()
+    return report
+
+
+def _business_profile_score(profile: ClientBusinessProfile, strategy: ClientStrategyProfile) -> int:
+    score = 0
+    score += 20 if profile.business_type != "unknown" else 0
+    score += 15 if (profile.preferred_strategy != "unknown" or strategy.strategy_type != "unknown") else 0
+    score += 20 if profile.primary_market else 0
+    score += 15 if (profile.monthly_lead_goal or profile.monthly_contract_goal) else 0
+    score += 15 if profile.biggest_bottleneck != "unknown" else 0
+    score += 15 if (profile.operator_name or profile.current_tools_summary) else 0
+    return min(score, 100)
+
+
+def _market_setup_score(markets: list[ClientMarketSetup]) -> int:
+    if not markets:
+        return 0
+    best = max(
+        (
+            (25 if market.market_status == "configured" else 10)
+            + (15 if market.state else 0)
+            + (20 if (market.counties or market.cities) else 0)
+            + (20 if market.zip_codes else 0)
+            + (20 if market.market_priority == "primary" else 10)
+            for market in markets
+        ),
+        default=0,
+    )
+    return min(best, 100)
+
+
+def _pipeline_setup_score(session: Session, pipeline: ClientPipelineSetup) -> int:
+    if not pipeline:
+        return 0
+    stage_count = len(_pipeline_stages(session, pipeline.workspace_id, pipeline.id))
+    if stage_count == 0:
+        return 20
+    return min(100, 40 + stage_count * 5 + (20 if pipeline.setup_status == "configured" else 0))
+
+
+def _lead_source_score(sources: list[ClientLeadSourceSetup]) -> int:
+    if not sources:
+        return 0
+    active = len([item for item in sources if item.source_status == "active_manual"])
+    planned = len([item for item in sources if item.source_status in {"planned", "needs_setup"}])
+    score = 30 + active * 25 + planned * 10
+    if any(item.provider_connected for item in sources):
+        score -= 20
+    return max(0, min(100, score))
+
+
+def _lead_import_score(checklist: ClientFirstLeadImportChecklist) -> int:
+    score = 0
+    score += min(40, checklist.current_lead_count * 4)
+    score += min(15, checklist.leads_with_contact_count * 2)
+    score += min(15, checklist.leads_with_motivation_count * 2)
+    score += min(15, checklist.leads_with_condition_count * 2)
+    score += min(15, checklist.hot_leads_count * 5)
+    return max(0, min(100, score))
+
+
+def _buyer_setup_score(setup: ClientBuyerListSetup) -> int:
+    score = 0
+    score += min(30, setup.buyer_count * 8)
+    score += min(25, setup.clear_buy_box_count * 12)
+    score += min(20, setup.verified_or_stated_funding_count * 8)
+    score += 15 if setup.setup_status == "ready_for_matching" else 5 if setup.buyer_count else 0
+    score -= min(20, setup.needs_review_count * 5)
+    return max(0, min(100, score))
+
+
+def _team_setup_score(checklist: ClientTeamSetupChecklist) -> int:
+    score = 0
+    score += 40 if checklist.owner_added else 0
+    score += 10 if checklist.acquisition_role_added else 0
+    score += 10 if checklist.underwriting_role_added else 0
+    score += 10 if checklist.disposition_role_added else 0
+    score += 15 if checklist.compliance_owner_added else 0
+    score += 15 if checklist.client_success_owner_added else 0
+    return min(score, 100)
+
+
+def _compliance_setup_score(checklist: ClientComplianceSetupChecklist) -> int:
+    score = 0
+    score += 20 if checklist.consent_policy_documented else 0
+    score += 20 if checklist.opt_out_process_documented else 0
+    score += 20 if checklist.dnc_placeholder_created else 0
+    score += 10 if checklist.ten_dlc_placeholder_created else 0
+    score += 10 if checklist.email_unsubscribe_placeholder_created else 0
+    score += 10 if checklist.call_recording_notice_placeholder_created else 0
+    score += 10 if checklist.compliance_owner_assigned else 0
+    return min(score, 100)
+
+
+def _activation_blockers(session: Session, workspace_id: str) -> list[ClientActivationBlocker]:
+    return (
+        session.query(ClientActivationBlocker)
+        .filter(ClientActivationBlocker.workspace_id == workspace_id)
+        .order_by(
+            desc(ClientActivationBlocker.severity == "critical"),
+            desc(ClientActivationBlocker.severity == "high"),
+            ClientActivationBlocker.affected_area,
+            ClientActivationBlocker.blocker_type,
+        )
+        .all()
+    )
+
+
+def _onboarding_tasks(session: Session, workspace_id: str) -> list[ClientOnboardingTask]:
+    return (
+        session.query(ClientOnboardingTask)
+        .filter(ClientOnboardingTask.workspace_id == workspace_id)
+        .order_by(desc(ClientOnboardingTask.priority), ClientOnboardingTask.task_title)
+        .all()
+    )
+
+
+def _onboarding_timeline(session: Session, workspace_id: str) -> list[ClientOnboardingTimelineEvent]:
+    return (
+        session.query(ClientOnboardingTimelineEvent)
+        .filter(ClientOnboardingTimelineEvent.workspace_id == workspace_id)
+        .order_by(ClientOnboardingTimelineEvent.created_at)
+        .all()
+    )
+
+
+def _onboarding_manager_events(session: Session, workspace_id: str) -> list[ClientOnboardingManagerEvent]:
+    return (
+        session.query(ClientOnboardingManagerEvent)
+        .filter(ClientOnboardingManagerEvent.workspace_id == workspace_id)
+        .order_by(desc(ClientOnboardingManagerEvent.created_at))
+        .all()
+    )
+
+
+def _market_setups(session: Session, workspace_id: str) -> list[ClientMarketSetup]:
+    return (
+        session.query(ClientMarketSetup)
+        .filter(ClientMarketSetup.workspace_id == workspace_id)
+        .order_by(desc(ClientMarketSetup.market_priority == "primary"), ClientMarketSetup.market_name)
+        .all()
+    )
+
+
+def _pipeline_stages(session: Session, workspace_id: str, pipeline_setup_id: str) -> list[ClientPipelineStageTemplate]:
+    return (
+        session.query(ClientPipelineStageTemplate)
+        .filter(
+            ClientPipelineStageTemplate.workspace_id == workspace_id,
+            ClientPipelineStageTemplate.pipeline_setup_id == pipeline_setup_id,
+        )
+        .order_by(ClientPipelineStageTemplate.stage_order)
+        .all()
+    )
+
+
+def _lead_source_setups(session: Session, workspace_id: str) -> list[ClientLeadSourceSetup]:
+    return (
+        session.query(ClientLeadSourceSetup)
+        .filter(ClientLeadSourceSetup.workspace_id == workspace_id)
+        .order_by(ClientLeadSourceSetup.source_name)
+        .all()
+    )
+
+
+def _default_pipeline_stage_templates() -> list[dict[str, object]]:
+    return [
+        {"stage_name": "New Lead", "stage_order": 1, "stage_type": "new_lead", "required_before_next": [], "manager_owner": "Lead Intelligence Manager"},
+        {"stage_name": "Contact Needed", "stage_order": 2, "stage_type": "contact_needed", "required_before_next": ["lead_profile"], "manager_owner": "Lead Intelligence Manager"},
+        {"stage_name": "Acquisition Prep", "stage_order": 3, "stage_type": "acquisition_prep", "required_before_next": ["contact_channels"], "manager_owner": "Acquisition Manager"},
+        {"stage_name": "Appointment Ready", "stage_order": 4, "stage_type": "appointment_ready", "required_before_next": ["motivation", "timeline", "condition"], "manager_owner": "Acquisition Manager"},
+        {"stage_name": "Evidence Needed", "stage_order": 5, "stage_type": "evidence_needed", "required_before_next": ["seller_notes"], "manager_owner": "Underwriting Manager"},
+        {"stage_name": "Underwriting Review", "stage_order": 6, "stage_type": "underwriting_review", "required_before_next": ["arv", "repairs"], "manager_owner": "Underwriting Manager"},
+        {"stage_name": "Offer Ready", "stage_order": 7, "stage_type": "offer_ready", "required_before_next": ["mao", "evidence_packet"], "manager_owner": "Underwriting Manager"},
+        {"stage_name": "Buyer Matching", "stage_order": 8, "stage_type": "buyer_matching", "required_before_next": ["offer_readiness"], "manager_owner": "Disposition Manager"},
+        {"stage_name": "Disposition Ready", "stage_order": 9, "stage_type": "disposition_ready", "required_before_next": ["buyer_match"], "manager_owner": "Disposition Manager"},
+        {"stage_name": "Compliance Review", "stage_order": 10, "stage_type": "compliance_review", "required_before_next": ["manual_use_gate"], "manager_owner": "Compliance Manager"},
+        {"stage_name": "Blocked / Needs Review", "stage_order": 11, "stage_type": "blocked", "required_before_next": [], "manager_owner": "Onboarding Manager"},
+        {"stage_name": "Closed / Archived", "stage_order": 12, "stage_type": "closed_archived", "required_before_next": [], "manager_owner": "Client Success Manager"},
+    ]
+
+
+def _blocker_payload(
+    blocker_type: str,
+    severity: str,
+    affected_area: str,
+    summary: str,
+    fix: str,
+) -> dict[str, object]:
+    return {
+        "blocker_type": blocker_type,
+        "severity": severity,
+        "affected_area": affected_area,
+        "blocker_summary": summary,
+        "recommended_fix": fix,
+    }
+
+
+def _task_category_for_area(area: str) -> str:
+    return {
+        "business": "business_profile",
+        "market": "market_setup",
+        "pipeline": "pipeline_setup",
+        "leads": "lead_import",
+        "buyers": "buyer_list",
+        "team": "team_setup",
+        "compliance": "compliance",
+        "reporting": "reporting",
+    }.get(area, "review")
+
+
+def _task_owner_for_area(area: str) -> str:
+    return {
+        "business": "client_owner",
+        "market": "onboarding_manager",
+        "pipeline": "onboarding_manager",
+        "leads": "acquisition_manager",
+        "buyers": "disposition_manager",
+        "team": "client_success_manager",
+        "compliance": "compliance_manager",
+        "reporting": "client_success_manager",
+    }.get(area, "onboarding_manager")
+
+
+def _ensure_onboarding_manager_event(
+    session: Session,
+    workspace_id: str,
+    event_type: str,
+    summary: str,
+) -> None:
+    event = (
+        session.query(ClientOnboardingManagerEvent)
+        .filter(
+            ClientOnboardingManagerEvent.workspace_id == workspace_id,
+            ClientOnboardingManagerEvent.event_type == event_type,
+        )
+        .first()
+    )
+    if event is None:
+        event = ClientOnboardingManagerEvent(
+            id=f"client-onboarding-event-{uuid4().hex[:10]}",
+            workspace_id=workspace_id,
+            event_type=event_type,
+        )
+        session.add(event)
+    event.event_summary = summary
+    event.manager_name = "Onboarding Manager"
+    event.client_visible = True

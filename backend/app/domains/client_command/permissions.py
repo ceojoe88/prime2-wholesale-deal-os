@@ -26,6 +26,14 @@ CLIENT_COMMAND_PERMISSIONS = {
     "client_command.compliance_manage",
     "client_command.contact_gate_view",
     "client_command.contact_gate_manage",
+    "client_command.onboarding_view",
+    "client_command.onboarding_manage",
+    "client_command.onboarding_tasks_view",
+    "client_command.onboarding_tasks_manage",
+    "client_command.readiness_view",
+    "client_command.readiness_manage",
+    "client_command.activation_gate_view",
+    "client_command.activation_gate_manage",
     "client_command.admin",
 }
 

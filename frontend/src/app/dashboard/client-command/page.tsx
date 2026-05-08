@@ -5,13 +5,17 @@ import { Pill } from "@/components/Pill";
 import { RecordCard } from "@/components/RecordCard";
 import { Section } from "@/components/Section";
 import {
+  clientActivationBlockers,
   clientCommandPermissions,
   clientCommandSafetyCards,
   clientAcquisitionBriefs,
   clientAppointmentReadinessReviews,
   clientBuyerProfiles,
+  clientComplianceSetupChecklists,
   clientCommunicationApprovalGates,
   clientComplianceReadinessPlaceholders,
+  clientFirstWeeklyCycleReadinessRecords,
+  clientGoLiveReadinessGates,
   clientSafeContactStatuses,
   clientDealBuyerMatches,
   clientDispositionReadinessGates,
@@ -19,8 +23,11 @@ import {
   clientLeadCards,
   clientLeadDivisionEvents,
   clientLeadNextBestActions,
+  clientOnboardingReports,
+  clientOnboardingTasks,
   clientMemphisScenarioCards,
   clientOfferReadinessGates,
+  clientWorkspaceReadinessScores,
   clientWeeklyBottlenecks,
   clientWeeklyCommandReports,
   clientWeeklyRecommendedActions,
@@ -40,12 +47,19 @@ export default function ClientCommandPage() {
   const latestReport = clientWeeklyCommandReports[0];
   const topBottleneck = clientWeeklyBottlenecks[0];
   const nextReportAction = clientWeeklyRecommendedActions[0];
+  const onboardingReadiness = clientWorkspaceReadinessScores[0];
+  const onboardingGate = clientGoLiveReadinessGates[0];
+  const onboardingBlocker = clientActivationBlockers[0];
+  const onboardingTask = clientOnboardingTasks[0];
+  const firstWeeklyCycle = clientFirstWeeklyCycleReadinessRecords[0];
+  const onboardingReport = clientOnboardingReports[0];
+  const complianceSetup = clientComplianceSetupChecklists[0];
   return (
     <div className="page">
       <PageHeader
-        eyebrow="CP1-CP7 Client Command"
+        eyebrow="CP1-CP8 Client Command"
         title="Client-safe investor command workspace"
-        description="A customer-facing command layer for lead intelligence, acquisition prep, underwriting review, buyer matching, compliance readiness, and weekly reporting without exposing internal Prime governance."
+        description="A customer-facing command layer for lead intelligence, acquisition prep, underwriting review, buyer matching, compliance readiness, weekly reporting, and onboarding without exposing internal Prime governance."
       />
 
       <div className="metric-grid">
@@ -79,6 +93,15 @@ export default function ClientCommandPage() {
           <MetricCard label="Top bottleneck" value={topBottleneck?.bottleneckType ?? "clear"} detail={topBottleneck?.recommendedFix ?? "No weekly bottlenecks"} />
           <MetricCard label="Next report action" value={nextReportAction?.priority ?? "none"} detail={nextReportAction?.actionSummary ?? "No weekly action"} />
           <MetricCard label="Memphis weekly reports" value={String(clientWeeklyCommandReports.length)} detail="Client-safe weekly summaries" />
+        </div>
+      </Section>
+
+      <Section title="CP8 Onboarding Panel">
+        <div className="metric-grid">
+          <MetricCard label="Workspace readiness" value={String(onboardingReadiness?.readinessScore ?? 0)} detail={onboardingReadiness?.readinessStatus ?? "not_started"} />
+          <MetricCard label="Activation gate" value={onboardingGate?.gateStatus ?? "not_ready"} detail={onboardingGate?.approvedScope ?? "manual review required"} />
+          <MetricCard label="Top blocker" value={onboardingBlocker?.severity ?? "clear"} detail={onboardingBlocker?.blockerSummary ?? "No onboarding blockers"} />
+          <MetricCard label="First weekly cycle" value={firstWeeklyCycle?.readyForFirstWeeklyCycle ? "ready" : "review"} detail={firstWeeklyCycle?.recommendedNextStep ?? "Check weekly-cycle readiness"} />
         </div>
       </Section>
 
@@ -117,8 +140,9 @@ export default function ClientCommandPage() {
             <RecordCard title="Disposition Manager" meta="Ranks buyer fit, buy box evidence, and disposition readiness without buyer contact." right={<Pill tone="green">CP5</Pill>} />
             <RecordCard title="Compliance Manager" meta="Tracks consent, opt-outs, safe manual-use status, and message risk without any provider checks." right={<Pill tone="green">CP6</Pill>} />
             <RecordCard title="Client Success Manager" meta="Builds weekly rollups, bottlenecks, and next-week action plans without ROI or revenue guarantees." right={<Pill tone="green">CP7</Pill>} />
+            <RecordCard title="Onboarding Manager" meta="Tracks client setup, activation blockers, manual-operation readiness, and first weekly-cycle readiness." right={<Pill tone="green">CP8</Pill>} />
             <RecordCard title="Client Workspace Guard" meta="Tenant-safe roles, client permissions, and sanitized workspace responses." right={<Pill tone="green">safe</Pill>} />
-            <RecordCard title="Provider Boundary Guard" meta="No outbound provider actions or raw payload exposure in CP1-CP7." right={<Pill tone="red">locked</Pill>} />
+            <RecordCard title="Provider Boundary Guard" meta="No outbound provider actions or raw payload exposure in CP1-CP8." right={<Pill tone="red">locked</Pill>} />
           </div>
         </Section>
         <Section title="Lead Intelligence Manager">
@@ -141,8 +165,24 @@ export default function ClientCommandPage() {
           <RecordCard title="Disposition" meta="Buyer matching and disposition readiness" right={<Link href="/dashboard/client-command/disposition">Open</Link>} />
           <RecordCard title="Compliance" meta="Consent, opt-out, and manual-use approval gates" right={<Link href="/dashboard/client-command/compliance">Open</Link>} />
           <RecordCard title="Reports" meta="Weekly command reports and bottlenecks" right={<Link href="/dashboard/client-command/reports">Open</Link>} />
+          <RecordCard title="Onboarding" meta={onboardingReport?.reportTitle ?? "Workspace activation readiness"} right={<Link href="/dashboard/client-command/onboarding">Open</Link>} />
           <RecordCard title="Permissions" meta={`${clientCommandPermissions.length} scoped permissions`} right={<Pill tone="gold">CP1</Pill>} />
           <RecordCard title="Lead Division" meta="Deterministic scoring" right={<Pill tone="gold">CP2</Pill>} />
+        </div>
+      </Section>
+
+      <Section title="CP8 Readiness Detail">
+        <div className="grid-two">
+          <RecordCard title="Onboarding Manager" meta={onboardingReport?.clientSafeSummary ?? "Client-safe onboarding report - no revenue, ROI, or deal outcome is guaranteed."} right={<Pill tone="gold">{onboardingGate?.approvedScope ?? "manual only"}</Pill>}>
+            <p>{onboardingReadiness?.recommendedNextStep ?? "Calculate readiness to see the next onboarding step."}</p>
+            <div className="tag-row">
+              <Pill tone="green">Manual Operation Only</Pill>
+              <Pill tone="green">No Live Actions</Pill>
+            </div>
+          </RecordCard>
+          <RecordCard title="Memphis demo onboarding status" meta={onboardingTask?.taskTitle ?? "Review activation board"} right={<Pill tone={firstWeeklyCycle?.readyForFirstWeeklyCycle ? "green" : "gold"}>{firstWeeklyCycle?.readyForFirstWeeklyCycle ? "weekly cycle ready" : "setup review"}</Pill>}>
+            <p>{complianceSetup?.recommendedNextStep ?? "Readiness checklist only - no DNC provider check or 10DLC live registration occurred."}</p>
+          </RecordCard>
         </div>
       </Section>
     </div>

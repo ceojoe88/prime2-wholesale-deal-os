@@ -10,27 +10,45 @@ from app.domains.client_command.service import (
     acquisition_briefs,
     acquisition_needs_review,
     appointment_readiness_for_lead,
+    business_profile_detail,
     buyer_buy_boxes_for_buyer,
     buyer_confidence_for_buyer,
     buyer_demand_evidence_for_lead,
     buyer_detail,
     buyer_matches_for_lead,
     buyer_outreach_drafts_for_lead,
+    buyer_list_setup_detail,
     communication_approval_gate_detail,
     communication_approval_gates,
     compliance_blocked,
     compliance_needs_review,
     compliance_overview,
+    compliance_setup_checklist_detail,
     compliance_safe_manual_use,
     consent_record_detail,
+    create_business_profile,
     create_buyer_buy_box,
     create_buyer_demand_evidence,
+    create_buyer_list_setup,
     create_buyer_profile,
     create_communication_approval_gate,
+    create_compliance_setup_checklist,
     create_compliance_readiness_placeholder,
     create_consent_record,
+    create_default_pipeline_stages,
+    create_first_leads_checklist,
+    create_first_weekly_cycle_readiness,
+    create_go_live_gate,
+    create_lead_source_setup,
+    create_market_setup,
     create_message_risk_review,
+    create_onboarding_report,
+    create_onboarding_task,
     create_opt_out_record,
+    create_pipeline_setup,
+    create_readiness_score,
+    create_strategy_profile,
+    create_team_setup_checklist,
     create_weekly_report,
     disposition_blocked,
     disposition_matches,
@@ -43,17 +61,32 @@ from app.domains.client_command.service import (
     follow_up_drafts_for_lead,
     hot_board,
     lead_detail,
+    lead_source_setups_detail,
     list_leads,
     leads_for_workspace,
     list_workspaces,
+    market_setups_detail,
     mark_weekly_report_client_visible,
     mark_weekly_report_reviewed,
+    first_leads_checklist_detail,
+    first_weekly_cycle_readiness_detail,
+    go_live_gate_detail,
     message_risk_review_detail,
     next_actions,
+    onboarding_activation_board,
+    onboarding_blockers_detail,
+    onboarding_overview,
+    onboarding_report_detail,
+    onboarding_tasks_blocked,
+    onboarding_tasks_detail,
+    onboarding_tasks_urgent,
     opt_out_record_detail,
     objection_drafts_for_lead,
     offer_readiness_for_lead,
+    pipeline_setup_detail,
+    pipeline_stage_detail,
     question_plan_for_lead,
+    readiness_score_detail,
     reports_bottlenecks,
     reports_overview,
     reports_recommended_actions,
@@ -62,6 +95,8 @@ from app.domains.client_command.service import (
     safe_contact_status_for_buyer,
     safe_contact_status_for_lead,
     score_lead,
+    strategy_profile_detail,
+    team_setup_checklist_detail,
     underwriting_blocked,
     underwriting_needs_human_review,
     underwriting_ready_review,
@@ -80,15 +115,25 @@ from app.domains.client_command.service import (
     workspace_weekly_reports,
 )
 from app.domains.client_command.schemas import (
+    ClientBusinessProfileCreate,
+    ClientBuyerListSetupCreate,
     ClientBuyerBuyBoxCreate,
     ClientBuyerDemandEvidenceCreate,
     ClientBuyerOutreachDraftCreate,
     ClientBuyerProfileCreate,
     ClientCommunicationApprovalGateCreate,
+    ClientComplianceSetupChecklistCreate,
     ClientComplianceReadinessPlaceholderCreate,
     ClientContactConsentRecordCreate,
     ClientContactOptOutRecordCreate,
+    ClientFirstLeadImportChecklistCreate,
+    ClientLeadSourceSetupCreate,
+    ClientMarketSetupCreate,
     ClientMessageRiskReviewCreate,
+    ClientOnboardingTaskCreate,
+    ClientPipelineSetupCreate,
+    ClientStrategyProfileCreate,
+    ClientTeamSetupChecklistCreate,
     ClientWeeklyCommandReportCreate,
 )
 
@@ -1071,3 +1116,416 @@ def get_reports_recommended_actions(
     session: Session = Depends(get_session),
 ) -> dict[str, object]:
     return reports_recommended_actions(session, workspace_id)
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/business-profile")
+def post_business_profile(
+    workspace_id: str,
+    payload: ClientBusinessProfileCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_business_profile(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/business-profile")
+def get_business_profile(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return business_profile_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/strategy-profile")
+def post_strategy_profile(
+    workspace_id: str,
+    payload: ClientStrategyProfileCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_strategy_profile(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/strategy-profile")
+def get_strategy_profile(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return strategy_profile_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/markets")
+def post_market_setup(
+    workspace_id: str,
+    payload: ClientMarketSetupCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_market_setup(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/markets")
+def get_market_setups(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return market_setups_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/pipeline")
+def post_pipeline_setup(
+    workspace_id: str,
+    payload: ClientPipelineSetupCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_pipeline_setup(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/pipeline")
+def get_pipeline_setup(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return pipeline_setup_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/pipeline/default-stages")
+def post_default_pipeline_stages(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_default_pipeline_stages(session, workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/pipeline/stages")
+def get_pipeline_stages(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return pipeline_stage_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/lead-sources")
+def post_lead_source_setup(
+    workspace_id: str,
+    payload: ClientLeadSourceSetupCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_lead_source_setup(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/lead-sources")
+def get_lead_source_setups(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return lead_source_setups_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/buyer-list-setup")
+def post_buyer_list_setup(
+    workspace_id: str,
+    payload: ClientBuyerListSetupCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_buyer_list_setup(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/buyer-list-setup")
+def get_buyer_list_setup(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return buyer_list_setup_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/team-checklist")
+def post_team_checklist(
+    workspace_id: str,
+    payload: ClientTeamSetupChecklistCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_team_setup_checklist(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/team-checklist")
+def get_team_checklist(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return team_setup_checklist_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/compliance-checklist")
+def post_onboarding_compliance_checklist(
+    workspace_id: str,
+    payload: ClientComplianceSetupChecklistCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_compliance_setup_checklist(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/compliance-checklist")
+def get_onboarding_compliance_checklist(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return compliance_setup_checklist_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/first-leads-checklist")
+def post_first_leads_checklist(
+    workspace_id: str,
+    payload: ClientFirstLeadImportChecklistCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_first_leads_checklist(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/first-leads-checklist")
+def get_first_leads_checklist(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return first_leads_checklist_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/readiness-score")
+def post_readiness_score(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_readiness_score(session, workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/readiness-score")
+def get_readiness_score(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return readiness_score_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/blockers")
+def get_onboarding_blockers(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return onboarding_blockers_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/go-live-gate")
+def post_go_live_gate(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_go_live_gate(session, workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/go-live-gate")
+def get_go_live_gate(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return go_live_gate_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/first-weekly-cycle-readiness")
+def post_first_weekly_cycle_readiness(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_first_weekly_cycle_readiness(session, workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/first-weekly-cycle-readiness")
+def get_first_weekly_cycle_readiness(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return first_weekly_cycle_readiness_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/tasks")
+def post_onboarding_task(
+    workspace_id: str,
+    payload: ClientOnboardingTaskCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_onboarding_task(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/tasks")
+def get_onboarding_tasks(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return onboarding_tasks_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/onboarding/tasks/blocked")
+def get_onboarding_tasks_blocked(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return onboarding_tasks_blocked(session, workspace_id)
+
+
+@router.get("/onboarding/tasks/urgent")
+def get_onboarding_tasks_urgent(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return onboarding_tasks_urgent(session, workspace_id)
+
+
+@router.post("/workspaces/{workspace_id}/onboarding/report")
+def post_onboarding_report(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = create_onboarding_report(session, workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/onboarding/report")
+def get_onboarding_report(
+    workspace_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        return onboarding_report_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/onboarding/overview")
+def get_onboarding_overview(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return onboarding_overview(session, workspace_id)
+
+
+@router.get("/onboarding/activation-board")
+def get_onboarding_activation_board(
+    workspace_id: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    return onboarding_activation_board(session, workspace_id)

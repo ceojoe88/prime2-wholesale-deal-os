@@ -5348,17 +5348,37 @@ export const clientCommandPermissions = [
   "client_command.leads_view",
   "client_command.leads_manage",
   "client_command.reports_view",
+  "client_command.reports_manage",
+  "client_command.reports_approve_visibility",
   "client_command.acquisition_view",
   "client_command.acquisition_manage",
   "client_command.underwriting_view",
   "client_command.underwriting_manage",
   "client_command.offer_review",
+  "client_command.disposition_view",
+  "client_command.disposition_manage",
+  "client_command.buyers_view",
+  "client_command.buyers_manage",
+  "client_command.buyer_matching_view",
+  "client_command.buyer_matching_manage",
+  "client_command.compliance_view",
+  "client_command.compliance_manage",
+  "client_command.contact_gate_view",
+  "client_command.contact_gate_manage",
+  "client_command.onboarding_view",
+  "client_command.onboarding_manage",
+  "client_command.onboarding_tasks_view",
+  "client_command.onboarding_tasks_manage",
+  "client_command.readiness_view",
+  "client_command.readiness_manage",
+  "client_command.activation_gate_view",
+  "client_command.activation_gate_manage",
   "client_command.admin"
 ];
 
 export const clientCommandSafetyCards = [
-  { label: "SMS", value: "off", detail: "No outbound provider action in CP1-CP7" },
-  { label: "Email", value: "off", detail: "No outbound provider action in CP1-CP7" },
+  { label: "SMS", value: "off", detail: "No outbound provider action in CP1-CP8" },
+  { label: "Email", value: "off", detail: "No outbound provider action in CP1-CP8" },
   { label: "Voice", value: "off", detail: "Manual client workflow only" },
   { label: "Skip trace", value: "off", detail: "No external enrichment provider call" },
   { label: "Billing", value: "off", detail: "No payment handling" },
@@ -6519,6 +6539,265 @@ export type ClientWeeklyDivisionSummary = {
   wins: string[];
   risks: string[];
   nextActions: string[];
+};
+
+export type ClientBusinessProfile = {
+  id: string;
+  workspaceId: string;
+  businessName: string;
+  operatorName: string | null;
+  businessType: "solo_wholesaler" | "small_wholesale_team" | "investor_operator" | "acquisition_team" | "disposition_team" | "agency_operator" | "unknown";
+  experienceLevel: "beginner" | "intermediate" | "advanced" | "unknown";
+  primaryMarket: string;
+  secondaryMarkets: string[];
+  monthlyLeadGoal: number | null;
+  monthlyContractGoal: number | null;
+  preferredStrategy: "wholesaling" | "fix_and_flip" | "buy_and_hold" | "creative_finance" | "hybrid" | "unknown";
+  currentToolsSummary: string | null;
+  biggestBottleneck: "lead_flow" | "follow_up" | "underwriting" | "buyers" | "compliance" | "team_execution" | "unknown";
+  clientSafeSummary: string;
+};
+
+export type ClientStrategyProfile = {
+  id: string;
+  workspaceId: string;
+  strategyType: "virtual_wholesale" | "local_wholesale" | "fix_and_flip" | "buy_and_hold" | "creative_finance" | "agent_investor" | "unknown";
+  acquisitionChannels: string[];
+  dispositionChannels: string[];
+  targetPropertyTypes: string[];
+  targetSellerSituations: string[];
+  targetPriceBandMin: number | null;
+  targetPriceBandMax: number | null;
+  assignmentFeeTarget: number | null;
+  riskTolerance: "conservative" | "balanced" | "aggressive" | "unknown";
+  operatingMode: "manual" | "assisted" | "managed" | "unknown";
+  strategySummary: string;
+  requiresHumanReview: boolean;
+};
+
+export type ClientMarketSetup = {
+  id: string;
+  workspaceId: string;
+  marketName: string;
+  state: string;
+  counties: string[];
+  cities: string[];
+  zipCodes: string[];
+  marketPriority: "primary" | "secondary" | "test_market";
+  marketStatus: "draft" | "configured" | "needs_review";
+  marketNotesSummary: string;
+  noLiveDataProvider: boolean;
+};
+
+export type ClientPipelineSetup = {
+  id: string;
+  workspaceId: string;
+  pipelineName: string;
+  pipelineType: "seller_acquisition" | "buyer_disposition" | "full_deal_loop" | "custom";
+  setupStatus: "draft" | "configured" | "needs_review";
+  stageCount: number;
+  clientSafeSummary: string;
+};
+
+export type ClientPipelineStageTemplate = {
+  id: string;
+  workspaceId: string;
+  pipelineSetupId: string;
+  stageName: string;
+  stageOrder: number;
+  stageType: "new_lead" | "contact_needed" | "acquisition_prep" | "appointment_ready" | "evidence_needed" | "underwriting_review" | "offer_ready" | "buyer_matching" | "disposition_ready" | "compliance_review" | "blocked" | "closed_archived" | "custom";
+  requiredBeforeNext: string[];
+  managerOwner: "Lead Intelligence Manager" | "Acquisition Manager" | "Underwriting Manager" | "Disposition Manager" | "Compliance Manager" | "Client Success Manager" | "Onboarding Manager";
+  clientSafe: boolean;
+};
+
+export type ClientLeadSourceSetup = {
+  id: string;
+  workspaceId: string;
+  sourceName: string;
+  sourceType: "manual_entry" | "driving_for_dollars" | "cold_call_list" | "ppc" | "facebook_leads" | "referrals" | "agent_referrals" | "probate" | "tax_delinquent" | "tired_landlord" | "expired_listing" | "unknown";
+  sourceStatus: "planned" | "active_manual" | "paused" | "needs_setup";
+  expectedMonthlyLeads: number | null;
+  costTrackingEnabled: boolean;
+  providerConnected: boolean;
+  noProviderSync: boolean;
+  notesSummary: string;
+};
+
+export type ClientBuyerListSetup = {
+  id: string;
+  workspaceId: string;
+  setupStatus: "not_started" | "needs_buyer_profiles" | "buyer_profiles_started" | "ready_for_matching" | "needs_review";
+  buyerCount: number;
+  activeBuyerCount: number;
+  clearBuyBoxCount: number;
+  missingBuyBoxCount: number;
+  verifiedOrStatedFundingCount: number;
+  needsReviewCount: number;
+  recommendedNextStep: string;
+  noBuyerContacted: boolean;
+  noCampaignStarted: boolean;
+};
+
+export type ClientTeamSetupChecklist = {
+  id: string;
+  workspaceId: string;
+  ownerAdded: boolean;
+  acquisitionRoleAdded: boolean;
+  underwritingRoleAdded: boolean;
+  dispositionRoleAdded: boolean;
+  complianceOwnerAdded: boolean;
+  clientSuccessOwnerAdded: boolean;
+  teamMemberCount: number;
+  missingRoles: string[];
+  setupStatus: "not_started" | "partial" | "ready" | "needs_review";
+  recommendedNextStep: string;
+};
+
+export type ClientComplianceSetupChecklist = {
+  id: string;
+  workspaceId: string;
+  consentPolicyDocumented: boolean;
+  optOutProcessDocumented: boolean;
+  dncPlaceholderCreated: boolean;
+  tenDlcPlaceholderCreated: boolean;
+  emailUnsubscribePlaceholderCreated: boolean;
+  callRecordingNoticePlaceholderCreated: boolean;
+  complianceOwnerAssigned: boolean;
+  setupStatus: "not_started" | "partial" | "ready_for_manual_use" | "needs_review" | "blocked";
+  blockReasons: string[];
+  recommendedNextStep: string;
+  noProviderCheck: boolean;
+  noLiveRegistration: boolean;
+};
+
+export type ClientFirstLeadImportChecklist = {
+  id: string;
+  workspaceId: string;
+  first10LeadsTarget: number;
+  currentLeadCount: number;
+  leadsWithContactCount: number;
+  leadsWithPropertyAddressCount: number;
+  leadsWithMotivationCount: number;
+  leadsWithConditionCount: number;
+  leadsWithTimelineCount: number;
+  leadsScoredCount: number;
+  hotLeadsCount: number;
+  importStatus: "not_started" | "partial" | "ready_for_review" | "ready_for_first_command_cycle";
+  missingRequirements: string[];
+  recommendedNextStep: string;
+  noExternalImport: boolean;
+};
+
+export type ClientWorkspaceReadinessScore = {
+  id: string;
+  workspaceId: string;
+  readinessScore: number;
+  readinessStatus: "not_started" | "setup_in_progress" | "blocked" | "ready_for_manual_operation" | "ready_for_first_weekly_cycle";
+  businessProfileScore: number;
+  marketSetupScore: number;
+  pipelineSetupScore: number;
+  leadSourceScore: number;
+  leadImportScore: number;
+  buyerSetupScore: number;
+  teamSetupScore: number;
+  complianceSetupScore: number;
+  reportReadinessScore: number;
+  topBlockers: string[];
+  recommendedNextStep: string;
+  noLiveActionsEnabled: boolean;
+};
+
+export type ClientActivationBlocker = {
+  id: string;
+  workspaceId: string;
+  blockerType: "missing_business_profile" | "missing_market" | "missing_pipeline" | "missing_lead_source" | "missing_leads" | "missing_buyer_list" | "missing_team_owner" | "missing_compliance_setup" | "missing_weekly_report" | "unsafe_contact_posture" | "unknown";
+  severity: "low" | "medium" | "high" | "critical";
+  blockerSummary: string;
+  affectedArea: "business" | "market" | "pipeline" | "leads" | "buyers" | "team" | "compliance" | "reporting";
+  recommendedFix: string;
+  resolved: boolean;
+};
+
+export type ClientGoLiveReadinessGate = {
+  id: string;
+  workspaceId: string;
+  gateStatus: "not_ready" | "blocked" | "ready_for_manual_operation" | "ready_for_first_weekly_cycle" | "needs_review";
+  readinessScoreSnapshot: number;
+  requiredBeforeManualOperation: string[];
+  blockReasons: string[];
+  approvedScope: "manual_operation_only" | "first_weekly_cycle_only" | "none";
+  noLiveCommunication: boolean;
+  noProviderExecution: boolean;
+  noBillingAction: boolean;
+  noContractAction: boolean;
+  noCampaignAction: boolean;
+  clientSafeSummary: string;
+  requiresHumanReview: boolean;
+};
+
+export type ClientOnboardingTask = {
+  id: string;
+  workspaceId: string;
+  taskTitle: string;
+  taskDescription: string;
+  taskCategory: "business_profile" | "market_setup" | "pipeline_setup" | "lead_sources" | "lead_import" | "buyer_list" | "team_setup" | "compliance" | "reporting" | "review";
+  taskStatus: "todo" | "in_progress" | "blocked" | "done" | "skipped";
+  priority: "low" | "medium" | "high" | "urgent";
+  ownerRole: "client_owner" | "acquisition_manager" | "underwriting_manager" | "disposition_manager" | "compliance_manager" | "client_success_manager" | "onboarding_manager";
+  dueWindow: "today" | "this_week" | "next_week" | "before_activation";
+  relatedBlockerId: string | null;
+  clientSafe: boolean;
+};
+
+export type ClientOnboardingTimelineEvent = {
+  id: string;
+  workspaceId: string;
+  eventType: string;
+  eventSummary: string;
+  milestoneName: string;
+  progressPercent: number;
+  managerName: string;
+  clientVisible: boolean;
+};
+
+export type ClientFirstWeeklyCycleReadiness = {
+  id: string;
+  workspaceId: string;
+  readyForFirstWeeklyCycle: boolean;
+  leadMinimumMet: boolean;
+  buyerSetupMinimumMet: boolean;
+  complianceMinimumMet: boolean;
+  reportCanGenerate: boolean;
+  topMissingItems: string[];
+  recommendedNextStep: string;
+  noLiveActionsTaken: boolean;
+};
+
+export type ClientOnboardingReport = {
+  id: string;
+  workspaceId: string;
+  reportStatus: "draft" | "generated" | "reviewed" | "client_visible";
+  reportTitle: string;
+  executiveSummary: string;
+  setupProgressSummary: string;
+  readinessSummary: string;
+  blockerSummary: string;
+  nextStepsSummary: string;
+  firstWeekFocus: string;
+  clientSafeSummary: string;
+  noLiveActionsEnabled: boolean;
+  noRevenueGuarantee: boolean;
+  noRoiClaim: boolean;
+};
+
+export type ClientOnboardingManagerEvent = {
+  id: string;
+  workspaceId: string;
+  eventType: string;
+  eventSummary: string;
+  managerName: string;
+  clientVisible: boolean;
 };
 
 export const clientAcquisitionBriefs: ClientAcquisitionBrief[] = [
@@ -8596,6 +8875,353 @@ export const clientWeeklyDivisionSummaries: ClientWeeklyDivisionSummary[] = [
   }
 ];
 
+export const clientBusinessProfiles: ClientBusinessProfile[] = [
+  {
+    id: "client-business-profile-memphis",
+    workspaceId: "client-workspace-003",
+    businessName: "Memphis Virtual Wholesale Operator",
+    operatorName: "Memphis Demo Operator",
+    businessType: "solo_wholesaler",
+    experienceLevel: "intermediate",
+    primaryMarket: "Memphis, TN",
+    secondaryMarkets: ["Shelby County, TN"],
+    monthlyLeadGoal: 20,
+    monthlyContractGoal: 2,
+    preferredStrategy: "wholesaling",
+    currentToolsSummary: "Demo/manual Prime2 client command workspace only.",
+    biggestBottleneck: "buyers",
+    clientSafeSummary: "Memphis Virtual Wholesale Operator runs a manual-first virtual wholesale workflow in Memphis, TN."
+  }
+];
+
+export const clientStrategyProfiles: ClientStrategyProfile[] = [
+  {
+    id: "client-strategy-profile-memphis",
+    workspaceId: "client-workspace-003",
+    strategyType: "virtual_wholesale",
+    acquisitionChannels: ["manual_entry", "referrals", "driving_for_dollars"],
+    dispositionChannels: ["buyer_list", "manual_review"],
+    targetPropertyTypes: ["single_family", "small_multifamily"],
+    targetSellerSituations: ["vacant", "inheritance", "tired_landlord", "high_equity"],
+    targetPriceBandMin: 50000,
+    targetPriceBandMax: 180000,
+    assignmentFeeTarget: 10000,
+    riskTolerance: "balanced",
+    operatingMode: "manual",
+    strategySummary: "Manual-only virtual wholesale setup focused on Memphis leads and buyer-list review.",
+    requiresHumanReview: false
+  }
+];
+
+export const clientMarketSetups: ClientMarketSetup[] = [
+  {
+    id: "client-market-setup-memphis",
+    workspaceId: "client-workspace-003",
+    marketName: "Memphis, TN",
+    state: "TN",
+    counties: ["Shelby County"],
+    cities: ["Memphis"],
+    zipCodes: ["38106", "38111", "38116", "38118", "38127"],
+    marketPriority: "primary",
+    marketStatus: "configured",
+    marketNotesSummary: "Demo/local market setup only with no live provider data.",
+    noLiveDataProvider: true
+  }
+];
+
+export const clientPipelineSetups: ClientPipelineSetup[] = [
+  {
+    id: "client-pipeline-setup-memphis",
+    workspaceId: "client-workspace-003",
+    pipelineName: "Prime2 Full Deal Loop",
+    pipelineType: "full_deal_loop",
+    setupStatus: "configured",
+    stageCount: 12,
+    clientSafeSummary: "Client-safe setup only; pipeline stages support controlled/manual Prime2 operation."
+  }
+];
+
+export const clientPipelineStageTemplates: ClientPipelineStageTemplate[] = [
+  { id: "client-pipeline-stage-memphis-001", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "New Lead", stageOrder: 1, stageType: "new_lead", requiredBeforeNext: [], managerOwner: "Lead Intelligence Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-002", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Contact Needed", stageOrder: 2, stageType: "contact_needed", requiredBeforeNext: ["lead_profile"], managerOwner: "Lead Intelligence Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-003", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Acquisition Prep", stageOrder: 3, stageType: "acquisition_prep", requiredBeforeNext: ["contact_channels"], managerOwner: "Acquisition Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-004", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Appointment Ready", stageOrder: 4, stageType: "appointment_ready", requiredBeforeNext: ["motivation", "timeline", "condition"], managerOwner: "Acquisition Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-005", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Evidence Needed", stageOrder: 5, stageType: "evidence_needed", requiredBeforeNext: ["seller_notes"], managerOwner: "Underwriting Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-006", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Underwriting Review", stageOrder: 6, stageType: "underwriting_review", requiredBeforeNext: ["arv", "repairs"], managerOwner: "Underwriting Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-007", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Offer Ready", stageOrder: 7, stageType: "offer_ready", requiredBeforeNext: ["mao", "evidence_packet"], managerOwner: "Underwriting Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-008", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Buyer Matching", stageOrder: 8, stageType: "buyer_matching", requiredBeforeNext: ["offer_readiness"], managerOwner: "Disposition Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-009", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Disposition Ready", stageOrder: 9, stageType: "disposition_ready", requiredBeforeNext: ["buyer_match"], managerOwner: "Disposition Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-010", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Compliance Review", stageOrder: 10, stageType: "compliance_review", requiredBeforeNext: ["manual_use_gate"], managerOwner: "Compliance Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-011", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Blocked / Needs Review", stageOrder: 11, stageType: "blocked", requiredBeforeNext: [], managerOwner: "Onboarding Manager", clientSafe: true },
+  { id: "client-pipeline-stage-memphis-012", workspaceId: "client-workspace-003", pipelineSetupId: "client-pipeline-setup-memphis", stageName: "Closed / Archived", stageOrder: 12, stageType: "closed_archived", requiredBeforeNext: [], managerOwner: "Client Success Manager", clientSafe: true }
+];
+
+export const clientLeadSourceSetups: ClientLeadSourceSetup[] = [
+  {
+    id: "client-lead-source-memphis-manual",
+    workspaceId: "client-workspace-003",
+    sourceName: "Memphis manual demo leads",
+    sourceType: "manual_entry",
+    sourceStatus: "active_manual",
+    expectedMonthlyLeads: 12,
+    costTrackingEnabled: false,
+    providerConnected: false,
+    noProviderSync: true,
+    notesSummary: "Setup record only - no provider sync or campaign launch occurred."
+  },
+  {
+    id: "client-lead-source-memphis-referrals",
+    workspaceId: "client-workspace-003",
+    sourceName: "Memphis referrals demo",
+    sourceType: "referrals",
+    sourceStatus: "active_manual",
+    expectedMonthlyLeads: 6,
+    costTrackingEnabled: false,
+    providerConnected: false,
+    noProviderSync: true,
+    notesSummary: "Manual referral setup only with no provider connectivity."
+  }
+];
+
+export const clientBuyerListSetups: ClientBuyerListSetup[] = [
+  {
+    id: "client-buyer-list-setup-memphis",
+    workspaceId: "client-workspace-003",
+    setupStatus: "ready_for_matching",
+    buyerCount: 4,
+    activeBuyerCount: 3,
+    clearBuyBoxCount: 3,
+    missingBuyBoxCount: 1,
+    verifiedOrStatedFundingCount: 3,
+    needsReviewCount: 2,
+    recommendedNextStep: "Buyer setup only - no buyer has been contacted.",
+    noBuyerContacted: true,
+    noCampaignStarted: true
+  }
+];
+
+export const clientTeamSetupChecklists: ClientTeamSetupChecklist[] = [
+  {
+    id: "client-team-checklist-memphis",
+    workspaceId: "client-workspace-003",
+    ownerAdded: true,
+    acquisitionRoleAdded: true,
+    underwritingRoleAdded: true,
+    dispositionRoleAdded: true,
+    complianceOwnerAdded: false,
+    clientSuccessOwnerAdded: false,
+    teamMemberCount: 1,
+    missingRoles: ["compliance_owner", "client_success_owner"],
+    setupStatus: "partial",
+    recommendedNextStep: "Document compliance and client success ownership, or note that the operator covers those reviews manually."
+  }
+];
+
+export const clientComplianceSetupChecklists: ClientComplianceSetupChecklist[] = [
+  {
+    id: "client-compliance-setup-memphis",
+    workspaceId: "client-workspace-003",
+    consentPolicyDocumented: true,
+    optOutProcessDocumented: true,
+    dncPlaceholderCreated: true,
+    tenDlcPlaceholderCreated: true,
+    emailUnsubscribePlaceholderCreated: true,
+    callRecordingNoticePlaceholderCreated: false,
+    complianceOwnerAssigned: false,
+    setupStatus: "needs_review",
+    blockReasons: ["compliance_owner_missing", "call_recording_notice_placeholder_missing"],
+    recommendedNextStep: "Readiness checklist only - no DNC provider check or 10DLC live registration occurred.",
+    noProviderCheck: true,
+    noLiveRegistration: true
+  }
+];
+
+export const clientFirstLeadImportChecklists: ClientFirstLeadImportChecklist[] = [
+  {
+    id: "client-first-leads-memphis",
+    workspaceId: "client-workspace-003",
+    first10LeadsTarget: 10,
+    currentLeadCount: 5,
+    leadsWithContactCount: 5,
+    leadsWithPropertyAddressCount: 5,
+    leadsWithMotivationCount: 5,
+    leadsWithConditionCount: 5,
+    leadsWithTimelineCount: 5,
+    leadsScoredCount: 5,
+    hotLeadsCount: 3,
+    importStatus: "ready_for_review",
+    missingRequirements: ["first_10_leads_target_not_met"],
+    recommendedNextStep: "Demo/local first-leads checklist is usable for manual review, but the first-10 target is not fully met yet.",
+    noExternalImport: true
+  }
+];
+
+export const clientWorkspaceReadinessScores: ClientWorkspaceReadinessScore[] = [
+  {
+    id: "client-readiness-score-memphis",
+    workspaceId: "client-workspace-003",
+    readinessScore: 83,
+    readinessStatus: "ready_for_manual_operation",
+    businessProfileScore: 100,
+    marketSetupScore: 100,
+    pipelineSetupScore: 100,
+    leadSourceScore: 65,
+    leadImportScore: 65,
+    buyerSetupScore: 80,
+    teamSetupScore: 70,
+    complianceSetupScore: 80,
+    reportReadinessScore: 100,
+    topBlockers: ["unknown", "unsafe_contact_posture", "unknown"],
+    recommendedNextStep: "Manual operation readiness is close; finish compliance ownership and add more leads before depending on the first weekly cycle.",
+    noLiveActionsEnabled: true
+  }
+];
+
+export const clientActivationBlockers: ClientActivationBlocker[] = [
+  {
+    id: "client-activation-blocker-memphis-leads",
+    workspaceId: "client-workspace-003",
+    blockerType: "unknown",
+    severity: "medium",
+    blockerSummary: "The first 10-lead target is not met yet.",
+    affectedArea: "leads",
+    recommendedFix: "Continue loading or qualifying leads until the first-10 target is reached.",
+    resolved: false
+  },
+  {
+    id: "client-activation-blocker-memphis-compliance",
+    workspaceId: "client-workspace-003",
+    blockerType: "unsafe_contact_posture",
+    severity: "medium",
+    blockerSummary: "Manual-use contact posture still needs review on one or more records.",
+    affectedArea: "compliance",
+    recommendedFix: "Resolve consent and opt-out questions before treating more contacts as ready.",
+    resolved: false
+  },
+  {
+    id: "client-activation-blocker-memphis-buyers",
+    workspaceId: "client-workspace-003",
+    blockerType: "unknown",
+    severity: "medium",
+    blockerSummary: "Some leads still need buyer demand evidence before disposition review.",
+    affectedArea: "buyers",
+    recommendedFix: "Add buyer demand evidence or stronger buyer matches for blocked leads.",
+    resolved: false
+  }
+];
+
+export const clientGoLiveReadinessGates: ClientGoLiveReadinessGate[] = [
+  {
+    id: "client-go-live-gate-memphis",
+    workspaceId: "client-workspace-003",
+    gateStatus: "ready_for_manual_operation",
+    readinessScoreSnapshot: 83,
+    requiredBeforeManualOperation: ["unknown", "unsafe_contact_posture", "unknown"],
+    blockReasons: [
+      "The first 10-lead target is not met yet.",
+      "Manual-use contact posture still needs review on one or more records.",
+      "Some leads still need buyer demand evidence before disposition review."
+    ],
+    approvedScope: "manual_operation_only",
+    noLiveCommunication: true,
+    noProviderExecution: true,
+    noBillingAction: true,
+    noContractAction: true,
+    noCampaignAction: true,
+    clientSafeSummary: "Manual operation readiness only - no live communication, provider execution, billing, contracts, or campaigns are enabled.",
+    requiresHumanReview: true
+  }
+];
+
+export const clientOnboardingTasks: ClientOnboardingTask[] = [
+  {
+    id: "client-onboarding-task-memphis-001",
+    workspaceId: "client-workspace-003",
+    taskTitle: "Finish the first 10-lead batch",
+    taskDescription: "The Memphis demo is usable, but the first 10-lead target is not met yet.",
+    taskCategory: "lead_import",
+    taskStatus: "todo",
+    priority: "high",
+    ownerRole: "acquisition_manager",
+    dueWindow: "before_activation",
+    relatedBlockerId: "client-activation-blocker-memphis-leads",
+    clientSafe: true
+  },
+  {
+    id: "client-onboarding-task-memphis-002",
+    workspaceId: "client-workspace-003",
+    taskTitle: "Document compliance ownership and review gaps",
+    taskDescription: "Manual-use contact posture still needs review on one or more records.",
+    taskCategory: "compliance",
+    taskStatus: "in_progress",
+    priority: "high",
+    ownerRole: "compliance_manager",
+    dueWindow: "this_week",
+    relatedBlockerId: "client-activation-blocker-memphis-compliance",
+    clientSafe: true
+  },
+  {
+    id: "client-onboarding-task-memphis-003",
+    workspaceId: "client-workspace-003",
+    taskTitle: "Add buyer demand evidence for blocked leads",
+    taskDescription: "Some leads still need buyer demand evidence before disposition review.",
+    taskCategory: "buyer_list",
+    taskStatus: "todo",
+    priority: "medium",
+    ownerRole: "disposition_manager",
+    dueWindow: "this_week",
+    relatedBlockerId: "client-activation-blocker-memphis-buyers",
+    clientSafe: true
+  }
+];
+
+export const clientOnboardingTimelineEvents: ClientOnboardingTimelineEvent[] = [
+  { id: "client-onboarding-timeline-memphis-001", workspaceId: "client-workspace-003", eventType: "workspace_created", eventSummary: "Client workspace foundation is in place.", milestoneName: "Workspace foundation", progressPercent: 15, managerName: "Onboarding Manager", clientVisible: true },
+  { id: "client-onboarding-timeline-memphis-002", workspaceId: "client-workspace-003", eventType: "setup_reviewed", eventSummary: "Onboarding Manager reviewed setup records and checklists.", milestoneName: "Setup review", progressPercent: 48, managerName: "Onboarding Manager", clientVisible: true },
+  { id: "client-onboarding-timeline-memphis-003", workspaceId: "client-workspace-003", eventType: "readiness_scored", eventSummary: "Workspace readiness score was calculated for manual operation.", milestoneName: "Readiness scored", progressPercent: 83, managerName: "Onboarding Manager", clientVisible: true },
+  { id: "client-onboarding-timeline-memphis-004", workspaceId: "client-workspace-003", eventType: "weekly_cycle_reviewed", eventSummary: "First weekly cycle readiness was reviewed without enabling live actions.", milestoneName: "Weekly cycle readiness", progressPercent: 88, managerName: "Onboarding Manager", clientVisible: true }
+];
+
+export const clientFirstWeeklyCycleReadinessRecords: ClientFirstWeeklyCycleReadiness[] = [
+  {
+    id: "client-first-weekly-cycle-memphis",
+    workspaceId: "client-workspace-003",
+    readyForFirstWeeklyCycle: true,
+    leadMinimumMet: true,
+    buyerSetupMinimumMet: true,
+    complianceMinimumMet: true,
+    reportCanGenerate: true,
+    topMissingItems: [],
+    recommendedNextStep: "Run the first weekly client command cycle in manual mode.",
+    noLiveActionsTaken: true
+  }
+];
+
+export const clientOnboardingReports: ClientOnboardingReport[] = [
+  {
+    id: "client-onboarding-report-memphis",
+    workspaceId: "client-workspace-003",
+    reportStatus: "client_visible",
+    reportTitle: "Memphis Virtual Wholesale Operator onboarding readiness report",
+    executiveSummary: "Memphis Virtual Wholesale Operator is ready for controlled/manual Prime2 operation, with follow-up blockers still open around compliance review, first-10 lead volume, and buyer-demand coverage.",
+    setupProgressSummary: "Business profile, strategy, market setup, pipeline, buyer setup, compliance placeholders, and reporting are documented in demo/local form only.",
+    readinessSummary: "Go-live readiness remains manual-operation only. No live communication, provider execution, billing, contracts, or campaigns are enabled.",
+    blockerSummary: "Top blockers are the first 10-lead target, compliance review posture, and buyer demand evidence gaps on some leads.",
+    nextStepsSummary: "Finish the first 10-lead batch, document compliance ownership, and strengthen buyer demand evidence before relying on more disposition review.",
+    firstWeekFocus: "Use the first weekly command cycle in manual mode while clearing the remaining blockers.",
+    clientSafeSummary: "Client-safe onboarding report - no revenue, ROI, or deal outcome is guaranteed.",
+    noLiveActionsEnabled: true,
+    noRevenueGuarantee: true,
+    noRoiClaim: true
+  }
+];
+
+export const clientOnboardingManagerEvents: ClientOnboardingManagerEvent[] = [
+  { id: "client-onboarding-event-memphis-001", workspaceId: "client-workspace-003", eventType: "onboarding_summary", eventSummary: "Onboarding Manager summarized the current workspace setup posture.", managerName: "Onboarding Manager", clientVisible: true },
+  { id: "client-onboarding-event-memphis-002", workspaceId: "client-workspace-003", eventType: "readiness_status", eventSummary: "Onboarding Manager marked workspace readiness as ready_for_manual_operation.", managerName: "Onboarding Manager", clientVisible: true },
+  { id: "client-onboarding-event-memphis-003", workspaceId: "client-workspace-003", eventType: "weekly_cycle_status", eventSummary: "Onboarding Manager confirmed the first weekly cycle is ready in manual mode only.", managerName: "Onboarding Manager", clientVisible: true }
+];
+
 export function getClientBuyer(buyerId: string) {
   return clientBuyerProfiles.find((buyer) => buyer.id === buyerId);
 }
@@ -8646,4 +9272,48 @@ export function getClientWeeklyReport(reportId: string) {
 
 export function getClientLatestWeeklyReport(workspaceId = "client-workspace-003") {
   return clientWeeklyCommandReports.find((report) => report.workspaceId === workspaceId);
+}
+
+export function getClientBusinessProfile(workspaceId = "client-workspace-003") {
+  return clientBusinessProfiles.find((profile) => profile.workspaceId === workspaceId);
+}
+
+export function getClientStrategyProfile(workspaceId = "client-workspace-003") {
+  return clientStrategyProfiles.find((profile) => profile.workspaceId === workspaceId);
+}
+
+export function getClientPipelineSetup(workspaceId = "client-workspace-003") {
+  return clientPipelineSetups.find((pipeline) => pipeline.workspaceId === workspaceId);
+}
+
+export function getClientBuyerListSetup(workspaceId = "client-workspace-003") {
+  return clientBuyerListSetups.find((setup) => setup.workspaceId === workspaceId);
+}
+
+export function getClientTeamSetupChecklist(workspaceId = "client-workspace-003") {
+  return clientTeamSetupChecklists.find((checklist) => checklist.workspaceId === workspaceId);
+}
+
+export function getClientComplianceSetupChecklist(workspaceId = "client-workspace-003") {
+  return clientComplianceSetupChecklists.find((checklist) => checklist.workspaceId === workspaceId);
+}
+
+export function getClientFirstLeadImportChecklist(workspaceId = "client-workspace-003") {
+  return clientFirstLeadImportChecklists.find((checklist) => checklist.workspaceId === workspaceId);
+}
+
+export function getClientWorkspaceReadinessScore(workspaceId = "client-workspace-003") {
+  return clientWorkspaceReadinessScores.find((score) => score.workspaceId === workspaceId);
+}
+
+export function getClientGoLiveGate(workspaceId = "client-workspace-003") {
+  return clientGoLiveReadinessGates.find((gate) => gate.workspaceId === workspaceId);
+}
+
+export function getClientFirstWeeklyCycleReadiness(workspaceId = "client-workspace-003") {
+  return clientFirstWeeklyCycleReadinessRecords.find((record) => record.workspaceId === workspaceId);
+}
+
+export function getClientOnboardingReport(workspaceId = "client-workspace-003") {
+  return clientOnboardingReports.find((report) => report.workspaceId === workspaceId);
 }

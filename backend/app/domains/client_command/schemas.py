@@ -121,3 +121,101 @@ class ClientComplianceReadinessPlaceholderCreate(BaseModel):
 class ClientWeeklyCommandReportCreate(BaseModel):
     report_week_start: str = ""
     report_week_end: str = ""
+
+
+class ClientBusinessProfileCreate(BaseModel):
+    business_name: str = "Client Business"
+    operator_name: str | None = None
+    business_type: str = "unknown"
+    experience_level: str = "unknown"
+    primary_market: str = ""
+    secondary_markets: list[str] = Field(default_factory=list)
+    monthly_lead_goal: int | None = None
+    monthly_contract_goal: int | None = None
+    preferred_strategy: str = "unknown"
+    current_tools_summary: str | None = None
+    biggest_bottleneck: str = "unknown"
+
+
+class ClientStrategyProfileCreate(BaseModel):
+    strategy_type: str = "unknown"
+    acquisition_channels: list[str] = Field(default_factory=list)
+    disposition_channels: list[str] = Field(default_factory=list)
+    target_property_types: list[str] = Field(default_factory=list)
+    target_seller_situations: list[str] = Field(default_factory=list)
+    target_price_band_min: int | None = None
+    target_price_band_max: int | None = None
+    assignment_fee_target: int | None = None
+    risk_tolerance: str = "unknown"
+    operating_mode: str = "unknown"
+    strategy_summary: str = ""
+    requires_human_review: bool = False
+
+
+class ClientMarketSetupCreate(BaseModel):
+    market_name: str = ""
+    state: str = ""
+    counties: list[str] = Field(default_factory=list)
+    cities: list[str] = Field(default_factory=list)
+    zip_codes: list[str] = Field(default_factory=list)
+    market_priority: str = "primary"
+    market_status: str = "draft"
+    market_notes_summary: str = ""
+
+
+class ClientPipelineSetupCreate(BaseModel):
+    pipeline_name: str = "Prime2 Full Deal Loop"
+    pipeline_type: str = "full_deal_loop"
+    setup_status: str = "draft"
+
+
+class ClientLeadSourceSetupCreate(BaseModel):
+    source_name: str = "Manual lead source"
+    source_type: str = "manual_entry"
+    source_status: str = "planned"
+    expected_monthly_leads: int | None = None
+    cost_tracking_enabled: bool = False
+    provider_connected: bool = False
+    notes_summary: str = ""
+
+
+class ClientBuyerListSetupCreate(BaseModel):
+    setup_status: str | None = None
+    recommended_next_step: str = ""
+
+
+class ClientTeamSetupChecklistCreate(BaseModel):
+    owner_added: bool | None = None
+    acquisition_role_added: bool | None = None
+    underwriting_role_added: bool | None = None
+    disposition_role_added: bool | None = None
+    compliance_owner_added: bool | None = None
+    client_success_owner_added: bool | None = None
+    recommended_next_step: str = ""
+
+
+class ClientComplianceSetupChecklistCreate(BaseModel):
+    consent_policy_documented: bool | None = None
+    opt_out_process_documented: bool | None = None
+    dnc_placeholder_created: bool | None = None
+    ten_dlc_placeholder_created: bool | None = None
+    email_unsubscribe_placeholder_created: bool | None = None
+    call_recording_notice_placeholder_created: bool | None = None
+    compliance_owner_assigned: bool | None = None
+    recommended_next_step: str = ""
+
+
+class ClientFirstLeadImportChecklistCreate(BaseModel):
+    first_10_leads_target: int = 10
+    recommended_next_step: str = ""
+
+
+class ClientOnboardingTaskCreate(BaseModel):
+    task_title: str = "Review onboarding blocker"
+    task_description: str = ""
+    task_category: str = "review"
+    task_status: str = "todo"
+    priority: str = "medium"
+    owner_role: str = "onboarding_manager"
+    due_window: str = "this_week"
+    related_blocker_id: str | None = None
