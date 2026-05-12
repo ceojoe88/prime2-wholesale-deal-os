@@ -1398,7 +1398,7 @@ Allowed:
 ## Migration Strategy
 
 The initial Alembic revision creates the SQLAlchemy metadata-defined schema. The backend defaults to SQLite for local operator use and switches to Postgres when `DATABASE_URL` points to a Postgres database.
-## Client Command CP6-CP8
+## Client Command CP6-CP12
 
 CP6 extends the existing `client_command` domain with:
 - consent records
@@ -1445,3 +1445,47 @@ CP8 extends the same `client_command` domain with:
 - onboarding manager events
 
 CP8 is a setup and activation-readiness layer only. It does not enable provider execution, live communication, DNC checks, 10DLC registration, billing, campaigns, contracts, or autonomous execution. In CP8, "go-live" means the workspace is ready for controlled/manual Prime2 operation only.
+
+CP9 through CP12 extend the same `client_command` domain with guarded, default-blocked backend records and routes. These surfaces create and review plan, communication, billing, and pilot/support artifacts, but they do not permit live execution unless every downstream gate passes.
+
+CP9 adds:
+- plan catalog, features, and limits
+- workspace plan assignments
+- feature-gate evaluations and feature-gate lists
+- usage counters and seat usage review
+- upgrade recommendations
+- billing-readiness records and subscription placeholders
+- plan gate events
+
+CP10 adds:
+- communication provider profiles and live-flag snapshots
+- communication readiness checks
+- dry-run receipts
+- send approvals
+- blocked or audited send attempts
+- communication gate events and overview surfaces
+
+CP11 adds:
+- billing provider profiles and live-flag snapshots
+- billing customer profiles
+- billing readiness checks
+- checkout dry-run receipts
+- billing approvals
+- blocked or audited billing attempts
+- billing ledger entries, external references, and overview surfaces
+
+CP12 adds:
+- pilot programs, workspace enrollments, and operating-mode records
+- pilot health snapshots
+- support tickets, support actions, and escalations
+- launch checklists and risk reviews
+- internal admin notes plus client-safe updates
+- admin-console, support-console, blocked, and needs-review aggregate surfaces
+
+Shared CP9-CP12 boundaries:
+- default non-live posture until an explicit gate is cleared
+- no bulk campaigns
+- no autonomous execution
+- no raw card data storage
+- no source-gate bypass
+- Prime governance internals remain private

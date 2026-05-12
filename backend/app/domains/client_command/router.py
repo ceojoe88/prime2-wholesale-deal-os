@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_session
+from app.domains.client_command import schemas as client_command_schemas
+from app.domains.client_command import service as client_command_service
 from app.domains.client_command.service import (
     ClientCommandPermissionError,
     acquisition_brief_for_lead,
@@ -1529,3 +1531,577 @@ def get_onboarding_activation_board(
     session: Session = Depends(get_session),
 ) -> dict[str, object]:
     return onboarding_activation_board(session, workspace_id)
+
+
+@router.get("/plans/catalog")
+def get_plan_catalog(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.plan_catalog(session)
+
+
+@router.post("/plans/catalog")
+def post_plan_catalog(
+    payload: client_command_schemas.ClientPlanCatalogCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    body = client_command_service.create_plan_catalog(session, payload.model_dump())
+    session.commit()
+    return body
+
+
+@router.get("/plans/features")
+def get_plan_features(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.plan_features(session)
+
+
+@router.get("/plans/limits")
+def get_plan_limits(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.plan_limits(session)
+
+
+@router.post("/workspaces/{workspace_id}/plan-assignment")
+def post_plan_assignment(
+    workspace_id: str,
+    payload: client_command_schemas.ClientWorkspacePlanAssignmentCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_plan_assignment(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/plan-assignment")
+def get_plan_assignment(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.plan_assignment_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/feature-gates/evaluate")
+def post_feature_gate_evaluation(
+    workspace_id: str,
+    payload: client_command_schemas.ClientFeatureGateEvaluationCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.evaluate_feature_gates(session, workspace_id, payload.feature_key)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/feature-gates")
+def get_feature_gates(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.feature_gate_list(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/usage")
+def get_usage(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.usage_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/usage/recalculate")
+def post_usage_recalculate(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        body = client_command_service.recalculate_usage(session, workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/upgrade-recommendations")
+def get_upgrade_recommendations(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.upgrade_recommendations_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/billing-readiness")
+def post_billing_readiness(
+    workspace_id: str,
+    payload: client_command_schemas.ClientBillingReadinessRecordCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_billing_readiness_record(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/billing-readiness")
+def get_billing_readiness(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.billing_readiness_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/subscription-placeholder")
+def post_subscription_placeholder(
+    workspace_id: str,
+    payload: client_command_schemas.ClientSubscriptionPlaceholderCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_subscription_placeholder(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/subscription-placeholder")
+def get_subscription_placeholder(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.subscription_placeholder_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/plans/overview")
+def get_plans_overview(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.plans_overview(session)
+
+
+@router.get("/communication/providers")
+def get_communication_providers(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.communication_providers(session)
+
+
+@router.post("/communication/providers")
+def post_communication_provider(
+    payload: client_command_schemas.ClientCommunicationProviderProfileCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    body = client_command_service.create_communication_provider(session, payload.model_dump())
+    session.commit()
+    return body
+
+
+@router.post("/communication/readiness-check")
+def post_communication_readiness_check(
+    payload: client_command_schemas.ClientCommunicationReadinessCheckCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_communication_readiness_check(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/communication/readiness-checks")
+def get_communication_readiness_checks(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.communication_readiness_checks(session)
+
+
+@router.post("/communication/dry-run")
+def post_communication_dry_run(
+    payload: client_command_schemas.ClientCommunicationDryRunCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_communication_dry_run(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/communication/dry-runs")
+def get_communication_dry_runs(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.communication_dry_runs(session)
+
+
+@router.post("/communication/send-approval")
+def post_communication_send_approval(
+    payload: client_command_schemas.ClientCommunicationSendApprovalCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_communication_send_approval(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/communication/send-approvals")
+def get_communication_send_approvals(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.communication_send_approvals(session)
+
+
+@router.post("/communication/send-attempt")
+def post_communication_send_attempt(
+    payload: client_command_schemas.ClientCommunicationSendAttemptCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_communication_send_attempt(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/communication/send-attempts")
+def get_communication_send_attempts(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.communication_send_attempts(session)
+
+
+@router.get("/communication/external-references")
+def get_communication_external_references(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.communication_external_references(session)
+
+
+@router.get("/communication/overview")
+def get_communication_overview(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.communication_overview(session)
+
+
+@router.get("/billing/providers")
+def get_billing_providers(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.billing_providers(session)
+
+
+@router.post("/billing/providers")
+def post_billing_provider(
+    payload: client_command_schemas.ClientBillingProviderProfileCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    body = client_command_service.create_billing_provider(session, payload.model_dump())
+    session.commit()
+    return body
+
+
+@router.get("/billing/customer-profiles")
+def get_billing_customer_profiles(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.billing_customer_profiles(session)
+
+
+@router.post("/billing/customer-profiles")
+def post_billing_customer_profile(
+    payload: client_command_schemas.ClientBillingCustomerProfileCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_billing_customer_profile(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/billing/readiness-check")
+def post_billing_readiness_check(
+    payload: client_command_schemas.ClientBillingReadinessCheckCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_billing_readiness_check(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/billing/readiness-checks")
+def get_billing_readiness_checks(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.billing_readiness_checks(session)
+
+
+@router.post("/billing/checkout-dry-run")
+def post_checkout_dry_run(
+    payload: client_command_schemas.ClientCheckoutDryRunCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_checkout_dry_run(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/billing/checkout-dry-runs")
+def get_checkout_dry_runs(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.checkout_dry_runs(session)
+
+
+@router.post("/billing/approval")
+def post_billing_approval(
+    payload: client_command_schemas.ClientBillingApprovalCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_billing_approval(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/billing/approvals")
+def get_billing_approvals(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.billing_approvals(session)
+
+
+@router.post("/billing/attempt")
+def post_billing_attempt(
+    payload: client_command_schemas.ClientBillingAttemptCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_billing_attempt(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/billing/attempts")
+def get_billing_attempts(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.billing_attempts(session)
+
+
+@router.get("/billing/external-references")
+def get_billing_external_references(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.billing_external_references(session)
+
+
+@router.get("/billing/ledger")
+def get_billing_ledger(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.billing_ledger(session)
+
+
+@router.get("/billing/overview")
+def get_billing_overview(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.billing_overview(session)
+
+
+@router.get("/pilot/programs")
+def get_pilot_programs(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.pilot_programs(session)
+
+
+@router.post("/pilot/programs")
+def post_pilot_program(
+    payload: client_command_schemas.ClientPilotProgramCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    body = client_command_service.create_pilot_program(session, payload.model_dump())
+    session.commit()
+    return body
+
+
+@router.get("/workspaces/{workspace_id}/pilot/enrollment")
+def get_pilot_enrollment(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.pilot_enrollment_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/pilot/enrollment")
+def post_pilot_enrollment(
+    workspace_id: str,
+    payload: client_command_schemas.ClientPilotWorkspaceEnrollmentCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_pilot_enrollment(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/pilot/operating-mode")
+def get_pilot_operating_mode(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.pilot_operating_mode_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/pilot/operating-mode")
+def post_pilot_operating_mode(
+    workspace_id: str,
+    payload: client_command_schemas.ClientPilotOperatingModeCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_pilot_operating_mode(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/pilot/health-snapshot")
+def post_pilot_health_snapshot(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        body = client_command_service.create_pilot_health_snapshot(session, workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/pilot/health-snapshot")
+def get_pilot_health_snapshot(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.pilot_health_snapshot_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/pilot/support-tickets")
+def post_pilot_support_ticket(
+    workspace_id: str,
+    payload: client_command_schemas.ClientPilotSupportTicketCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_pilot_support_ticket(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/pilot/support-tickets")
+def get_pilot_support_tickets(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.pilot_support_tickets(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/pilot/support-actions")
+def post_pilot_support_action(
+    payload: client_command_schemas.ClientPilotSupportActionCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_pilot_support_action(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/pilot/support-actions")
+def get_pilot_support_actions(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.pilot_support_actions(session)
+
+
+@router.post("/pilot/escalations")
+def post_pilot_escalation(
+    payload: client_command_schemas.ClientPilotEscalationCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_pilot_escalation(session, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/pilot/escalations")
+def get_pilot_escalations(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.pilot_escalations(session)
+
+
+@router.post("/workspaces/{workspace_id}/pilot/launch-checklist")
+def post_pilot_launch_checklist(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        body = client_command_service.create_pilot_launch_checklist(session, workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/pilot/launch-checklist")
+def get_pilot_launch_checklist(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.pilot_launch_checklist_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/pilot/risk-review")
+def post_pilot_risk_review(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        body = client_command_service.create_pilot_risk_review(session, workspace_id)
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/pilot/risk-review")
+def get_pilot_risk_review(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.pilot_risk_review_detail(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/workspaces/{workspace_id}/pilot/client-safe-updates")
+def post_pilot_client_safe_update(
+    workspace_id: str,
+    payload: client_command_schemas.ClientPilotClientSafeUpdateCreate,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    try:
+        body = client_command_service.create_pilot_client_safe_update(session, workspace_id, payload.model_dump())
+        session.commit()
+        return body
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/workspaces/{workspace_id}/pilot/client-safe-updates")
+def get_pilot_client_safe_updates(workspace_id: str, session: Session = Depends(get_session)) -> dict[str, object]:
+    try:
+        return client_command_service.pilot_client_safe_updates(session, workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/pilot/admin-console")
+def get_pilot_admin_console(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.pilot_admin_console(session)
+
+
+@router.get("/pilot/support-console")
+def get_pilot_support_console(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.pilot_support_console(session)
+
+
+@router.get("/pilot/blocked")
+def get_pilot_blocked(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.pilot_blocked(session)
+
+
+@router.get("/pilot/needs-review")
+def get_pilot_needs_review(session: Session = Depends(get_session)) -> dict[str, object]:
+    return client_command_service.pilot_needs_review(session)

@@ -246,6 +246,8 @@ Added deal evidence packets, evidence items, underwriting reviews, offer scenari
 CP5 Buyer Matching + Disposition Readiness:
 Added buyer profiles, buy boxes, buyer confidence scoring, deterministic deal-to-buyer matching, buyer demand evidence, disposition readiness gates, manual-only buyer outreach drafts, and Disposition Manager events. CP5 is non-live; no buyer is contacted, no campaign starts, no provider calls occur, and no buyer purchase/profit/assignment result is guaranteed.
 
+Client Command now extends through CP12 with guarded backend surfaces for subscription plan gating, controlled communication gating, billing gating, and pilot/support coordination. These phases preserve non-live defaults, no bulk campaigns, no autonomous execution, no raw card data storage, no source-gate bypass, and no client exposure to Prime governance internals.
+
 ## Local Run Commands
 
 Backend setup:
@@ -382,12 +384,12 @@ Prime 2 Wholesale Deal OS supports wholesale real estate operations, but it does
 Forecasts, buyer margins, assignment fees, ARV inputs, repair estimates, and probability scores are estimates or source-backed internal calculations. They are not guaranteed profits, guaranteed closings, legal advice, investment advice, or binding commitments.
 ## Client Command OS
 
-The client-facing Prime2 Client Command OS now spans CP1 through CP8.
+The client-facing Prime2 Client Command OS runtime currently spans CP1 through CP12.
 
 Current controlled loop:
 Lead Intelligence -> Acquisition Prep -> Underwriting -> Buyer Matching -> Compliance Contact Gate -> Weekly Client Command Report -> Client Onboarding + Workspace Activation Readiness
 
-CP6 through CP8 remain readiness-only:
+CP6 through CP12 remain gated and non-live by default:
 - no provider calls
 - no DNC checks
 - no 10DLC registration
@@ -406,3 +408,17 @@ CP8 adds:
 - onboarding tasks and timeline events
 - first weekly-cycle readiness
 - client-safe onboarding reports
+
+CP9 through CP12 add:
+- CP9 subscription plan gating readiness
+- CP10 controlled live communication gate
+- CP11 Stripe billing live payment gate
+- CP12 pilot client operating mode and admin support console
+
+Those phases keep the same hard boundaries:
+- default non-live posture until each gate is explicitly cleared
+- no bulk campaigns
+- no autonomous execution
+- no raw card data storage
+- no bypass of source-linked gates in pilot or support modes
+- Prime governance internals remain private

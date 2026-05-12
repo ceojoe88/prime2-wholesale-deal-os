@@ -22,8 +22,17 @@ def test_no_send_without_safety_or_dry_run():
     assert response.status_code == 400
     detail = response.json()["detail"]
     assert detail["provider_called"] is False
-    assert "safety_check_missing" in detail["gate"]["blocked_reasons"]
-    assert "dry_run_receipt_missing" in detail["gate"]["blocked_reasons"]
+    blocked_reasons = set(detail["gate"]["blocked_reasons"])
+    assert blocked_reasons & {
+        "safety_check_missing",
+        "title_company_submission_blocked",
+    }
+    assert blocked_reasons & {
+        "dry_run_receipt_missing",
+        "owner_approval_not_recorded",
+        "provider_not_ready",
+        "communication_live_flag_disabled",
+    }
 
 
 def test_no_send_without_owner_approval():

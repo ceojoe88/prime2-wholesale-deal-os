@@ -9222,6 +9222,706 @@ export const clientOnboardingManagerEvents: ClientOnboardingManagerEvent[] = [
   { id: "client-onboarding-event-memphis-003", workspaceId: "client-workspace-003", eventType: "weekly_cycle_status", eventSummary: "Onboarding Manager confirmed the first weekly cycle is ready in manual mode only.", managerName: "Onboarding Manager", clientVisible: true }
 ];
 
+export type ClientPlanCatalog = {
+  id: string;
+  planName: string;
+  planCode: "beta_demo" | "starter" | "pro" | "command" | "managed_growth" | "enterprise_custom";
+  monthlyPricePlaceholder: number;
+  setupFeePlaceholder: number;
+  isPublic: boolean;
+  isActive: boolean;
+  clientSafeSummary: string;
+  noLiveBilling: boolean;
+  noPaymentCollected: boolean;
+};
+
+export type ClientPlanFeature = {
+  id: string;
+  planCode: ClientPlanCatalog["planCode"];
+  featureGroup: string;
+  featureKey: string;
+  featureName: string;
+  allowed: boolean;
+  featureSummary: string;
+  clientSafe: boolean;
+};
+
+export type ClientPlanLimit = {
+  id: string;
+  planCode: ClientPlanCatalog["planCode"];
+  maxWorkspaces: number;
+  maxUsers: number;
+  maxLeads: number;
+  maxBuyers: number;
+  maxWeeklyReports: number;
+  maxManualDrafts: number;
+  liveCommunicationAllowed: boolean;
+  billingLiveAllowed: boolean;
+  supportConsoleAllowed: boolean;
+  pilotModeAllowed: boolean;
+};
+
+export type ClientWorkspacePlanAssignment = {
+  id: string;
+  workspaceId: string;
+  planCode: ClientPlanCatalog["planCode"];
+  planName: string;
+  assignmentStatus: "active" | "paused" | "trial";
+  clientSafeSummary: string;
+  noLiveBilling: boolean;
+  noPaymentCollected: boolean;
+};
+
+export type ClientFeatureGateEvaluation = {
+  id: string;
+  workspaceId: string;
+  featureKey: string;
+  gateStatus: "allowed" | "blocked_by_plan" | "blocked_by_usage_limit" | "blocked_by_billing_readiness" | "blocked_by_compliance" | "needs_review";
+  reasonSummary: string;
+  requiredUpgradePlan: ClientPlanCatalog["planCode"] | null;
+  noLiveAction: boolean;
+};
+
+export type ClientUsageCounter = {
+  id: string;
+  workspaceId: string;
+  leadsCount: number;
+  buyersCount: number;
+  usersCount: number;
+  weeklyReportsCount: number;
+  manualDraftsCount: number;
+  complianceGatesCount: number;
+  liveAttemptsCount: number;
+  billingAttemptsCount: number;
+};
+
+export type ClientSeatUsageRecord = {
+  id: string;
+  workspaceId: string;
+  memberId: string | null;
+  seatLabel: string;
+  seatStatus: string;
+  roleName: string;
+  countsAgainstLimit: boolean;
+};
+
+export type ClientPlanUpgradeRecommendation = {
+  id: string;
+  workspaceId: string;
+  currentPlanCode: ClientPlanCatalog["planCode"];
+  recommendedPlanCode: ClientPlanCatalog["planCode"];
+  reasonSummary: string;
+  blockedFeatures: string[];
+  usagePressure: string[];
+  clientSafeSummary: string;
+};
+
+export type ClientBillingReadinessRecord = {
+  id: string;
+  workspaceId: string;
+  readinessStatus: "not_ready" | "setup_needed" | "ready_for_future_billing_gate" | "blocked";
+  customerInfoCollected: boolean;
+  billingContactCollected: boolean;
+  taxInfoPlaceholder: boolean;
+  termsAcknowledgmentPlaceholder: boolean;
+  notesSummary: string;
+  noProviderCall: boolean;
+  noPaymentCollected: boolean;
+  noInvoiceCreated: boolean;
+};
+
+export type ClientSubscriptionPlaceholder = {
+  id: string;
+  workspaceId: string;
+  planCode: ClientPlanCatalog["planCode"];
+  placeholderStatus: "draft" | "review" | "ready";
+  monthlyPricePlaceholder: number;
+  setupFeePlaceholder: number;
+  billingContactEmail: string;
+  clientSafeSummary: string;
+  noLiveBilling: boolean;
+  noPaymentCollected: boolean;
+};
+
+export type ClientCommunicationProviderProfile = {
+  id: string;
+  workspaceId: string;
+  providerName: string;
+  providerMode: "mock" | "sandbox" | "test" | "live" | "unknown";
+  channel: "sms" | "email" | "call_note";
+  enabled: boolean;
+  credentialReferenceName: string;
+  configSummary: string;
+  secretPresent: boolean;
+  clientSafeSummary: string;
+};
+
+export type ClientCommunicationLiveFlag = {
+  id: string;
+  workspaceId: string;
+  providerProfileId: string;
+  channel: "sms" | "email" | "call_note";
+  globalCommunicationLiveEnabled: boolean;
+  workspaceCommunicationLiveEnabled: boolean;
+  providerLiveEnabled: boolean;
+  channelLiveEnabled: boolean;
+};
+
+export type ClientCommunicationLiveReadinessCheck = {
+  id: string;
+  workspaceId: string;
+  leadId: string | null;
+  buyerId: string | null;
+  sourceDraftType: "seller_follow_up" | "buyer_outreach" | "unknown";
+  sourceDraftId: string | null;
+  channel: "sms" | "email" | "call_note";
+  providerProfileId: string | null;
+  readinessStatus: "ready" | "blocked";
+  blockReasons: string[];
+  riskFlags: string[];
+  cp6StatusSnapshot: string;
+  cp9GateSnapshot: string;
+  cp8ReadinessSnapshot: string;
+  liveFlagSnapshot: Record<string, boolean>;
+  dryRunPresent: boolean;
+  approvalPresent: boolean;
+  idempotencyKey: string;
+  noLiveSend: boolean;
+};
+
+export type ClientCommunicationDryRunReceipt = {
+  id: string;
+  workspaceId: string;
+  leadId: string | null;
+  buyerId: string | null;
+  sourceDraftType: "seller_follow_up" | "buyer_outreach" | "unknown";
+  sourceDraftId: string | null;
+  channel: "sms" | "email" | "call_note";
+  providerProfileId: string | null;
+  idempotencyKey: string;
+  dryRunSummary: string;
+  status: string;
+  contentHash: string;
+  noLiveSend: boolean;
+};
+
+export type ClientCommunicationSendApproval = {
+  id: string;
+  workspaceId: string;
+  readinessCheckId: string | null;
+  dryRunReceiptId: string | null;
+  approvalStatus: "approved" | "pending" | "blocked";
+  approvedBy: string;
+  reasonSummary: string;
+  noLiveSend: boolean;
+};
+
+export type ClientCommunicationSendAttempt = {
+  id: string;
+  workspaceId: string;
+  readinessCheckId: string | null;
+  dryRunReceiptId: string | null;
+  approvalId: string | null;
+  providerProfileId: string | null;
+  leadId: string | null;
+  buyerId: string | null;
+  channel: "sms" | "email" | "call_note";
+  sourceDraftType: "seller_follow_up" | "buyer_outreach" | "unknown";
+  sourceDraftId: string | null;
+  idempotencyKey: string;
+  attemptStatus: "blocked" | "dry_run_created" | "approved" | "sent_mock" | "sent_sandbox" | "sent_live" | "failed" | "cancelled";
+  blockReasons: string[];
+  failureReason: string;
+  providerMode: "mock" | "sandbox" | "test" | "live" | "unknown";
+  requestSummary: string;
+  noBulk: boolean;
+};
+
+export type ClientCommunicationExternalMessageReference = {
+  id: string;
+  workspaceId: string;
+  attemptId: string;
+  providerProfileId: string;
+  channel: "sms" | "email" | "call_note";
+  providerMode: "mock" | "sandbox" | "test" | "live" | "unknown";
+  externalReference: string;
+  externalStatus: string;
+  responseMetadataSummary: string;
+};
+
+export type ClientBillingProviderProfile = {
+  id: string;
+  workspaceId: string;
+  providerName: string;
+  providerMode: "mock" | "sandbox" | "test" | "live" | "unknown";
+  enabled: boolean;
+  credentialReferenceName: string;
+  configSummary: string;
+  secretPresent: boolean;
+  supportsPaymentLinks: boolean;
+  supportsSubscriptions: boolean;
+  clientSafeSummary: string;
+};
+
+export type ClientBillingLiveFlag = {
+  id: string;
+  workspaceId: string;
+  providerProfileId: string;
+  globalBillingLiveEnabled: boolean;
+  workspaceBillingLiveEnabled: boolean;
+  providerBillingLiveEnabled: boolean;
+  paymentLinkLiveEnabled: boolean;
+  subscriptionLiveEnabled: boolean;
+};
+
+export type ClientBillingCustomerProfile = {
+  id: string;
+  workspaceId: string;
+  customerName: string;
+  billingEmail: string;
+  billingContactName: string;
+  billingContactCollected: boolean;
+  taxInfoPlaceholder: boolean;
+  termsAcknowledgmentPlaceholder: boolean;
+  rawCardDataPresent: boolean;
+  clientSafeSummary: string;
+};
+
+export type ClientBillingReadinessCheck = {
+  id: string;
+  workspaceId: string;
+  planAssignmentPresent: boolean;
+  billingReadinessStatusSnapshot: string;
+  providerProfileId: string | null;
+  providerMode: "mock" | "sandbox" | "test" | "live" | "unknown";
+  liveFlagSnapshot: Record<string, boolean>;
+  readinessStatus: "ready" | "blocked";
+  blockReasons: string[];
+  noPaymentCollected: boolean;
+  noInvoiceCreated: boolean;
+};
+
+export type ClientCheckoutDryRunReceipt = {
+  id: string;
+  workspaceId: string;
+  planCode: ClientPlanCatalog["planCode"];
+  attemptType: "checkout_session" | "payment_link" | "subscription_create" | "invoice_create" | "customer_create";
+  providerProfileId: string | null;
+  dryRunSummary: string;
+  idempotencyKey: string;
+  amountPlaceholder: number;
+  status: string;
+  noPaymentCollected: boolean;
+};
+
+export type ClientBillingApproval = {
+  id: string;
+  workspaceId: string;
+  readinessCheckId: string | null;
+  dryRunReceiptId: string | null;
+  approvalStatus: "approved" | "pending" | "blocked";
+  approvedBy: string;
+  reasonSummary: string;
+  noPaymentCollected: boolean;
+};
+
+export type ClientBillingAttempt = {
+  id: string;
+  workspaceId: string;
+  providerProfileId: string | null;
+  customerProfileId: string | null;
+  planCode: ClientPlanCatalog["planCode"];
+  readinessCheckId: string | null;
+  dryRunReceiptId: string | null;
+  approvalId: string | null;
+  attemptType: "checkout_session" | "payment_link" | "subscription_create" | "invoice_create" | "customer_create";
+  idempotencyKey: string;
+  attemptStatus: "blocked" | "dry_run_created" | "approved" | "created_mock" | "created_sandbox" | "created_live" | "failed" | "cancelled";
+  blockReasons: string[];
+  providerMode: "mock" | "sandbox" | "test" | "live" | "unknown";
+  requestSummary: string;
+  noRawCardData: boolean;
+};
+
+export type ClientBillingExternalReference = {
+  id: string;
+  workspaceId: string;
+  attemptId: string;
+  providerProfileId: string;
+  providerMode: "mock" | "sandbox" | "test" | "live" | "unknown";
+  externalReference: string;
+  externalStatus: string;
+  responseMetadataSummary: string;
+};
+
+export type ClientBillingLedgerEntry = {
+  id: string;
+  workspaceId: string;
+  attemptId: string;
+  entryType: string;
+  amountPlaceholder: number;
+  currency: string;
+  status: string;
+  summary: string;
+  clientSafe: boolean;
+};
+
+export type ClientPilotProgram = {
+  id: string;
+  programName: string;
+  programCode: string;
+  programStatus: string;
+  clientSafeSummary: string;
+};
+
+export type ClientPilotWorkspaceEnrollment = {
+  id: string;
+  workspaceId: string;
+  programId: string;
+  pilotMode: "demo" | "internal_test" | "beta_pilot" | "paid_pilot" | "paused" | "graduated" | "blocked";
+  enrollmentStatus: string;
+  supportOwnerName: string;
+  clientSafeSummary: string;
+};
+
+export type ClientPilotOperatingMode = {
+  id: string;
+  workspaceId: string;
+  pilotMode: ClientPilotWorkspaceEnrollment["pilotMode"];
+  operatingPosture: "manual_only" | "assisted" | "controlled_live_limited" | "blocked";
+  reasonSummary: string;
+  requiresHumanReview: boolean;
+  noGateBypass: boolean;
+};
+
+export type ClientPilotHealthSnapshot = {
+  id: string;
+  workspaceId: string;
+  healthStatus: "healthy" | "watch" | "blocked" | "needs_review" | "critical";
+  onboardingStatus: string;
+  planStatus: string;
+  communicationStatus: string;
+  billingStatus: string;
+  complianceStatus: string;
+  weeklyReportStatus: string;
+  blockReasons: string[];
+  nextActions: string[];
+  clientSafeSummary: string;
+};
+
+export type ClientPilotSupportTicket = {
+  id: string;
+  workspaceId: string;
+  ticketType: "onboarding" | "leads" | "underwriting" | "buyers" | "compliance" | "billing" | "communication" | "access" | "bug" | "feature_request" | "training";
+  title: string;
+  summary: string;
+  status: string;
+  priority: "low" | "medium" | "high" | "urgent";
+  assignedTo: string;
+  clientSafe: boolean;
+};
+
+export type ClientPilotSupportAction = {
+  id: string;
+  workspaceId: string;
+  ticketId: string | null;
+  actionSummary: string;
+  actionStatus: string;
+  ownerRole: string;
+  clientVisible: boolean;
+};
+
+export type ClientPilotEscalation = {
+  id: string;
+  workspaceId: string;
+  escalationType: string;
+  sourceDomain: string;
+  sourceRecordId: string | null;
+  escalationStatus: string;
+  escalationReason: string;
+  requiresHumanReview: boolean;
+};
+
+export type ClientPilotClientSafeUpdate = {
+  id: string;
+  workspaceId: string;
+  updateTitle: string;
+  updateSummary: string;
+  status: string;
+  clientSafeSummary: string;
+  hidesAdminNotes: boolean;
+};
+
+export type ClientPilotLaunchChecklist = {
+  id: string;
+  workspaceId: string;
+  checklistStatus: string;
+  onboardingReady: boolean;
+  planAssigned: boolean;
+  complianceAcceptable: boolean;
+  weeklyReportAvailable: boolean;
+  supportOwnerAssigned: boolean;
+  noCriticalBlockers: boolean;
+  noUnsafeLiveFlags: boolean;
+  blockReasons: string[];
+  clientSafeSummary: string;
+};
+
+export type ClientPilotRiskReview = {
+  id: string;
+  workspaceId: string;
+  riskStatus: string;
+  communicationBlocked: boolean;
+  billingBlocked: boolean;
+  complianceBlocked: boolean;
+  criticalBlockers: string[];
+  escalationRequired: boolean;
+  summary: string;
+};
+
+export type ClientPilotOutcomeCheckpoint = {
+  id: string;
+  workspaceId: string;
+  checkpointName: string;
+  checkpointStatus: string;
+  summary: string;
+  clientSafe: boolean;
+};
+
+export type ClientPilotEvent = {
+  id: string;
+  workspaceId: string;
+  eventType: string;
+  eventSummary: string;
+  clientVisible: boolean;
+};
+
+export const clientPlanCatalogEntries: ClientPlanCatalog[] = [
+  { id: "client-plan-beta-demo", planName: "Beta Demo", planCode: "beta_demo", monthlyPricePlaceholder: 0, setupFeePlaceholder: 0, isPublic: false, isActive: true, clientSafeSummary: "Demo-only plan for manual readiness.", noLiveBilling: true, noPaymentCollected: true },
+  { id: "client-plan-starter", planName: "Starter", planCode: "starter", monthlyPricePlaceholder: 99, setupFeePlaceholder: 0, isPublic: true, isActive: true, clientSafeSummary: "Starter plan for manual investor command workflows.", noLiveBilling: true, noPaymentCollected: true },
+  { id: "client-plan-pro", planName: "Pro", planCode: "pro", monthlyPricePlaceholder: 249, setupFeePlaceholder: 99, isPublic: true, isActive: true, clientSafeSummary: "Pro plan for expanded manual operations and controlled live review gates.", noLiveBilling: true, noPaymentCollected: true },
+  { id: "client-plan-command", planName: "Command", planCode: "command", monthlyPricePlaceholder: 499, setupFeePlaceholder: 149, isPublic: true, isActive: true, clientSafeSummary: "Command plan for tightly controlled pilot support and gated live lanes.", noLiveBilling: true, noPaymentCollected: true },
+  { id: "client-plan-managed-growth", planName: "Managed Growth", planCode: "managed_growth", monthlyPricePlaceholder: 999, setupFeePlaceholder: 299, isPublic: false, isActive: true, clientSafeSummary: "Managed Growth plan for high-touch pilot expansion and guarded integrations.", noLiveBilling: true, noPaymentCollected: true },
+  { id: "client-plan-enterprise-custom", planName: "Enterprise Custom", planCode: "enterprise_custom", monthlyPricePlaceholder: 0, setupFeePlaceholder: 0, isPublic: false, isActive: true, clientSafeSummary: "Enterprise custom plan for private deployment and negotiated support boundaries.", noLiveBilling: true, noPaymentCollected: true }
+];
+
+export const clientPlanLimits: ClientPlanLimit[] = [
+  { id: "client-plan-limit-beta-demo", planCode: "beta_demo", maxWorkspaces: 1, maxUsers: 2, maxLeads: 25, maxBuyers: 10, maxWeeklyReports: 4, maxManualDrafts: 25, liveCommunicationAllowed: false, billingLiveAllowed: false, supportConsoleAllowed: false, pilotModeAllowed: false },
+  { id: "client-plan-limit-starter", planCode: "starter", maxWorkspaces: 1, maxUsers: 3, maxLeads: 100, maxBuyers: 40, maxWeeklyReports: 8, maxManualDrafts: 100, liveCommunicationAllowed: false, billingLiveAllowed: false, supportConsoleAllowed: false, pilotModeAllowed: false },
+  { id: "client-plan-limit-pro", planCode: "pro", maxWorkspaces: 2, maxUsers: 6, maxLeads: 500, maxBuyers: 200, maxWeeklyReports: 24, maxManualDrafts: 400, liveCommunicationAllowed: true, billingLiveAllowed: false, supportConsoleAllowed: false, pilotModeAllowed: true },
+  { id: "client-plan-limit-command", planCode: "command", maxWorkspaces: 5, maxUsers: 12, maxLeads: 1500, maxBuyers: 600, maxWeeklyReports: 60, maxManualDrafts: 1200, liveCommunicationAllowed: true, billingLiveAllowed: true, supportConsoleAllowed: true, pilotModeAllowed: true },
+  { id: "client-plan-limit-managed-growth", planCode: "managed_growth", maxWorkspaces: 10, maxUsers: 25, maxLeads: 5000, maxBuyers: 2000, maxWeeklyReports: 120, maxManualDrafts: 4000, liveCommunicationAllowed: true, billingLiveAllowed: true, supportConsoleAllowed: true, pilotModeAllowed: true },
+  { id: "client-plan-limit-enterprise-custom", planCode: "enterprise_custom", maxWorkspaces: 100, maxUsers: 500, maxLeads: 100000, maxBuyers: 50000, maxWeeklyReports: 1000, maxManualDrafts: 50000, liveCommunicationAllowed: true, billingLiveAllowed: true, supportConsoleAllowed: true, pilotModeAllowed: true }
+];
+
+const clientPlanFeatureGroups = ["onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "live_communication", "billing", "admin_support", "pilot_mode", "exports", "integrations"] as const;
+const clientPlanFeatureMatrix: Record<ClientPlanCatalog["planCode"], string[]> = {
+  beta_demo: ["onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports"],
+  starter: ["onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "exports"],
+  pro: ["onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "live_communication", "pilot_mode", "exports", "integrations"],
+  command: ["onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "live_communication", "billing", "admin_support", "pilot_mode", "exports", "integrations"],
+  managed_growth: ["onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "live_communication", "billing", "admin_support", "pilot_mode", "exports", "integrations"],
+  enterprise_custom: ["onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "live_communication", "billing", "admin_support", "pilot_mode", "exports", "integrations"]
+};
+
+export const clientPlanFeatures: ClientPlanFeature[] = clientPlanCatalogEntries.flatMap((plan) =>
+  clientPlanFeatureGroups.map((featureKey) => ({
+    id: `client-plan-feature-${plan.planCode}-${featureKey}`,
+    planCode: plan.planCode,
+    featureGroup: featureKey,
+    featureKey,
+    featureName: featureKey.replaceAll("_", " "),
+    allowed: clientPlanFeatureMatrix[plan.planCode].includes(featureKey),
+    featureSummary: `${plan.planName} ${clientPlanFeatureMatrix[plan.planCode].includes(featureKey) ? "allows" : "blocks"} ${featureKey.replaceAll("_", " ")}.`,
+    clientSafe: true
+  }))
+);
+
+export const clientPlanAssignments: ClientWorkspacePlanAssignment[] = [
+  { id: "client-plan-assignment-memphis", workspaceId: "client-workspace-003", planCode: "pro", planName: "Pro", assignmentStatus: "active", clientSafeSummary: "Memphis demo is assigned to Pro for controlled pilot readiness.", noLiveBilling: true, noPaymentCollected: true }
+];
+
+export const clientFeatureGateEvaluations: ClientFeatureGateEvaluation[] = [
+  { id: "client-gate-memphis-live-communication", workspaceId: "client-workspace-003", featureKey: "live_communication", gateStatus: "allowed", reasonSummary: "Live communication is plan-allowed but still blocked by downstream readiness, compliance, approval, and live flags.", requiredUpgradePlan: null, noLiveAction: true },
+  { id: "client-gate-memphis-billing", workspaceId: "client-workspace-003", featureKey: "billing", gateStatus: "blocked_by_plan", reasonSummary: "Billing remains blocked until the workspace moves to Command and passes billing readiness.", requiredUpgradePlan: "command", noLiveAction: true },
+  { id: "client-gate-memphis-admin-support", workspaceId: "client-workspace-003", featureKey: "admin_support", gateStatus: "blocked_by_plan", reasonSummary: "Admin support console is a Command-gated feature.", requiredUpgradePlan: "command", noLiveAction: true },
+  { id: "client-gate-memphis-pilot-mode", workspaceId: "client-workspace-003", featureKey: "pilot_mode", gateStatus: "allowed", reasonSummary: "Pilot mode is allowed, but it never bypasses source-domain gates.", requiredUpgradePlan: null, noLiveAction: true }
+];
+
+export const clientUsageCounters: ClientUsageCounter[] = [
+  { id: "client-usage-memphis", workspaceId: "client-workspace-003", leadsCount: 5, buyersCount: 4, usersCount: 1, weeklyReportsCount: 1, manualDraftsCount: 10, complianceGatesCount: 3, liveAttemptsCount: 2, billingAttemptsCount: 1 }
+];
+
+export const clientSeatUsageRecords: ClientSeatUsageRecord[] = [
+  { id: "client-seat-memphis-owner", workspaceId: "client-workspace-003", memberId: "client-member-003-operator", seatLabel: "Memphis Demo Operator", seatStatus: "active", roleName: "Memphis Command Operator", countsAgainstLimit: true }
+];
+
+export const clientPlanUpgradeRecommendations: ClientPlanUpgradeRecommendation[] = [
+  { id: "client-upgrade-memphis", workspaceId: "client-workspace-003", currentPlanCode: "pro", recommendedPlanCode: "command", reasonSummary: "Upgrade to Command to clear blocked features or usage pressure.", blockedFeatures: ["billing", "admin_support"], usagePressure: ["controlled_live_review_requested"], clientSafeSummary: "Feature access is controlled by plan, readiness, and safety gates." }
+];
+
+export const clientBillingReadinessRecords: ClientBillingReadinessRecord[] = [
+  { id: "client-billing-readiness-memphis", workspaceId: "client-workspace-003", readinessStatus: "setup_needed", customerInfoCollected: true, billingContactCollected: true, taxInfoPlaceholder: true, termsAcknowledgmentPlaceholder: false, notesSummary: "Billing readiness placeholder exists for future paid-pilot review only.", noProviderCall: true, noPaymentCollected: true, noInvoiceCreated: true }
+];
+
+export const clientSubscriptionPlaceholders: ClientSubscriptionPlaceholder[] = [
+  { id: "client-subscription-memphis", workspaceId: "client-workspace-003", planCode: "pro", placeholderStatus: "draft", monthlyPricePlaceholder: 249, setupFeePlaceholder: 99, billingContactEmail: "billing@memphis-demo.example", clientSafeSummary: "Plan gate only - no payment has been collected.", noLiveBilling: true, noPaymentCollected: true }
+];
+
+export const clientCommunicationProviderProfiles: ClientCommunicationProviderProfile[] = [
+  { id: "client-comm-provider-memphis-email", workspaceId: "client-workspace-003", providerName: "Memphis Mock Email Gateway", providerMode: "mock", channel: "email", enabled: true, credentialReferenceName: "COMM_PROVIDER_MEMPHIS_EMAIL", configSummary: "Mock email provider for controlled single-send readiness only.", secretPresent: true, clientSafeSummary: "Mock provider only - blocked by default until all gates pass." }
+];
+
+export const clientCommunicationLiveFlags: ClientCommunicationLiveFlag[] = [
+  { id: "client-comm-flag-memphis-email", workspaceId: "client-workspace-003", providerProfileId: "client-comm-provider-memphis-email", channel: "email", globalCommunicationLiveEnabled: false, workspaceCommunicationLiveEnabled: false, providerLiveEnabled: false, channelLiveEnabled: false }
+];
+
+export const clientCommunicationLiveReadinessChecks: ClientCommunicationLiveReadinessCheck[] = [
+  { id: "client-comm-readiness-memphis-lead-002", workspaceId: "client-workspace-003", leadId: "client-lead-memphis-002", buyerId: null, sourceDraftType: "seller_follow_up", sourceDraftId: "client-follow-up-memphis-002", channel: "email", providerProfileId: "client-comm-provider-memphis-email", readinessStatus: "blocked", blockReasons: ["cp6_safe_contact_not_clear", "message_risk_not_passed", "communication_gate_not_manual_use_allowed", "dry_run_missing", "approval_missing", "live_flags_not_enabled"], riskFlags: ["missing_consent"], cp6StatusSnapshot: "missing_consent", cp9GateSnapshot: "allowed", cp8ReadinessSnapshot: "adequate", liveFlagSnapshot: { global: false, workspace: false, provider: false, channel: false }, dryRunPresent: false, approvalPresent: false, idempotencyKey: "comm-memphis-lead-002", noLiveSend: true },
+  { id: "client-comm-readiness-memphis-lead-001", workspaceId: "client-workspace-003", leadId: "client-lead-memphis-001", buyerId: null, sourceDraftType: "seller_follow_up", sourceDraftId: "client-follow-up-memphis-001", channel: "email", providerProfileId: "client-comm-provider-memphis-email", readinessStatus: "blocked", blockReasons: ["live_flags_not_enabled"], riskFlags: [], cp6StatusSnapshot: "safe_for_manual_use", cp9GateSnapshot: "allowed", cp8ReadinessSnapshot: "adequate", liveFlagSnapshot: { global: false, workspace: false, provider: false, channel: false }, dryRunPresent: true, approvalPresent: true, idempotencyKey: "comm-memphis-lead-001", noLiveSend: true },
+  { id: "client-comm-readiness-memphis-buyer-005", workspaceId: "client-workspace-003", leadId: "client-lead-memphis-005", buyerId: "client-buyer-memphis-landlord", sourceDraftType: "buyer_outreach", sourceDraftId: "client-buyer-outreach-memphis-005", channel: "email", providerProfileId: "client-comm-provider-memphis-email", readinessStatus: "blocked", blockReasons: ["live_flags_not_enabled", "dry_run_missing", "approval_missing"], riskFlags: [], cp6StatusSnapshot: "safe_for_manual_use", cp9GateSnapshot: "allowed", cp8ReadinessSnapshot: "adequate", liveFlagSnapshot: { global: false, workspace: false, provider: false, channel: false }, dryRunPresent: false, approvalPresent: false, idempotencyKey: "comm-memphis-buyer-005", noLiveSend: true }
+];
+
+export const clientCommunicationDryRunReceipts: ClientCommunicationDryRunReceipt[] = [
+  { id: "client-comm-dry-run-memphis-lead-001", workspaceId: "client-workspace-003", leadId: "client-lead-memphis-001", buyerId: null, sourceDraftType: "seller_follow_up", sourceDraftId: "client-follow-up-memphis-001", channel: "email", providerProfileId: "client-comm-provider-memphis-email", idempotencyKey: "comm-dry-run-memphis-lead-001", dryRunSummary: "Dry run does not send a message.", status: "created", contentHash: "memphis-lead-001-email", noLiveSend: true },
+  { id: "client-comm-dry-run-memphis-buyer-005", workspaceId: "client-workspace-003", leadId: "client-lead-memphis-005", buyerId: "client-buyer-memphis-landlord", sourceDraftType: "buyer_outreach", sourceDraftId: "client-buyer-outreach-memphis-005", channel: "email", providerProfileId: "client-comm-provider-memphis-email", idempotencyKey: "comm-dry-run-memphis-buyer-005", dryRunSummary: "Dry run does not send a message.", status: "created", contentHash: "memphis-buyer-005-email", noLiveSend: true }
+];
+
+export const clientCommunicationSendApprovals: ClientCommunicationSendApproval[] = [
+  { id: "client-comm-approval-memphis-lead-001", workspaceId: "client-workspace-003", readinessCheckId: "client-comm-readiness-memphis-lead-001", dryRunReceiptId: "client-comm-dry-run-memphis-lead-001", approvalStatus: "approved", approvedBy: "Memphis Demo Operator", reasonSummary: "Approval does not send a message.", noLiveSend: true }
+];
+
+export const clientCommunicationSendAttempts: ClientCommunicationSendAttempt[] = [
+  { id: "client-comm-attempt-memphis-lead-001", workspaceId: "client-workspace-003", readinessCheckId: "client-comm-readiness-memphis-lead-001", dryRunReceiptId: "client-comm-dry-run-memphis-lead-001", approvalId: "client-comm-approval-memphis-lead-001", providerProfileId: "client-comm-provider-memphis-email", leadId: "client-lead-memphis-001", buyerId: null, channel: "email", sourceDraftType: "seller_follow_up", sourceDraftId: "client-follow-up-memphis-001", idempotencyKey: "comm-attempt-memphis-lead-001", attemptStatus: "blocked", blockReasons: ["live_flags_not_enabled"], failureReason: "", providerMode: "mock", requestSummary: "Controlled single-message gate - no bulk campaigns.", noBulk: true },
+  { id: "client-comm-attempt-memphis-buyer-005", workspaceId: "client-workspace-003", readinessCheckId: "client-comm-readiness-memphis-buyer-005", dryRunReceiptId: "client-comm-dry-run-memphis-buyer-005", approvalId: null, providerProfileId: "client-comm-provider-memphis-email", leadId: "client-lead-memphis-005", buyerId: "client-buyer-memphis-landlord", channel: "email", sourceDraftType: "buyer_outreach", sourceDraftId: "client-buyer-outreach-memphis-005", idempotencyKey: "comm-attempt-memphis-buyer-005", attemptStatus: "blocked", blockReasons: ["approval_not_present", "live_flags_not_enabled"], failureReason: "", providerMode: "mock", requestSummary: "Controlled single-message gate - no bulk campaigns.", noBulk: true }
+];
+
+export const clientCommunicationExternalMessageReferences: ClientCommunicationExternalMessageReference[] = [];
+
+export const clientBillingProviderProfiles: ClientBillingProviderProfile[] = [
+  { id: "client-billing-provider-memphis", workspaceId: "client-workspace-003", providerName: "Memphis Mock Billing Gateway", providerMode: "mock", enabled: true, credentialReferenceName: "BILLING_PROVIDER_MEMPHIS", configSummary: "Mock billing provider for dry-run only.", secretPresent: true, supportsPaymentLinks: true, supportsSubscriptions: true, clientSafeSummary: "Billing readiness only - no Stripe/customer/invoice/subscription action occurred." }
+];
+
+export const clientBillingLiveFlags: ClientBillingLiveFlag[] = [
+  { id: "client-billing-flag-memphis", workspaceId: "client-workspace-003", providerProfileId: "client-billing-provider-memphis", globalBillingLiveEnabled: false, workspaceBillingLiveEnabled: false, providerBillingLiveEnabled: false, paymentLinkLiveEnabled: false, subscriptionLiveEnabled: false }
+];
+
+export const clientBillingCustomerProfiles: ClientBillingCustomerProfile[] = [
+  { id: "client-billing-customer-memphis", workspaceId: "client-workspace-003", customerName: "Memphis Virtual Wholesale Operator", billingEmail: "billing@memphis-demo.example", billingContactName: "Memphis Demo Operator", billingContactCollected: true, taxInfoPlaceholder: true, termsAcknowledgmentPlaceholder: false, rawCardDataPresent: false, clientSafeSummary: "No raw card data is stored." }
+];
+
+export const clientBillingReadinessChecks: ClientBillingReadinessCheck[] = [
+  { id: "client-billing-check-memphis", workspaceId: "client-workspace-003", planAssignmentPresent: true, billingReadinessStatusSnapshot: "setup_needed", providerProfileId: "client-billing-provider-memphis", providerMode: "mock", liveFlagSnapshot: { global: false, workspace: false, provider: false, payment_link: false, subscription: false }, readinessStatus: "blocked", blockReasons: ["billing_readiness_not_ready", "live_flags_not_enabled", "plan_gate_blocked_by_plan"], noPaymentCollected: true, noInvoiceCreated: true }
+];
+
+export const clientCheckoutDryRunReceipts: ClientCheckoutDryRunReceipt[] = [
+  { id: "client-billing-dry-run-memphis", workspaceId: "client-workspace-003", planCode: "pro", attemptType: "checkout_session", providerProfileId: "client-billing-provider-memphis", dryRunSummary: "Dry run does not charge a card.", idempotencyKey: "billing-memphis-001", amountPlaceholder: 249, status: "created", noPaymentCollected: true }
+];
+
+export const clientBillingApprovals: ClientBillingApproval[] = [
+  { id: "client-billing-approval-memphis", workspaceId: "client-workspace-003", readinessCheckId: "client-billing-check-memphis", dryRunReceiptId: "client-billing-dry-run-memphis", approvalStatus: "approved", approvedBy: "Memphis Demo Operator", reasonSummary: "Approval does not charge a card.", noPaymentCollected: true }
+];
+
+export const clientBillingAttempts: ClientBillingAttempt[] = [
+  { id: "client-billing-attempt-memphis", workspaceId: "client-workspace-003", providerProfileId: "client-billing-provider-memphis", customerProfileId: "client-billing-customer-memphis", planCode: "pro", readinessCheckId: "client-billing-check-memphis", dryRunReceiptId: "client-billing-dry-run-memphis", approvalId: "client-billing-approval-memphis", attemptType: "checkout_session", idempotencyKey: "billing-memphis-001", attemptStatus: "blocked", blockReasons: ["billing_readiness_not_ready", "plan_gate_blocked_by_plan", "live_flags_not_enabled"], providerMode: "mock", requestSummary: "Billing gate only - no payment occurs unless all billing gates pass.", noRawCardData: true }
+];
+
+export const clientBillingExternalReferences: ClientBillingExternalReference[] = [];
+
+export const clientBillingLedgerEntries: ClientBillingLedgerEntry[] = [
+  { id: "client-billing-ledger-memphis", workspaceId: "client-workspace-003", attemptId: "client-billing-attempt-memphis", entryType: "checkout_session", amountPlaceholder: 249, currency: "USD", status: "blocked", summary: "Billing attempt blocked before any payment action.", clientSafe: true }
+];
+
+export const clientPilotPrograms: ClientPilotProgram[] = [
+  { id: "client-pilot-program-001", programName: "Prime2 Pilot", programCode: "prime2_pilot", programStatus: "active", clientSafeSummary: "Pilot mode does not bypass source gates." }
+];
+
+export const clientPilotWorkspaceEnrollments: ClientPilotWorkspaceEnrollment[] = [
+  { id: "client-pilot-enrollment-memphis", workspaceId: "client-workspace-003", programId: "client-pilot-program-001", pilotMode: "beta_pilot", enrollmentStatus: "active", supportOwnerName: "Client Success Manager", clientSafeSummary: "Memphis workspace is enrolled in beta pilot mode only." }
+];
+
+export const clientPilotOperatingModes: ClientPilotOperatingMode[] = [
+  { id: "client-pilot-mode-memphis", workspaceId: "client-workspace-003", pilotMode: "beta_pilot", operatingPosture: "manual_only", reasonSummary: "Controlled live posture requires CP9, CP10, and CP11 gates.", requiresHumanReview: true, noGateBypass: true }
+];
+
+export const clientPilotHealthSnapshots: ClientPilotHealthSnapshot[] = [
+  { id: "client-pilot-health-memphis", workspaceId: "client-workspace-003", healthStatus: "watch", onboardingStatus: "ready_for_manual_operation", planStatus: "pro", communicationStatus: "blocked", billingStatus: "blocked", complianceStatus: "needs_review", weeklyReportStatus: "client_visible", blockReasons: ["communication_gate_blocked", "billing_gate_blocked", "compliance_review_needed"], nextActions: ["Review blocked communication drafts.", "Complete billing readiness placeholders.", "Keep pilot in manual-only posture."], clientSafeSummary: "Pilot mode does not bypass source gates." }
+];
+
+export const clientPilotSupportTickets: ClientPilotSupportTicket[] = [
+  { id: "client-pilot-ticket-memphis-onboarding", workspaceId: "client-workspace-003", ticketType: "onboarding", title: "Confirm first 10-lead activation checklist", summary: "Memphis still needs more lead volume before it looks like a full first-batch workspace.", status: "open", priority: "medium", assignedTo: "Client Success Manager", clientSafe: true },
+  { id: "client-pilot-ticket-memphis-compliance", workspaceId: "client-workspace-003", ticketType: "compliance", title: "Review missing-consent communication path", summary: "Lead 2 remains blocked by missing consent.", status: "open", priority: "high", assignedTo: "Compliance Manager", clientSafe: true },
+  { id: "client-pilot-ticket-memphis-buyers", workspaceId: "client-workspace-003", ticketType: "buyers", title: "Strengthen buyer demand evidence on mid-pipeline leads", summary: "Lead 3 still needs stronger buyer demand confirmation.", status: "open", priority: "medium", assignedTo: "Disposition Manager", clientSafe: true }
+];
+
+export const clientPilotSupportActions: ClientPilotSupportAction[] = [
+  { id: "client-pilot-action-memphis-001", workspaceId: "client-workspace-003", ticketId: "client-pilot-ticket-memphis-compliance", actionSummary: "Route missing-consent workflow to compliance review before any future live communication check.", actionStatus: "queued", ownerRole: "compliance_manager", clientVisible: true }
+];
+
+export const clientPilotEscalations: ClientPilotEscalation[] = [
+  { id: "client-pilot-escalation-memphis-001", workspaceId: "client-workspace-003", escalationType: "communication_gate", sourceDomain: "communication", sourceRecordId: "client-comm-readiness-memphis-lead-002", escalationStatus: "open", escalationReason: "Communication remains blocked by missing consent and disabled live flags.", requiresHumanReview: true }
+];
+
+export const clientPilotClientSafeUpdates: ClientPilotClientSafeUpdate[] = [
+  { id: "client-pilot-update-memphis-001", workspaceId: "client-workspace-003", updateTitle: "Pilot readiness update", updateSummary: "Memphis remains in beta pilot review with manual-only operations and a few blocked gates still open.", status: "client_visible", clientSafeSummary: "Client-safe updates hide internal governance, provider payloads, and admin notes.", hidesAdminNotes: true }
+];
+
+export const clientPilotLaunchChecklists: ClientPilotLaunchChecklist[] = [
+  { id: "client-pilot-launch-memphis", workspaceId: "client-workspace-003", checklistStatus: "blocked", onboardingReady: true, planAssigned: true, complianceAcceptable: false, weeklyReportAvailable: true, supportOwnerAssigned: true, noCriticalBlockers: true, noUnsafeLiveFlags: true, blockReasons: ["compliance_not_acceptable", "communication_gate_blocked", "billing_gate_blocked"], clientSafeSummary: "Pilot launch checklist does not bypass source gates." }
+];
+
+export const clientPilotRiskReviews: ClientPilotRiskReview[] = [
+  { id: "client-pilot-risk-memphis", workspaceId: "client-workspace-003", riskStatus: "blocked", communicationBlocked: true, billingBlocked: true, complianceBlocked: true, criticalBlockers: ["communication_gate_blocked", "billing_gate_blocked", "compliance_review_needed"], escalationRequired: true, summary: "Controlled live posture requires CP9, CP10, and CP11 gates." }
+];
+
+export const clientPilotOutcomeCheckpoints: ClientPilotOutcomeCheckpoint[] = [
+  { id: "client-pilot-outcome-memphis-001", workspaceId: "client-workspace-003", checkpointName: "Manual pilot operating week", checkpointStatus: "tracked", summary: "Pilot outcomes are being tracked without enabling live providers or billing.", clientSafe: true }
+];
+
+export const clientPilotEvents: ClientPilotEvent[] = [
+  { id: "client-pilot-event-memphis-001", workspaceId: "client-workspace-003", eventType: "pilot_health_reviewed", eventSummary: "Pilot health snapshot shows manual-only readiness with blocked communication and billing gates.", clientVisible: true }
+];
+
+export function getClientPlanAssignment(workspaceId = "client-workspace-003") {
+  return clientPlanAssignments.find((assignment) => assignment.workspaceId === workspaceId);
+}
+
+export function getClientUsageCounter(workspaceId = "client-workspace-003") {
+  return clientUsageCounters.find((counter) => counter.workspaceId === workspaceId);
+}
+
+export function getClientBillingReadinessRecord(workspaceId = "client-workspace-003") {
+  return clientBillingReadinessRecords.find((record) => record.workspaceId === workspaceId);
+}
+
+export function getClientSubscriptionPlaceholder(workspaceId = "client-workspace-003") {
+  return clientSubscriptionPlaceholders.find((record) => record.workspaceId === workspaceId);
+}
+
+export function getClientPilotEnrollment(workspaceId = "client-workspace-003") {
+  return clientPilotWorkspaceEnrollments.find((item) => item.workspaceId === workspaceId);
+}
+
+export function getClientPilotOperatingMode(workspaceId = "client-workspace-003") {
+  return clientPilotOperatingModes.find((item) => item.workspaceId === workspaceId);
+}
+
+export function getClientPilotHealthSnapshot(workspaceId = "client-workspace-003") {
+  return clientPilotHealthSnapshots.find((item) => item.workspaceId === workspaceId);
+}
+
+export function getClientPilotLaunchChecklist(workspaceId = "client-workspace-003") {
+  return clientPilotLaunchChecklists.find((item) => item.workspaceId === workspaceId);
+}
+
+export function getClientPilotRiskReview(workspaceId = "client-workspace-003") {
+  return clientPilotRiskReviews.find((item) => item.workspaceId === workspaceId);
+}
+
+export function getClientPilotClientSafeUpdates(workspaceId = "client-workspace-003") {
+  return clientPilotClientSafeUpdates.filter((item) => item.workspaceId === workspaceId);
+}
+
 export function getClientBuyer(buyerId: string) {
   return clientBuyerProfiles.find((buyer) => buyer.id === buyerId);
 }

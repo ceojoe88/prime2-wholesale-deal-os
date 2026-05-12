@@ -161,6 +161,50 @@ from app.models import (
     ClientOnboardingReport,
     ClientOnboardingTask,
     ClientOnboardingTimelineEvent,
+    ClientPlanCatalog,
+    ClientPlanFeature,
+    ClientPlanLimit,
+    ClientWorkspacePlanAssignment,
+    ClientFeatureGateEvaluation,
+    ClientUsageCounter,
+    ClientSeatUsageRecord,
+    ClientPlanUpgradeRecommendation,
+    ClientBillingReadinessRecord,
+    ClientSubscriptionPlaceholder,
+    ClientPlanGateEvent,
+    ClientCommunicationProviderProfile,
+    ClientCommunicationLiveReadinessCheck,
+    ClientCommunicationDryRunReceipt,
+    ClientCommunicationSendApproval,
+    ClientCommunicationSendAttempt,
+    ClientCommunicationExternalMessageReference,
+    ClientCommunicationIdempotencyRecord,
+    ClientCommunicationLiveFlag,
+    ClientCommunicationGateEvent,
+    ClientBillingProviderProfile,
+    ClientBillingLiveFlag,
+    ClientBillingCustomerProfile,
+    ClientBillingReadinessCheck,
+    ClientCheckoutDryRunReceipt,
+    ClientBillingApproval,
+    ClientBillingAttempt,
+    ClientBillingExternalReference,
+    ClientBillingWebhookEventPlaceholder,
+    ClientBillingLedgerEntry,
+    ClientBillingGateEvent,
+    ClientPilotProgram,
+    ClientPilotWorkspaceEnrollment,
+    ClientPilotOperatingMode,
+    ClientPilotHealthSnapshot,
+    ClientPilotSupportTicket,
+    ClientPilotSupportAction,
+    ClientPilotEscalation,
+    ClientPilotAdminNote,
+    ClientPilotClientSafeUpdate,
+    ClientPilotLaunchChecklist,
+    ClientPilotRiskReview,
+    ClientPilotOutcomeCheckpoint,
+    ClientPilotEvent,
     ClientOfferReadinessGate,
     ClientOfferScenario,
     ClientPipelineSetup,
@@ -8739,6 +8783,16 @@ CLIENT_COMMAND_PERMISSIONS = [
     "client_command.readiness_manage",
     "client_command.activation_gate_view",
     "client_command.activation_gate_manage",
+    "client_command.plan_view",
+    "client_command.plan_manage",
+    "client_command.communication_view",
+    "client_command.communication_manage",
+    "client_command.billing_view",
+    "client_command.billing_manage",
+    "client_command.pilot_view",
+    "client_command.pilot_manage",
+    "client_command.support_view",
+    "client_command.support_manage",
     "client_command.admin",
 ]
 
@@ -12656,6 +12710,901 @@ def add_memphis_client_demo(payload: dict[str, list[dict[str, object]]]) -> None
     )
 
 
+def add_memphis_client_demo_cp9_cp12(payload: dict[str, list[dict[str, object]]]) -> None:
+    workspace_id = "client-workspace-003"
+    lead_ids = [f"client-lead-memphis-00{index}" for index in range(1, 6)]
+    buyer_ids = [
+        "client-buyer-memphis-landlord",
+        "client-buyer-memphis-flipper",
+        "client-buyer-memphis-hedge",
+        "client-buyer-memphis-review",
+    ]
+
+    payload["client_plan_catalog"].extend(
+        [
+            {
+                "id": "client-plan-beta-demo",
+                "tenant_id": "tenant-demo-001",
+                "plan_name": "Beta Demo",
+                "plan_code": "beta_demo",
+                "monthly_price_placeholder": 0.0,
+                "setup_fee_placeholder": 0.0,
+                "is_public": False,
+                "is_active": True,
+                "client_safe_summary": "Demo-only plan for manual readiness.",
+                "no_live_billing": True,
+                "no_payment_collected": True,
+            },
+            {
+                "id": "client-plan-starter",
+                "tenant_id": "tenant-demo-001",
+                "plan_name": "Starter",
+                "plan_code": "starter",
+                "monthly_price_placeholder": 99.0,
+                "setup_fee_placeholder": 0.0,
+                "is_public": True,
+                "is_active": True,
+                "client_safe_summary": "Starter plan for manual investor command workflows.",
+                "no_live_billing": True,
+                "no_payment_collected": True,
+            },
+            {
+                "id": "client-plan-pro",
+                "tenant_id": "tenant-demo-001",
+                "plan_name": "Pro",
+                "plan_code": "pro",
+                "monthly_price_placeholder": 249.0,
+                "setup_fee_placeholder": 99.0,
+                "is_public": True,
+                "is_active": True,
+                "client_safe_summary": "Pro plan for expanded manual operations and controlled live review gates.",
+                "no_live_billing": True,
+                "no_payment_collected": True,
+            },
+            {
+                "id": "client-plan-command",
+                "tenant_id": "tenant-demo-001",
+                "plan_name": "Command",
+                "plan_code": "command",
+                "monthly_price_placeholder": 499.0,
+                "setup_fee_placeholder": 149.0,
+                "is_public": True,
+                "is_active": True,
+                "client_safe_summary": "Command plan for tightly controlled pilot support and gated live lanes.",
+                "no_live_billing": True,
+                "no_payment_collected": True,
+            },
+            {
+                "id": "client-plan-managed-growth",
+                "tenant_id": "tenant-demo-001",
+                "plan_name": "Managed Growth",
+                "plan_code": "managed_growth",
+                "monthly_price_placeholder": 999.0,
+                "setup_fee_placeholder": 299.0,
+                "is_public": False,
+                "is_active": True,
+                "client_safe_summary": "Managed Growth plan for high-touch pilot expansion and guarded integrations.",
+                "no_live_billing": True,
+                "no_payment_collected": True,
+            },
+            {
+                "id": "client-plan-enterprise-custom",
+                "tenant_id": "tenant-demo-001",
+                "plan_name": "Enterprise Custom",
+                "plan_code": "enterprise_custom",
+                "monthly_price_placeholder": 0.0,
+                "setup_fee_placeholder": 0.0,
+                "is_public": False,
+                "is_active": True,
+                "client_safe_summary": "Enterprise custom plan for private deployment and negotiated support boundaries.",
+                "no_live_billing": True,
+                "no_payment_collected": True,
+            },
+        ]
+    )
+    payload["client_plan_limits"].extend(
+        [
+            {
+                "id": "client-plan-limit-beta-demo",
+                "tenant_id": "tenant-demo-001",
+                "plan_code": "beta_demo",
+                "max_workspaces": 1,
+                "max_users": 2,
+                "max_leads": 25,
+                "max_buyers": 10,
+                "max_weekly_reports": 4,
+                "max_manual_drafts": 25,
+                "live_communication_allowed": False,
+                "billing_live_allowed": False,
+                "support_console_allowed": False,
+                "pilot_mode_allowed": False,
+            },
+            {
+                "id": "client-plan-limit-starter",
+                "tenant_id": "tenant-demo-001",
+                "plan_code": "starter",
+                "max_workspaces": 1,
+                "max_users": 3,
+                "max_leads": 100,
+                "max_buyers": 40,
+                "max_weekly_reports": 8,
+                "max_manual_drafts": 100,
+                "live_communication_allowed": False,
+                "billing_live_allowed": False,
+                "support_console_allowed": False,
+                "pilot_mode_allowed": False,
+            },
+            {
+                "id": "client-plan-limit-pro",
+                "tenant_id": "tenant-demo-001",
+                "plan_code": "pro",
+                "max_workspaces": 2,
+                "max_users": 6,
+                "max_leads": 500,
+                "max_buyers": 200,
+                "max_weekly_reports": 24,
+                "max_manual_drafts": 400,
+                "live_communication_allowed": True,
+                "billing_live_allowed": False,
+                "support_console_allowed": False,
+                "pilot_mode_allowed": True,
+            },
+            {
+                "id": "client-plan-limit-command",
+                "tenant_id": "tenant-demo-001",
+                "plan_code": "command",
+                "max_workspaces": 5,
+                "max_users": 12,
+                "max_leads": 1500,
+                "max_buyers": 600,
+                "max_weekly_reports": 60,
+                "max_manual_drafts": 1200,
+                "live_communication_allowed": True,
+                "billing_live_allowed": True,
+                "support_console_allowed": True,
+                "pilot_mode_allowed": True,
+            },
+            {
+                "id": "client-plan-limit-managed-growth",
+                "tenant_id": "tenant-demo-001",
+                "plan_code": "managed_growth",
+                "max_workspaces": 10,
+                "max_users": 25,
+                "max_leads": 5000,
+                "max_buyers": 2000,
+                "max_weekly_reports": 120,
+                "max_manual_drafts": 4000,
+                "live_communication_allowed": True,
+                "billing_live_allowed": True,
+                "support_console_allowed": True,
+                "pilot_mode_allowed": True,
+            },
+            {
+                "id": "client-plan-limit-enterprise-custom",
+                "tenant_id": "tenant-demo-001",
+                "plan_code": "enterprise_custom",
+                "max_workspaces": 100,
+                "max_users": 500,
+                "max_leads": 100000,
+                "max_buyers": 50000,
+                "max_weekly_reports": 1000,
+                "max_manual_drafts": 50000,
+                "live_communication_allowed": True,
+                "billing_live_allowed": True,
+                "support_console_allowed": True,
+                "pilot_mode_allowed": True,
+            },
+        ]
+    )
+    plan_feature_matrix = {
+        "beta_demo": {"onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports"},
+        "starter": {"onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "exports"},
+        "pro": {"onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "live_communication", "pilot_mode", "exports", "integrations"},
+        "command": {"onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "live_communication", "billing", "admin_support", "pilot_mode", "exports", "integrations"},
+        "managed_growth": {"onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "live_communication", "billing", "admin_support", "pilot_mode", "exports", "integrations"},
+        "enterprise_custom": {"onboarding", "lead_intelligence", "acquisition", "underwriting", "buyer_matching", "compliance", "weekly_reports", "live_communication", "billing", "admin_support", "pilot_mode", "exports", "integrations"},
+    }
+    for plan_code, allowed_features in plan_feature_matrix.items():
+        for feature_key in [
+            "onboarding",
+            "lead_intelligence",
+            "acquisition",
+            "underwriting",
+            "buyer_matching",
+            "compliance",
+            "weekly_reports",
+            "live_communication",
+            "billing",
+            "admin_support",
+            "pilot_mode",
+            "exports",
+            "integrations",
+        ]:
+            payload["client_plan_features"].append(
+                {
+                    "id": f"client-plan-feature-{plan_code}-{feature_key}",
+                    "tenant_id": "tenant-demo-001",
+                    "plan_code": plan_code,
+                    "feature_group": feature_key,
+                    "feature_key": feature_key,
+                    "feature_name": feature_key.replace("_", " ").title(),
+                    "allowed": feature_key in allowed_features,
+                    "feature_summary": f"{plan_code} {'allows' if feature_key in allowed_features else 'blocks'} {feature_key}.",
+                    "client_safe": True,
+                }
+            )
+
+    payload["client_workspace_plan_assignments"].append(
+        {
+            "id": "client-plan-assignment-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "plan_code": "pro",
+            "plan_name": "Pro",
+            "assignment_status": "active",
+            "client_safe_summary": "Memphis demo is assigned to Pro for controlled pilot readiness.",
+            "no_live_billing": True,
+            "no_payment_collected": True,
+        }
+    )
+    payload["client_usage_counters"].append(
+        {
+            "id": "client-usage-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "leads_count": 5,
+            "buyers_count": 4,
+            "users_count": 1,
+            "weekly_reports_count": 1,
+            "manual_drafts_count": 10,
+            "compliance_gates_count": 3,
+            "live_attempts_count": 0,
+            "billing_attempts_count": 1,
+        }
+    )
+    payload["client_seat_usage_records"].append(
+        {
+            "id": "client-seat-memphis-owner",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "member_id": "client-member-003-operator",
+            "seat_label": "Memphis Demo Operator",
+            "seat_status": "active",
+            "role_name": "Memphis Command Operator",
+            "counts_against_limit": True,
+        }
+    )
+    payload["client_feature_gate_evaluations"].extend(
+        [
+            {
+                "id": "client-gate-memphis-live-communication",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "feature_key": "live_communication",
+                "gate_status": "allowed",
+                "reason_summary": "Live communication is plan-allowed but still blocked by downstream readiness, compliance, approval, and live flags.",
+                "required_upgrade_plan": None,
+                "no_live_action": True,
+            },
+            {
+                "id": "client-gate-memphis-billing",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "feature_key": "billing",
+                "gate_status": "blocked_by_plan",
+                "reason_summary": "Billing remains blocked until the workspace moves to Command and passes billing readiness.",
+                "required_upgrade_plan": "command",
+                "no_live_action": True,
+            },
+            {
+                "id": "client-gate-memphis-admin-support",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "feature_key": "admin_support",
+                "gate_status": "blocked_by_plan",
+                "reason_summary": "Admin support console is a Command-gated feature.",
+                "required_upgrade_plan": "command",
+                "no_live_action": True,
+            },
+            {
+                "id": "client-gate-memphis-pilot-mode",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "feature_key": "pilot_mode",
+                "gate_status": "allowed",
+                "reason_summary": "Pilot mode is allowed, but it never bypasses source-domain gates.",
+                "required_upgrade_plan": None,
+                "no_live_action": True,
+            },
+        ]
+    )
+    payload["client_plan_upgrade_recommendations"].append(
+        {
+            "id": "client-upgrade-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "current_plan_code": "pro",
+            "recommended_plan_code": "command",
+            "reason_summary": "Upgrade to Command to review billing and admin support gates for a paid pilot.",
+            "blocked_features": ["billing", "admin_support"],
+            "usage_pressure": ["controlled_live_review_requested"],
+            "client_safe_summary": "Feature access is controlled by plan, readiness, and safety gates.",
+        }
+    )
+    payload["client_billing_readiness_records"].append(
+        {
+            "id": "client-billing-readiness-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "readiness_status": "setup_needed",
+            "customer_info_collected": True,
+            "billing_contact_collected": True,
+            "tax_info_placeholder": True,
+            "terms_acknowledgment_placeholder": False,
+            "no_provider_call": True,
+            "no_payment_collected": True,
+            "no_invoice_created": True,
+            "notes_summary": "Billing readiness placeholder exists for future paid-pilot review only.",
+        }
+    )
+    payload["client_subscription_placeholders"].append(
+        {
+            "id": "client-subscription-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "plan_code": "pro",
+            "placeholder_status": "draft",
+            "monthly_price_placeholder": 249.0,
+            "setup_fee_placeholder": 99.0,
+            "billing_contact_email": "billing@memphis-demo.example",
+            "client_safe_summary": "Plan gate only - no payment has been collected.",
+            "no_live_billing": True,
+            "no_payment_collected": True,
+        }
+    )
+    payload["client_plan_gate_events"].append(
+        {
+            "id": "client-plan-event-memphis-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "feature_key": "billing",
+            "event_type": "plan_gate_reviewed",
+            "event_summary": "Billing and admin support remain blocked until the workspace reaches Command.",
+            "client_visible": True,
+        }
+    )
+
+    payload["client_communication_provider_profiles"].append(
+        {
+            "id": "client-comm-provider-memphis-email",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "provider_name": "Memphis Mock Email Gateway",
+            "provider_mode": "mock",
+            "channel": "email",
+            "enabled": True,
+            "credential_reference_name": "COMM_PROVIDER_MEMPHIS_EMAIL",
+            "config_summary": "Mock email provider for controlled single-send readiness only.",
+            "secret_present": True,
+            "client_safe_summary": "Mock provider only - blocked by default until all gates pass.",
+        }
+    )
+    payload["client_communication_live_flags"].append(
+        {
+            "id": "client-comm-flag-memphis-email",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "provider_profile_id": "client-comm-provider-memphis-email",
+            "channel": "email",
+            "global_communication_live_enabled": False,
+            "workspace_communication_live_enabled": False,
+            "provider_live_enabled": False,
+            "channel_live_enabled": False,
+        }
+    )
+    payload["client_communication_live_readiness_checks"].extend(
+        [
+            {
+                "id": "client-comm-readiness-memphis-lead-002",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "lead_id": lead_ids[1],
+                "buyer_id": None,
+                "source_draft_type": "seller_follow_up",
+                "source_draft_id": "client-follow-up-memphis-002",
+                "channel": "email",
+                "provider_profile_id": "client-comm-provider-memphis-email",
+                "readiness_status": "blocked",
+                "block_reasons": ["cp6_safe_contact_not_clear", "message_risk_not_passed", "communication_gate_not_manual_use_allowed", "dry_run_missing", "approval_missing", "live_flags_not_enabled"],
+                "risk_flags": ["missing_consent"],
+                "cp6_status_snapshot": "missing_consent",
+                "cp9_gate_snapshot": "allowed",
+                "cp8_readiness_snapshot": "adequate",
+                "live_flag_snapshot": {"global": False, "workspace": False, "provider": False, "channel": False},
+                "dry_run_present": False,
+                "approval_present": False,
+                "idempotency_key": "comm-memphis-lead-002",
+                "no_live_send": True,
+            },
+            {
+                "id": "client-comm-readiness-memphis-lead-001",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "lead_id": lead_ids[0],
+                "buyer_id": None,
+                "source_draft_type": "seller_follow_up",
+                "source_draft_id": "client-follow-up-memphis-001",
+                "channel": "email",
+                "provider_profile_id": "client-comm-provider-memphis-email",
+                "readiness_status": "blocked",
+                "block_reasons": ["live_flags_not_enabled"],
+                "risk_flags": [],
+                "cp6_status_snapshot": "safe_for_manual_use",
+                "cp9_gate_snapshot": "allowed",
+                "cp8_readiness_snapshot": "adequate",
+                "live_flag_snapshot": {"global": False, "workspace": False, "provider": False, "channel": False},
+                "dry_run_present": True,
+                "approval_present": True,
+                "idempotency_key": "comm-memphis-lead-001",
+                "no_live_send": True,
+            },
+            {
+                "id": "client-comm-readiness-memphis-buyer-005",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "lead_id": lead_ids[4],
+                "buyer_id": buyer_ids[0],
+                "source_draft_type": "buyer_outreach",
+                "source_draft_id": "client-buyer-outreach-memphis-005",
+                "channel": "email",
+                "provider_profile_id": "client-comm-provider-memphis-email",
+                "readiness_status": "blocked",
+                "block_reasons": ["live_flags_not_enabled", "dry_run_missing", "approval_missing"],
+                "risk_flags": [],
+                "cp6_status_snapshot": "safe_for_manual_use",
+                "cp9_gate_snapshot": "allowed",
+                "cp8_readiness_snapshot": "adequate",
+                "live_flag_snapshot": {"global": False, "workspace": False, "provider": False, "channel": False},
+                "dry_run_present": False,
+                "approval_present": False,
+                "idempotency_key": "comm-memphis-buyer-005",
+                "no_live_send": True,
+            },
+        ]
+    )
+    payload["client_communication_dry_run_receipts"].extend(
+        [
+            {
+                "id": "client-comm-dry-run-memphis-lead-001",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "lead_id": lead_ids[0],
+                "buyer_id": None,
+                "source_draft_type": "seller_follow_up",
+                "source_draft_id": "client-follow-up-memphis-001",
+                "channel": "email",
+                "provider_profile_id": "client-comm-provider-memphis-email",
+                "idempotency_key": "comm-dry-run-memphis-lead-001",
+                "dry_run_summary": "Dry run does not send a message.",
+                "status": "created",
+                "content_hash": "memphis-lead-001-email",
+                "no_live_send": True,
+            },
+            {
+                "id": "client-comm-dry-run-memphis-buyer-005",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "lead_id": lead_ids[4],
+                "buyer_id": buyer_ids[0],
+                "source_draft_type": "buyer_outreach",
+                "source_draft_id": "client-buyer-outreach-memphis-005",
+                "channel": "email",
+                "provider_profile_id": "client-comm-provider-memphis-email",
+                "idempotency_key": "comm-dry-run-memphis-buyer-005",
+                "dry_run_summary": "Dry run does not send a message.",
+                "status": "created",
+                "content_hash": "memphis-buyer-005-email",
+                "no_live_send": True,
+            },
+        ]
+    )
+    payload["client_communication_send_approvals"].append(
+        {
+            "id": "client-comm-approval-memphis-lead-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "readiness_check_id": "client-comm-readiness-memphis-lead-001",
+            "dry_run_receipt_id": "client-comm-dry-run-memphis-lead-001",
+            "approval_status": "approved",
+            "approved_by": "Memphis Demo Operator",
+            "reason_summary": "Approval does not send a message.",
+            "no_live_send": True,
+        }
+    )
+    payload["client_communication_send_attempts"].extend(
+        [
+            {
+                "id": "client-comm-attempt-memphis-lead-001",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "readiness_check_id": "client-comm-readiness-memphis-lead-001",
+                "dry_run_receipt_id": "client-comm-dry-run-memphis-lead-001",
+                "approval_id": "client-comm-approval-memphis-lead-001",
+                "provider_profile_id": "client-comm-provider-memphis-email",
+                "lead_id": lead_ids[0],
+                "buyer_id": None,
+                "channel": "email",
+                "source_draft_type": "seller_follow_up",
+                "source_draft_id": "client-follow-up-memphis-001",
+                "idempotency_key": "comm-attempt-memphis-lead-001",
+                "attempt_status": "blocked",
+                "block_reasons": ["live_flags_not_enabled"],
+                "failure_reason": "",
+                "provider_mode": "mock",
+                "request_summary": "Controlled single-message gate - no bulk campaigns.",
+                "no_bulk": True,
+            },
+            {
+                "id": "client-comm-attempt-memphis-buyer-005",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "readiness_check_id": "client-comm-readiness-memphis-buyer-005",
+                "dry_run_receipt_id": "client-comm-dry-run-memphis-buyer-005",
+                "approval_id": None,
+                "provider_profile_id": "client-comm-provider-memphis-email",
+                "lead_id": lead_ids[4],
+                "buyer_id": buyer_ids[0],
+                "channel": "email",
+                "source_draft_type": "buyer_outreach",
+                "source_draft_id": "client-buyer-outreach-memphis-005",
+                "idempotency_key": "comm-attempt-memphis-buyer-005",
+                "attempt_status": "blocked",
+                "block_reasons": ["approval_not_present", "live_flags_not_enabled"],
+                "failure_reason": "",
+                "provider_mode": "mock",
+                "request_summary": "Controlled single-message gate - no bulk campaigns.",
+                "no_bulk": True,
+            },
+        ]
+    )
+    payload["client_communication_gate_events"].append(
+        {
+            "id": "client-comm-event-memphis-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "lead_id": lead_ids[0],
+            "buyer_id": None,
+            "event_type": "gate_reviewed",
+            "event_summary": "Controlled single-message gate remains blocked by default until dry run, approval, and live flags pass.",
+            "client_visible": True,
+        }
+    )
+
+    payload["client_billing_provider_profiles"].append(
+        {
+            "id": "client-billing-provider-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "provider_name": "Memphis Mock Billing Gateway",
+            "provider_mode": "mock",
+            "enabled": True,
+            "credential_reference_name": "BILLING_PROVIDER_MEMPHIS",
+            "config_summary": "Mock billing provider for dry-run only.",
+            "secret_present": True,
+            "supports_payment_links": True,
+            "supports_subscriptions": True,
+            "client_safe_summary": "Billing readiness only - no Stripe/customer/invoice/subscription action occurred.",
+        }
+    )
+    payload["client_billing_live_flags"].append(
+        {
+            "id": "client-billing-flag-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "provider_profile_id": "client-billing-provider-memphis",
+            "global_billing_live_enabled": False,
+            "workspace_billing_live_enabled": False,
+            "provider_billing_live_enabled": False,
+            "payment_link_live_enabled": False,
+            "subscription_live_enabled": False,
+        }
+    )
+    payload["client_billing_customer_profiles"].append(
+        {
+            "id": "client-billing-customer-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "customer_name": "Memphis Virtual Wholesale Operator",
+            "billing_email": "billing@memphis-demo.example",
+            "billing_contact_name": "Memphis Demo Operator",
+            "billing_contact_collected": True,
+            "tax_info_placeholder": True,
+            "terms_acknowledgment_placeholder": False,
+            "raw_card_data_present": False,
+            "client_safe_summary": "No raw card data is stored.",
+        }
+    )
+    payload["client_billing_readiness_checks"].append(
+        {
+            "id": "client-billing-check-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "plan_assignment_present": True,
+            "billing_readiness_status_snapshot": "setup_needed",
+            "provider_profile_id": "client-billing-provider-memphis",
+            "provider_mode": "mock",
+            "live_flag_snapshot": {"global": False, "workspace": False, "provider": False, "payment_link": False, "subscription": False},
+            "readiness_status": "blocked",
+            "block_reasons": ["billing_readiness_not_ready", "live_flags_not_enabled", "plan_gate_blocked_by_plan"],
+            "no_payment_collected": True,
+            "no_invoice_created": True,
+        }
+    )
+    payload["client_checkout_dry_run_receipts"].append(
+        {
+            "id": "client-billing-dry-run-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "plan_code": "pro",
+            "attempt_type": "checkout_session",
+            "provider_profile_id": "client-billing-provider-memphis",
+            "dry_run_summary": "Dry run does not charge a card.",
+            "idempotency_key": "billing-memphis-001",
+            "amount_placeholder": 249.0,
+            "status": "created",
+            "no_payment_collected": True,
+        }
+    )
+    payload["client_billing_approvals"].append(
+        {
+            "id": "client-billing-approval-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "readiness_check_id": "client-billing-check-memphis",
+            "dry_run_receipt_id": "client-billing-dry-run-memphis",
+            "approval_status": "approved",
+            "approved_by": "Memphis Demo Operator",
+            "reason_summary": "Approval does not charge a card.",
+            "no_payment_collected": True,
+        }
+    )
+    payload["client_billing_attempts"].append(
+        {
+            "id": "client-billing-attempt-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "provider_profile_id": "client-billing-provider-memphis",
+            "customer_profile_id": "client-billing-customer-memphis",
+            "plan_code": "pro",
+            "readiness_check_id": "client-billing-check-memphis",
+            "dry_run_receipt_id": "client-billing-dry-run-memphis",
+            "approval_id": "client-billing-approval-memphis",
+            "attempt_type": "checkout_session",
+            "idempotency_key": "billing-memphis-001",
+            "attempt_status": "blocked",
+            "block_reasons": ["billing_readiness_not_ready", "plan_gate_blocked_by_plan", "live_flags_not_enabled"],
+            "provider_mode": "mock",
+            "request_summary": "Billing gate only - no payment occurs unless all billing gates pass.",
+            "no_raw_card_data": True,
+        }
+    )
+    payload["client_billing_ledger_entries"].append(
+        {
+            "id": "client-billing-ledger-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "attempt_id": "client-billing-attempt-memphis",
+            "entry_type": "checkout_session",
+            "amount_placeholder": 249.0,
+            "currency": "USD",
+            "status": "blocked",
+            "summary": "Billing attempt blocked before any payment action.",
+            "client_safe": True,
+        }
+    )
+    payload["client_billing_gate_events"].append(
+        {
+            "id": "client-billing-event-memphis-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "event_type": "billing_gate_reviewed",
+            "event_summary": "Billing remains blocked until the workspace moves to Command and completes billing readiness.",
+            "client_visible": True,
+        }
+    )
+
+    payload["client_pilot_programs"].append(
+        {
+            "id": "client-pilot-program-001",
+            "tenant_id": "tenant-demo-001",
+            "program_name": "Prime2 Pilot",
+            "program_code": "prime2_pilot",
+            "program_status": "active",
+            "client_safe_summary": "Pilot mode does not bypass source gates.",
+        }
+    )
+    payload["client_pilot_workspace_enrollments"].append(
+        {
+            "id": "client-pilot-enrollment-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "program_id": "client-pilot-program-001",
+            "pilot_mode": "beta_pilot",
+            "enrollment_status": "active",
+            "support_owner_name": "Client Success Manager",
+            "client_safe_summary": "Memphis workspace is enrolled in beta pilot mode only.",
+        }
+    )
+    payload["client_pilot_operating_modes"].append(
+        {
+            "id": "client-pilot-mode-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "pilot_mode": "beta_pilot",
+            "operating_posture": "manual_only",
+            "reason_summary": "Controlled live posture requires CP9, CP10, and CP11 gates.",
+            "requires_human_review": True,
+            "no_gate_bypass": True,
+        }
+    )
+    payload["client_pilot_health_snapshots"].append(
+        {
+            "id": "client-pilot-health-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "health_status": "watch",
+            "onboarding_status": "ready_for_manual_operation",
+            "plan_status": "pro",
+            "communication_status": "blocked",
+            "billing_status": "blocked",
+            "compliance_status": "needs_review",
+            "weekly_report_status": "client_visible",
+            "block_reasons": ["communication_gate_blocked", "billing_gate_blocked", "compliance_review_needed"],
+            "next_actions": ["Review blocked communication drafts.", "Complete billing readiness placeholders.", "Keep pilot in manual-only posture."],
+            "client_safe_summary": "Pilot mode does not bypass source gates.",
+        }
+    )
+    payload["client_pilot_support_tickets"].extend(
+        [
+            {
+                "id": "client-pilot-ticket-memphis-onboarding",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "ticket_type": "onboarding",
+                "title": "Confirm first 10-lead activation checklist",
+                "summary": "Memphis still needs more lead volume before it looks like a full first-batch workspace.",
+                "status": "open",
+                "priority": "medium",
+                "assigned_to": "Client Success Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pilot-ticket-memphis-compliance",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "ticket_type": "compliance",
+                "title": "Review missing-consent communication path",
+                "summary": "Lead 2 remains blocked by missing consent.",
+                "status": "open",
+                "priority": "high",
+                "assigned_to": "Compliance Manager",
+                "client_safe": True,
+            },
+            {
+                "id": "client-pilot-ticket-memphis-buyers",
+                "tenant_id": "tenant-demo-001",
+                "workspace_id": workspace_id,
+                "ticket_type": "buyers",
+                "title": "Strengthen buyer demand evidence on mid-pipeline leads",
+                "summary": "Lead 3 still needs stronger buyer demand confirmation.",
+                "status": "open",
+                "priority": "medium",
+                "assigned_to": "Disposition Manager",
+                "client_safe": True,
+            },
+        ]
+    )
+    payload["client_pilot_support_actions"].append(
+        {
+            "id": "client-pilot-action-memphis-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "ticket_id": "client-pilot-ticket-memphis-compliance",
+            "action_summary": "Route missing-consent workflow to compliance review before any future live communication check.",
+            "action_status": "queued",
+            "owner_role": "compliance_manager",
+            "client_visible": True,
+        }
+    )
+    payload["client_pilot_escalations"].append(
+        {
+            "id": "client-pilot-escalation-memphis-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "escalation_type": "communication_gate",
+            "source_domain": "communication",
+            "source_record_id": "client-comm-readiness-memphis-lead-002",
+            "escalation_status": "open",
+            "escalation_reason": "Communication remains blocked by missing consent and disabled live flags.",
+            "requires_human_review": True,
+        }
+    )
+    payload["client_pilot_admin_notes"].append(
+        {
+            "id": "client-pilot-admin-note-memphis-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "note_title": "Internal pilot governance note",
+            "note_body": "Hidden admin-only note for pilot coordination.",
+            "visibility": "internal_only",
+        }
+    )
+    payload["client_pilot_client_safe_updates"].append(
+        {
+            "id": "client-pilot-update-memphis-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "update_title": "Pilot readiness update",
+            "update_summary": "Memphis remains in beta pilot review with manual-only operations and a few blocked gates still open.",
+            "status": "client_visible",
+            "client_safe_summary": "Client-safe updates hide internal governance, provider payloads, and admin notes.",
+            "hides_admin_notes": True,
+        }
+    )
+    payload["client_pilot_launch_checklists"].append(
+        {
+            "id": "client-pilot-launch-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "checklist_status": "blocked",
+            "onboarding_ready": True,
+            "plan_assigned": True,
+            "compliance_acceptable": False,
+            "weekly_report_available": True,
+            "support_owner_assigned": True,
+            "no_critical_blockers": True,
+            "no_unsafe_live_flags": True,
+            "block_reasons": ["compliance_not_acceptable", "communication_gate_blocked", "billing_gate_blocked"],
+            "client_safe_summary": "Pilot launch checklist does not bypass source gates.",
+        }
+    )
+    payload["client_pilot_risk_reviews"].append(
+        {
+            "id": "client-pilot-risk-memphis",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "risk_status": "blocked",
+            "communication_blocked": True,
+            "billing_blocked": True,
+            "compliance_blocked": True,
+            "critical_blockers": ["communication_gate_blocked", "billing_gate_blocked", "compliance_review_needed"],
+            "escalation_required": True,
+            "summary": "Controlled live posture requires CP9, CP10, and CP11 gates.",
+        }
+    )
+    payload["client_pilot_outcome_checkpoints"].append(
+        {
+            "id": "client-pilot-outcome-memphis-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "checkpoint_name": "Manual pilot operating week",
+            "checkpoint_status": "tracked",
+            "summary": "Pilot outcomes are being tracked without enabling live providers or billing.",
+            "client_safe": True,
+        }
+    )
+    payload["client_pilot_events"].append(
+        {
+            "id": "client-pilot-event-memphis-001",
+            "tenant_id": "tenant-demo-001",
+            "workspace_id": workspace_id,
+            "event_type": "pilot_health_reviewed",
+            "event_summary": "Pilot health snapshot shows manual-only readiness with blocked communication and billing gates.",
+            "client_visible": True,
+        }
+    )
+
+
 def seed_payload() -> dict[str, list[dict[str, object]]]:
     leads = build_lead_records()
     leads_by_id = {lead["id"]: lead for lead in leads}
@@ -12843,6 +13792,50 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "client_first_weekly_cycle_readiness": [],
         "client_onboarding_reports": [],
         "client_onboarding_manager_events": [],
+        "client_plan_catalog": [],
+        "client_plan_features": [],
+        "client_plan_limits": [],
+        "client_workspace_plan_assignments": [],
+        "client_feature_gate_evaluations": [],
+        "client_usage_counters": [],
+        "client_seat_usage_records": [],
+        "client_plan_upgrade_recommendations": [],
+        "client_billing_readiness_records": [],
+        "client_subscription_placeholders": [],
+        "client_plan_gate_events": [],
+        "client_communication_provider_profiles": [],
+        "client_communication_live_readiness_checks": [],
+        "client_communication_dry_run_receipts": [],
+        "client_communication_send_approvals": [],
+        "client_communication_send_attempts": [],
+        "client_communication_external_message_references": [],
+        "client_communication_idempotency_records": [],
+        "client_communication_live_flags": [],
+        "client_communication_gate_events": [],
+        "client_billing_provider_profiles": [],
+        "client_billing_live_flags": [],
+        "client_billing_customer_profiles": [],
+        "client_billing_readiness_checks": [],
+        "client_checkout_dry_run_receipts": [],
+        "client_billing_approvals": [],
+        "client_billing_attempts": [],
+        "client_billing_external_references": [],
+        "client_billing_webhook_event_placeholders": [],
+        "client_billing_ledger_entries": [],
+        "client_billing_gate_events": [],
+        "client_pilot_programs": [],
+        "client_pilot_workspace_enrollments": [],
+        "client_pilot_operating_modes": [],
+        "client_pilot_health_snapshots": [],
+        "client_pilot_support_tickets": [],
+        "client_pilot_support_actions": [],
+        "client_pilot_escalations": [],
+        "client_pilot_admin_notes": [],
+        "client_pilot_client_safe_updates": [],
+        "client_pilot_launch_checklists": [],
+        "client_pilot_risk_reviews": [],
+        "client_pilot_outcome_checkpoints": [],
+        "client_pilot_events": [],
         "assignment_fee_attributions": build_assignment_fee_attribution_records(),
         "title_handoff_packets": build_title_handoff_records(),
         "assignment_readiness_records": build_assignment_readiness_records(),
@@ -12857,6 +13850,7 @@ def seed_payload() -> dict[str, list[dict[str, object]]]:
         "compliance_records": build_compliance_records(),
     }
     add_memphis_client_demo(payload)
+    add_memphis_client_demo_cp9_cp12(payload)
     return payload
 
 
@@ -12886,6 +13880,50 @@ def seed_database(session: Session) -> dict[str, int]:
         LiveProviderActivationAttempt,
         LiveProviderActivation,
         RealDealExecutionBatch,
+        ClientPilotEvent,
+        ClientPilotOutcomeCheckpoint,
+        ClientPilotRiskReview,
+        ClientPilotLaunchChecklist,
+        ClientPilotClientSafeUpdate,
+        ClientPilotAdminNote,
+        ClientPilotEscalation,
+        ClientPilotSupportAction,
+        ClientPilotSupportTicket,
+        ClientPilotHealthSnapshot,
+        ClientPilotOperatingMode,
+        ClientPilotWorkspaceEnrollment,
+        ClientPilotProgram,
+        ClientBillingGateEvent,
+        ClientBillingLedgerEntry,
+        ClientBillingWebhookEventPlaceholder,
+        ClientBillingExternalReference,
+        ClientBillingAttempt,
+        ClientBillingApproval,
+        ClientCheckoutDryRunReceipt,
+        ClientBillingReadinessCheck,
+        ClientBillingCustomerProfile,
+        ClientBillingLiveFlag,
+        ClientBillingProviderProfile,
+        ClientCommunicationGateEvent,
+        ClientCommunicationLiveFlag,
+        ClientCommunicationIdempotencyRecord,
+        ClientCommunicationExternalMessageReference,
+        ClientCommunicationSendAttempt,
+        ClientCommunicationSendApproval,
+        ClientCommunicationDryRunReceipt,
+        ClientCommunicationLiveReadinessCheck,
+        ClientCommunicationProviderProfile,
+        ClientPlanGateEvent,
+        ClientSubscriptionPlaceholder,
+        ClientBillingReadinessRecord,
+        ClientPlanUpgradeRecommendation,
+        ClientSeatUsageRecord,
+        ClientUsageCounter,
+        ClientFeatureGateEvaluation,
+        ClientWorkspacePlanAssignment,
+        ClientPlanLimit,
+        ClientPlanFeature,
+        ClientPlanCatalog,
         ClientOnboardingManagerEvent,
         ClientOnboardingReport,
         ClientFirstWeeklyCycleReadiness,
@@ -13559,6 +14597,170 @@ def seed_database(session: Session) -> dict[str, int]:
     session.add_all(
         ClientOnboardingManagerEvent(**row)
         for row in payload["client_onboarding_manager_events"]
+    )
+    session.add_all(
+        ClientPlanCatalog(**row) for row in payload["client_plan_catalog"]
+    )
+    session.add_all(
+        ClientPlanFeature(**row) for row in payload["client_plan_features"]
+    )
+    session.add_all(
+        ClientPlanLimit(**row) for row in payload["client_plan_limits"]
+    )
+    session.add_all(
+        ClientWorkspacePlanAssignment(**row)
+        for row in payload["client_workspace_plan_assignments"]
+    )
+    session.add_all(
+        ClientFeatureGateEvaluation(**row)
+        for row in payload["client_feature_gate_evaluations"]
+    )
+    session.add_all(
+        ClientUsageCounter(**row) for row in payload["client_usage_counters"]
+    )
+    session.add_all(
+        ClientSeatUsageRecord(**row) for row in payload["client_seat_usage_records"]
+    )
+    session.add_all(
+        ClientPlanUpgradeRecommendation(**row)
+        for row in payload["client_plan_upgrade_recommendations"]
+    )
+    session.add_all(
+        ClientBillingReadinessRecord(**row)
+        for row in payload["client_billing_readiness_records"]
+    )
+    session.add_all(
+        ClientSubscriptionPlaceholder(**row)
+        for row in payload["client_subscription_placeholders"]
+    )
+    session.add_all(
+        ClientPlanGateEvent(**row) for row in payload["client_plan_gate_events"]
+    )
+    session.add_all(
+        ClientCommunicationProviderProfile(**row)
+        for row in payload["client_communication_provider_profiles"]
+    )
+    session.add_all(
+        ClientCommunicationLiveReadinessCheck(**row)
+        for row in payload["client_communication_live_readiness_checks"]
+    )
+    session.add_all(
+        ClientCommunicationDryRunReceipt(**row)
+        for row in payload["client_communication_dry_run_receipts"]
+    )
+    session.add_all(
+        ClientCommunicationSendApproval(**row)
+        for row in payload["client_communication_send_approvals"]
+    )
+    session.add_all(
+        ClientCommunicationSendAttempt(**row)
+        for row in payload["client_communication_send_attempts"]
+    )
+    session.add_all(
+        ClientCommunicationExternalMessageReference(**row)
+        for row in payload["client_communication_external_message_references"]
+    )
+    session.add_all(
+        ClientCommunicationIdempotencyRecord(**row)
+        for row in payload["client_communication_idempotency_records"]
+    )
+    session.add_all(
+        ClientCommunicationLiveFlag(**row)
+        for row in payload["client_communication_live_flags"]
+    )
+    session.add_all(
+        ClientCommunicationGateEvent(**row)
+        for row in payload["client_communication_gate_events"]
+    )
+    session.add_all(
+        ClientBillingProviderProfile(**row)
+        for row in payload["client_billing_provider_profiles"]
+    )
+    session.add_all(
+        ClientBillingLiveFlag(**row) for row in payload["client_billing_live_flags"]
+    )
+    session.add_all(
+        ClientBillingCustomerProfile(**row)
+        for row in payload["client_billing_customer_profiles"]
+    )
+    session.add_all(
+        ClientBillingReadinessCheck(**row)
+        for row in payload["client_billing_readiness_checks"]
+    )
+    session.add_all(
+        ClientCheckoutDryRunReceipt(**row)
+        for row in payload["client_checkout_dry_run_receipts"]
+    )
+    session.add_all(
+        ClientBillingApproval(**row) for row in payload["client_billing_approvals"]
+    )
+    session.add_all(
+        ClientBillingAttempt(**row) for row in payload["client_billing_attempts"]
+    )
+    session.add_all(
+        ClientBillingExternalReference(**row)
+        for row in payload["client_billing_external_references"]
+    )
+    session.add_all(
+        ClientBillingWebhookEventPlaceholder(**row)
+        for row in payload["client_billing_webhook_event_placeholders"]
+    )
+    session.add_all(
+        ClientBillingLedgerEntry(**row)
+        for row in payload["client_billing_ledger_entries"]
+    )
+    session.add_all(
+        ClientBillingGateEvent(**row)
+        for row in payload["client_billing_gate_events"]
+    )
+    session.add_all(
+        ClientPilotProgram(**row) for row in payload["client_pilot_programs"]
+    )
+    session.add_all(
+        ClientPilotWorkspaceEnrollment(**row)
+        for row in payload["client_pilot_workspace_enrollments"]
+    )
+    session.add_all(
+        ClientPilotOperatingMode(**row)
+        for row in payload["client_pilot_operating_modes"]
+    )
+    session.add_all(
+        ClientPilotHealthSnapshot(**row)
+        for row in payload["client_pilot_health_snapshots"]
+    )
+    session.add_all(
+        ClientPilotSupportTicket(**row)
+        for row in payload["client_pilot_support_tickets"]
+    )
+    session.add_all(
+        ClientPilotSupportAction(**row)
+        for row in payload["client_pilot_support_actions"]
+    )
+    session.add_all(
+        ClientPilotEscalation(**row)
+        for row in payload["client_pilot_escalations"]
+    )
+    session.add_all(
+        ClientPilotAdminNote(**row) for row in payload["client_pilot_admin_notes"]
+    )
+    session.add_all(
+        ClientPilotClientSafeUpdate(**row)
+        for row in payload["client_pilot_client_safe_updates"]
+    )
+    session.add_all(
+        ClientPilotLaunchChecklist(**row)
+        for row in payload["client_pilot_launch_checklists"]
+    )
+    session.add_all(
+        ClientPilotRiskReview(**row)
+        for row in payload["client_pilot_risk_reviews"]
+    )
+    session.add_all(
+        ClientPilotOutcomeCheckpoint(**row)
+        for row in payload["client_pilot_outcome_checkpoints"]
+    )
+    session.add_all(
+        ClientPilotEvent(**row) for row in payload["client_pilot_events"]
     )
     session.add_all(
         EvidenceAttachmentRecord(**row) for row in payload["evidence_attachment_records"]

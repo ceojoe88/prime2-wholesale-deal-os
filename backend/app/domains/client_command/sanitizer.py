@@ -42,6 +42,50 @@ from app.models import (
     ClientOnboardingReport,
     ClientOnboardingTask,
     ClientOnboardingTimelineEvent,
+    ClientPlanCatalog,
+    ClientPlanFeature,
+    ClientPlanLimit,
+    ClientWorkspacePlanAssignment,
+    ClientFeatureGateEvaluation,
+    ClientUsageCounter,
+    ClientSeatUsageRecord,
+    ClientPlanUpgradeRecommendation,
+    ClientBillingReadinessRecord,
+    ClientSubscriptionPlaceholder,
+    ClientPlanGateEvent,
+    ClientCommunicationProviderProfile,
+    ClientCommunicationLiveReadinessCheck,
+    ClientCommunicationDryRunReceipt,
+    ClientCommunicationSendApproval,
+    ClientCommunicationSendAttempt,
+    ClientCommunicationExternalMessageReference,
+    ClientCommunicationIdempotencyRecord,
+    ClientCommunicationLiveFlag,
+    ClientCommunicationGateEvent,
+    ClientBillingProviderProfile,
+    ClientBillingLiveFlag,
+    ClientBillingCustomerProfile,
+    ClientBillingReadinessCheck,
+    ClientCheckoutDryRunReceipt,
+    ClientBillingApproval,
+    ClientBillingAttempt,
+    ClientBillingExternalReference,
+    ClientBillingWebhookEventPlaceholder,
+    ClientBillingLedgerEntry,
+    ClientBillingGateEvent,
+    ClientPilotProgram,
+    ClientPilotWorkspaceEnrollment,
+    ClientPilotOperatingMode,
+    ClientPilotHealthSnapshot,
+    ClientPilotSupportTicket,
+    ClientPilotSupportAction,
+    ClientPilotEscalation,
+    ClientPilotAdminNote,
+    ClientPilotClientSafeUpdate,
+    ClientPilotLaunchChecklist,
+    ClientPilotRiskReview,
+    ClientPilotOutcomeCheckpoint,
+    ClientPilotEvent,
     ClientOfferReadinessGate,
     ClientOfferScenario,
     ClientPipelineSetup,
@@ -513,6 +557,294 @@ def onboarding_report_public(report: ClientOnboardingReport) -> dict[str, Any]:
 
 
 def onboarding_manager_event_public(event: ClientOnboardingManagerEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def plan_catalog_public(plan: ClientPlanCatalog) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(plan))
+    data["client_safe"] = True
+    data["no_live_billing"] = True
+    data["no_payment_collected"] = True
+    return data
+
+
+def plan_feature_public(feature: ClientPlanFeature) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(feature))
+    data["client_safe"] = True
+    return data
+
+
+def plan_limit_public(limit: ClientPlanLimit) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(limit))
+    data["client_safe"] = True
+    return data
+
+
+def plan_assignment_public(assignment: ClientWorkspacePlanAssignment) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(assignment))
+    data["client_safe"] = True
+    data["no_live_billing"] = True
+    data["no_payment_collected"] = True
+    return data
+
+
+def feature_gate_public(gate: ClientFeatureGateEvaluation) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(gate))
+    data["client_safe"] = True
+    data["no_live_action"] = True
+    return data
+
+
+def usage_counter_public(counter: ClientUsageCounter) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(counter))
+    data["client_safe"] = True
+    return data
+
+
+def seat_usage_public(record: ClientSeatUsageRecord) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(record))
+    data["client_safe"] = True
+    return data
+
+
+def upgrade_recommendation_public(recommendation: ClientPlanUpgradeRecommendation) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(recommendation))
+    data["client_safe"] = True
+    return data
+
+
+def billing_readiness_record_public(record: ClientBillingReadinessRecord) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(record))
+    data["client_safe"] = True
+    data["no_provider_call"] = True
+    data["no_payment_collected"] = True
+    data["no_invoice_created"] = True
+    return data
+
+
+def subscription_placeholder_public(placeholder: ClientSubscriptionPlaceholder) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(placeholder))
+    data["client_safe"] = True
+    data["no_live_billing"] = True
+    data["no_payment_collected"] = True
+    return data
+
+
+def plan_gate_event_public(event: ClientPlanGateEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def communication_provider_public(profile: ClientCommunicationProviderProfile) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(profile))
+    data["client_safe"] = True
+    data["secret_present"] = bool(profile.secret_present)
+    return data
+
+
+def communication_readiness_check_public(check: ClientCommunicationLiveReadinessCheck) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(check))
+    data["client_safe"] = True
+    data["no_live_send"] = True
+    return data
+
+
+def communication_dry_run_public(receipt: ClientCommunicationDryRunReceipt) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(receipt))
+    data["client_safe"] = True
+    data["no_live_send"] = True
+    return data
+
+
+def communication_send_approval_public(approval: ClientCommunicationSendApproval) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(approval))
+    data["client_safe"] = True
+    data["no_live_send"] = True
+    return data
+
+
+def communication_send_attempt_public(attempt: ClientCommunicationSendAttempt) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(attempt))
+    data["client_safe"] = True
+    data["no_bulk"] = True
+    return data
+
+
+def communication_external_reference_public(reference: ClientCommunicationExternalMessageReference) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(reference))
+    data["client_safe"] = True
+    return data
+
+
+def communication_idempotency_public(record: ClientCommunicationIdempotencyRecord) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(record))
+    data["client_safe"] = True
+    return data
+
+
+def communication_live_flag_public(flag: ClientCommunicationLiveFlag) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(flag))
+    data["client_safe"] = True
+    return data
+
+
+def communication_gate_event_public(event: ClientCommunicationGateEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def billing_provider_public(profile: ClientBillingProviderProfile) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(profile))
+    data["client_safe"] = True
+    data["secret_present"] = bool(profile.secret_present)
+    return data
+
+
+def billing_live_flag_public(flag: ClientBillingLiveFlag) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(flag))
+    data["client_safe"] = True
+    return data
+
+
+def billing_customer_profile_public(profile: ClientBillingCustomerProfile) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(profile))
+    data["client_safe"] = True
+    data["raw_card_data_present"] = False
+    return data
+
+
+def billing_readiness_check_public(check: ClientBillingReadinessCheck) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(check))
+    data["client_safe"] = True
+    data["no_payment_collected"] = True
+    data["no_invoice_created"] = True
+    return data
+
+
+def checkout_dry_run_public(receipt: ClientCheckoutDryRunReceipt) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(receipt))
+    data["client_safe"] = True
+    data["no_payment_collected"] = True
+    return data
+
+
+def billing_approval_public(approval: ClientBillingApproval) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(approval))
+    data["client_safe"] = True
+    data["no_payment_collected"] = True
+    return data
+
+
+def billing_attempt_public(attempt: ClientBillingAttempt) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(attempt))
+    data["client_safe"] = True
+    data["no_raw_card_data"] = True
+    return data
+
+
+def billing_external_reference_public(reference: ClientBillingExternalReference) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(reference))
+    data["client_safe"] = True
+    return data
+
+
+def billing_webhook_placeholder_public(event: ClientBillingWebhookEventPlaceholder) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_safe"] = True
+    return data
+
+
+def billing_ledger_public(entry: ClientBillingLedgerEntry) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(entry))
+    data["client_safe"] = True
+    return data
+
+
+def billing_gate_event_public(event: ClientBillingGateEvent) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(event))
+    data["client_visible"] = True
+    return data
+
+
+def pilot_program_public(program: ClientPilotProgram) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(program))
+    data["client_safe"] = True
+    return data
+
+
+def pilot_enrollment_public(enrollment: ClientPilotWorkspaceEnrollment) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(enrollment))
+    data["client_safe"] = True
+    return data
+
+
+def pilot_operating_mode_public(mode: ClientPilotOperatingMode) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(mode))
+    data["client_safe"] = True
+    data["no_gate_bypass"] = True
+    return data
+
+
+def pilot_health_snapshot_public(snapshot: ClientPilotHealthSnapshot) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(snapshot))
+    data["client_safe"] = True
+    return data
+
+
+def pilot_support_ticket_public(ticket: ClientPilotSupportTicket) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(ticket))
+    data["client_safe"] = True
+    return data
+
+
+def pilot_support_action_public(action: ClientPilotSupportAction) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(action))
+    data["client_visible"] = bool(action.client_visible)
+    return data
+
+
+def pilot_escalation_public(escalation: ClientPilotEscalation) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(escalation))
+    data["client_safe"] = True
+    return data
+
+
+def pilot_admin_note_public(note: ClientPilotAdminNote) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(note))
+    data["client_visible"] = False
+    return data
+
+
+def pilot_client_safe_update_public(update: ClientPilotClientSafeUpdate) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(update))
+    data["client_safe"] = True
+    data["hides_admin_notes"] = True
+    return data
+
+
+def pilot_launch_checklist_public(checklist: ClientPilotLaunchChecklist) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(checklist))
+    data["client_safe"] = True
+    return data
+
+
+def pilot_risk_review_public(review: ClientPilotRiskReview) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(review))
+    data["client_safe"] = True
+    return data
+
+
+def pilot_outcome_checkpoint_public(checkpoint: ClientPilotOutcomeCheckpoint) -> dict[str, Any]:
+    data = strip_forbidden(model_to_dict(checkpoint))
+    data["client_safe"] = True
+    return data
+
+
+def pilot_event_public(event: ClientPilotEvent) -> dict[str, Any]:
     data = strip_forbidden(model_to_dict(event))
     data["client_visible"] = True
     return data

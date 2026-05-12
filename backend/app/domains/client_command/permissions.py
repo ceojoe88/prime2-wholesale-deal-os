@@ -34,6 +34,16 @@ CLIENT_COMMAND_PERMISSIONS = {
     "client_command.readiness_manage",
     "client_command.activation_gate_view",
     "client_command.activation_gate_manage",
+    "client_command.plan_view",
+    "client_command.plan_manage",
+    "client_command.communication_view",
+    "client_command.communication_manage",
+    "client_command.billing_view",
+    "client_command.billing_manage",
+    "client_command.pilot_view",
+    "client_command.pilot_manage",
+    "client_command.support_view",
+    "client_command.support_manage",
     "client_command.admin",
 }
 

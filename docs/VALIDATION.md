@@ -300,6 +300,29 @@ Smoke check:
 - `/api/v1/client-command/underwriting/ready-review`
 - `/api/v1/client-command/underwriting/blocked`
 - `/api/v1/client-command/underwriting/needs-human-review`
+- `/api/v1/client-command/plans/catalog`
+- `/api/v1/client-command/plans/overview`
+- `/api/v1/client-command/workspaces/client-workspace-003/feature-gates`
+- `/api/v1/client-command/workspaces/client-workspace-003/feature-gates/evaluate`
+- `/api/v1/client-command/workspaces/client-workspace-003/usage`
+- `/api/v1/client-command/workspaces/client-workspace-003/upgrade-recommendations`
+- `/api/v1/client-command/workspaces/client-workspace-003/billing-readiness`
+- `/api/v1/client-command/communication/readiness-checks`
+- `/api/v1/client-command/communication/dry-runs`
+- `/api/v1/client-command/communication/send-attempts`
+- `/api/v1/client-command/billing/providers`
+- `/api/v1/client-command/billing/customer-profiles`
+- `/api/v1/client-command/billing/readiness-checks`
+- `/api/v1/client-command/billing/checkout-dry-runs`
+- `/api/v1/client-command/billing/attempts`
+- `/api/v1/client-command/billing/ledger`
+- `/api/v1/client-command/billing/overview`
+- `/api/v1/client-command/workspaces/client-workspace-003/pilot/launch-checklist`
+- `/api/v1/client-command/workspaces/client-workspace-003/pilot/risk-review`
+- `/api/v1/client-command/workspaces/client-workspace-003/pilot/client-safe-updates`
+- `/api/v1/client-command/pilot/admin-console`
+- `/api/v1/client-command/pilot/support-console`
+- `/api/v1/client-command/pilot/blocked`
 - `/api/production-readiness`
 
 ## V19 Field Testing Checklist
@@ -353,13 +376,13 @@ Before any hosted deployment:
 - Contract execution remains external.
 - Payment handling remains unavailable.
 - Owner approval gates remain enabled.
-## Client Command CP6-CP8 Validation
+## Client Command CP6-CP12 Validation
 
 Minimum validation lane:
 - Alembic upgrade head on a clean SQLite validation DB
 - seed script
-- targeted CP6/CP7 backend tests
-- existing CP1-CP5 backend tests
+- targeted CP9-CP12 backend tests (`backend/tests/test_client_command_cp9_cp12.py`)
+- existing CP1-CP8 backend tests
 - full backend test suite
 - targeted CP6/CP7 frontend route tests
 - existing client-command frontend tests
@@ -387,3 +410,27 @@ CP8 boundaries to verify:
 - no 10DLC live registration occurs
 - no billing or payment actions occur
 - no contract or e-signature actions occur
+
+CP9 boundaries to verify:
+- subscription plan posture remains non-live by default
+- plan assignment alone does not create billing activation
+- entitlement summaries remain client-safe
+- Prime governance internals remain private
+
+CP10 boundaries to verify:
+- live communication stays blocked without source linkage
+- live communication stays blocked without dry-run, owner approval, provider readiness, and idempotency
+- one-recipient scope remains required
+- no bulk campaigns or autonomous sends are enabled
+
+CP11 boundaries to verify:
+- Stripe billing remains subscription-scoped only
+- raw card data never appears in app records, logs, docs, or seed data
+- only Stripe IDs and masked metadata are retained
+- billing does not unlock communication, campaigns, or pilot execution by itself
+
+CP12 boundaries to verify:
+- pilot mode remains invite-only and manual-first
+- admin support tooling cannot bypass source gates, owner approval, communication gates, or billing gates
+- no bulk campaigns or autonomous execution are enabled
+- Prime governance internals remain private in client-facing surfaces

@@ -219,3 +219,225 @@ class ClientOnboardingTaskCreate(BaseModel):
     owner_role: str = "onboarding_manager"
     due_window: str = "this_week"
     related_blocker_id: str | None = None
+
+
+class ClientPlanCatalogCreate(BaseModel):
+    plan_name: str = "Starter"
+    plan_code: str = "starter"
+    monthly_price_placeholder: float = 0
+    setup_fee_placeholder: float = 0
+    is_public: bool = True
+    is_active: bool = True
+    client_safe_summary: str = ""
+
+
+class ClientWorkspacePlanAssignmentCreate(BaseModel):
+    plan_code: str = "beta_demo"
+    plan_name: str | None = None
+    assignment_status: str = "active"
+    client_safe_summary: str = ""
+
+
+class ClientFeatureGateEvaluationCreate(BaseModel):
+    feature_key: str = "onboarding"
+
+
+class ClientBillingReadinessRecordCreate(BaseModel):
+    readiness_status: str = "setup_needed"
+    customer_info_collected: bool = False
+    billing_contact_collected: bool = False
+    tax_info_placeholder: bool = False
+    terms_acknowledgment_placeholder: bool = False
+    notes_summary: str = ""
+
+
+class ClientSubscriptionPlaceholderCreate(BaseModel):
+    plan_code: str = "beta_demo"
+    placeholder_status: str = "draft"
+    monthly_price_placeholder: float = 0
+    setup_fee_placeholder: float = 0
+    billing_contact_email: str = ""
+    client_safe_summary: str = ""
+
+
+class ClientCommunicationProviderProfileCreate(BaseModel):
+    workspace_id: str | None = None
+    provider_name: str = "Mock Communication Provider"
+    provider_mode: str = "mock"
+    channel: str = "email"
+    enabled: bool = False
+    credential_reference_name: str = ""
+    config_summary: str = ""
+    global_communication_live_enabled: bool = False
+    workspace_communication_live_enabled: bool = False
+    provider_live_enabled: bool = False
+    channel_live_enabled: bool = False
+
+
+class ClientCommunicationReadinessCheckCreate(BaseModel):
+    workspace_id: str
+    lead_id: str | None = None
+    buyer_id: str | None = None
+    source_draft_type: str = "unknown"
+    source_draft_id: str | None = None
+    channel: str = "email"
+    provider_profile_id: str | None = None
+    idempotency_key: str = ""
+
+
+class ClientCommunicationDryRunCreate(BaseModel):
+    workspace_id: str
+    lead_id: str | None = None
+    buyer_id: str | None = None
+    source_draft_type: str = "unknown"
+    source_draft_id: str | None = None
+    channel: str = "email"
+    provider_profile_id: str | None = None
+    idempotency_key: str = ""
+
+
+class ClientCommunicationSendApprovalCreate(BaseModel):
+    workspace_id: str
+    readiness_check_id: str | None = None
+    dry_run_receipt_id: str | None = None
+    approved_by: str = "Prime2 Operator"
+    reason_summary: str = ""
+
+
+class ClientCommunicationSendAttemptCreate(BaseModel):
+    workspace_id: str
+    readiness_check_id: str | None = None
+    dry_run_receipt_id: str | None = None
+    approval_id: str | None = None
+    provider_profile_id: str | None = None
+    lead_id: str | None = None
+    buyer_id: str | None = None
+    source_draft_type: str = "unknown"
+    source_draft_id: str | None = None
+    channel: str = "email"
+    idempotency_key: str = ""
+
+
+class ClientBillingProviderProfileCreate(BaseModel):
+    workspace_id: str | None = None
+    provider_name: str = "Mock Billing Provider"
+    provider_mode: str = "mock"
+    enabled: bool = False
+    credential_reference_name: str = ""
+    config_summary: str = ""
+    supports_payment_links: bool = False
+    supports_subscriptions: bool = False
+    global_billing_live_enabled: bool = False
+    workspace_billing_live_enabled: bool = False
+    provider_billing_live_enabled: bool = False
+    payment_link_live_enabled: bool = False
+    subscription_live_enabled: bool = False
+
+
+class ClientBillingCustomerProfileCreate(BaseModel):
+    workspace_id: str
+    customer_name: str = ""
+    billing_email: str = ""
+    billing_contact_name: str = ""
+    billing_contact_collected: bool = False
+    tax_info_placeholder: bool = False
+    terms_acknowledgment_placeholder: bool = False
+
+
+class ClientBillingReadinessCheckCreate(BaseModel):
+    workspace_id: str
+    provider_profile_id: str | None = None
+
+
+class ClientCheckoutDryRunCreate(BaseModel):
+    workspace_id: str
+    plan_code: str = "beta_demo"
+    attempt_type: str = "checkout_session"
+    provider_profile_id: str | None = None
+    idempotency_key: str = ""
+    amount_placeholder: float = 0
+
+
+class ClientBillingApprovalCreate(BaseModel):
+    workspace_id: str
+    readiness_check_id: str | None = None
+    dry_run_receipt_id: str | None = None
+    approved_by: str = "Prime2 Operator"
+    reason_summary: str = ""
+
+
+class ClientBillingAttemptCreate(BaseModel):
+    workspace_id: str
+    provider_profile_id: str | None = None
+    customer_profile_id: str | None = None
+    plan_code: str = "beta_demo"
+    readiness_check_id: str | None = None
+    dry_run_receipt_id: str | None = None
+    approval_id: str | None = None
+    attempt_type: str = "checkout_session"
+    idempotency_key: str = ""
+
+
+class ClientPilotProgramCreate(BaseModel):
+    program_name: str = "Prime2 Pilot"
+    program_code: str = "prime2_pilot"
+    program_status: str = "active"
+    client_safe_summary: str = ""
+
+
+class ClientPilotWorkspaceEnrollmentCreate(BaseModel):
+    program_id: str = "client-pilot-program-001"
+    pilot_mode: str = "beta_pilot"
+    enrollment_status: str = "active"
+    support_owner_name: str = ""
+    client_safe_summary: str = ""
+
+
+class ClientPilotOperatingModeCreate(BaseModel):
+    pilot_mode: str = "beta_pilot"
+    operating_posture: str = "manual_only"
+    reason_summary: str = ""
+    requires_human_review: bool = False
+
+
+class ClientPilotSupportTicketCreate(BaseModel):
+    ticket_type: str = "bug"
+    title: str = ""
+    summary: str = ""
+    status: str = "open"
+    priority: str = "medium"
+    assigned_to: str = ""
+
+
+class ClientPilotSupportActionCreate(BaseModel):
+    workspace_id: str
+    ticket_id: str | None = None
+    action_summary: str = ""
+    action_status: str = "queued"
+    owner_role: str = ""
+    client_visible: bool = True
+
+
+class ClientPilotEscalationCreate(BaseModel):
+    workspace_id: str
+    escalation_type: str = ""
+    source_domain: str = ""
+    source_record_id: str | None = None
+    escalation_status: str = "open"
+    escalation_reason: str = ""
+    requires_human_review: bool = True
+
+
+class ClientPilotLaunchChecklistCreate(BaseModel):
+    workspace_id: str
+
+
+class ClientPilotRiskReviewCreate(BaseModel):
+    workspace_id: str
+
+
+class ClientPilotClientSafeUpdateCreate(BaseModel):
+    update_title: str = ""
+    update_summary: str = ""
+    status: str = "draft"
+    client_safe_summary: str = ""

@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from hashlib import sha256
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+import app.models as app_models
 from app.domains.client_command.permissions import (
     CLIENT_COMMAND_PERMISSIONS,
     has_permission,
     member_permissions,
 )
+from app.domains.client_command import sanitizer as client_command_sanitizer
 from app.domains.client_command.safety import (
     client_command_safety_rules,
     validate_client_safe_text,
@@ -5471,3 +5475,2036 @@ def _ensure_onboarding_manager_event(
     event.event_summary = summary
     event.manager_name = "Onboarding Manager"
     event.client_visible = True
+
+
+PLAN_FEATURE_GROUPS = [
+    "onboarding",
+    "lead_intelligence",
+    "acquisition",
+    "underwriting",
+    "buyer_matching",
+    "compliance",
+    "weekly_reports",
+    "live_communication",
+    "billing",
+    "admin_support",
+    "pilot_mode",
+    "exports",
+    "integrations",
+]
+
+
+DEFAULT_PLAN_DEFINITIONS: list[dict[str, Any]] = [
+    {
+        "plan_code": "beta_demo",
+        "plan_name": "Beta Demo",
+        "monthly_price_placeholder": 0.0,
+        "setup_fee_placeholder": 0.0,
+        "is_public": False,
+        "is_active": True,
+        "client_safe_summary": "Demo-only plan for onboarding, scoring, and manual reviews.",
+        "limits": {
+            "max_workspaces": 1,
+            "max_users": 2,
+            "max_leads": 25,
+            "max_buyers": 10,
+            "max_weekly_reports": 4,
+            "max_manual_drafts": 25,
+            "live_communication_allowed": False,
+            "billing_live_allowed": False,
+            "support_console_allowed": False,
+            "pilot_mode_allowed": False,
+        },
+        "features": {
+            "onboarding": True,
+            "lead_intelligence": True,
+            "acquisition": True,
+            "underwriting": True,
+            "buyer_matching": True,
+            "compliance": True,
+            "weekly_reports": True,
+            "live_communication": False,
+            "billing": False,
+            "admin_support": False,
+            "pilot_mode": False,
+            "exports": False,
+            "integrations": False,
+        },
+    },
+    {
+        "plan_code": "starter",
+        "plan_name": "Starter",
+        "monthly_price_placeholder": 99.0,
+        "setup_fee_placeholder": 0.0,
+        "is_public": True,
+        "is_active": True,
+        "client_safe_summary": "Starter plan for manual investor command workflows.",
+        "limits": {
+            "max_workspaces": 1,
+            "max_users": 3,
+            "max_leads": 100,
+            "max_buyers": 40,
+            "max_weekly_reports": 8,
+            "max_manual_drafts": 100,
+            "live_communication_allowed": False,
+            "billing_live_allowed": False,
+            "support_console_allowed": False,
+            "pilot_mode_allowed": False,
+        },
+        "features": {
+            "onboarding": True,
+            "lead_intelligence": True,
+            "acquisition": True,
+            "underwriting": True,
+            "buyer_matching": True,
+            "compliance": True,
+            "weekly_reports": True,
+            "live_communication": False,
+            "billing": False,
+            "admin_support": False,
+            "pilot_mode": False,
+            "exports": True,
+            "integrations": False,
+        },
+    },
+    {
+        "plan_code": "pro",
+        "plan_name": "Pro",
+        "monthly_price_placeholder": 249.0,
+        "setup_fee_placeholder": 99.0,
+        "is_public": True,
+        "is_active": True,
+        "client_safe_summary": "Pro plan for expanded manual operations and guarded pilot readiness.",
+        "limits": {
+            "max_workspaces": 2,
+            "max_users": 6,
+            "max_leads": 500,
+            "max_buyers": 200,
+            "max_weekly_reports": 24,
+            "max_manual_drafts": 400,
+            "live_communication_allowed": True,
+            "billing_live_allowed": False,
+            "support_console_allowed": False,
+            "pilot_mode_allowed": True,
+        },
+        "features": {
+            "onboarding": True,
+            "lead_intelligence": True,
+            "acquisition": True,
+            "underwriting": True,
+            "buyer_matching": True,
+            "compliance": True,
+            "weekly_reports": True,
+            "live_communication": True,
+            "billing": False,
+            "admin_support": False,
+            "pilot_mode": True,
+            "exports": True,
+            "integrations": True,
+        },
+    },
+    {
+        "plan_code": "command",
+        "plan_name": "Command",
+        "monthly_price_placeholder": 499.0,
+        "setup_fee_placeholder": 149.0,
+        "is_public": True,
+        "is_active": True,
+        "client_safe_summary": "Command plan for tightly controlled live communication and support review.",
+        "limits": {
+            "max_workspaces": 5,
+            "max_users": 12,
+            "max_leads": 1500,
+            "max_buyers": 600,
+            "max_weekly_reports": 60,
+            "max_manual_drafts": 1200,
+            "live_communication_allowed": True,
+            "billing_live_allowed": True,
+            "support_console_allowed": True,
+            "pilot_mode_allowed": True,
+        },
+        "features": {feature: True for feature in PLAN_FEATURE_GROUPS},
+    },
+    {
+        "plan_code": "managed_growth",
+        "plan_name": "Managed Growth",
+        "monthly_price_placeholder": 999.0,
+        "setup_fee_placeholder": 499.0,
+        "is_public": False,
+        "is_active": True,
+        "client_safe_summary": "Managed plan for coached pilots and controlled live lanes.",
+        "limits": {
+            "max_workspaces": 10,
+            "max_users": 25,
+            "max_leads": 5000,
+            "max_buyers": 1500,
+            "max_weekly_reports": 120,
+            "max_manual_drafts": 3000,
+            "live_communication_allowed": True,
+            "billing_live_allowed": True,
+            "support_console_allowed": True,
+            "pilot_mode_allowed": True,
+        },
+        "features": {feature: True for feature in PLAN_FEATURE_GROUPS},
+    },
+    {
+        "plan_code": "enterprise_custom",
+        "plan_name": "Enterprise Custom",
+        "monthly_price_placeholder": 0.0,
+        "setup_fee_placeholder": 0.0,
+        "is_public": False,
+        "is_active": True,
+        "client_safe_summary": "Custom enterprise plan with explicit commercial review required.",
+        "limits": {
+            "max_workspaces": 100,
+            "max_users": 200,
+            "max_leads": 50000,
+            "max_buyers": 10000,
+            "max_weekly_reports": 500,
+            "max_manual_drafts": 20000,
+            "live_communication_allowed": True,
+            "billing_live_allowed": True,
+            "support_console_allowed": True,
+            "pilot_mode_allowed": True,
+        },
+        "features": {feature: True for feature in PLAN_FEATURE_GROUPS},
+    },
+]
+
+
+def _generate_id(prefix: str) -> str:
+    return f"{prefix}-{uuid4().hex[:10]}"
+
+
+def _hash_value(*parts: str) -> str:
+    return sha256("|".join(parts).encode("utf-8")).hexdigest()
+
+
+def _latest(query):
+    return query.order_by(desc(query.column_descriptions[0]["entity"].created_at)).first()
+
+
+def _ensure_plan_catalog_scaffolding(session: Session) -> None:
+    if session.query(app_models.ClientPlanCatalog).count():
+        return
+
+    for definition in DEFAULT_PLAN_DEFINITIONS:
+        plan = app_models.ClientPlanCatalog(
+            id=f"client-plan-{definition['plan_code']}",
+            plan_name=definition["plan_name"],
+            plan_code=definition["plan_code"],
+            monthly_price_placeholder=definition["monthly_price_placeholder"],
+            setup_fee_placeholder=definition["setup_fee_placeholder"],
+            is_public=definition["is_public"],
+            is_active=definition["is_active"],
+            client_safe_summary=definition["client_safe_summary"],
+            no_live_billing=True,
+            no_payment_collected=True,
+        )
+        limit = app_models.ClientPlanLimit(
+            id=f"client-plan-limit-{definition['plan_code']}",
+            plan_code=definition["plan_code"],
+            **definition["limits"],
+        )
+        session.add(plan)
+        session.add(limit)
+        for feature_key in PLAN_FEATURE_GROUPS:
+            session.add(
+                app_models.ClientPlanFeature(
+                    id=f"client-plan-feature-{definition['plan_code']}-{feature_key}",
+                    plan_code=definition["plan_code"],
+                    feature_group=feature_key,
+                    feature_key=feature_key,
+                    feature_name=feature_key.replace("_", " ").title(),
+                    allowed=bool(definition["features"].get(feature_key, False)),
+                    feature_summary=f"{definition['plan_name']} {'allows' if definition['features'].get(feature_key, False) else 'blocks'} {feature_key.replace('_', ' ')}.",
+                )
+            )
+    session.flush()
+
+
+def _plan_record(session: Session, plan_code: str) -> tuple[Any, Any]:
+    _ensure_plan_catalog_scaffolding(session)
+    plan = session.query(app_models.ClientPlanCatalog).filter_by(plan_code=plan_code).first()
+    limit = session.query(app_models.ClientPlanLimit).filter_by(plan_code=plan_code).first()
+    if plan is None or limit is None:
+        raise ValueError(f"Client plan not found: {plan_code}")
+    return plan, limit
+
+
+def create_plan_catalog(session: Session, values: dict[str, object]) -> dict[str, object]:
+    _ensure_plan_catalog_scaffolding(session)
+    plan_code = str(values.get("plan_code") or "custom").lower()
+    existing = session.query(app_models.ClientPlanCatalog).filter_by(plan_code=plan_code).first()
+    if existing is not None:
+        existing.plan_name = str(values.get("plan_name") or existing.plan_name)
+        existing.monthly_price_placeholder = float(values.get("monthly_price_placeholder") or existing.monthly_price_placeholder)
+        existing.setup_fee_placeholder = float(values.get("setup_fee_placeholder") or existing.setup_fee_placeholder)
+        existing.is_public = bool(values.get("is_public", existing.is_public))
+        existing.is_active = bool(values.get("is_active", existing.is_active))
+        existing.client_safe_summary = str(values.get("client_safe_summary") or existing.client_safe_summary)
+        session.flush()
+        return {"plan": client_command_sanitizer.plan_catalog_public(existing)}
+    plan = app_models.ClientPlanCatalog(
+        id=f"client-plan-{plan_code}",
+        plan_name=str(values.get("plan_name") or plan_code.replace("_", " ").title()),
+        plan_code=plan_code,
+        monthly_price_placeholder=float(values.get("monthly_price_placeholder") or 0),
+        setup_fee_placeholder=float(values.get("setup_fee_placeholder") or 0),
+        is_public=bool(values.get("is_public", False)),
+        is_active=bool(values.get("is_active", True)),
+        client_safe_summary=str(values.get("client_safe_summary") or ""),
+    )
+    session.add(plan)
+    if session.query(app_models.ClientPlanLimit).filter_by(plan_code=plan_code).first() is None:
+        session.add(
+            app_models.ClientPlanLimit(
+                id=f"client-plan-limit-{plan_code}",
+                plan_code=plan_code,
+            )
+        )
+    session.flush()
+    return {"plan": client_command_sanitizer.plan_catalog_public(plan)}
+
+
+def plan_catalog(session: Session) -> dict[str, object]:
+    _ensure_plan_catalog_scaffolding(session)
+    plans = session.query(app_models.ClientPlanCatalog).order_by(app_models.ClientPlanCatalog.plan_name).all()
+    return {
+        "plans": [client_command_sanitizer.plan_catalog_public(plan) for plan in plans],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def plan_features(session: Session) -> dict[str, object]:
+    _ensure_plan_catalog_scaffolding(session)
+    features = session.query(app_models.ClientPlanFeature).order_by(
+        app_models.ClientPlanFeature.plan_code,
+        app_models.ClientPlanFeature.feature_key,
+    ).all()
+    return {"features": [client_command_sanitizer.plan_feature_public(item) for item in features]}
+
+
+def plan_limits(session: Session) -> dict[str, object]:
+    _ensure_plan_catalog_scaffolding(session)
+    limits = session.query(app_models.ClientPlanLimit).order_by(app_models.ClientPlanLimit.plan_code).all()
+    return {"limits": [client_command_sanitizer.plan_limit_public(item) for item in limits]}
+
+
+def _latest_plan_assignment(session: Session, workspace_id: str):
+    return (
+        session.query(app_models.ClientWorkspacePlanAssignment)
+        .filter(app_models.ClientWorkspacePlanAssignment.workspace_id == workspace_id)
+        .order_by(desc(app_models.ClientWorkspacePlanAssignment.created_at))
+        .first()
+    )
+
+
+def _current_billing_readiness(session: Session, workspace_id: str):
+    return (
+        session.query(app_models.ClientBillingReadinessRecord)
+        .filter(app_models.ClientBillingReadinessRecord.workspace_id == workspace_id)
+        .order_by(desc(app_models.ClientBillingReadinessRecord.created_at))
+        .first()
+    )
+
+
+def create_plan_assignment(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    _ensure_plan_catalog_scaffolding(session)
+    plan_code = str(values.get("plan_code") or "beta_demo")
+    plan, _ = _plan_record(session, plan_code)
+    assignment = _latest_plan_assignment(session, workspace_id)
+    if assignment is None:
+        assignment = app_models.ClientWorkspacePlanAssignment(
+            id=_generate_id("client-plan-assignment"),
+            workspace_id=workspace_id,
+        )
+        session.add(assignment)
+    assignment.plan_code = plan_code
+    assignment.plan_name = str(values.get("plan_name") or plan.plan_name)
+    assignment.assignment_status = str(values.get("assignment_status") or "active")
+    assignment.client_safe_summary = str(values.get("client_safe_summary") or f"{assignment.plan_name} assigned for client-safe feature gating.")
+    assignment.no_live_billing = True
+    assignment.no_payment_collected = True
+    session.flush()
+    _ensure_plan_gate_event(session, workspace_id, "plan_assignment", f"Workspace assigned to {assignment.plan_name}.")
+    return {"plan_assignment": client_command_sanitizer.plan_assignment_public(assignment)}
+
+
+def plan_assignment_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    _ensure_plan_catalog_scaffolding(session)
+    assignment = _latest_plan_assignment(session, workspace_id)
+    if assignment is None:
+        return create_plan_assignment(session, workspace_id, {"plan_code": "beta_demo"})
+    return {"plan_assignment": client_command_sanitizer.plan_assignment_public(assignment)}
+
+
+def _usage_counts(session: Session, workspace_id: str) -> dict[str, int]:
+    return {
+        "leads_count": session.query(ClientLeadProfile).filter_by(workspace_id=workspace_id).count(),
+        "buyers_count": session.query(ClientBuyerProfile).filter_by(workspace_id=workspace_id).count(),
+        "users_count": session.query(ClientWorkspaceMember).filter_by(workspace_id=workspace_id).count(),
+        "weekly_reports_count": session.query(ClientWeeklyCommandReport).filter_by(workspace_id=workspace_id).count(),
+        "manual_drafts_count": session.query(ClientFollowUpDraft).filter_by(workspace_id=workspace_id).count()
+        + session.query(ClientBuyerOutreachDraft).filter_by(workspace_id=workspace_id).count(),
+        "compliance_gates_count": session.query(ClientCommunicationApprovalGate).filter_by(workspace_id=workspace_id).count(),
+        "live_attempts_count": session.query(app_models.ClientCommunicationSendAttempt).filter_by(workspace_id=workspace_id).count(),
+        "billing_attempts_count": session.query(app_models.ClientBillingAttempt).filter_by(workspace_id=workspace_id).count(),
+    }
+
+
+def _seat_usage_records(session: Session, workspace_id: str) -> list[Any]:
+    records: list[Any] = []
+    members = session.query(ClientWorkspaceMember).filter_by(workspace_id=workspace_id).all()
+    for member in members:
+        role = session.get(ClientWorkspaceRole, member.role_id) if member.role_id else None
+        record = (
+            session.query(app_models.ClientSeatUsageRecord)
+            .filter_by(workspace_id=workspace_id, member_id=member.id)
+            .first()
+        )
+        if record is None:
+            record = app_models.ClientSeatUsageRecord(
+                id=_generate_id("client-seat"),
+                workspace_id=workspace_id,
+                member_id=member.id,
+            )
+            session.add(record)
+        record.seat_label = member.member_name
+        record.seat_status = member.member_status
+        record.role_name = role.role_name if role else ""
+        record.counts_against_limit = member.member_status != "inactive"
+        records.append(record)
+    session.flush()
+    return records
+
+
+def recalculate_usage(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    counts = _usage_counts(session, workspace_id)
+    counter = (
+        session.query(app_models.ClientUsageCounter)
+        .filter(app_models.ClientUsageCounter.workspace_id == workspace_id)
+        .first()
+    )
+    if counter is None:
+        counter = app_models.ClientUsageCounter(
+            id=_generate_id("client-usage"),
+            workspace_id=workspace_id,
+        )
+        session.add(counter)
+    for key, value in counts.items():
+        setattr(counter, key, value)
+    seat_records = _seat_usage_records(session, workspace_id)
+    session.flush()
+    return {
+        "usage": client_command_sanitizer.usage_counter_public(counter),
+        "seat_usage": [client_command_sanitizer.seat_usage_public(item) for item in seat_records],
+    }
+
+
+def usage_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    return recalculate_usage(session, workspace_id)
+
+
+def create_billing_readiness_record(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    record = _current_billing_readiness(session, workspace_id)
+    if record is None:
+        record = app_models.ClientBillingReadinessRecord(
+            id=_generate_id("client-billing-readiness"),
+            workspace_id=workspace_id,
+        )
+        session.add(record)
+    record.readiness_status = str(values.get("readiness_status") or record.readiness_status or "setup_needed")
+    record.customer_info_collected = bool(values.get("customer_info_collected", record.customer_info_collected))
+    record.billing_contact_collected = bool(values.get("billing_contact_collected", record.billing_contact_collected))
+    record.tax_info_placeholder = bool(values.get("tax_info_placeholder", record.tax_info_placeholder))
+    record.terms_acknowledgment_placeholder = bool(values.get("terms_acknowledgment_placeholder", record.terms_acknowledgment_placeholder))
+    record.notes_summary = str(values.get("notes_summary") or record.notes_summary)
+    record.no_provider_call = True
+    record.no_payment_collected = True
+    record.no_invoice_created = True
+    session.flush()
+    return {"billing_readiness": client_command_sanitizer.billing_readiness_record_public(record)}
+
+
+def billing_readiness_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    record = _current_billing_readiness(session, workspace_id)
+    if record is None:
+        return create_billing_readiness_record(session, workspace_id, {})
+    return {"billing_readiness": client_command_sanitizer.billing_readiness_record_public(record)}
+
+
+def create_subscription_placeholder(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    placeholder = (
+        session.query(app_models.ClientSubscriptionPlaceholder)
+        .filter(app_models.ClientSubscriptionPlaceholder.workspace_id == workspace_id)
+        .order_by(desc(app_models.ClientSubscriptionPlaceholder.created_at))
+        .first()
+    )
+    if placeholder is None:
+        placeholder = app_models.ClientSubscriptionPlaceholder(
+            id=_generate_id("client-subscription"),
+            workspace_id=workspace_id,
+        )
+        session.add(placeholder)
+    assignment = _latest_plan_assignment(session, workspace_id)
+    plan_code = str(values.get("plan_code") or (assignment.plan_code if assignment else "beta_demo"))
+    placeholder.plan_code = plan_code
+    placeholder.placeholder_status = str(values.get("placeholder_status") or "draft")
+    placeholder.monthly_price_placeholder = float(values.get("monthly_price_placeholder") or 0)
+    placeholder.setup_fee_placeholder = float(values.get("setup_fee_placeholder") or 0)
+    placeholder.billing_contact_email = str(values.get("billing_contact_email") or "")
+    placeholder.client_safe_summary = str(values.get("client_safe_summary") or "Plan gate only - no payment has been collected.")
+    placeholder.no_live_billing = True
+    placeholder.no_payment_collected = True
+    session.flush()
+    return {"subscription_placeholder": client_command_sanitizer.subscription_placeholder_public(placeholder)}
+
+
+def subscription_placeholder_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    placeholder = (
+        session.query(app_models.ClientSubscriptionPlaceholder)
+        .filter(app_models.ClientSubscriptionPlaceholder.workspace_id == workspace_id)
+        .order_by(desc(app_models.ClientSubscriptionPlaceholder.created_at))
+        .first()
+    )
+    if placeholder is None:
+        return create_subscription_placeholder(session, workspace_id, {})
+    return {"subscription_placeholder": client_command_sanitizer.subscription_placeholder_public(placeholder)}
+
+
+def _required_upgrade_for_feature(feature_key: str) -> str | None:
+    mapping = {
+        "live_communication": "pro",
+        "billing": "command",
+        "admin_support": "command",
+        "pilot_mode": "pro",
+        "integrations": "pro",
+        "exports": "starter",
+    }
+    return mapping.get(feature_key)
+
+
+def _feature_allowed_for_plan(session: Session, plan_code: str, feature_key: str) -> bool:
+    feature = (
+        session.query(app_models.ClientPlanFeature)
+        .filter_by(plan_code=plan_code, feature_key=feature_key)
+        .first()
+    )
+    return bool(feature and feature.allowed)
+
+
+def _compliance_posture_ok(session: Session, workspace_id: str) -> bool:
+    blocked = session.query(ClientSafeContactStatus).filter(
+        ClientSafeContactStatus.workspace_id == workspace_id,
+        ClientSafeContactStatus.status.in_(["blocked", "opted_out", "missing_consent"]),
+    ).count()
+    return blocked == 0
+
+
+def _evaluate_feature_gate(
+    session: Session,
+    workspace_id: str,
+    feature_key: str,
+    assignment: Any,
+    limit: Any,
+    usage: Any,
+    billing_readiness: Any,
+) -> tuple[str, str, str | None]:
+    if not _feature_allowed_for_plan(session, assignment.plan_code, feature_key):
+        return ("blocked_by_plan", f"{feature_key.replace('_', ' ').title()} is not included in the current plan.", _required_upgrade_for_feature(feature_key))
+
+    if feature_key == "lead_intelligence" and usage.leads_count > limit.max_leads:
+        return ("blocked_by_usage_limit", "Lead limit reached for the current plan.", "starter" if assignment.plan_code == "beta_demo" else "pro")
+    if feature_key == "buyer_matching" and usage.buyers_count > limit.max_buyers:
+        return ("blocked_by_usage_limit", "Buyer limit reached for the current plan.", "starter" if assignment.plan_code == "beta_demo" else "pro")
+    if feature_key == "weekly_reports" and usage.weekly_reports_count > limit.max_weekly_reports:
+        return ("blocked_by_usage_limit", "Weekly report limit reached for the current plan.", "pro")
+    if feature_key == "acquisition" and usage.manual_drafts_count > limit.max_manual_drafts:
+        return ("blocked_by_usage_limit", "Manual draft limit reached for the current plan.", "pro")
+    if feature_key == "live_communication":
+        if not limit.live_communication_allowed:
+            return ("blocked_by_plan", "Live communication is blocked by the current plan.", "pro")
+        if not _compliance_posture_ok(session, workspace_id):
+            return ("blocked_by_compliance", "Compliance posture is not clear enough for future live communication review.", None)
+    if feature_key == "billing":
+        if not limit.billing_live_allowed:
+            return ("blocked_by_plan", "Billing is blocked by the current plan.", "command")
+        if billing_readiness.readiness_status != "ready_for_future_billing_gate":
+            return ("blocked_by_billing_readiness", "Billing readiness must be completed before future billing review.", "command")
+    if feature_key == "admin_support" and not limit.support_console_allowed:
+        return ("blocked_by_plan", "Admin support console is blocked by the current plan.", "command")
+    if feature_key == "pilot_mode" and not limit.pilot_mode_allowed:
+        return ("blocked_by_plan", "Pilot mode is blocked by the current plan.", "pro")
+    return ("allowed", f"{feature_key.replace('_', ' ').title()} is allowed for the current plan and readiness posture.", None)
+
+
+def evaluate_feature_gates(session: Session, workspace_id: str, feature_key: str | None = None) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    assignment = _latest_plan_assignment(session, workspace_id)
+    if assignment is None:
+        assignment = create_plan_assignment(session, workspace_id, {"plan_code": "beta_demo"})["plan_assignment"]
+        assignment = _latest_plan_assignment(session, workspace_id)
+    _, limit = _plan_record(session, assignment.plan_code)
+    usage = recalculate_usage(session, workspace_id)["usage"]
+    usage_counter = session.query(app_models.ClientUsageCounter).filter_by(workspace_id=workspace_id).first()
+    billing_readiness = _current_billing_readiness(session, workspace_id)
+    if billing_readiness is None:
+        create_billing_readiness_record(session, workspace_id, {})
+        billing_readiness = _current_billing_readiness(session, workspace_id)
+
+    keys = [feature_key] if feature_key else PLAN_FEATURE_GROUPS
+    evaluations: list[dict[str, object]] = []
+    for key in keys:
+        gate = (
+            session.query(app_models.ClientFeatureGateEvaluation)
+            .filter_by(workspace_id=workspace_id, feature_key=key)
+            .first()
+        )
+        if gate is None:
+            gate = app_models.ClientFeatureGateEvaluation(
+                id=_generate_id("client-feature-gate"),
+                workspace_id=workspace_id,
+                feature_key=key,
+            )
+            session.add(gate)
+        status, reason, upgrade = _evaluate_feature_gate(
+            session,
+            workspace_id,
+            key,
+            assignment,
+            limit,
+            usage_counter,
+            billing_readiness,
+        )
+        gate.gate_status = status
+        gate.reason_summary = reason
+        gate.required_upgrade_plan = upgrade
+        gate.no_live_action = True
+        evaluations.append(client_command_sanitizer.feature_gate_public(gate))
+    session.flush()
+    _ensure_plan_upgrade_recommendation(session, workspace_id)
+    return {"workspace_id": workspace_id, "feature_gates": evaluations, "usage": usage}
+
+
+def feature_gate_list(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    if session.query(app_models.ClientFeatureGateEvaluation).filter_by(workspace_id=workspace_id).count() == 0:
+        return evaluate_feature_gates(session, workspace_id)
+    gates = (
+        session.query(app_models.ClientFeatureGateEvaluation)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(app_models.ClientFeatureGateEvaluation.feature_key)
+        .all()
+    )
+    return {
+        "workspace_id": workspace_id,
+        "feature_gates": [client_command_sanitizer.feature_gate_public(gate) for gate in gates],
+    }
+
+
+def _ensure_plan_upgrade_recommendation(session: Session, workspace_id: str) -> Any:
+    assignment = _latest_plan_assignment(session, workspace_id)
+    if assignment is None:
+        return None
+    gates = session.query(app_models.ClientFeatureGateEvaluation).filter_by(workspace_id=workspace_id).all()
+    blocked_features = [gate.feature_key for gate in gates if gate.gate_status != "allowed"]
+    usage = session.query(app_models.ClientUsageCounter).filter_by(workspace_id=workspace_id).first()
+    pressure: list[str] = []
+    if usage:
+        if assignment.plan_code == "beta_demo" and usage.leads_count >= 20:
+            pressure.append("lead_capacity_near_demo_limit")
+        if usage.manual_drafts_count >= 20:
+            pressure.append("manual_draft_volume_rising")
+    current_index = [item["plan_code"] for item in DEFAULT_PLAN_DEFINITIONS].index(assignment.plan_code) if assignment.plan_code in [item["plan_code"] for item in DEFAULT_PLAN_DEFINITIONS] else 0
+    target_code = assignment.plan_code
+    for blocked in blocked_features:
+        upgrade = _required_upgrade_for_feature(blocked)
+        if upgrade and upgrade in [item["plan_code"] for item in DEFAULT_PLAN_DEFINITIONS]:
+            if [item["plan_code"] for item in DEFAULT_PLAN_DEFINITIONS].index(upgrade) > current_index:
+                target_code = upgrade
+                current_index = [item["plan_code"] for item in DEFAULT_PLAN_DEFINITIONS].index(upgrade)
+    if target_code == assignment.plan_code and pressure:
+        target_code = "starter" if assignment.plan_code == "beta_demo" else assignment.plan_code
+    recommendation = (
+        session.query(app_models.ClientPlanUpgradeRecommendation)
+        .filter_by(workspace_id=workspace_id)
+        .first()
+    )
+    if recommendation is None:
+        recommendation = app_models.ClientPlanUpgradeRecommendation(
+            id=_generate_id("client-plan-upgrade"),
+            workspace_id=workspace_id,
+        )
+        session.add(recommendation)
+    recommendation.current_plan_code = assignment.plan_code
+    recommendation.recommended_plan_code = target_code
+    recommendation.blocked_features = blocked_features
+    recommendation.usage_pressure = pressure
+    recommendation.reason_summary = (
+        "Current plan supports the workspace." if target_code == assignment.plan_code and not blocked_features
+        else f"Upgrade to {target_code.replace('_', ' ').title()} to clear blocked features or usage pressure."
+    )
+    recommendation.client_safe_summary = "Feature access is controlled by plan, readiness, and safety gates."
+    session.flush()
+    return recommendation
+
+
+def upgrade_recommendations_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    if session.query(app_models.ClientFeatureGateEvaluation).filter_by(workspace_id=workspace_id).count() == 0:
+        evaluate_feature_gates(session, workspace_id)
+    recommendation = _ensure_plan_upgrade_recommendation(session, workspace_id)
+    return {
+        "workspace_id": workspace_id,
+        "upgrade_recommendation": client_command_sanitizer.upgrade_recommendation_public(recommendation) if recommendation else None,
+    }
+
+
+def _ensure_plan_gate_event(session: Session, workspace_id: str, feature_key: str, summary: str) -> None:
+    event = app_models.ClientPlanGateEvent(
+        id=_generate_id("client-plan-event"),
+        workspace_id=workspace_id,
+        feature_key=feature_key,
+        event_type=feature_key,
+        event_summary=summary,
+        client_visible=True,
+    )
+    session.add(event)
+
+
+def plans_overview(session: Session) -> dict[str, object]:
+    _ensure_plan_catalog_scaffolding(session)
+    plans = session.query(app_models.ClientPlanCatalog).count()
+    assignments = session.query(app_models.ClientWorkspacePlanAssignment).count()
+    blocked_gates = session.query(app_models.ClientFeatureGateEvaluation).filter(
+        app_models.ClientFeatureGateEvaluation.gate_status != "allowed"
+    ).count()
+    readiness_needed = session.query(app_models.ClientBillingReadinessRecord).filter(
+        app_models.ClientBillingReadinessRecord.readiness_status != "ready_for_future_billing_gate"
+    ).count()
+    return {
+        "metrics": {
+            "plan_count": plans,
+            "workspace_assignments": assignments,
+            "blocked_feature_gates": blocked_gates,
+            "billing_readiness_needed": readiness_needed,
+        },
+        "plans": [client_command_sanitizer.plan_catalog_public(plan) for plan in session.query(app_models.ClientPlanCatalog).order_by(app_models.ClientPlanCatalog.plan_name).all()],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_communication_provider(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "client-workspace-001")
+    _workspace_or_404(session, workspace_id)
+    profile = (
+        session.query(app_models.ClientCommunicationProviderProfile)
+        .filter_by(workspace_id=workspace_id, provider_name=str(values.get("provider_name") or "Mock Communication Provider"), channel=str(values.get("channel") or "email"))
+        .first()
+    )
+    if profile is None:
+        profile = app_models.ClientCommunicationProviderProfile(
+            id=_generate_id("client-comm-provider"),
+            workspace_id=workspace_id,
+        )
+        session.add(profile)
+    profile.provider_name = str(values.get("provider_name") or profile.provider_name or "Mock Communication Provider")
+    profile.provider_mode = str(values.get("provider_mode") or profile.provider_mode or "mock")
+    profile.channel = str(values.get("channel") or profile.channel or "email")
+    profile.enabled = bool(values.get("enabled", profile.enabled))
+    profile.credential_reference_name = str(values.get("credential_reference_name") or profile.credential_reference_name)
+    profile.config_summary = str(values.get("config_summary") or profile.config_summary)
+    profile.secret_present = bool(profile.credential_reference_name)
+    profile.client_safe_summary = f"{profile.provider_name} is configured in {profile.provider_mode} mode."
+    flag = (
+        session.query(app_models.ClientCommunicationLiveFlag)
+        .filter_by(workspace_id=workspace_id, provider_profile_id=profile.id, channel=profile.channel)
+        .first()
+    )
+    if flag is None:
+        flag = app_models.ClientCommunicationLiveFlag(
+            id=_generate_id("client-comm-flag"),
+            workspace_id=workspace_id,
+            provider_profile_id=profile.id,
+            channel=profile.channel,
+        )
+        session.add(flag)
+    flag.global_communication_live_enabled = bool(values.get("global_communication_live_enabled", flag.global_communication_live_enabled))
+    flag.workspace_communication_live_enabled = bool(values.get("workspace_communication_live_enabled", flag.workspace_communication_live_enabled))
+    flag.provider_live_enabled = bool(values.get("provider_live_enabled", flag.provider_live_enabled))
+    flag.channel_live_enabled = bool(values.get("channel_live_enabled", flag.channel_live_enabled))
+    session.flush()
+    return {
+        "provider": client_command_sanitizer.communication_provider_public(profile),
+        "live_flag": client_command_sanitizer.communication_live_flag_public(flag),
+    }
+
+
+def communication_providers(session: Session) -> dict[str, object]:
+    providers = session.query(app_models.ClientCommunicationProviderProfile).order_by(
+        app_models.ClientCommunicationProviderProfile.workspace_id,
+        app_models.ClientCommunicationProviderProfile.provider_name,
+    ).all()
+    flags = session.query(app_models.ClientCommunicationLiveFlag).order_by(
+        app_models.ClientCommunicationLiveFlag.workspace_id,
+        app_models.ClientCommunicationLiveFlag.channel,
+    ).all()
+    return {
+        "providers": [client_command_sanitizer.communication_provider_public(item) for item in providers],
+        "live_flags": [client_command_sanitizer.communication_live_flag_public(item) for item in flags],
+    }
+
+
+def _latest_safe_contact_status(session: Session, workspace_id: str, lead_id: str | None, buyer_id: str | None, channel: str):
+    query = session.query(ClientSafeContactStatus).filter(
+        ClientSafeContactStatus.workspace_id == workspace_id,
+        ClientSafeContactStatus.channel == channel,
+    )
+    if lead_id:
+        query = query.filter(ClientSafeContactStatus.lead_id == lead_id)
+    if buyer_id:
+        query = query.filter(ClientSafeContactStatus.buyer_id == buyer_id)
+    return query.order_by(desc(ClientSafeContactStatus.created_at)).first()
+
+
+def _latest_message_risk_review(session: Session, workspace_id: str, source_draft_id: str | None, channel: str):
+    if source_draft_id is None:
+        return None
+    return (
+        session.query(ClientMessageRiskReview)
+        .filter_by(workspace_id=workspace_id, source_draft_id=source_draft_id, channel=channel)
+        .order_by(desc(ClientMessageRiskReview.created_at))
+        .first()
+    )
+
+
+def _latest_comm_gate(session: Session, workspace_id: str, source_draft_id: str | None):
+    if source_draft_id is None:
+        return None
+    return (
+        session.query(ClientCommunicationApprovalGate)
+        .filter_by(workspace_id=workspace_id, source_draft_id=source_draft_id)
+        .order_by(desc(ClientCommunicationApprovalGate.created_at))
+        .first()
+    )
+
+
+def _comm_live_flag(session: Session, workspace_id: str, provider_profile_id: str | None, channel: str):
+    return (
+        session.query(app_models.ClientCommunicationLiveFlag)
+        .filter_by(workspace_id=workspace_id, provider_profile_id=provider_profile_id, channel=channel)
+        .order_by(desc(app_models.ClientCommunicationLiveFlag.created_at))
+        .first()
+    )
+
+
+def _comm_provider(session: Session, provider_profile_id: str | None):
+    if provider_profile_id is None:
+        return None
+    return session.get(app_models.ClientCommunicationProviderProfile, provider_profile_id)
+
+
+def _workspace_ready_for_controlled_live(session: Session, workspace_id: str) -> bool:
+    gate = (
+        session.query(ClientGoLiveReadinessGate)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(ClientGoLiveReadinessGate.created_at))
+        .first()
+    )
+    return bool(gate and gate.readiness_score_snapshot >= 80 and gate.gate_status in {"ready_for_manual_operation", "ready_for_first_weekly_cycle"})
+
+
+def _communication_gate_status(session: Session, workspace_id: str) -> tuple[str, str]:
+    evaluation = (
+        session.query(app_models.ClientFeatureGateEvaluation)
+        .filter_by(workspace_id=workspace_id, feature_key="live_communication")
+        .order_by(desc(app_models.ClientFeatureGateEvaluation.created_at))
+        .first()
+    )
+    if evaluation is None:
+        evaluation = evaluate_feature_gates(session, workspace_id, "live_communication")["feature_gates"][0]
+        evaluation = (
+            session.query(app_models.ClientFeatureGateEvaluation)
+            .filter_by(workspace_id=workspace_id, feature_key="live_communication")
+            .order_by(desc(app_models.ClientFeatureGateEvaluation.created_at))
+            .first()
+        )
+    return evaluation.gate_status, evaluation.reason_summary
+
+
+def create_communication_readiness_check(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    lead_id = str(values.get("lead_id")) if values.get("lead_id") else None
+    buyer_id = str(values.get("buyer_id")) if values.get("buyer_id") else None
+    source_draft_id = str(values.get("source_draft_id")) if values.get("source_draft_id") else None
+    channel = str(values.get("channel") or "email")
+    provider_profile_id = str(values.get("provider_profile_id")) if values.get("provider_profile_id") else None
+    idempotency_key = str(values.get("idempotency_key") or _generate_id("comm-idem"))
+    safe_status = _latest_safe_contact_status(session, workspace_id, lead_id, buyer_id, channel)
+    risk_review = _latest_message_risk_review(session, workspace_id, source_draft_id, channel)
+    comm_gate = _latest_comm_gate(session, workspace_id, source_draft_id)
+    provider = _comm_provider(session, provider_profile_id)
+    live_flag = _comm_live_flag(session, workspace_id, provider_profile_id, channel)
+    plan_status, plan_reason = _communication_gate_status(session, workspace_id)
+    dry_run_present = session.query(app_models.ClientCommunicationDryRunReceipt).filter_by(
+        workspace_id=workspace_id, source_draft_id=source_draft_id, channel=channel
+    ).count() > 0
+    if source_draft_id:
+        matching_dry_run_ids = [
+            record_id
+            for (record_id,) in session.query(app_models.ClientCommunicationDryRunReceipt.id)
+            .filter_by(workspace_id=workspace_id, source_draft_id=source_draft_id, channel=channel)
+            .all()
+        ]
+        approval_present = (
+            session.query(app_models.ClientCommunicationSendApproval)
+            .filter(
+                app_models.ClientCommunicationSendApproval.workspace_id == workspace_id,
+                app_models.ClientCommunicationSendApproval.dry_run_receipt_id.in_(matching_dry_run_ids),
+            )
+            .count()
+            > 0
+        ) if matching_dry_run_ids else False
+    else:
+        approval_present = False
+    block_reasons: list[str] = []
+    risk_flags: list[str] = []
+    if safe_status is None or safe_status.status != "safe_for_manual_use":
+        block_reasons.append("cp6_safe_contact_not_clear")
+    if safe_status and safe_status.status in {"blocked", "opted_out"}:
+        block_reasons.append("opt_out_or_blocked_contact")
+    if risk_review is None or risk_review.review_status != "passed_for_manual_use":
+        block_reasons.append("message_risk_not_passed")
+    if risk_review is not None:
+        risk_flags.extend(risk_review.unsafe_language_flags or [])
+    if comm_gate is None or comm_gate.gate_status != "manual_use_allowed":
+        block_reasons.append("communication_gate_not_manual_use_allowed")
+    if plan_status != "allowed":
+        block_reasons.append(f"plan_gate_{plan_status}")
+        risk_flags.append(plan_reason)
+    if not _workspace_ready_for_controlled_live(session, workspace_id):
+        block_reasons.append("workspace_not_ready_for_controlled_live_review")
+    if provider is None or not provider.enabled:
+        block_reasons.append("provider_not_configured")
+    if live_flag is None or not all(
+        [
+            live_flag.global_communication_live_enabled,
+            live_flag.workspace_communication_live_enabled,
+            live_flag.provider_live_enabled,
+            live_flag.channel_live_enabled,
+        ]
+    ):
+        block_reasons.append("live_flags_not_enabled")
+    if not dry_run_present:
+        block_reasons.append("dry_run_missing")
+    if not approval_present:
+        block_reasons.append("approval_missing")
+    if session.query(app_models.ClientCommunicationIdempotencyRecord).filter_by(
+        workspace_id=workspace_id, idempotency_key=idempotency_key
+    ).count():
+        block_reasons.append("idempotency_key_already_used")
+    readiness = app_models.ClientCommunicationLiveReadinessCheck(
+        id=_generate_id("client-comm-readiness"),
+        workspace_id=workspace_id,
+        lead_id=lead_id,
+        buyer_id=buyer_id,
+        source_draft_type=str(values.get("source_draft_type") or "unknown"),
+        source_draft_id=source_draft_id,
+        channel=channel,
+        provider_profile_id=provider_profile_id,
+        readiness_status="ready" if not block_reasons else "blocked",
+        block_reasons=sorted(set(block_reasons)),
+        risk_flags=sorted(set(risk_flags)),
+        cp6_status_snapshot=safe_status.status if safe_status else "missing",
+        cp9_gate_snapshot=plan_status,
+        cp8_readiness_snapshot="adequate" if _workspace_ready_for_controlled_live(session, workspace_id) else "not_ready",
+        live_flag_snapshot={
+            "global": bool(live_flag.global_communication_live_enabled) if live_flag else False,
+            "workspace": bool(live_flag.workspace_communication_live_enabled) if live_flag else False,
+            "provider": bool(live_flag.provider_live_enabled) if live_flag else False,
+            "channel": bool(live_flag.channel_live_enabled) if live_flag else False,
+        },
+        dry_run_present=dry_run_present,
+        approval_present=approval_present,
+        idempotency_key=idempotency_key,
+        no_live_send=True,
+    )
+    session.add(readiness)
+    session.flush()
+    return {"readiness_check": client_command_sanitizer.communication_readiness_check_public(readiness)}
+
+
+def communication_readiness_checks(session: Session) -> dict[str, object]:
+    checks = session.query(app_models.ClientCommunicationLiveReadinessCheck).order_by(
+        desc(app_models.ClientCommunicationLiveReadinessCheck.created_at)
+    ).all()
+    return {"readiness_checks": [client_command_sanitizer.communication_readiness_check_public(item) for item in checks]}
+
+
+def create_communication_dry_run(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    source_draft_id = str(values.get("source_draft_id") or "")
+    channel = str(values.get("channel") or "email")
+    summary = "Dry run does not send a message."
+    receipt = app_models.ClientCommunicationDryRunReceipt(
+        id=_generate_id("client-comm-dry-run"),
+        workspace_id=workspace_id,
+        lead_id=str(values.get("lead_id")) if values.get("lead_id") else None,
+        buyer_id=str(values.get("buyer_id")) if values.get("buyer_id") else None,
+        source_draft_type=str(values.get("source_draft_type") or "unknown"),
+        source_draft_id=source_draft_id or None,
+        channel=channel,
+        provider_profile_id=str(values.get("provider_profile_id")) if values.get("provider_profile_id") else None,
+        idempotency_key=str(values.get("idempotency_key") or _generate_id("comm-idem")),
+        dry_run_summary=summary,
+        status="created",
+        content_hash=_hash_value(workspace_id, source_draft_id, channel),
+        no_live_send=True,
+    )
+    session.add(receipt)
+    session.flush()
+    return {"dry_run": client_command_sanitizer.communication_dry_run_public(receipt)}
+
+
+def communication_dry_runs(session: Session) -> dict[str, object]:
+    receipts = session.query(app_models.ClientCommunicationDryRunReceipt).order_by(
+        desc(app_models.ClientCommunicationDryRunReceipt.created_at)
+    ).all()
+    return {"dry_runs": [client_command_sanitizer.communication_dry_run_public(item) for item in receipts]}
+
+
+def create_communication_send_approval(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    approval = app_models.ClientCommunicationSendApproval(
+        id=_generate_id("client-comm-approval"),
+        workspace_id=workspace_id,
+        readiness_check_id=str(values.get("readiness_check_id")) if values.get("readiness_check_id") else None,
+        dry_run_receipt_id=str(values.get("dry_run_receipt_id")) if values.get("dry_run_receipt_id") else None,
+        approval_status="approved",
+        approved_by=str(values.get("approved_by") or "Prime2 Operator"),
+        reason_summary=str(values.get("reason_summary") or "Approval does not send a message."),
+        no_live_send=True,
+    )
+    session.add(approval)
+    session.flush()
+    return {"send_approval": client_command_sanitizer.communication_send_approval_public(approval)}
+
+
+def communication_send_approvals(session: Session) -> dict[str, object]:
+    approvals = session.query(app_models.ClientCommunicationSendApproval).order_by(
+        desc(app_models.ClientCommunicationSendApproval.created_at)
+    ).all()
+    return {"send_approvals": [client_command_sanitizer.communication_send_approval_public(item) for item in approvals]}
+
+
+def create_communication_send_attempt(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    readiness = session.get(app_models.ClientCommunicationLiveReadinessCheck, str(values.get("readiness_check_id") or "")) if values.get("readiness_check_id") else None
+    approval = session.get(app_models.ClientCommunicationSendApproval, str(values.get("approval_id") or "")) if values.get("approval_id") else None
+    dry_run = session.get(app_models.ClientCommunicationDryRunReceipt, str(values.get("dry_run_receipt_id") or "")) if values.get("dry_run_receipt_id") else None
+    provider = _comm_provider(session, str(values.get("provider_profile_id")) if values.get("provider_profile_id") else None)
+    idempotency_key = str(values.get("idempotency_key") or (readiness.idempotency_key if readiness else _generate_id("comm-idem")))
+    block_reasons = []
+    if readiness is None or readiness.readiness_status != "ready":
+        block_reasons.append("readiness_not_ready")
+    if approval is None or approval.approval_status != "approved":
+        block_reasons.append("approval_not_present")
+    if dry_run is None:
+        block_reasons.append("dry_run_missing")
+    if session.query(app_models.ClientCommunicationIdempotencyRecord).filter_by(
+        workspace_id=workspace_id, idempotency_key=idempotency_key
+    ).count():
+        block_reasons.append("idempotency_key_already_used")
+    if provider is None:
+        block_reasons.append("provider_not_configured")
+    status = "blocked"
+    reference = None
+    if not block_reasons and provider is not None:
+        mode_map = {
+            "mock": "sent_mock",
+            "sandbox": "sent_sandbox",
+            "test": "sent_sandbox",
+            "live": "sent_live",
+        }
+        status = mode_map.get(provider.provider_mode, "failed")
+        reference = app_models.ClientCommunicationExternalMessageReference(
+            id=_generate_id("client-comm-ref"),
+            workspace_id=workspace_id,
+            attempt_id="pending",
+            provider_profile_id=provider.id,
+            channel=str(values.get("channel") or (dry_run.channel if dry_run else "email")),
+            provider_mode=provider.provider_mode,
+            external_reference=f"{provider.provider_mode}-message-{uuid4().hex[:8]}",
+            external_status=status,
+            response_metadata_summary="Sanitized provider response summary.",
+        )
+        session.add(reference)
+        session.add(
+            app_models.ClientCommunicationIdempotencyRecord(
+                id=_generate_id("client-comm-idempotency"),
+                workspace_id=workspace_id,
+                idempotency_key=idempotency_key,
+                source_draft_id=dry_run.source_draft_id if dry_run else None,
+                attempt_id="pending",
+            )
+        )
+    attempt = app_models.ClientCommunicationSendAttempt(
+        id=_generate_id("client-comm-attempt"),
+        workspace_id=workspace_id,
+        readiness_check_id=readiness.id if readiness else None,
+        dry_run_receipt_id=dry_run.id if dry_run else None,
+        approval_id=approval.id if approval else None,
+        provider_profile_id=provider.id if provider else None,
+        lead_id=str(values.get("lead_id")) if values.get("lead_id") else (readiness.lead_id if readiness else None),
+        buyer_id=str(values.get("buyer_id")) if values.get("buyer_id") else (readiness.buyer_id if readiness else None),
+        channel=str(values.get("channel") or (dry_run.channel if dry_run else "email")),
+        source_draft_type=str(values.get("source_draft_type") or (readiness.source_draft_type if readiness else "unknown")),
+        source_draft_id=str(values.get("source_draft_id")) if values.get("source_draft_id") else (readiness.source_draft_id if readiness else None),
+        idempotency_key=idempotency_key,
+        attempt_status=status,
+        block_reasons=sorted(set(block_reasons or (readiness.block_reasons if readiness and readiness.readiness_status != "ready" else []))),
+        failure_reason="" if status != "failed" else "Provider mode is unknown.",
+        provider_mode=provider.provider_mode if provider else "unknown",
+        request_summary="Controlled single-message gate - no bulk campaigns.",
+        no_bulk=True,
+    )
+    session.add(attempt)
+    session.flush()
+    if reference is not None:
+        reference.attempt_id = attempt.id
+    idem = session.query(app_models.ClientCommunicationIdempotencyRecord).filter_by(
+        workspace_id=workspace_id, idempotency_key=idempotency_key, attempt_id="pending"
+    ).first()
+    if idem is not None:
+        idem.attempt_id = attempt.id
+    usage = session.query(app_models.ClientUsageCounter).filter_by(workspace_id=workspace_id).first()
+    if usage is not None:
+        usage.live_attempts_count += 1
+    session.add(
+        app_models.ClientCommunicationGateEvent(
+            id=_generate_id("client-comm-event"),
+            workspace_id=workspace_id,
+            lead_id=attempt.lead_id,
+            buyer_id=attempt.buyer_id,
+            event_type="send_attempt",
+            event_summary=f"Communication send attempt recorded with status {attempt.attempt_status}.",
+            client_visible=True,
+        )
+    )
+    session.flush()
+    return {"send_attempt": client_command_sanitizer.communication_send_attempt_public(attempt)}
+
+
+def communication_send_attempts(session: Session) -> dict[str, object]:
+    attempts = session.query(app_models.ClientCommunicationSendAttempt).order_by(
+        desc(app_models.ClientCommunicationSendAttempt.created_at)
+    ).all()
+    return {"send_attempts": [client_command_sanitizer.communication_send_attempt_public(item) for item in attempts]}
+
+
+def communication_external_references(session: Session) -> dict[str, object]:
+    refs = session.query(app_models.ClientCommunicationExternalMessageReference).order_by(
+        desc(app_models.ClientCommunicationExternalMessageReference.created_at)
+    ).all()
+    return {"external_references": [client_command_sanitizer.communication_external_reference_public(item) for item in refs]}
+
+
+def communication_overview(session: Session) -> dict[str, object]:
+    providers = session.query(app_models.ClientCommunicationProviderProfile).count()
+    readiness = session.query(app_models.ClientCommunicationLiveReadinessCheck).count()
+    dry_runs = session.query(app_models.ClientCommunicationDryRunReceipt).count()
+    approvals = session.query(app_models.ClientCommunicationSendApproval).count()
+    attempts = session.query(app_models.ClientCommunicationSendAttempt).count()
+    blocked = session.query(app_models.ClientCommunicationSendAttempt).filter_by(attempt_status="blocked").count()
+    refs = session.query(app_models.ClientCommunicationExternalMessageReference).count()
+    return {
+        "metrics": {
+            "provider_profiles": providers,
+            "readiness_checks": readiness,
+            "dry_runs": dry_runs,
+            "approvals": approvals,
+            "send_attempts": attempts,
+            "blocked_attempts": blocked,
+            "external_references": refs,
+        },
+        "safety": client_command_safety_rules(),
+    }
+
+
+def create_billing_provider(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "client-workspace-001")
+    _workspace_or_404(session, workspace_id)
+    profile = (
+        session.query(app_models.ClientBillingProviderProfile)
+        .filter_by(workspace_id=workspace_id, provider_name=str(values.get("provider_name") or "Mock Billing Provider"))
+        .first()
+    )
+    if profile is None:
+        profile = app_models.ClientBillingProviderProfile(
+            id=_generate_id("client-billing-provider"),
+            workspace_id=workspace_id,
+        )
+        session.add(profile)
+    profile.provider_name = str(values.get("provider_name") or profile.provider_name or "Mock Billing Provider")
+    profile.provider_mode = str(values.get("provider_mode") or profile.provider_mode or "mock")
+    profile.enabled = bool(values.get("enabled", profile.enabled))
+    profile.credential_reference_name = str(values.get("credential_reference_name") or profile.credential_reference_name)
+    profile.config_summary = str(values.get("config_summary") or profile.config_summary)
+    profile.secret_present = bool(profile.credential_reference_name)
+    profile.supports_payment_links = bool(values.get("supports_payment_links", profile.supports_payment_links))
+    profile.supports_subscriptions = bool(values.get("supports_subscriptions", profile.supports_subscriptions))
+    profile.client_safe_summary = f"{profile.provider_name} is configured in {profile.provider_mode} mode."
+    flag = (
+        session.query(app_models.ClientBillingLiveFlag)
+        .filter_by(workspace_id=workspace_id, provider_profile_id=profile.id)
+        .first()
+    )
+    if flag is None:
+        flag = app_models.ClientBillingLiveFlag(
+            id=_generate_id("client-billing-flag"),
+            workspace_id=workspace_id,
+            provider_profile_id=profile.id,
+        )
+        session.add(flag)
+    flag.global_billing_live_enabled = bool(values.get("global_billing_live_enabled", flag.global_billing_live_enabled))
+    flag.workspace_billing_live_enabled = bool(values.get("workspace_billing_live_enabled", flag.workspace_billing_live_enabled))
+    flag.provider_billing_live_enabled = bool(values.get("provider_billing_live_enabled", flag.provider_billing_live_enabled))
+    flag.payment_link_live_enabled = bool(values.get("payment_link_live_enabled", flag.payment_link_live_enabled))
+    flag.subscription_live_enabled = bool(values.get("subscription_live_enabled", flag.subscription_live_enabled))
+    session.flush()
+    return {
+        "provider": client_command_sanitizer.billing_provider_public(profile),
+        "live_flag": client_command_sanitizer.billing_live_flag_public(flag),
+    }
+
+
+def billing_providers(session: Session) -> dict[str, object]:
+    providers = session.query(app_models.ClientBillingProviderProfile).order_by(
+        app_models.ClientBillingProviderProfile.workspace_id,
+        app_models.ClientBillingProviderProfile.provider_name,
+    ).all()
+    flags = session.query(app_models.ClientBillingLiveFlag).order_by(
+        app_models.ClientBillingLiveFlag.workspace_id,
+        app_models.ClientBillingLiveFlag.created_at,
+    ).all()
+    return {
+        "providers": [client_command_sanitizer.billing_provider_public(item) for item in providers],
+        "live_flags": [client_command_sanitizer.billing_live_flag_public(item) for item in flags],
+    }
+
+
+def create_billing_customer_profile(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    profile = (
+        session.query(app_models.ClientBillingCustomerProfile)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientBillingCustomerProfile.created_at))
+        .first()
+    )
+    if profile is None:
+        profile = app_models.ClientBillingCustomerProfile(
+            id=_generate_id("client-billing-customer"),
+            workspace_id=workspace_id,
+        )
+        session.add(profile)
+    profile.customer_name = str(values.get("customer_name") or profile.customer_name)
+    profile.billing_email = str(values.get("billing_email") or profile.billing_email)
+    profile.billing_contact_name = str(values.get("billing_contact_name") or profile.billing_contact_name)
+    profile.billing_contact_collected = bool(values.get("billing_contact_collected", profile.billing_contact_collected))
+    profile.tax_info_placeholder = bool(values.get("tax_info_placeholder", profile.tax_info_placeholder))
+    profile.terms_acknowledgment_placeholder = bool(values.get("terms_acknowledgment_placeholder", profile.terms_acknowledgment_placeholder))
+    profile.raw_card_data_present = False
+    profile.client_safe_summary = "No raw card data is stored."
+    session.flush()
+    create_billing_readiness_record(
+        session,
+        workspace_id,
+        {
+            "customer_info_collected": bool(profile.customer_name or profile.billing_email),
+            "billing_contact_collected": profile.billing_contact_collected,
+            "tax_info_placeholder": profile.tax_info_placeholder,
+            "terms_acknowledgment_placeholder": profile.terms_acknowledgment_placeholder,
+            "readiness_status": "ready_for_future_billing_gate"
+            if profile.billing_contact_collected and profile.terms_acknowledgment_placeholder
+            else "setup_needed",
+        },
+    )
+    return {"customer_profile": client_command_sanitizer.billing_customer_profile_public(profile)}
+
+
+def billing_customer_profiles(session: Session) -> dict[str, object]:
+    profiles = session.query(app_models.ClientBillingCustomerProfile).order_by(
+        desc(app_models.ClientBillingCustomerProfile.created_at)
+    ).all()
+    return {"customer_profiles": [client_command_sanitizer.billing_customer_profile_public(item) for item in profiles]}
+
+
+def _billing_provider(session: Session, provider_profile_id: str | None):
+    if provider_profile_id is None:
+        return None
+    return session.get(app_models.ClientBillingProviderProfile, provider_profile_id)
+
+
+def _billing_live_flag(session: Session, workspace_id: str, provider_profile_id: str | None):
+    return (
+        session.query(app_models.ClientBillingLiveFlag)
+        .filter_by(workspace_id=workspace_id, provider_profile_id=provider_profile_id)
+        .order_by(desc(app_models.ClientBillingLiveFlag.created_at))
+        .first()
+    )
+
+
+def _billing_feature_gate(session: Session, workspace_id: str) -> tuple[str, str]:
+    evaluation = (
+        session.query(app_models.ClientFeatureGateEvaluation)
+        .filter_by(workspace_id=workspace_id, feature_key="billing")
+        .order_by(desc(app_models.ClientFeatureGateEvaluation.created_at))
+        .first()
+    )
+    if evaluation is None:
+        evaluate_feature_gates(session, workspace_id, "billing")
+        evaluation = (
+            session.query(app_models.ClientFeatureGateEvaluation)
+            .filter_by(workspace_id=workspace_id, feature_key="billing")
+            .order_by(desc(app_models.ClientFeatureGateEvaluation.created_at))
+            .first()
+        )
+    return evaluation.gate_status, evaluation.reason_summary
+
+
+def create_billing_readiness_check(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    provider_profile_id = str(values.get("provider_profile_id")) if values.get("provider_profile_id") else None
+    plan_assignment = _latest_plan_assignment(session, workspace_id)
+    billing_readiness = _current_billing_readiness(session, workspace_id)
+    provider = _billing_provider(session, provider_profile_id)
+    live_flag = _billing_live_flag(session, workspace_id, provider_profile_id)
+    plan_gate_status, plan_gate_reason = _billing_feature_gate(session, workspace_id)
+    block_reasons: list[str] = []
+    if plan_assignment is None:
+        block_reasons.append("plan_assignment_missing")
+    if billing_readiness is None or billing_readiness.readiness_status != "ready_for_future_billing_gate":
+        block_reasons.append("billing_readiness_not_ready")
+    if billing_readiness is not None and not billing_readiness.billing_contact_collected:
+        block_reasons.append("billing_contact_missing")
+    if provider is None or not provider.enabled:
+        block_reasons.append("provider_not_configured")
+    if live_flag is None or not all(
+        [
+            live_flag.global_billing_live_enabled,
+            live_flag.workspace_billing_live_enabled,
+            live_flag.provider_billing_live_enabled,
+        ]
+    ):
+        block_reasons.append("live_flags_not_enabled")
+    if plan_gate_status != "allowed":
+        block_reasons.append(f"plan_gate_{plan_gate_status}")
+        block_reasons.append(plan_gate_reason)
+    check = app_models.ClientBillingReadinessCheck(
+        id=_generate_id("client-billing-readiness-check"),
+        workspace_id=workspace_id,
+        plan_assignment_present=plan_assignment is not None,
+        billing_readiness_status_snapshot=billing_readiness.readiness_status if billing_readiness else "not_ready",
+        provider_profile_id=provider_profile_id,
+        provider_mode=provider.provider_mode if provider else "unknown",
+        live_flag_snapshot={
+            "global": bool(live_flag.global_billing_live_enabled) if live_flag else False,
+            "workspace": bool(live_flag.workspace_billing_live_enabled) if live_flag else False,
+            "provider": bool(live_flag.provider_billing_live_enabled) if live_flag else False,
+            "payment_link": bool(live_flag.payment_link_live_enabled) if live_flag else False,
+            "subscription": bool(live_flag.subscription_live_enabled) if live_flag else False,
+        },
+        readiness_status="ready" if not block_reasons else "blocked",
+        block_reasons=sorted(set(block_reasons)),
+        no_payment_collected=True,
+        no_invoice_created=True,
+    )
+    session.add(check)
+    session.flush()
+    return {"readiness_check": client_command_sanitizer.billing_readiness_check_public(check)}
+
+
+def billing_readiness_checks(session: Session) -> dict[str, object]:
+    checks = session.query(app_models.ClientBillingReadinessCheck).order_by(
+        desc(app_models.ClientBillingReadinessCheck.created_at)
+    ).all()
+    return {"readiness_checks": [client_command_sanitizer.billing_readiness_check_public(item) for item in checks]}
+
+
+def create_checkout_dry_run(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    receipt = app_models.ClientCheckoutDryRunReceipt(
+        id=_generate_id("client-billing-dry-run"),
+        workspace_id=workspace_id,
+        plan_code=str(values.get("plan_code") or "beta_demo"),
+        attempt_type=str(values.get("attempt_type") or "checkout_session"),
+        provider_profile_id=str(values.get("provider_profile_id")) if values.get("provider_profile_id") else None,
+        dry_run_summary="Dry run does not charge a card.",
+        idempotency_key=str(values.get("idempotency_key") or _generate_id("billing-idem")),
+        amount_placeholder=float(values.get("amount_placeholder") or 0),
+        status="created",
+        no_payment_collected=True,
+    )
+    session.add(receipt)
+    session.flush()
+    return {"dry_run": client_command_sanitizer.checkout_dry_run_public(receipt)}
+
+
+def checkout_dry_runs(session: Session) -> dict[str, object]:
+    runs = session.query(app_models.ClientCheckoutDryRunReceipt).order_by(
+        desc(app_models.ClientCheckoutDryRunReceipt.created_at)
+    ).all()
+    return {"dry_runs": [client_command_sanitizer.checkout_dry_run_public(item) for item in runs]}
+
+
+def create_billing_approval(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    approval = app_models.ClientBillingApproval(
+        id=_generate_id("client-billing-approval"),
+        workspace_id=workspace_id,
+        readiness_check_id=str(values.get("readiness_check_id")) if values.get("readiness_check_id") else None,
+        dry_run_receipt_id=str(values.get("dry_run_receipt_id")) if values.get("dry_run_receipt_id") else None,
+        approval_status="approved",
+        approved_by=str(values.get("approved_by") or "Prime2 Operator"),
+        reason_summary=str(values.get("reason_summary") or "Approval does not charge a card."),
+        no_payment_collected=True,
+    )
+    session.add(approval)
+    session.flush()
+    return {"approval": client_command_sanitizer.billing_approval_public(approval)}
+
+
+def billing_approvals(session: Session) -> dict[str, object]:
+    approvals = session.query(app_models.ClientBillingApproval).order_by(
+        desc(app_models.ClientBillingApproval.created_at)
+    ).all()
+    return {"approvals": [client_command_sanitizer.billing_approval_public(item) for item in approvals]}
+
+
+def create_billing_attempt(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    provider = _billing_provider(session, str(values.get("provider_profile_id")) if values.get("provider_profile_id") else None)
+    customer = session.get(app_models.ClientBillingCustomerProfile, str(values.get("customer_profile_id") or "")) if values.get("customer_profile_id") else None
+    readiness = session.get(app_models.ClientBillingReadinessCheck, str(values.get("readiness_check_id") or "")) if values.get("readiness_check_id") else None
+    dry_run = session.get(app_models.ClientCheckoutDryRunReceipt, str(values.get("dry_run_receipt_id") or "")) if values.get("dry_run_receipt_id") else None
+    approval = session.get(app_models.ClientBillingApproval, str(values.get("approval_id") or "")) if values.get("approval_id") else None
+    idempotency_key = str(values.get("idempotency_key") or (dry_run.idempotency_key if dry_run else _generate_id("billing-idem")))
+    block_reasons = []
+    if _latest_plan_assignment(session, workspace_id) is None:
+        block_reasons.append("plan_assignment_missing")
+    if readiness is None or readiness.readiness_status != "ready":
+        block_reasons.append("billing_readiness_check_not_ready")
+    if dry_run is None:
+        block_reasons.append("dry_run_missing")
+    if approval is None or approval.approval_status != "approved":
+        block_reasons.append("approval_not_present")
+    if provider is None or not provider.enabled:
+        block_reasons.append("provider_not_configured")
+    if customer is None:
+        block_reasons.append("customer_profile_missing")
+    if customer is not None and customer.raw_card_data_present:
+        block_reasons.append("raw_card_data_forbidden")
+    if session.query(app_models.ClientBillingAttempt).filter_by(workspace_id=workspace_id, idempotency_key=idempotency_key).count():
+        block_reasons.append("idempotency_key_already_used")
+    status = "blocked"
+    if not block_reasons and provider is not None:
+        status = {
+            "mock": "created_mock",
+            "sandbox": "created_sandbox",
+            "test": "created_sandbox",
+            "live": "created_live",
+        }.get(provider.provider_mode, "failed")
+    attempt = app_models.ClientBillingAttempt(
+        id=_generate_id("client-billing-attempt"),
+        workspace_id=workspace_id,
+        provider_profile_id=provider.id if provider else None,
+        customer_profile_id=customer.id if customer else None,
+        plan_code=str(values.get("plan_code") or (_latest_plan_assignment(session, workspace_id).plan_code if _latest_plan_assignment(session, workspace_id) else "beta_demo")),
+        readiness_check_id=readiness.id if readiness else None,
+        dry_run_receipt_id=dry_run.id if dry_run else None,
+        approval_id=approval.id if approval else None,
+        attempt_type=str(values.get("attempt_type") or "checkout_session"),
+        idempotency_key=idempotency_key,
+        attempt_status=status,
+        block_reasons=sorted(set(block_reasons or (readiness.block_reasons if readiness and readiness.readiness_status != "ready" else []))),
+        provider_mode=provider.provider_mode if provider else "unknown",
+        request_summary="Billing gate only - no payment occurs unless all billing gates pass.",
+        no_raw_card_data=True,
+    )
+    session.add(attempt)
+    session.flush()
+    if status.startswith("created_"):
+        session.add(
+            app_models.ClientBillingExternalReference(
+                id=_generate_id("client-billing-ref"),
+                workspace_id=workspace_id,
+                attempt_id=attempt.id,
+                provider_mode=provider.provider_mode if provider else "unknown",
+                external_reference=f"{provider.provider_mode if provider else 'mock'}-billing-{uuid4().hex[:8]}",
+                external_status=status,
+                response_metadata_summary="Sanitized billing provider response summary.",
+            )
+        )
+        session.add(
+            app_models.ClientBillingLedgerEntry(
+                id=_generate_id("client-billing-ledger"),
+                workspace_id=workspace_id,
+                attempt_id=attempt.id,
+                entry_type=attempt.attempt_type,
+                amount_placeholder=dry_run.amount_placeholder if dry_run else 0,
+                currency="USD",
+                status=status,
+                summary="Billing gate entry created without storing raw card data.",
+                client_safe=True,
+            )
+        )
+    else:
+        session.add(
+            app_models.ClientBillingLedgerEntry(
+                id=_generate_id("client-billing-ledger"),
+                workspace_id=workspace_id,
+                attempt_id=attempt.id,
+                entry_type=attempt.attempt_type,
+                amount_placeholder=0,
+                currency="USD",
+                status="blocked",
+                summary="Billing attempt blocked before any payment action.",
+                client_safe=True,
+            )
+        )
+    session.add(
+        app_models.ClientBillingGateEvent(
+            id=_generate_id("client-billing-event"),
+            workspace_id=workspace_id,
+            event_type="billing_attempt",
+            event_summary=f"Billing attempt recorded with status {attempt.attempt_status}.",
+            client_visible=True,
+        )
+    )
+    usage = session.query(app_models.ClientUsageCounter).filter_by(workspace_id=workspace_id).first()
+    if usage is not None:
+        usage.billing_attempts_count += 1
+    session.flush()
+    return {"attempt": client_command_sanitizer.billing_attempt_public(attempt)}
+
+
+def billing_attempts(session: Session) -> dict[str, object]:
+    attempts = session.query(app_models.ClientBillingAttempt).order_by(
+        desc(app_models.ClientBillingAttempt.created_at)
+    ).all()
+    return {"attempts": [client_command_sanitizer.billing_attempt_public(item) for item in attempts]}
+
+
+def billing_external_references(session: Session) -> dict[str, object]:
+    refs = session.query(app_models.ClientBillingExternalReference).order_by(
+        desc(app_models.ClientBillingExternalReference.created_at)
+    ).all()
+    return {"external_references": [client_command_sanitizer.billing_external_reference_public(item) for item in refs]}
+
+
+def billing_ledger(session: Session) -> dict[str, object]:
+    entries = session.query(app_models.ClientBillingLedgerEntry).order_by(
+        desc(app_models.ClientBillingLedgerEntry.created_at)
+    ).all()
+    return {"ledger": [client_command_sanitizer.billing_ledger_public(item) for item in entries]}
+
+
+def billing_overview(session: Session) -> dict[str, object]:
+    return {
+        "metrics": {
+            "provider_profiles": session.query(app_models.ClientBillingProviderProfile).count(),
+            "customer_profiles": session.query(app_models.ClientBillingCustomerProfile).count(),
+            "readiness_checks": session.query(app_models.ClientBillingReadinessCheck).count(),
+            "dry_runs": session.query(app_models.ClientCheckoutDryRunReceipt).count(),
+            "approvals": session.query(app_models.ClientBillingApproval).count(),
+            "attempts": session.query(app_models.ClientBillingAttempt).count(),
+            "blocked_attempts": session.query(app_models.ClientBillingAttempt).filter_by(attempt_status="blocked").count(),
+        },
+        "safety": client_command_safety_rules(),
+    }
+
+
+def _ensure_default_pilot_program(session: Session) -> Any:
+    program = session.query(app_models.ClientPilotProgram).filter_by(program_code="prime2_pilot").first()
+    if program is None:
+        program = app_models.ClientPilotProgram(
+            id="client-pilot-program-001",
+            program_name="Prime2 Pilot",
+            program_code="prime2_pilot",
+            program_status="active",
+            client_safe_summary="Pilot mode does not bypass source gates.",
+        )
+        session.add(program)
+        session.flush()
+    return program
+
+
+def create_pilot_program(session: Session, values: dict[str, object]) -> dict[str, object]:
+    program = app_models.ClientPilotProgram(
+        id=_generate_id("client-pilot-program"),
+        program_name=str(values.get("program_name") or "Prime2 Pilot"),
+        program_code=str(values.get("program_code") or f"pilot_{uuid4().hex[:6]}"),
+        program_status=str(values.get("program_status") or "active"),
+        client_safe_summary=str(values.get("client_safe_summary") or "Pilot mode does not bypass source gates."),
+    )
+    session.add(program)
+    session.flush()
+    return {"program": client_command_sanitizer.pilot_program_public(program)}
+
+
+def pilot_programs(session: Session) -> dict[str, object]:
+    _ensure_default_pilot_program(session)
+    programs = session.query(app_models.ClientPilotProgram).order_by(app_models.ClientPilotProgram.program_name).all()
+    return {"programs": [client_command_sanitizer.pilot_program_public(item) for item in programs]}
+
+
+def create_pilot_enrollment(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    program = session.get(app_models.ClientPilotProgram, str(values.get("program_id") or _ensure_default_pilot_program(session).id))
+    enrollment = (
+        session.query(app_models.ClientPilotWorkspaceEnrollment)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotWorkspaceEnrollment.created_at))
+        .first()
+    )
+    if enrollment is None:
+        enrollment = app_models.ClientPilotWorkspaceEnrollment(
+            id=_generate_id("client-pilot-enrollment"),
+            workspace_id=workspace_id,
+        )
+        session.add(enrollment)
+    enrollment.program_id = program.id
+    enrollment.pilot_mode = str(values.get("pilot_mode") or "beta_pilot")
+    enrollment.enrollment_status = str(values.get("enrollment_status") or "active")
+    enrollment.support_owner_name = str(values.get("support_owner_name") or "Client Success Manager")
+    enrollment.client_safe_summary = str(values.get("client_safe_summary") or "Pilot workspace enrolled without bypassing source gates.")
+    session.flush()
+    return {"enrollment": client_command_sanitizer.pilot_enrollment_public(enrollment)}
+
+
+def pilot_enrollment_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    enrollment = (
+        session.query(app_models.ClientPilotWorkspaceEnrollment)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotWorkspaceEnrollment.created_at))
+        .first()
+    )
+    if enrollment is None:
+        return create_pilot_enrollment(session, workspace_id, {})
+    return {"enrollment": client_command_sanitizer.pilot_enrollment_public(enrollment)}
+
+
+def create_pilot_operating_mode(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    mode = (
+        session.query(app_models.ClientPilotOperatingMode)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotOperatingMode.created_at))
+        .first()
+    )
+    if mode is None:
+        mode = app_models.ClientPilotOperatingMode(
+            id=_generate_id("client-pilot-mode"),
+            workspace_id=workspace_id,
+        )
+        session.add(mode)
+    mode.pilot_mode = str(values.get("pilot_mode") or "beta_pilot")
+    mode.operating_posture = str(values.get("operating_posture") or "manual_only")
+    mode.reason_summary = str(values.get("reason_summary") or "Controlled live posture requires CP9, CP10, and CP11 gates.")
+    mode.requires_human_review = bool(values.get("requires_human_review", False))
+    mode.no_gate_bypass = True
+    session.flush()
+    return {"operating_mode": client_command_sanitizer.pilot_operating_mode_public(mode)}
+
+
+def pilot_operating_mode_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    mode = (
+        session.query(app_models.ClientPilotOperatingMode)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotOperatingMode.created_at))
+        .first()
+    )
+    if mode is None:
+        return create_pilot_operating_mode(session, workspace_id, {})
+    return {"operating_mode": client_command_sanitizer.pilot_operating_mode_public(mode)}
+
+
+def create_pilot_health_snapshot(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    readiness = (
+        session.query(ClientWorkspaceReadinessScore)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(ClientWorkspaceReadinessScore.created_at))
+        .first()
+    )
+    assignment = _latest_plan_assignment(session, workspace_id)
+    communication_blocks = session.query(app_models.ClientCommunicationSendAttempt).filter_by(
+        workspace_id=workspace_id, attempt_status="blocked"
+    ).count()
+    billing_blocks = session.query(app_models.ClientBillingAttempt).filter_by(
+        workspace_id=workspace_id, attempt_status="blocked"
+    ).count()
+    compliance_blocks = session.query(ClientSafeContactStatus).filter(
+        ClientSafeContactStatus.workspace_id == workspace_id,
+        ClientSafeContactStatus.status.in_(["blocked", "opted_out", "missing_consent"]),
+    ).count()
+    weekly_report = (
+        session.query(ClientWeeklyCommandReport)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(ClientWeeklyCommandReport.created_at))
+        .first()
+    )
+    blockers = (
+        session.query(ClientActivationBlocker)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(ClientActivationBlocker.severity))
+        .all()
+    )
+    block_reasons = [item.blocker_summary for item in blockers if item.severity in {"critical", "high"}]
+    if communication_blocks:
+        block_reasons.append("communication_gate_blocked")
+    if billing_blocks:
+        block_reasons.append("billing_gate_blocked")
+    if compliance_blocks:
+        block_reasons.append("compliance_review_needed")
+    health_status = "healthy"
+    if any(item.severity == "critical" for item in blockers):
+        health_status = "critical"
+    elif block_reasons:
+        health_status = "blocked"
+    elif readiness and readiness.readiness_status not in {"ready_for_manual_operation", "ready_for_first_weekly_cycle"}:
+        health_status = "watch"
+    snapshot = (
+        session.query(app_models.ClientPilotHealthSnapshot)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotHealthSnapshot.created_at))
+        .first()
+    )
+    if snapshot is None:
+        snapshot = app_models.ClientPilotHealthSnapshot(
+            id=_generate_id("client-pilot-health"),
+            workspace_id=workspace_id,
+        )
+        session.add(snapshot)
+    snapshot.health_status = health_status
+    snapshot.onboarding_status = readiness.readiness_status if readiness else "not_started"
+    snapshot.plan_status = assignment.plan_code if assignment else "unassigned"
+    snapshot.communication_status = "blocked" if communication_blocks else "ready_for_review"
+    snapshot.billing_status = "blocked" if billing_blocks else "ready_for_review"
+    snapshot.compliance_status = "blocked" if compliance_blocks else "acceptable"
+    snapshot.weekly_report_status = weekly_report.report_status if weekly_report else "missing"
+    snapshot.block_reasons = block_reasons
+    snapshot.next_actions = [
+        "Review onboarding blockers.",
+        "Check plan gates before any live action.",
+        "Keep pilot operations inside source-domain safety gates.",
+    ]
+    snapshot.client_safe_summary = "Pilot mode does not bypass source gates."
+    session.flush()
+    return {"health_snapshot": client_command_sanitizer.pilot_health_snapshot_public(snapshot)}
+
+
+def pilot_health_snapshot_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    snapshot = (
+        session.query(app_models.ClientPilotHealthSnapshot)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotHealthSnapshot.created_at))
+        .first()
+    )
+    if snapshot is None:
+        return create_pilot_health_snapshot(session, workspace_id)
+    return {"health_snapshot": client_command_sanitizer.pilot_health_snapshot_public(snapshot)}
+
+
+def create_pilot_support_ticket(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    ticket = app_models.ClientPilotSupportTicket(
+        id=_generate_id("client-pilot-ticket"),
+        workspace_id=workspace_id,
+        ticket_type=str(values.get("ticket_type") or "bug"),
+        title=str(values.get("title") or "Pilot support item"),
+        summary=str(values.get("summary") or ""),
+        status=str(values.get("status") or "open"),
+        priority=str(values.get("priority") or "medium"),
+        assigned_to=str(values.get("assigned_to") or "Client Success Manager"),
+        client_safe=True,
+    )
+    session.add(ticket)
+    session.flush()
+    return {"ticket": client_command_sanitizer.pilot_support_ticket_public(ticket)}
+
+
+def pilot_support_tickets(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    tickets = session.query(app_models.ClientPilotSupportTicket).filter_by(workspace_id=workspace_id).order_by(
+        desc(app_models.ClientPilotSupportTicket.created_at)
+    ).all()
+    return {"tickets": [client_command_sanitizer.pilot_support_ticket_public(item) for item in tickets]}
+
+
+def create_pilot_support_action(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    action = app_models.ClientPilotSupportAction(
+        id=_generate_id("client-pilot-action"),
+        workspace_id=workspace_id,
+        ticket_id=str(values.get("ticket_id")) if values.get("ticket_id") else None,
+        action_summary=str(values.get("action_summary") or ""),
+        action_status=str(values.get("action_status") or "queued"),
+        owner_role=str(values.get("owner_role") or "client_success_manager"),
+        client_visible=bool(values.get("client_visible", True)),
+    )
+    session.add(action)
+    session.flush()
+    return {"support_action": client_command_sanitizer.pilot_support_action_public(action)}
+
+
+def pilot_support_actions(session: Session) -> dict[str, object]:
+    actions = session.query(app_models.ClientPilotSupportAction).order_by(
+        desc(app_models.ClientPilotSupportAction.created_at)
+    ).all()
+    return {"support_actions": [client_command_sanitizer.pilot_support_action_public(item) for item in actions]}
+
+
+def create_pilot_escalation(session: Session, values: dict[str, object]) -> dict[str, object]:
+    workspace_id = str(values.get("workspace_id") or "")
+    _workspace_or_404(session, workspace_id)
+    escalation = app_models.ClientPilotEscalation(
+        id=_generate_id("client-pilot-escalation"),
+        workspace_id=workspace_id,
+        escalation_type=str(values.get("escalation_type") or "review"),
+        source_domain=str(values.get("source_domain") or "client_command"),
+        source_record_id=str(values.get("source_record_id")) if values.get("source_record_id") else None,
+        escalation_status=str(values.get("escalation_status") or "open"),
+        escalation_reason=str(values.get("escalation_reason") or ""),
+        requires_human_review=bool(values.get("requires_human_review", True)),
+    )
+    session.add(escalation)
+    session.flush()
+    return {"escalation": client_command_sanitizer.pilot_escalation_public(escalation)}
+
+
+def pilot_escalations(session: Session) -> dict[str, object]:
+    escalations = session.query(app_models.ClientPilotEscalation).order_by(
+        desc(app_models.ClientPilotEscalation.created_at)
+    ).all()
+    return {"escalations": [client_command_sanitizer.pilot_escalation_public(item) for item in escalations]}
+
+
+def create_pilot_launch_checklist(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    readiness = (
+        session.query(ClientWorkspaceReadinessScore)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(ClientWorkspaceReadinessScore.created_at))
+        .first()
+    )
+    assignment = _latest_plan_assignment(session, workspace_id)
+    weekly_report = session.query(ClientWeeklyCommandReport).filter_by(workspace_id=workspace_id).first()
+    compliance_ok = _compliance_posture_ok(session, workspace_id)
+    support_owner_assigned = session.query(app_models.ClientPilotWorkspaceEnrollment).filter(
+        app_models.ClientPilotWorkspaceEnrollment.workspace_id == workspace_id,
+        app_models.ClientPilotWorkspaceEnrollment.support_owner_name != "",
+    ).count() > 0
+    critical_blockers = session.query(ClientActivationBlocker).filter_by(
+        workspace_id=workspace_id, severity="critical"
+    ).count()
+    live_flags_unsafe = session.query(app_models.ClientCommunicationLiveFlag).filter(
+        app_models.ClientCommunicationLiveFlag.workspace_id == workspace_id,
+        app_models.ClientCommunicationLiveFlag.workspace_communication_live_enabled.is_(True),
+    ).count() > 0 and _communication_gate_status(session, workspace_id)[0] != "allowed"
+    checklist = (
+        session.query(app_models.ClientPilotLaunchChecklist)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotLaunchChecklist.created_at))
+        .first()
+    )
+    if checklist is None:
+        checklist = app_models.ClientPilotLaunchChecklist(
+            id=_generate_id("client-pilot-launch"),
+            workspace_id=workspace_id,
+        )
+        session.add(checklist)
+    checklist.onboarding_ready = bool(readiness and readiness.readiness_score >= 80)
+    checklist.plan_assigned = assignment is not None
+    checklist.compliance_acceptable = compliance_ok
+    checklist.weekly_report_available = weekly_report is not None
+    checklist.support_owner_assigned = support_owner_assigned
+    checklist.no_critical_blockers = critical_blockers == 0
+    checklist.no_unsafe_live_flags = not live_flags_unsafe
+    checklist.block_reasons = [
+        reason
+        for reason, enabled in [
+            ("onboarding_not_ready", not checklist.onboarding_ready),
+            ("plan_not_assigned", not checklist.plan_assigned),
+            ("compliance_not_acceptable", not checklist.compliance_acceptable),
+            ("weekly_report_missing", not checklist.weekly_report_available),
+            ("support_owner_missing", not checklist.support_owner_assigned),
+            ("critical_blockers_present", not checklist.no_critical_blockers),
+            ("unsafe_live_flags_present", not checklist.no_unsafe_live_flags),
+        ]
+        if enabled
+    ]
+    checklist.checklist_status = "ready" if not checklist.block_reasons else "blocked"
+    checklist.client_safe_summary = "Pilot launch checklist does not bypass source gates."
+    session.flush()
+    return {"launch_checklist": client_command_sanitizer.pilot_launch_checklist_public(checklist)}
+
+
+def pilot_launch_checklist_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    checklist = (
+        session.query(app_models.ClientPilotLaunchChecklist)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotLaunchChecklist.created_at))
+        .first()
+    )
+    if checklist is None:
+        return create_pilot_launch_checklist(session, workspace_id)
+    return {"launch_checklist": client_command_sanitizer.pilot_launch_checklist_public(checklist)}
+
+
+def create_pilot_risk_review(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    communication_blocked = session.query(app_models.ClientCommunicationSendAttempt).filter_by(
+        workspace_id=workspace_id, attempt_status="blocked"
+    ).count() > 0
+    billing_blocked = session.query(app_models.ClientBillingAttempt).filter_by(
+        workspace_id=workspace_id, attempt_status="blocked"
+    ).count() > 0
+    compliance_blocked = not _compliance_posture_ok(session, workspace_id)
+    critical_blockers = [
+        blocker.blocker_type
+        for blocker in session.query(ClientActivationBlocker).filter_by(workspace_id=workspace_id).all()
+        if blocker.severity in {"critical", "high"}
+    ]
+    review = (
+        session.query(app_models.ClientPilotRiskReview)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotRiskReview.created_at))
+        .first()
+    )
+    if review is None:
+        review = app_models.ClientPilotRiskReview(
+            id=_generate_id("client-pilot-risk"),
+            workspace_id=workspace_id,
+        )
+        session.add(review)
+    review.communication_blocked = communication_blocked
+    review.billing_blocked = billing_blocked
+    review.compliance_blocked = compliance_blocked
+    review.critical_blockers = critical_blockers
+    review.escalation_required = communication_blocked or billing_blocked or compliance_blocked or bool(critical_blockers)
+    review.risk_status = "blocked" if review.escalation_required else "watch"
+    review.summary = "Controlled live posture requires CP9, CP10, and CP11 gates."
+    session.flush()
+    if review.escalation_required:
+        create_pilot_escalation(
+            session,
+            {
+                "workspace_id": workspace_id,
+                "escalation_type": "risk_review",
+                "source_domain": "pilot",
+                "source_record_id": review.id,
+                "escalation_reason": review.summary,
+                "requires_human_review": True,
+            },
+        )
+    return {"risk_review": client_command_sanitizer.pilot_risk_review_public(review)}
+
+
+def pilot_risk_review_detail(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    review = (
+        session.query(app_models.ClientPilotRiskReview)
+        .filter_by(workspace_id=workspace_id)
+        .order_by(desc(app_models.ClientPilotRiskReview.created_at))
+        .first()
+    )
+    if review is None:
+        return create_pilot_risk_review(session, workspace_id)
+    return {"risk_review": client_command_sanitizer.pilot_risk_review_public(review)}
+
+
+def create_pilot_client_safe_update(session: Session, workspace_id: str, values: dict[str, object]) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    update = app_models.ClientPilotClientSafeUpdate(
+        id=_generate_id("client-pilot-update"),
+        workspace_id=workspace_id,
+        update_title=str(values.get("update_title") or "Pilot update"),
+        update_summary=str(values.get("update_summary") or ""),
+        status=str(values.get("status") or "draft"),
+        client_safe_summary=str(values.get("client_safe_summary") or "Client-safe updates hide internal governance, provider payloads, and admin notes."),
+        hides_admin_notes=True,
+    )
+    session.add(update)
+    session.flush()
+    return {"client_safe_update": client_command_sanitizer.pilot_client_safe_update_public(update)}
+
+
+def pilot_client_safe_updates(session: Session, workspace_id: str) -> dict[str, object]:
+    _workspace_or_404(session, workspace_id)
+    updates = session.query(app_models.ClientPilotClientSafeUpdate).filter_by(workspace_id=workspace_id).order_by(
+        desc(app_models.ClientPilotClientSafeUpdate.created_at)
+    ).all()
+    return {"client_safe_updates": [client_command_sanitizer.pilot_client_safe_update_public(item) for item in updates]}
+
+
+def pilot_admin_console(session: Session) -> dict[str, object]:
+    return {
+        "metrics": {
+            "programs": session.query(app_models.ClientPilotProgram).count(),
+            "enrollments": session.query(app_models.ClientPilotWorkspaceEnrollment).count(),
+            "support_tickets": session.query(app_models.ClientPilotSupportTicket).count(),
+            "escalations": session.query(app_models.ClientPilotEscalation).count(),
+            "blocked_health_snapshots": session.query(app_models.ClientPilotHealthSnapshot).filter(
+                app_models.ClientPilotHealthSnapshot.health_status.in_(["blocked", "critical"])
+            ).count(),
+        },
+        "programs": [client_command_sanitizer.pilot_program_public(item) for item in session.query(app_models.ClientPilotProgram).all()],
+        "enrollments": [client_command_sanitizer.pilot_enrollment_public(item) for item in session.query(app_models.ClientPilotWorkspaceEnrollment).all()],
+        "health": [client_command_sanitizer.pilot_health_snapshot_public(item) for item in session.query(app_models.ClientPilotHealthSnapshot).all()],
+        "safety": client_command_safety_rules(),
+    }
+
+
+def pilot_support_console(session: Session) -> dict[str, object]:
+    return {
+        "tickets": [client_command_sanitizer.pilot_support_ticket_public(item) for item in session.query(app_models.ClientPilotSupportTicket).order_by(desc(app_models.ClientPilotSupportTicket.created_at)).all()],
+        "actions": [client_command_sanitizer.pilot_support_action_public(item) for item in session.query(app_models.ClientPilotSupportAction).order_by(desc(app_models.ClientPilotSupportAction.created_at)).all()],
+        "escalations": [client_command_sanitizer.pilot_escalation_public(item) for item in session.query(app_models.ClientPilotEscalation).order_by(desc(app_models.ClientPilotEscalation.created_at)).all()],
+    }
+
+
+def pilot_blocked(session: Session) -> dict[str, object]:
+    blocked = session.query(app_models.ClientPilotHealthSnapshot).filter(
+        app_models.ClientPilotHealthSnapshot.health_status.in_(["blocked", "critical"])
+    ).order_by(desc(app_models.ClientPilotHealthSnapshot.created_at)).all()
+    return {"blocked": [client_command_sanitizer.pilot_health_snapshot_public(item) for item in blocked]}
+
+
+def pilot_needs_review(session: Session) -> dict[str, object]:
+    needs_review = session.query(app_models.ClientPilotHealthSnapshot).filter(
+        app_models.ClientPilotHealthSnapshot.health_status.in_(["watch", "needs_review"])
+    ).order_by(desc(app_models.ClientPilotHealthSnapshot.created_at)).all()
+    return {"needs_review": [client_command_sanitizer.pilot_health_snapshot_public(item) for item in needs_review]}

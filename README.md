@@ -171,7 +171,7 @@ V31 adds the First Deal Cockpit, a guided internal execution board for the first
 
 This is not a new live-action layer. The cockpit gives Prime 2 a way to recommend the next step, show blockers, validate buyer margin, block unsupported 10K+ claims, and create advisory learning signals after a batch. The owner still performs and approves real-world action, and the cockpit cannot send outreach, execute contracts, submit title packets, handle payments, or provide legal guidance.
 
-## Client Command CP3 + CP8
+## Client Command CP3 through CP12
 
 CP3 adds a client-safe Acquisition Manager that prepares seller briefs, question plans, objection responses, manual follow-up drafts, and appointment readiness reviews from CP2 lead intelligence. Drafts are manual-use only and the UI states that no message has been sent.
 
@@ -185,6 +185,14 @@ CP7 adds weekly client command reports with metric snapshots, lead rollups, bott
 
 CP8 adds the Client Onboarding Wizard and Workspace Activation Readiness layer. It captures client business and strategy profiles, market setup, pipeline setup, lead sources, buyer-list readiness, team and compliance checklists, first-lead readiness, workspace readiness scoring, activation blockers, manual-operation go-live gating, onboarding tasks, timeline events, first weekly-cycle readiness, and a client-safe onboarding report. Go-live means controlled/manual Prime2 operation only and does not enable live communication, provider execution, billing, contracts, or campaigns.
 
+CP9 adds guarded Subscription Plan Gating Readiness backend surfaces for Client Command OS. It covers plan catalog, plan assignment, feature-gate evaluation, usage review, upgrade recommendations, billing-readiness review, and subscription placeholders without creating a live billing lane. The seeded Memphis workspace remains on Pro, with billing and admin support blocked until Command.
+
+CP10 adds guarded Controlled Live Communication Gate backend surfaces. Any send path remains source-linked, one-recipient, dry-run verified, owner-approved, provider-ready, idempotent, and audited. The seeded Memphis communication records stay blocked by consent, review, approval, and live-flag gates, and no live send occurs.
+
+CP11 adds guarded Stripe Billing Live Payment Gate backend surfaces for subscription billing review. Billing stays centered on Stripe Billing plus Checkout Sessions and Customer Portal, stores only Stripe IDs and masked metadata, and never stores raw card data. The seeded Memphis billing attempt remains blocked and no payment is collected.
+
+CP12 adds guarded Pilot Client Operating Mode and Admin Support Console backend surfaces. Pilot workspaces remain invite-only, manual-first, owner-approved, source-gated, and non-autonomous. The seeded Memphis pilot state includes blocked launch and risk records, three support tickets, one support action, one escalation, and client-safe updates that hide admin-only notes.
+
 Docs:
 
 - [CP3 Acquisition AI Team](docs/client_command/CP3_ACQUISITION_AI_TEAM.md)
@@ -194,6 +202,11 @@ Docs:
 - [CP7 Weekly Client Command Reports](docs/client_command/CP7_WEEKLY_CLIENT_COMMAND_REPORTS.md)
 - [CP8 Client Onboarding Wizard](docs/client_command/CP8_CLIENT_ONBOARDING_WIZARD.md)
 - [CP8 Workspace Activation Readiness](docs/client_command/CP8_WORKSPACE_ACTIVATION_READINESS.md)
+- [CP9 Subscription Plan Gating Readiness](docs/client_command/CP9_SUBSCRIPTION_PLAN_GATING_READINESS.md)
+- [CP10 Controlled Live Communication Gate](docs/client_command/CP10_CONTROLLED_LIVE_COMMUNICATION_GATE.md)
+- [CP11 Stripe Billing Live Payment Gate](docs/client_command/CP11_STRIPE_BILLING_LIVE_PAYMENT_GATE.md)
+- [CP12 Pilot Client Operating Mode](docs/client_command/CP12_PILOT_CLIENT_OPERATING_MODE.md)
+- [CP12 Admin Support Console](docs/client_command/CP12_ADMIN_SUPPORT_CONSOLE.md)
 
 ## Safety Boundaries
 
@@ -351,7 +364,7 @@ Production readiness pages exist in the app, but missing auth/env/secrets/provid
 This system supports wholesale real estate operations, but the operator is responsible for following applicable local and state law. Contracts, disclosures, title review, legal questions, and closing coordination must be handled with qualified professionals. Forecasts, assignment fees, ARV, repair estimates, buyer margin, and probability scores are estimates or source-backed internal calculations, not guaranteed profits or guaranteed closings.
 ## Client Command Status
 
-Client Command OS now includes CP1 through CP8:
+Client Command runtime now includes CP1 through CP12:
 - CP1 workspace foundation
 - CP2 lead intelligence
 - CP3 acquisition AI team
@@ -360,12 +373,19 @@ Client Command OS now includes CP1 through CP8:
 - CP6 compliance and contact permission gate
 - CP7 weekly client command reports
 - CP8 client onboarding wizard and workspace activation readiness
+- CP9 subscription plan gating readiness
+- CP10 controlled live communication gate
+- CP11 Stripe billing live payment gate
+- CP12 pilot client operating mode and admin support console
 
-All client-command phases remain non-live:
+All client-command phases remain non-live by default unless a later gate explicitly clears them:
 - no provider calls
 - no SMS or email sends
 - no voice calling
-- no campaigns
+- no bulk campaigns
 - no contract generation
 - no e-signature
 - no billing or payment actions
+- no autonomous execution
+- no raw card data storage
+- no exposure of Prime governance internals

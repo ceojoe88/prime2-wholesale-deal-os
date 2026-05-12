@@ -55,6 +55,44 @@ const requiredRouteFiles = [
   "src/app/dashboard/client-command/onboarding/tasks/page.tsx",
   "src/app/dashboard/client-command/onboarding/report/page.tsx",
   "src/app/dashboard/client-command/onboarding/activation-board/page.tsx",
+  "src/app/dashboard/client-command/plans/page.tsx",
+  "src/app/dashboard/client-command/plans/catalog/page.tsx",
+  "src/app/dashboard/client-command/plans/features/page.tsx",
+  "src/app/dashboard/client-command/plans/usage/page.tsx",
+  "src/app/dashboard/client-command/plans/upgrade-recommendations/page.tsx",
+  "src/app/dashboard/client-command/plans/billing-readiness/page.tsx",
+  "src/app/dashboard/client-command/plans/subscription-placeholder/page.tsx",
+  "src/app/dashboard/client-command/communication/page.tsx",
+  "src/app/dashboard/client-command/communication/providers/page.tsx",
+  "src/app/dashboard/client-command/communication/readiness/page.tsx",
+  "src/app/dashboard/client-command/communication/dry-runs/page.tsx",
+  "src/app/dashboard/client-command/communication/approvals/page.tsx",
+  "src/app/dashboard/client-command/communication/attempts/page.tsx",
+  "src/app/dashboard/client-command/communication/external-references/page.tsx",
+  "src/app/dashboard/client-command/billing/page.tsx",
+  "src/app/dashboard/client-command/billing/providers/page.tsx",
+  "src/app/dashboard/client-command/billing/customers/page.tsx",
+  "src/app/dashboard/client-command/billing/readiness/page.tsx",
+  "src/app/dashboard/client-command/billing/dry-runs/page.tsx",
+  "src/app/dashboard/client-command/billing/approvals/page.tsx",
+  "src/app/dashboard/client-command/billing/attempts/page.tsx",
+  "src/app/dashboard/client-command/billing/ledger/page.tsx",
+  "src/app/dashboard/client-command/billing/external-references/page.tsx",
+  "src/app/dashboard/client-command/pilot/page.tsx",
+  "src/app/dashboard/client-command/pilot/admin-console/page.tsx",
+  "src/app/dashboard/client-command/pilot/support-console/page.tsx",
+  "src/app/dashboard/client-command/pilot/programs/page.tsx",
+  "src/app/dashboard/client-command/pilot/enrollments/page.tsx",
+  "src/app/dashboard/client-command/pilot/health/page.tsx",
+  "src/app/dashboard/client-command/pilot/support/page.tsx",
+  "src/app/dashboard/client-command/pilot/support-tickets/page.tsx",
+  "src/app/dashboard/client-command/pilot/escalations/page.tsx",
+  "src/app/dashboard/client-command/pilot/launch-checklist/page.tsx",
+  "src/app/dashboard/client-command/pilot/risk-review/page.tsx",
+  "src/app/dashboard/client-command/pilot/client-updates/page.tsx",
+  "src/app/dashboard/client-command/pilot/updates/page.tsx",
+  "src/app/dashboard/client-command/pilot/blocked/page.tsx",
+  "src/app/dashboard/client-command/pilot/needs-review/page.tsx",
   "src/app/dashboard/first-deal-cockpit/page.tsx",
   "src/app/dashboard/first-deal-cockpit/calls/page.tsx",
   "src/app/dashboard/first-deal-cockpit/offers/page.tsx",
@@ -770,9 +808,9 @@ test("CP3 and CP4 client command pages expose no forbidden client controls", () 
     "generate contract",
     "send offer",
     "e-sign",
-    "charge",
-    "invoice",
-    "activate",
+    "charge now",
+    "collect payment",
+    "activate live",
     "sync to provider",
     "dispatch agent",
     "execute",
@@ -837,9 +875,9 @@ test("CP5 client command pages expose no forbidden buyer execution controls", ()
     "generate contract",
     "send offer",
     "e-sign",
-    "charge",
-    "invoice",
-    "activate",
+    "charge now",
+    "collect payment",
+    "activate live",
     "sync to provider",
     "dispatch agent",
     "execute",
@@ -922,9 +960,9 @@ test("CP6 and CP7 client command pages expose no forbidden compliance or reporti
     "generate contract",
     "send offer",
     "e-sign",
-    "charge",
-    "invoice",
-    "activate",
+    "charge now",
+    "collect payment",
+    "activate live",
     "sync to provider",
     "dispatch agent",
     "execute",
@@ -1011,8 +1049,8 @@ test("CP8 client command pages expose no forbidden onboarding or activation cont
     "generate contract",
     "send offer",
     "e-sign",
-    "charge",
-    "invoice",
+    "charge now",
+    "collect payment",
     "activate billing",
     "activate live",
     "sync to provider",
@@ -1024,6 +1062,499 @@ test("CP8 client command pages expose no forbidden onboarding or activation cont
     "guaranteed buyer",
     "guaranteed assignment fee"
   ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("client-command CP9-CP12 navigation entries target implemented routes", () => {
+  const navigation = readFileSync(join(root, "src", "lib", "navigation.ts"), "utf8");
+  for (const expected of [
+    'href: "/dashboard/client-command/plans", label: "Client Plans"',
+    'href: "/dashboard/client-command/communication", label: "Client Communication"',
+    'href: "/dashboard/client-command/billing", label: "Client Billing"',
+    'href: "/dashboard/client-command/pilot", label: "Client Pilot"'
+  ]) {
+    assert.match(navigation, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+});
+
+test("client-command CP9-CP12 implemented surface route files exist", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/plans/page.tsx",
+    "src/app/dashboard/client-command/communication/page.tsx",
+    "src/app/dashboard/client-command/billing/page.tsx",
+    "src/app/dashboard/client-command/pilot/page.tsx"
+  ];
+  for (const routeFile of files) {
+    const absolute = join(root, routeFile);
+    assert.equal(existsSync(absolute), true, routeFile);
+    assert.match(readFileSync(absolute, "utf8"), /export default (async )?function/, routeFile);
+  }
+});
+
+test("client-command CP9-CP12 dedicated pages render expected titles and boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/plans/page.tsx",
+    "src/app/dashboard/client-command/communication/page.tsx",
+    "src/app/dashboard/client-command/billing/page.tsx",
+    "src/app/dashboard/client-command/pilot/page.tsx",
+    "src/app/dashboard/client-command/plans/catalog/page.tsx",
+    "src/app/dashboard/client-command/communication/dry-runs/page.tsx",
+    "src/app/dashboard/client-command/billing/approvals/page.tsx",
+    "src/app/dashboard/client-command/pilot/blocked/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  for (const requiredText of [
+    "Plan catalog and readiness gates",
+    "Controlled live communication gate",
+    "Controlled billing gate",
+    "Pilot mode and support routing",
+    "Plan Catalog",
+    "Communication Dry Runs",
+    "Billing Approvals",
+    "Blocked Pilot Workspaces",
+    "Client-safe Updates",
+    "Billing gate only - no payment occurs unless all billing gates pass.",
+    "Pilot mode does not bypass source gates."
+  ]) {
+    assert.match(joined, new RegExp(requiredText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+});
+
+test("client-command dashboard renders CP9-CP12 plans communication billing and pilot panels", () => {
+  const source = readFileSync(join(root, "src", "app", "dashboard", "client-command", "page.tsx"), "utf8");
+  for (const requiredText of [
+    "CP9 Plans Panel",
+    "CP10 Communication Panel",
+    "CP11 Billing Panel",
+    "CP12 Pilot Panel",
+    "Memphis plan gate",
+    "Memphis communication gate",
+    "Billing guard",
+    "Memphis pilot health",
+    "Plan Access Manager",
+    "Communication Control Manager",
+    "Billing Guard Manager",
+    "Pilot Operations Manager",
+    "No raw card data is stored.",
+    "Pilot mode does not bypass source gates.",
+    "Billing gate only - no payment occurs unless all billing gates pass.",
+    "Live communication remains manual-only until readiness, dry-run, approval, and live-flag gates all clear.",
+    "/dashboard/client-command/plans",
+    "/dashboard/client-command/communication",
+    "/dashboard/client-command/billing",
+    "/dashboard/client-command/pilot"
+  ]) {
+    assert.match(source, new RegExp(requiredText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+});
+
+test("client-command CP9-CP12 surface exposes no forbidden plan billing pilot or live-send controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/plans/page.tsx",
+    "src/app/dashboard/client-command/communication/page.tsx",
+    "src/app/dashboard/client-command/communication/dry-runs/page.tsx",
+    "src/app/dashboard/client-command/communication/approvals/page.tsx",
+    "src/app/dashboard/client-command/communication/attempts/page.tsx",
+    "src/app/dashboard/client-command/billing/page.tsx",
+    "src/app/dashboard/client-command/billing/dry-runs/page.tsx",
+    "src/app/dashboard/client-command/billing/approvals/page.tsx",
+    "src/app/dashboard/client-command/pilot/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "create stripe customer",
+    "store card",
+    "start subscription",
+    "force charge",
+    "charge card",
+    "override gate",
+    "delete client data",
+    "contractexecutionallowed: true",
+    "titlesubmissionallowed: true",
+    "automaticacceptanceallowed: true",
+    "billingliveallowed: true",
+    "provider called\" value=\"1",
+    "raw_provider_payload",
+    "internal_prime_governance"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP9 dashboard route files exist for buyer demand and distribution pages", () => {
+  const files = [
+    "src/app/dashboard/buyer-demand/page.tsx",
+    "src/app/dashboard/buyer-demand/[buyerId]/page.tsx",
+    "src/app/dashboard/deal-distribution/page.tsx",
+    "src/app/dashboard/deal-distribution/[distributionId]/page.tsx",
+    "src/app/dashboard/buyer-priority/page.tsx"
+  ];
+  for (const routeFile of files) {
+    const absolute = join(root, routeFile);
+    assert.equal(existsSync(absolute), true, routeFile);
+    assert.match(readFileSync(absolute, "utf8"), /export default (async )?function/, routeFile);
+  }
+});
+
+test("CP9 dashboard pages render draft-only buyer demand and distribution boundaries", () => {
+  const files = [
+    "src/app/dashboard/buyer-demand/page.tsx",
+    "src/app/dashboard/deal-distribution/page.tsx",
+    "src/app/dashboard/buyer-priority/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Buyer demand command/);
+  assert.match(joined, /without sending blasts or exposing internal spread logic\./);
+  assert.match(joined, /Draft-only buyer distribution/);
+  assert.match(joined, /without live sends, bulk blasts, or seller data exposure\./);
+  assert.match(joined, /Most likely buyers to close fast/);
+  assert.match(joined, /Recommendations remain internal only\./);
+});
+
+test("CP9 dashboard pages expose no forbidden buyer-demand execution controls", () => {
+  const files = [
+    "src/app/dashboard/buyer-demand/page.tsx",
+    "src/app/dashboard/deal-distribution/page.tsx",
+    "src/app/dashboard/buyer-priority/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "auto call",
+    "execute contract",
+    "submit to title",
+    "charge card",
+    "create stripe customer",
+    "store card",
+    "provider called\" value=\"1",
+    "raw_provider_payload"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP10 dashboard route files exist for conversion and negotiation pages", () => {
+  const files = [
+    "src/app/dashboard/offer-conversion/page.tsx",
+    "src/app/dashboard/offer-conversion/[dealId]/page.tsx",
+    "src/app/dashboard/negotiations/page.tsx",
+    "src/app/dashboard/negotiations/[recordId]/page.tsx",
+    "src/app/dashboard/contract-ready/page.tsx"
+  ];
+  for (const routeFile of files) {
+    const absolute = join(root, routeFile);
+    assert.equal(existsSync(absolute), true, routeFile);
+    assert.match(readFileSync(absolute, "utf8"), /export default (async )?function/, routeFile);
+  }
+});
+
+test("CP10 dashboard pages render gated conversion and negotiation boundaries", () => {
+  const files = [
+    "src/app/dashboard/offer-conversion/page.tsx",
+    "src/app/dashboard/offer-conversion/[dealId]/page.tsx",
+    "src/app/dashboard/negotiations/page.tsx",
+    "src/app/dashboard/negotiations/[recordId]/page.tsx",
+    "src/app/dashboard/contract-ready/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Controlled offer conversion gate/);
+  assert.match(joined, /No contract is generated, accepted, or executed here\./);
+  assert.match(joined, /No acceptance, send, or contract action happens here\./);
+  assert.match(joined, /External drafting readiness/);
+  assert.match(joined, /Automatic acceptance/);
+});
+
+test("CP10 dashboard pages expose no forbidden negotiation or contract controls", () => {
+  const files = [
+    "src/app/dashboard/offer-conversion/page.tsx",
+    "src/app/dashboard/offer-conversion/[dealId]/page.tsx",
+    "src/app/dashboard/negotiations/page.tsx",
+    "src/app/dashboard/negotiations/[recordId]/page.tsx",
+    "src/app/dashboard/contract-ready/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "auto call",
+    "send contract",
+    "e-signature",
+    "charge card",
+    "create stripe customer",
+    "submit to title",
+    "provider called\" value=\"1",
+    "automaticacceptanceallowed: true",
+    "contractexecutionallowed: true"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP11 dashboard route files exist for title review pages", () => {
+  const files = [
+    "src/app/dashboard/title-review/page.tsx",
+    "src/app/dashboard/title-review/[reviewId]/page.tsx",
+    "src/app/dashboard/review-packets/page.tsx"
+  ];
+  for (const routeFile of files) {
+    const absolute = join(root, routeFile);
+    assert.equal(existsSync(absolute), true, routeFile);
+    assert.match(readFileSync(absolute, "utf8"), /export default (async )?function/, routeFile);
+  }
+});
+
+test("CP11 dashboard pages render review-only packet preparation boundaries", () => {
+  const files = [
+    "src/app/dashboard/title-review/page.tsx",
+    "src/app/dashboard/title-review/[reviewId]/page.tsx",
+    "src/app/dashboard/review-packets/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Review coordination gate/);
+  assert.match(joined, /Draft-only title review packets/);
+  assert.match(joined, /does not submit documents, send title-company email, create legal relationships, or execute contracts\./);
+  assert.match(joined, /without submission or legal execution\./);
+  assert.match(joined, /Closing guarantees/);
+});
+
+test("CP11 dashboard pages expose no forbidden title-review controls", () => {
+  const files = [
+    "src/app/dashboard/title-review/page.tsx",
+    "src/app/dashboard/title-review/[reviewId]/page.tsx",
+    "src/app/dashboard/review-packets/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "auto call",
+    "submit to title",
+    "submit documents now",
+    "wire funds",
+    "charge card",
+    "create stripe customer",
+    "provider called\" value=\"1",
+    "contractexecutionallowed: true",
+    "documentsubmissionallowed: true"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP12 implemented controlled-lane route files exist", () => {
+  const files = [
+    "src/app/dashboard/communications/page.tsx",
+    "src/app/dashboard/communications/[draftId]/page.tsx",
+    "src/app/dashboard/communications/dry-runs/page.tsx",
+    "src/app/dashboard/communications/approvals/page.tsx",
+    "src/app/dashboard/communications/attempts/page.tsx"
+  ];
+  for (const routeFile of files) {
+    const absolute = join(root, routeFile);
+    assert.equal(existsSync(absolute), true, routeFile);
+    assert.match(readFileSync(absolute, "utf8"), /export default (async )?function/, routeFile);
+  }
+});
+
+test("CP12 implemented controlled-lane pages render dry-run and approval boundaries", () => {
+  const files = [
+    "src/app/dashboard/communications/page.tsx",
+    "src/app/dashboard/communications/[draftId]/page.tsx",
+    "src/app/dashboard/communications/dry-runs/page.tsx",
+    "src/app/dashboard/communications/approvals/page.tsx",
+    "src/app/dashboard/communications/attempts/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Owner-approved communication control/);
+  assert.match(joined, /Live communication remains blocked unless the unchanged draft, safety result, dry-run receipt, owner approval, live flags, provider readiness, recipient tie, and idempotency gate all clear\./);
+  assert.match(joined, /Dry-run does not send/);
+  assert.match(joined, /Approval records tied to dry-runs/);
+  assert.match(joined, /Blocked and mock-sent attempt log/);
+});
+
+test("CP12 implemented controlled-lane pages expose no forbidden live-send controls", () => {
+  const files = [
+    "src/app/dashboard/communications/page.tsx",
+    "src/app/dashboard/communications/[draftId]/page.tsx",
+    "src/app/dashboard/communications/dry-runs/page.tsx",
+    "src/app/dashboard/communications/approvals/page.tsx",
+    "src/app/dashboard/communications/attempts/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of [
+    "<button",
+    "send all",
+    "auto dial",
+    "charge card",
+    "create stripe customer",
+    "store card",
+    "bypass enabled",
+    "provider called\" value=\"1",
+    "bulksendallowed: true",
+    "titlesubmissionallowed: true"
+  ]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP9 client command plan pages render plan and billing-readiness boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/plans/page.tsx",
+    "src/app/dashboard/client-command/plans/catalog/page.tsx",
+    "src/app/dashboard/client-command/plans/features/page.tsx",
+    "src/app/dashboard/client-command/plans/usage/page.tsx",
+    "src/app/dashboard/client-command/plans/upgrade-recommendations/page.tsx",
+    "src/app/dashboard/client-command/plans/billing-readiness/page.tsx",
+    "src/app/dashboard/client-command/plans/subscription-placeholder/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Plan gate only - no payment has been collected\./);
+  assert.match(joined, /Billing readiness only - no Stripe\/customer\/invoice\/subscription action occurred\./);
+  assert.match(joined, /Feature access is controlled by plan, readiness, and safety gates\./);
+});
+
+test("CP9 client command plan pages expose no forbidden billing controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/plans/page.tsx",
+    "src/app/dashboard/client-command/plans/catalog/page.tsx",
+    "src/app/dashboard/client-command/plans/features/page.tsx",
+    "src/app/dashboard/client-command/plans/usage/page.tsx",
+    "src/app/dashboard/client-command/plans/upgrade-recommendations/page.tsx",
+    "src/app/dashboard/client-command/plans/billing-readiness/page.tsx",
+    "src/app/dashboard/client-command/plans/subscription-placeholder/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of ["<button", "collect payment", "activate billing", "create stripe customer", "start subscription", "bill client"]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP10 client command communication pages render dry-run and approval boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/communication/page.tsx",
+    "src/app/dashboard/client-command/communication/providers/page.tsx",
+    "src/app/dashboard/client-command/communication/readiness/page.tsx",
+    "src/app/dashboard/client-command/communication/dry-runs/page.tsx",
+    "src/app/dashboard/client-command/communication/approvals/page.tsx",
+    "src/app/dashboard/client-command/communication/attempts/page.tsx",
+    "src/app/dashboard/client-command/communication/external-references/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Controlled single-message gate - no bulk campaigns\./);
+  assert.match(joined, /Blocked by default unless compliance, plan, approval, and live flags pass\./);
+  assert.match(joined, /Dry run does not send a message\./);
+  assert.match(joined, /Approval does not send a message\./);
+  assert.match(joined, /Live send is single-message, idempotent, and audited\./);
+});
+
+test("CP10 client command communication pages expose no forbidden communication controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/communication/page.tsx",
+    "src/app/dashboard/client-command/communication/providers/page.tsx",
+    "src/app/dashboard/client-command/communication/readiness/page.tsx",
+    "src/app/dashboard/client-command/communication/dry-runs/page.tsx",
+    "src/app/dashboard/client-command/communication/approvals/page.tsx",
+    "src/app/dashboard/client-command/communication/attempts/page.tsx",
+    "src/app/dashboard/client-command/communication/external-references/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of ["<button", "blast buyers", "start campaign", "auto follow-up", "auto reply", "send bulk", "launch drip", "contact all"]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP11 client command billing pages render billing gate boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/billing/page.tsx",
+    "src/app/dashboard/client-command/billing/providers/page.tsx",
+    "src/app/dashboard/client-command/billing/customers/page.tsx",
+    "src/app/dashboard/client-command/billing/readiness/page.tsx",
+    "src/app/dashboard/client-command/billing/dry-runs/page.tsx",
+    "src/app/dashboard/client-command/billing/approvals/page.tsx",
+    "src/app/dashboard/client-command/billing/attempts/page.tsx",
+    "src/app/dashboard/client-command/billing/ledger/page.tsx",
+    "src/app/dashboard/client-command/billing/external-references/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Billing gate only - no payment occurs unless all billing gates pass\./);
+  assert.match(joined, /Dry run does not charge a card\./);
+  assert.match(joined, /Approval does not charge a card\./);
+  assert.match(joined, /No raw card data is stored\./);
+  assert.match(joined, /Stripe\/live provider execution is disabled by default\./);
+});
+
+test("CP11 client command billing pages expose no forbidden billing execution controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/billing/page.tsx",
+    "src/app/dashboard/client-command/billing/providers/page.tsx",
+    "src/app/dashboard/client-command/billing/customers/page.tsx",
+    "src/app/dashboard/client-command/billing/readiness/page.tsx",
+    "src/app/dashboard/client-command/billing/dry-runs/page.tsx",
+    "src/app/dashboard/client-command/billing/approvals/page.tsx",
+    "src/app/dashboard/client-command/billing/attempts/page.tsx",
+    "src/app/dashboard/client-command/billing/ledger/page.tsx",
+    "src/app/dashboard/client-command/billing/external-references/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of ["<button", "charge now", "refund", "auto subscribe", "auto upgrade", "auto downgrade", "delete customer", "store card", "force payment"]) {
+    assert.equal(joined.includes(forbidden), false, forbidden);
+  }
+});
+
+test("CP12 client command pilot pages render pilot/admin support boundaries", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/pilot/page.tsx",
+    "src/app/dashboard/client-command/pilot/admin-console/page.tsx",
+    "src/app/dashboard/client-command/pilot/support-console/page.tsx",
+    "src/app/dashboard/client-command/pilot/programs/page.tsx",
+    "src/app/dashboard/client-command/pilot/enrollments/page.tsx",
+    "src/app/dashboard/client-command/pilot/health/page.tsx",
+    "src/app/dashboard/client-command/pilot/support-tickets/page.tsx",
+    "src/app/dashboard/client-command/pilot/escalations/page.tsx",
+    "src/app/dashboard/client-command/pilot/launch-checklist/page.tsx",
+    "src/app/dashboard/client-command/pilot/risk-review/page.tsx",
+    "src/app/dashboard/client-command/pilot/client-updates/page.tsx",
+    "src/app/dashboard/client-command/pilot/blocked/page.tsx",
+    "src/app/dashboard/client-command/pilot/needs-review/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.match(joined, /Pilot mode does not bypass source gates\./);
+  assert.match(joined, /Admin support can review and route issues, but cannot force live actions\./);
+  assert.match(joined, /Client-safe updates hide internal governance, provider payloads, and admin notes\./);
+  assert.match(joined, /Controlled live posture requires CP9, CP10, and CP11 gates\./);
+});
+
+test("CP12 client command pilot pages expose no forbidden override controls", () => {
+  const files = [
+    "src/app/dashboard/client-command/page.tsx",
+    "src/app/dashboard/client-command/pilot/page.tsx",
+    "src/app/dashboard/client-command/pilot/admin-console/page.tsx",
+    "src/app/dashboard/client-command/pilot/support-console/page.tsx",
+    "src/app/dashboard/client-command/pilot/programs/page.tsx",
+    "src/app/dashboard/client-command/pilot/enrollments/page.tsx",
+    "src/app/dashboard/client-command/pilot/health/page.tsx",
+    "src/app/dashboard/client-command/pilot/support-tickets/page.tsx",
+    "src/app/dashboard/client-command/pilot/escalations/page.tsx",
+    "src/app/dashboard/client-command/pilot/launch-checklist/page.tsx",
+    "src/app/dashboard/client-command/pilot/risk-review/page.tsx",
+    "src/app/dashboard/client-command/pilot/client-updates/page.tsx",
+    "src/app/dashboard/client-command/pilot/blocked/page.tsx",
+    "src/app/dashboard/client-command/pilot/needs-review/page.tsx"
+  ].map((file) => join(root, file));
+  const joined = files.map((file) => readFileSync(file, "utf8").toLowerCase()).join("\n");
+  for (const forbidden of ["<button", "force send", "force charge", "override gate", "bypass compliance", "activate live", "execute provider", "delete client data", "auto campaign", "auto billing"]) {
     assert.equal(joined.includes(forbidden), false, forbidden);
   }
 });
